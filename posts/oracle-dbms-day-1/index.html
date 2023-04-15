@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[Training] DBMS with Oracle Day 1 - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="[Training] DBMS with Oracle Day 1" />
+<meta property="og:description" content="In this post, I am going to wrap up all the things I learned during my first class on &lsquo;DBMS with Oracle&rsquo;. The training lecture is given by &lsquo;Rahul Sohal&rsquo;, CTO &amp; Resource Management Lead of iandwe.in.
+So first of all what is database?
+A database is a collection of information kept an organized way, for the ease of retrieval.
+Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/oracle-dbms-day-1/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2017-07-18T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-07-18T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Training] DBMS with Oracle Day 1"/>
+<meta name="twitter:description" content="In this post, I am going to wrap up all the things I learned during my first class on &lsquo;DBMS with Oracle&rsquo;. The training lecture is given by &lsquo;Rahul Sohal&rsquo;, CTO &amp; Resource Management Lead of iandwe.in.
+So first of all what is database?
+A database is a collection of information kept an organized way, for the ease of retrieval.
+Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture."/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/oracle-dbms-day-1/" /><link rel="prev" href="http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/" /><link rel="next" href="http://debakarr.github.io/posts/oracle-dbms-day-3/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[Training] DBMS with Oracle Day 1",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/oracle-dbms-day-1\/"
+        },"genre": "posts","keywords": "Oracle, DBMS, Database, SQL, Tutorial, Day 1","wordcount":  986 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/oracle-dbms-day-1\/","datePublished": "2017-07-18T00:00:00+00:00","dateModified": "2017-07-18T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[Training] DBMS with Oracle Day 1</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/database-management/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Database Management</a>&nbsp;<a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2017-07-18">2017-07-18</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;986 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/bDVJGg3.png"
+        data-srcset="http://i.imgur.com/bDVJGg3.png, http://i.imgur.com/bDVJGg3.png 1.5x, http://i.imgur.com/bDVJGg3.png 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/bDVJGg3.png"
+        title="http://i.imgur.com/bDVJGg3.png" /></p>
+<!-- raw HTML omitted -->
+<p>In this post, I am going to wrap up all the things I learned during my first class on &lsquo;DBMS with Oracle&rsquo;. The training lecture is given by &lsquo;<strong>Rahul Sohal</strong>&rsquo;, CTO &amp; Resource Management Lead of <a href="https://secure.iandwe.in/" target="_blank" rel="noopener noreffer ">iandwe.in</a>.</p>
+<p><strong>So first of all what is database?</strong></p>
+<p>A <strong>database</strong> is a collection of information kept an organized way, for the ease of retrieval.</p>
+<p>Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture. This all things are stored in a database and when you logged into your account today, all this information are retrieved from the database.</p>
+<!-- raw HTML omitted -->
+<p>**Now next we were taught about what is so called DBMS? **</p>
+<p>As because we are Computer Science students we were familiar with the term. We have actually used <strong>DBMS</strong> like <strong>mySQL</strong> and <strong>Microsoft Access</strong>. So a DBMS stands for &lsquo;<strong>Database Management System</strong>&rsquo;. Basically it&rsquo;s a system software for creating as well as managing databases. So it provides a way by which a programmer/user can create, retrieve, update and manipulate the data in different ways.</p>
+<p>So we are going to learn <strong>DBMS with Oracle</strong>. As most of us have done mySQL, Rahul sir asked us the difference between mySQL and Oracle DBMS. I have not on Oracle DBMS before but I somewhat knew that Oracle DBMS is used fir more complex queries other the mySQL. In addition, it supports far more join then mySQL which only supports 61 join limit (These things I know as because I have used mySQL for managing database of my own website at some point, and I never have to use any complex queries). Then Rahul sir told us that Oracle is used for &lsquo;<strong>Enterprise Business Applications</strong>&rsquo; in big companies whereas mySQL is used by small companies as it is somewhat easier to use.</p>
+<!-- raw HTML omitted -->
+<p>**Next how data are processed between client and server? **</p>
+<p>From client side, we send a request with the help of SQL(Structured Query Language). Then the server returns a tuple on the successful execution of SQL statement. The server is generally hosted on 127.0.0.1:8080. Here 127.0.0.1 is IP and is basically called localhost and 8080 is the port which can be changed during installation of the Oracle DBMS.</p>
+<!-- raw HTML omitted -->
+<p>The data is generally organized as a <strong>table</strong> containing <strong>rows</strong> and <strong>columns</strong>. Here&rsquo;s a basic example:</p>
+<table>
+<thead>
+<tr>
+<th>ROLL</th>
+<th style="text-align:center">NAME</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align:center">Rahul</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align:center">Baka</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align:center">Debakar</td>
+</tr>
+</tbody>
+</table>
+<!-- raw HTML omitted -->
+<p>Here table contains Roll and Name which are attributes and each row contains one data.</p>
+<!-- raw HTML omitted -->
+<p>If we need to display data for roll no. 1 then the query for that is:</p>
+<pre tabindex="0"><code>SELECT * FROM STUDENT WHERE ROLL = 1;
+</code></pre><!-- raw HTML omitted -->
+<pre tabindex="0"><code>CONNECT / AS SYSDBA;
+</code></pre><!-- raw HTML omitted -->
+<p>To create a user we have to type:</p>
+<pre tabindex="0"><code>CREATE USER &lt;USERNAME&gt; IDENTIFIED BY &lt;PASSWORD&gt;;
+</code></pre><!-- raw HTML omitted -->
+<p>Before jumping into creating the table we need to provide some <strong>privilege</strong> to the newly created user. This thing is quite new to me as in mySQL, we can directly create a table after creating and using one database. In Oracle, we have to assign privilege to the user using SYSDBA. The few common privilege can be assigned like this:</p>
+<pre tabindex="0"><code>GRANT CONNECT TO &lt;USERNAME&gt;;
+GRANT RESOURCE, DBA TO &lt;USERNAME&gt;;
+GRANT CREATE SESSION TO &lt;USERNAME&gt;;
+GRANT UNLIMITED TABLESPACE TO ;
+</code></pre><!-- raw HTML omitted -->
+<p>After this we can connect to our user like this:</p>
+<pre tabindex="0"><code>CONNECT
+Enter user-name: your_user_name 
+Enter password: your_password
+</code></pre><!-- raw HTML omitted -->
+<p>Then we need to give privilege for the basic <strong>DML(Data Manipulation Language)</strong> commands. This can be done like this:</p>
+<pre tabindex="0"><code>GRANT SELECT, INSERT, UPDATE, DELETE ON &lt;TABLENAME&gt; TO &lt;USERNAME&gt;
+</code></pre><!-- raw HTML omitted -->
+<p>But the above command only works after you created a table. This all privilege things are really something to consider in the difference between mySQL and Oracle. Up till now, I get one thing clear, that Oracle DBMS has much greater function than mySQL.</p>
+<!-- raw HTML omitted -->
+<pre tabindex="0"><code>CREATE TABLE STUDENT(ROLL NUMBER, NAME VARCHAR2(30), DOB DATE) ;
+</code></pre><!-- raw HTML omitted -->
+<p>This takes us in a situation where we can talk about something called &lsquo;<strong>Data Redundancy</strong>&rsquo;. Rahul Sir told us that in the table we just created we can have as many numbers of the row as we want with same data. Which is nothing but a waste of space. Same data at different rows thus data which is not useful at all is cramming up all the spaces and hence it is called &lsquo;Data Redundancy&rsquo;. He told us that it frequently happens when a beginner makes a form and due to some Internet issues we as a user end up submitting the form 10 times and our data is placed on the table 10 times causing &lsquo;Data Redundancy&rsquo;. Up till now, I know all the things he was trying to explain and believe me I also know that he is going to tell us about constraints after this. Then he explained to us what is <strong>Primary key, composite key and unique key</strong>.</p>
+<!-- raw HTML omitted -->
+<p>Then after all this, we were told about the <strong>entities, relation, attributes and most important ER-Diagram</strong> (Here ER Stands for <strong>Entity Relationship</strong>). To be honest it is not my first time hearing all this but I never bothered about drawing ER-Diagram before.</p>
+<!-- raw HTML omitted -->
+<p>Then we were taught about the ER-Diagram in more depth. Few Diagrams we came to know about are as follows:</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://static3.creately.com/blog/wp-content/uploads/2012/03/ER-Diagram-Elements.jpeg"
+        data-srcset="http://static3.creately.com/blog/wp-content/uploads/2012/03/ER-Diagram-Elements.jpeg, http://static3.creately.com/blog/wp-content/uploads/2012/03/ER-Diagram-Elements.jpeg 1.5x, http://static3.creately.com/blog/wp-content/uploads/2012/03/ER-Diagram-Elements.jpeg 2x"
+        data-sizes="auto"
+        alt="http://static3.creately.com/blog/wp-content/uploads/2012/03/ER-Diagram-Elements.jpeg"
+        title="http://static3.creately.com/blog/wp-content/uploads/2012/03/ER-Diagram-Elements.jpeg" /></p>
+<!-- raw HTML omitted -->
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://image.slidesharecdn.com/topic-0304-131211014219-phpapp01/95/topic-03-04-entity-relationship-modelling-32-638.jpg?cb=1415320739"
+        data-srcset="https://image.slidesharecdn.com/topic-0304-131211014219-phpapp01/95/topic-03-04-entity-relationship-modelling-32-638.jpg?cb=1415320739, https://image.slidesharecdn.com/topic-0304-131211014219-phpapp01/95/topic-03-04-entity-relationship-modelling-32-638.jpg?cb=1415320739 1.5x, https://image.slidesharecdn.com/topic-0304-131211014219-phpapp01/95/topic-03-04-entity-relationship-modelling-32-638.jpg?cb=1415320739 2x"
+        data-sizes="auto"
+        alt="https://image.slidesharecdn.com/topic-0304-131211014219-phpapp01/95/topic-03-04-entity-relationship-modelling-32-638.jpg?cb=1415320739"
+        title="https://image.slidesharecdn.com/topic-0304-131211014219-phpapp01/95/topic-03-04-entity-relationship-modelling-32-638.jpg?cb=1415320739" /></p>
+<h6 id="note-these-pictures-are-taken-from-the-internet-yep-i-did-a-little-bit-of-research">NOTE: These pictures are taken from the internet. Yep I did a little bit of research.</h6>
+<!-- raw HTML omitted -->
+<p>Rahul sir have also given us some definitions on some of the basic terminologies. This includes <strong>Entity, Relationship, Keys, Super keys, Candidate keys</strong>.</p>
+<!-- raw HTML omitted -->
+<p>Now we were shown Relationship in ER-Diagram, which somehow ends our Day-1 Training. We were given a problem of making a &lsquo;<strong>Employee Database</strong>&rsquo;.</p>
+<!-- raw HTML omitted -->
+<p>Finally, as I have almost finished writing this blog and believe me, I am a beginner blogger. So writing up this blog took me a good amount of time. I ended up not doing any real stuff at home today. Still, I think I can make it up on tomorrow&rsquo;s class. I will also try to wrap up tomorrow&rsquo;s lecture in another upcoming blog post.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2017-07-18</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/oracle-dbms-day-1/" data-title="[Training] DBMS with Oracle Day 1" data-via="debakar_roy" data-hashtags="Oracle,DBMS,Database,SQL,Tutorial,Day 1"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/oracle-dbms-day-1/" data-hashtag="Oracle"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/oracle-dbms-day-1/" data-title="[Training] DBMS with Oracle Day 1"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/oracle-dbms-day-1/" data-title="[Training] DBMS with Oracle Day 1"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/oracle-dbms-day-1/" data-title="[Training] DBMS with Oracle Day 1"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/oracle/">Oracle</a>,&nbsp;<a href="/tags/dbms/">DBMS</a>,&nbsp;<a href="/tags/database/">Database</a>,&nbsp;<a href="/tags/sql/">SQL</a>,&nbsp;<a href="/tags/tutorial/">Tutorial</a>,&nbsp;<a href="/tags/day-1/">Day 1</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/how-to-create-reddit-to-twitter-bot/" class="prev" rel="prev" title="How to build a reddit to twitter bot"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>How to build a reddit to twitter bot</a>
+            <a href="/posts/oracle-dbms-day-3/" class="next" rel="next" title="[Training] DBMS with Oracle Day 3">[Training] DBMS with Oracle Day 3<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/css/lightgallery-bundle.min.css"><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/lightgallery.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/thumbnail/lg-thumbnail.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lightgallery@2.5.0/plugins/zoom/lg-zoom.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"lightgallery":true};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

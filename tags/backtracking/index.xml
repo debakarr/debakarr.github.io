@@ -1,0 +1,55 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Backtracking - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/backtracking/</link>
+        <description>Backtracking - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 08 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/backtracking/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 78. Subsets</title>
+    <link>http://debakarr.github.io/posts/subsets/</link>
+    <pubDate>Thu, 08 Aug 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/subsets/</guid>
+    <description><![CDATA[Subsets Link to original Problem on LeetCode
+Given a set of distinct integers, nums, return all possible subsets (the power set).
+Note: The solution set must not contain duplicate subsets.
+Example:
+Input: nums = [1,2,3]
+Output:
+[ [3], [1], [2], [1,2,3], [1,3], [2,3], [1,2], [] ]
+Company: Amazon, Microsoft
+Solution (Using Iteration):
+Time Complexity: Space Complexity:
+class Solution(object): def subsets(self, nums): &#34;&#34;&#34; :type nums: List[int] :rtype: List[List[int]] &#34;&#34;&#34; # Let&#39;s take an example, say we have nums = [1, 2, 3] # Initially we have an empty subset in the result i.]]></description>
+</item>
+<item>
+    <title>[LeetCode] 22. Generate Parentheses</title>
+    <link>http://debakarr.github.io/posts/generate-parentheses/</link>
+    <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/generate-parentheses/</guid>
+    <description><![CDATA[Generate Parentheses Link to original Problem on LeetCode
+Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
+For example, given n = 3, a solution set is:
+[ &ldquo;((()))&rdquo;, &ldquo;(()())&rdquo;, &ldquo;(())()&rdquo;, &ldquo;()(())&rdquo;, &ldquo;()()()&rdquo; ]
+Company: Microsoft, Facebook
+Solution (Backtracking and Recursion):
+Time Complexity: Space Complexity:
+class Solution(object): def generateParenthesis(self, n): &#34;&#34;&#34; :type n: int :rtype: List[str] &#34;&#34;&#34; result = [] self.generateParenthesisHelper(n, n, &#34;&#34;, result) return result def generateParenthesisHelper(self, left, right, path, result): if left &gt; right: return if left == 0 and right == 0: result.]]></description>
+</item>
+<item>
+    <title>[LeetCode] 46. Permutations</title>
+    <link>http://debakarr.github.io/posts/permutations/</link>
+    <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/permutations/</guid>
+    <description><![CDATA[Permutations Link to original Problem on LeetCode
+Given a collection of distinct integers, return all possible permutations.
+Example:
+Input: [1,2,3] Output: [ [1,2,3], [1,3,2], [2,1,3], [2,3,1], [3,1,2], [3,2,1] ]
+Company: Microsoft, Adobe, Google
+Solution (Backtracking and Recursion):
+Time Complexity: Space Complexity:
+class Solution(object): def permute(self, nums): &#34;&#34;&#34; :type nums: List[int] :rtype: List[List[int]] &#34;&#34;&#34; result = [] self.permuteHelper(nums, [], result) return result def permuteHelper(self, nums, path, result): if not nums: result.append(path) for i in range(len(nums)): self.]]></description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,130 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Tutorial - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/tutorial/</link>
+        <description>Tutorial - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 347. Top K Frequent Elements</title>
+    <link>http://debakarr.github.io/posts/top-k-frequent-elements/</link>
+    <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/top-k-frequent-elements/</guid>
+    <description><![CDATA[Top K Frequent Elements Link to original Problem on LeetCode
+Given a non-empty array of integers, return the k most frequent elements.
+Example 1:
+Input: nums = [1,1,1,2,2,3], k = 2 Output: [1,2]
+Example 2:
+Input: nums = [1], k = 1 Output: [1]
+Note:
+You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your algorithm&rsquo;s time complexity must be better than O(n log n), where n is the array&rsquo;s size.]]></description>
+</item>
+<item>
+    <title>TensorFlow Basic</title>
+    <link>http://debakarr.github.io/posts/tensorflow-basics/</link>
+    <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/tensorflow-basics/</guid>
+    <description><![CDATA[TensorFlow Basic I made this post for revision purpose. This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great).]]></description>
+</item>
+<item>
+    <title>Building a Restful API using JAX-RS</title>
+    <link>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</link>
+    <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</guid>
+    <description><![CDATA[1. What are the tools needed?
+2. Basic setup
+3. Setting up Tomcat Server and Postman
+4. Structure
+5. Book Model
+6. Book Database
+7. Book Services
+8. Book Resource
+9. GET
+10. PUSH
+11. PUT
+12. DELETE
+13. Query
+-Get Book(s) by title
+-Get Book(s) by subject ID
+Another thing we are going to use is called Postman. Postman is an HTTP Request composer. It helps you test your API in a very efficient way.]]></description>
+</item>
+<item>
+    <title>Understanding the very first few lines of basic C&#43;&#43; code</title>
+    <link>http://debakarr.github.io/posts/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</link>
+    <pubDate>Sun, 20 Aug 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</guid>
+    <description><![CDATA[So most of the students in Computer Science Department of a B.Tech college have written code in C++ at some point in their life.
+Let me begin with a small code snippet.
+#include&lt;iostream&gt; using namespace std; namespace abc { int a = 100; } int a = 200; int main() { int a = 300; cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl; cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl; cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl; return (0); } Running the code produce this output:]]></description>
+</item>
+<item>
+    <title>[OOP (CS 594D)] Assignment 1</title>
+    <link>http://debakarr.github.io/posts/java-assignment-1/</link>
+    <pubDate>Sun, 06 Aug 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/java-assignment-1/</guid>
+    <description><![CDATA[Assignment 1 Write a Java program to print &ldquo;Hello World&rdquo;. Source code:
+public class HelloWorldnormal {public static void main(String[] args) {System.out.println(&#34;Hello World&#34;);}} Output:
+$ javac HelloWorldnormal.java$ java HelloWorldnormalHello World Write a Java program to.pront &ldquo;Hello World&rdquo;, where &lsquo;World&rsquo; will be taken from command line argument. Source code:
+public class HelloWorldCLA {public static void main(String[] args) {System.out.println(&#34;Hello &#34; + args[0]);}} Output:]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 5</title>
+    <link>http://debakarr.github.io/posts/oracle-dbms-day-5/</link>
+    <pubDate>Thu, 27 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle-dbms-day-5/</guid>
+    <description><![CDATA[This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at PL/SQL Cursor, Procedure, Function, and Trigger. This will complete the very basics of PL/SQL.
+So what is cursor?
+Cursor is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use SELECT or any DML (INSERT, DELETE, UPDATE or MERGE) then cursor holds the rows (one or more) returned by a SQL statement.]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 4</title>
+    <link>http://debakarr.github.io/posts/oracle-dbms-day-4/</link>
+    <pubDate>Mon, 24 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle-dbms-day-4/</guid>
+    <description><![CDATA[If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically DBMS with Oracle.
+If you haven&rsquo;t yet read my previous post then feel free to go to this link for part 1 and this link for part 2.
+Now today we are going to look at something called PL/SQL and also we will do some exercise to get a grip of PL/SQL.]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 3</title>
+    <link>http://debakarr.github.io/posts/oracle-dbms-day-3/</link>
+    <pubDate>Thu, 20 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle-dbms-day-3/</guid>
+    <description><![CDATA[So in this blog basically we are going to cover up the things done by me on the second day of my Oracle DBMS Training. Although I am not going to use the same schema I used during the 2nd day of my training.
+So without further delay, lets dig in.
+First thing first. What is a schema?
+This is something I should have mentioned in the first blog. In general, a schema is a set of tables, sproc(stored procedure) and other objects that make up a whole database.]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 1</title>
+    <link>http://debakarr.github.io/posts/oracle-dbms-day-1/</link>
+    <pubDate>Tue, 18 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle-dbms-day-1/</guid>
+    <description><![CDATA[In this post, I am going to wrap up all the things I learned during my first class on &lsquo;DBMS with Oracle&rsquo;. The training lecture is given by &lsquo;Rahul Sohal&rsquo;, CTO &amp; Resource Management Lead of iandwe.in.
+So first of all what is database?
+A database is a collection of information kept an organized way, for the ease of retrieval.
+Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture.]]></description>
+</item>
+<item>
+    <title>How to build a reddit to twitter bot</title>
+    <link>http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/</link>
+    <pubDate>Mon, 19 Jun 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/</guid>
+    <description><![CDATA[First of all what will be this bot doing actually?
+Ans. This bot will be tweeting any new post on a particular subreddit to your twitter bot account. In my case it will be tweeting any new tweets from /r/anime
+Can I have a look on the finished product?
+Ans. Here you go
+So what do I actually need to create the bot?
+Ans.
+Some Basic Programming knowlegde and how to run terminal.]]></description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,25 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Moore&#39;s Voting Algorithm - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/moores-voting-algorithm/</link>
+        <description>Moore&#39;s Voting Algorithm - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 27 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/moores-voting-algorithm/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 169. Majority Element</title>
+    <link>http://debakarr.github.io/posts/majority-element/</link>
+    <pubDate>Tue, 27 Aug 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/majority-element/</guid>
+    <description><![CDATA[Majority Element Link to original Problem on LeetCode
+Given an array of size n, find the majority element. The majority element is the element that appears more than ⌊ n/2 ⌋ times.
+You may assume that the array is non-empty and the majority element always exist in the array.
+Example 1:
+Input: [3,2,3]
+Output: 3
+Example 2:
+Input: [2,2,1,1,1,2,2]
+Output: 2
+Company: Yahoo, Google, Amazon, Microsoft
+Solution (Using Hashing - 2 pass):]]></description>
+</item>
+</channel>
+</rss>

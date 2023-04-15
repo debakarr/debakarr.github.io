@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[Training] DBMS with Oracle Day 5 - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="[Training] DBMS with Oracle Day 5" />
+<meta property="og:description" content="This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at PL/SQL Cursor, Procedure, Function, and Trigger. This will complete the very basics of PL/SQL.
+So what is cursor?
+Cursor is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use SELECT or any DML (INSERT, DELETE, UPDATE or MERGE) then cursor holds the rows (one or more) returned by a SQL statement." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/oracle-dbms-day-5/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2017-07-27T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-07-27T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Training] DBMS with Oracle Day 5"/>
+<meta name="twitter:description" content="This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at PL/SQL Cursor, Procedure, Function, and Trigger. This will complete the very basics of PL/SQL.
+So what is cursor?
+Cursor is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use SELECT or any DML (INSERT, DELETE, UPDATE or MERGE) then cursor holds the rows (one or more) returned by a SQL statement."/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/oracle-dbms-day-5/" /><link rel="prev" href="http://debakarr.github.io/posts/oracle-dbms-day-4/" /><link rel="next" href="http://debakarr.github.io/posts/java-assignment-1/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[Training] DBMS with Oracle Day 5",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/oracle-dbms-day-5\/"
+        },"genre": "posts","keywords": "Oracle, DBMS, Database, SQL, Tutorial, Day 5","wordcount":  908 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/oracle-dbms-day-5\/","datePublished": "2017-07-27T00:00:00+00:00","dateModified": "2017-07-27T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[Training] DBMS with Oracle Day 5</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/database-management/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Database Management</a>&nbsp;<a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2017-07-27">2017-07-27</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;908 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/7l7BvWT.png"
+        data-srcset="http://i.imgur.com/7l7BvWT.png, http://i.imgur.com/7l7BvWT.png 1.5x, http://i.imgur.com/7l7BvWT.png 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/7l7BvWT.png"
+        title="http://i.imgur.com/7l7BvWT.png" /></p>
+<!-- raw HTML omitted -->
+<p>This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at <strong>PL/SQL</strong> <strong><code>Cursor, Procedure, Function,  and Trigger</code></strong>. This will complete the very basics of PL/SQL.</p>
+<!-- raw HTML omitted -->
+<p><strong>So what is cursor?</strong></p>
+<p><strong><code>Cursor</code></strong> is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use <strong><code>SELECT</code></strong> or any <strong><code>DML</code></strong> (<strong><code>INSERT, DELETE, UPDATE or MERGE</code></strong>) then cursor holds the rows (one or more) returned by a SQL statement.</p>
+<!-- raw HTML omitted -->
+<p>There are two types of cursors:</p>
+<ul>
+<li>
+<p><strong>Implicit cursors</strong></p>
+</li>
+<li>
+<p><strong>Explicit cursors</strong></p>
+</li>
+</ul>
+<!-- raw HTML omitted -->
+<p><strong>Implicit cursors</strong>: It is automatically created by the Oracle server every time an SQL DML statement is executed and the user cannot control the behavior of these cursors.</p>
+<p>Example:</p>
+<pre tabindex="0"><code>
+SET SERVEROUTPUT ON;
+
+BEGIN
+
+UPDATE PRODUCT
+
+SET P_NAME=&#39;WAIWAI&#39; 
+
+WHERE P_NAME LIKE (&#39;FULL%&#39;);
+
+DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT);
+
+END;
+</code></pre><p>Here the output will be number of rows affected by the <strong><code>UPDATE</code></strong> (DML) statement.</p>
+<!-- raw HTML omitted -->
+<p><strong>Explicit cursors</strong>: Explicit cursors, unlike implicit cursor, are user defined cursors. The user has to create these cursors for any statement which basically returns one or more row of data. Here the user has full control of the cursor. It is worth noting that an explicit cursor has to be named in the declaration section of the PL/SQL block.</p>
+<p>Here&rsquo;s an example:</p>
+<pre tabindex="0"><code>
+SET SERVEROUTPUT ON;
+
+Declare
+
+CURSOR CURS_product IS
+
+SELECT P_ID,P_NAME, P_QTY FROM PRODUCT;
+
+V_RECORD CURS_product%ROWTYPE;
+
+BEGIN
+
+    OPEN CURS_product;
+
+    LOOP
+
+        FETCH CURS_product INTO V_RECORD;
+
+        EXIT WHEN CURS_product%NOTFOUND;
+
+        DBMS_OUTPUT.PUT_LINE(&#39;PRODUCT NAME: &#39; || V_RECORD.P_NAME || chr(9) || &#39;, PRODUCT ID: &#39; || V_RECORD.P_ID || &#39;, PRODUCT QUANTITY: &#39; || V_RECORD.P_QTY);
+
+    END LOOP;
+
+    CLOSE CURS_product;
+
+END;
+</code></pre><!-- raw HTML omitted -->
+<p>So now you know what is a cursor and how to use implicit and explicit cursor. I would recommend you to look to the over the internet for more information on cursor.</p>
+<!-- raw HTML omitted -->
+<p><strong>Now lets talk about procedure and function</strong></p>
+<p>Just like other languages here in <strong>PL/SQL</strong> too a <strong><code>function</code></strong> is a set of statements which finally return something to the caller. Similarly a <strong><code>procedure</code></strong> too is a set of statement but it does not return anything. These two can save us time as we don&rsquo;t have to rewrite the same long code again and again.</p>
+<!-- raw HTML omitted -->
+<p>Let me provide you the syntax for both first.</p>
+<pre tabindex="0"><code>
+--Syntax for function
+
+
+
+CREATE [OR REPLACE] FUNCTION function_name
+
+(Parameter 1, Parameter 2…)
+
+RETURN datatype
+
+IS
+
+Declare variable, constant etc. here. 
+
+BEGIN
+
+Executable Statements
+
+Return (Return Value);
+
+END;
+
+ /
+
+ --Syntax for procedure
+
+ 
+
+CREATE [OR REPLACE] PROCEDURE procedure_name
+
+    [ (parameter [,parameter]) ]
+
+IS
+
+    [declaration_section]
+
+BEGIN
+
+    executable_section
+
+[EXCEPTION
+
+    exception_section]
+
+END [procedure_name];
+</code></pre><!-- raw HTML omitted -->
+<p>Here&rsquo;s an example of update product quantity in <strong><code>product</code></strong> tableeverytime someone purchased something i.e. data/row is added to the <strong><code>sales</code></strong> table:</p>
+<pre tabindex="0"><code>
+create or replace PROCEDURE PROD_PRODUCTS
+
+(PRO_ID NUMBER, PRO_QTY NUMBER , CUS_ID NUMBER, EMP_ID NUMBER, PRO_DATE DATE)
+
+   AS
+
+BEGIN 
+
+INSERT INTO SALES(C_ID, E_ID, P_ID, PUR_QTY, PUR_DATE)
+
+VALUES(CUS_ID , EMP_ID, PRO_ID, PRO_QTY, PRO_DATE);
+
+UPDATE PRODUCT SET P_QTY = 
+
+((SELECT P_QTY FROM PRODUCT WHERE P_ID = PRO_ID) - PRO_QTY)WHERE P_ID = PRO_ID;
+
+END;
+
+/
+
+EXEC PROD_PRODUCTS ( 10001, 2, 10000001, 100001, TO_DATE(&#39;18-JUL-2017&#39;, &#39;DD-MON-YYYY&#39;))
+</code></pre><!-- raw HTML omitted -->
+<p>Similarly we can have a function to return number of bills count in a particular day from <strong><code>sales</code></strong> table.</p>
+<pre tabindex="0"><code>
+create FUNCTION FUNC_BILLS
+
+(P_DATE DATE) RETURN NUMBER
+
+AS
+
+V_BILLCOUNT NUMBER;
+
+BEGIN
+
+SELECT COUNT(*) INTO V_BILLCOUNT
+
+FROM SALES WHERE PUR_DATE = P_DATE;
+
+RETURN V_BILLCOUNT;
+
+END;
+
+/
+
+SET SERVEROUTPUT ON; 
+
+DECLARE 
+
+V_DATE DATE := TO_DATE(&#39;&amp;E_DATE&#39;, &#39;DD-MON-YYYY&#39;);
+
+V_NUM NUMBER;
+
+BEGIN
+
+V_NUM := FUNC_BILLS(V_DATE);
+
+DBMS_OUTPUT.PUT_LINE(V_NUM);
+
+END;
+</code></pre><!-- raw HTML omitted -->
+<p>So now we know about cursor, procedure, and function. So that left us with our last topic, trigger.</p>
+<!-- raw HTML omitted -->
+<p><strong>What are trigger?</strong>'</p>
+<p>Triggers are named PL/SQL blocks which automatically execute or fire whenever some event occur. In sence of PL/SQL lets say we want to call a function whenever a data is insert in sales table then we can use trigger for that. I basically use trigger to share the YouTube video I like to Facebook which save me time to click on share button and do the next necessary steps.</p>
+<p>The basic syntax for a trigger is:</p>
+<pre tabindex="0"><code>
+CREATE [OR REPLACE] TRIGGER Ttrigger_name
+
+{BEFORE|AFTER} Triggering_event ON table_name
+
+[FOR EACH ROW]
+
+[FOLLOWS another_trigger_name]
+
+[ENABLE/DISABLE]
+
+[WHEN condition]
+
+DECLARE
+
+declaration statements
+
+BEGIN
+
+executable statements
+
+EXCEPTION
+
+exception-handling statements
+
+END;
+</code></pre><p>Here&rsquo;s an example of a trigger which notifies you whenever you insert any new row to product table.</p>
+<pre tabindex="0"><code>
+ CREATE OR REPLACE TRIGGER TRIG_PRODUCT
+
+AFTER INSERT ON PRODUCT
+
+FOR EACH ROW
+
+ENABLE
+
+DECLARE
+
+BEGIN
+
+DBMS_OUTPUT.PUT_LINE(&#39;You Just Inserted a new row in Product &#39;);
+
+END;
+</code></pre><p>There are many ways to use trigger. This is just a very basic example I have provided. Trigger can also be use to assign ID to a primary key  which works as an AUTO_INCREMENT alternative for mySQL (We have to use sequence as well as trigger to do so). Basically I have just given you a gist of what we can do with PL/SQL and there is far more thing to learn.</p>
+<!-- raw HTML omitted -->
+<p>So this is the end of my blog post on DBMS with Oracle. Our training is about 5 days and to be honest we really learned a lot from this training. Oracle has a vast amount query that is still unknown to me. Though it is very important to know the basics of Oracle database as it is used by many Big companies out there as their DBMS. So this is all for today. I will keep on bringing blog like this, to tell you all the basic in shortest way possible. Thank you for reading and see you next time.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2017-07-27</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/oracle-dbms-day-5/" data-title="[Training] DBMS with Oracle Day 5" data-via="debakar_roy" data-hashtags="Oracle,DBMS,Database,SQL,Tutorial,Day 5"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/oracle-dbms-day-5/" data-hashtag="Oracle"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/oracle-dbms-day-5/" data-title="[Training] DBMS with Oracle Day 5"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/oracle-dbms-day-5/" data-title="[Training] DBMS with Oracle Day 5"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/oracle-dbms-day-5/" data-title="[Training] DBMS with Oracle Day 5"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/oracle/">Oracle</a>,&nbsp;<a href="/tags/dbms/">DBMS</a>,&nbsp;<a href="/tags/database/">Database</a>,&nbsp;<a href="/tags/sql/">SQL</a>,&nbsp;<a href="/tags/tutorial/">Tutorial</a>,&nbsp;<a href="/tags/day-5/">Day 5</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/oracle-dbms-day-4/" class="prev" rel="prev" title="[Training] DBMS with Oracle Day 4"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[Training] DBMS with Oracle Day 4</a>
+            <a href="/posts/java-assignment-1/" class="next" rel="next" title="[OOP (CS 594D)] Assignment 1">[OOP (CS 594D)] Assignment 1<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

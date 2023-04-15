@@ -1,0 +1,22 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Substring - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/substring/</link>
+        <description>Substring - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 14 May 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/substring/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 3. Longest Substring Without Repeating Characters</title>
+    <link>http://debakarr.github.io/posts/longest-substring-without-repeating-characters/</link>
+    <pubDate>Tue, 14 May 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/longest-substring-without-repeating-characters/</guid>
+    <description><![CDATA[Longest Substring Without Repeating Characters Link to original Problem on LeetCode
+Given a string, find the length of the longest substring without repeating characters.
+Example 1:
+Input: &ldquo;abcabcbb&rdquo; Output: 3 Explanation: The answer is &ldquo;abc&rdquo;, with the length of 3.
+Example 2:
+Input: &ldquo;bbbbb&rdquo; Output: 1 Explanation: The answer is &ldquo;b&rdquo;, with the length of 1.
+Example 3:
+Input: &ldquo;pwwkew&rdquo; Output: 3 Explanation: The answer is &ldquo;wke&rdquo;, with the length of 3.]]></description>
+</item>
+</channel>
+</rss>

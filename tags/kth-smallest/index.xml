@@ -1,0 +1,24 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Kth Smallest - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/kth-smallest/</link>
+        <description>Kth Smallest - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/kth-smallest/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 230. Kth Smallest Element in a BST</title>
+    <link>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</link>
+    <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</guid>
+    <description><![CDATA[Kth Smallest Element in a BST Link to original Problem on LeetCode
+Given a binary search tree, write a function kthSmallest to find the kth smallest element in it.
+Note: You may assume k is always valid, 1 ≤ k ≤ BST&rsquo;s total elements.
+Example 1:
+Input: root = [3,1,4,null,2], k = 1
+Output: 1
+Example 2:
+Input: root = [5,3,6,2,4,null,null,1], k = 3
+Output: 3
+Follow up: What if the BST is modified (insert/delete operations) often and you need to find the kth smallest frequently?]]></description>
+</item>
+</channel>
+</rss>

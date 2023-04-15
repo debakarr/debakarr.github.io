@@ -1,0 +1,15 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Top Interview Questions - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/top-interview-questions/</link>
+        <description>Top Interview Questions - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/top-interview-questions/" rel="self" type="application/rss+xml" /><item>
+    <title>Top Programming Questions [Updated]</title>
+    <link>http://debakarr.github.io/posts/top-interview-questions/</link>
+    <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/top-interview-questions/</guid>
+    <description><![CDATA[Top Programming Questions [Updated] ]]></description>
+</item>
+</channel>
+</rss>

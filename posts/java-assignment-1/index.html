@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[OOP (CS 594D)] Assignment 1 - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="[OOP (CS 594D)] Assignment 1" />
+<meta property="og:description" content="Assignment 1 Write a Java program to print &ldquo;Hello World&rdquo;. Source code:
+public class HelloWorldnormal {public static void main(String[] args) {System.out.println(&#34;Hello World&#34;);}} Output:
+$ javac HelloWorldnormal.java$ java HelloWorldnormalHello World Write a Java program to.pront &ldquo;Hello World&rdquo;, where &lsquo;World&rsquo; will be taken from command line argument. Source code:
+public class HelloWorldCLA {public static void main(String[] args) {System.out.println(&#34;Hello &#34; &#43; args[0]);}} Output:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/java-assignment-1/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2017-08-06T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-08-06T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[OOP (CS 594D)] Assignment 1"/>
+<meta name="twitter:description" content="Assignment 1 Write a Java program to print &ldquo;Hello World&rdquo;. Source code:
+public class HelloWorldnormal {public static void main(String[] args) {System.out.println(&#34;Hello World&#34;);}} Output:
+$ javac HelloWorldnormal.java$ java HelloWorldnormalHello World Write a Java program to.pront &ldquo;Hello World&rdquo;, where &lsquo;World&rsquo; will be taken from command line argument. Source code:
+public class HelloWorldCLA {public static void main(String[] args) {System.out.println(&#34;Hello &#34; &#43; args[0]);}} Output:"/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/java-assignment-1/" /><link rel="prev" href="http://debakarr.github.io/posts/oracle-dbms-day-5/" /><link rel="next" href="http://debakarr.github.io/posts/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[OOP (CS 594D)] Assignment 1",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/java-assignment-1\/"
+        },"genre": "posts","keywords": "Java, Assignment, Programming, Tutorial","wordcount":  670 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/java-assignment-1\/","datePublished": "2017-08-06T00:00:00+00:00","dateModified": "2017-08-06T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[OOP (CS 594D)] Assignment 1</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a>&nbsp;<a href="/categories/java/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Java</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2017-08-06">2017-08-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;670 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#assignment-1">Assignment 1</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/HK073Al.jpg"
+        data-srcset="http://i.imgur.com/HK073Al.jpg, http://i.imgur.com/HK073Al.jpg 1.5x, http://i.imgur.com/HK073Al.jpg 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/HK073Al.jpg"
+        title="http://i.imgur.com/HK073Al.jpg" /></p>
+<!-- raw HTML omitted -->
+<h2 id="assignment-1">Assignment 1</h2>
+<ul>
+<li><strong>Write a Java program to print &ldquo;Hello World&rdquo;.</strong></li>
+</ul>
+<p><em>Source code:</em></p>
+<pre tabindex="0"><code>public class HelloWorldnormal {
+
+	public static void main(String[] args) {
+		System.out.println(&#34;Hello World&#34;);
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>
+$ javac HelloWorldnormal.java
+
+$ java HelloWorldnormal
+Hello World
+</code></pre><!-- raw HTML omitted -->
+<ul>
+<li><strong>Write a Java program to.pront &ldquo;Hello World&rdquo;, where &lsquo;World&rsquo; will be taken from command line argument.</strong></li>
+</ul>
+<p><em>Source code:</em></p>
+<pre tabindex="0"><code>public class HelloWorldCLA {
+
+	public static void main(String[] args) {
+		System.out.println(&#34;Hello &#34; + args[0]);
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac HelloWorldCLA.java
+
+$ java HelloWorldCLA World
+Hello World
+</code></pre><!-- raw HTML omitted -->
+<p><em>Source code:</em></p>
+<pre tabindex="0"><code>public class SumOf2NumbersCLA {
+
+	public static void main(String[] args) {
+		System.out.println(&#34;Sum of &#34; + args[0] + &#34; and &#34; + args[1] + &#34; is &#34; + (Integer.parseInt(args[0]) + Integer.parseInt(args[1])));
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac SumOf2NumbersCLA.java
+
+$ java SumOf2NumbersCLA 7 8
+Sum of 7 and 8 is 15
+</code></pre><!-- raw HTML omitted -->
+<pre tabindex="0"><code>0 HELLO NAME1
+1 HELLO NAME2
+2 HELLO NAME3
+</code></pre><p><em>Source code:</em></p>
+<pre tabindex="0"><code>public class Greeting {
+
+	public static void main(String[] args) {
+		for (int i = 0; i &lt; args.length; i++) {
+			System.out.println(i + &#34; HELLO &#34; + args[i]);
+		}
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac Greeting.java
+
+$ java Greeting Debakar Baka Dr_NULL
+0 HELLO Debakar
+1 HELLO Baka
+2 HELLO Dr_NULL
+</code></pre><!-- raw HTML omitted -->
+<p><em>Source code:</em></p>
+<pre tabindex="0"><code>import java.util.Scanner;
+
+public class Swap2Numbers {
+
+	public static void main(String[] args) {
+		Scanner input = new Scanner(System.in);
+
+		System.out.print(&#34;\nEnter two numbers: &#34;);
+		int a = input.nextInt(), b = input.nextInt();
+		input.close();
+
+		System.out.println(&#34;\nBefore Swap: a = &#34; + a + &#34;, b = &#34; + b);
+		a = a + b;
+		b = a - b;
+		a = a - b;
+		System.out.println(&#34;\nAfter Swap: a = &#34; + a + &#34;, b = &#34; + b);
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac Swap2Numbers.java
+
+$ java Swap2Numbers
+
+Enter two numbers: 67 54
+
+Before Swap: a = 67, b = 54
+
+After Swap: a = 54, b = 67
+</code></pre><!-- raw HTML omitted -->
+<pre tabindex="0"><code>1 2 3 4 5
+2 3 4 5
+3 4 5
+4 5
+5
+</code></pre><p><em>Source code:</em></p>
+<pre tabindex="0"><code>import java.util.Scanner;
+
+public class Pattern1 {
+
+	public static void main(String[] args) {
+		Scanner input = new Scanner(System.in);
+
+		System.out.print(&#34;\nEnter number of line for the pattern: &#34;);
+		int n = input.nextInt();
+		input.close();
+
+		for (int i = 1; i &lt;= n; i++) {
+			for (int j = i; j &lt;= n; j++) {
+				System.out.print(j + &#34; &#34;);
+			}
+			System.out.println();
+		}
+
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac Pattern1.java
+
+$ java Pattern1
+
+Enter number of line for the pattern: 5
+1 2 3 4 5
+2 3 4 5
+3 4 5
+4 5
+5
+</code></pre><!-- raw HTML omitted -->
+<pre tabindex="0"><code>if marks &lt;= 40 - Fail
+41 to 50 - Average
+51 to 60 - Fair
+61 to 70 - Good
+71 to 80 - Very good
+81 to 90 - Excellent
+91 to 100 - Outstanding
+</code></pre><p><em>Source code:</em></p>
+<pre tabindex="0"><code>import java.util.Scanner;
+
+public class RemarkCard {
+
+	public static void main(String[] args) {
+		Scanner input = new Scanner(System.in);
+
+		System.out.print(&#34;\nEnter the marks of the students: &#34;);
+		int marks = input.nextInt();
+		input.close();
+
+		if (marks &lt;= 40)
+			System.out.println(&#34;Fail.&#34;);
+		else if (marks &gt;= 41 &amp;&amp; marks &lt;= 50)
+			System.out.println(&#34;Average.&#34;);
+		else if (marks &gt;= 51 &amp;&amp; marks &lt;= 60)
+			System.out.println(&#34;Fair.&#34;);
+		else if (marks &gt;= 61 &amp;&amp; marks &lt;= 70)
+			System.out.println(&#34;Good.&#34;);
+		else if (marks &gt;= 71 &amp;&amp; marks &lt;= 80)
+			System.out.println(&#34;Very Good.&#34;);
+		else if (marks &gt;= 81 &amp;&amp; marks &lt;= 90)
+			System.out.println(&#34;Excellent.&#34;);
+		else
+			System.out.println(&#34;Outstanding.&#34;);
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac RemarkCard.java
+
+$ java RemarkCard
+
+Enter the marks of the students: 95
+Outstanding.
+</code></pre><!-- raw HTML omitted -->
+<ul>
+<li><strong>Write a Java program to print this kind of pattern.</strong></li>
+</ul>
+<pre tabindex="0"><code>    *
+   * *
+  * * *
+ * * * *
+* * * * *
+</code></pre><p><em>Source code:</em></p>
+<pre tabindex="0"><code>import java.util.Scanner;
+
+public class Pattern2 {
+
+	public static void main(String[] args) {
+		Scanner input = new Scanner(System.in);
+
+		System.out.println(&#34;\nEnter number of line for the pattern: &#34;);
+		int n = input.nextInt();
+		input.close();
+
+		for (int i = 0; i &lt; n; i++) {
+			for (int j = i; j &lt; n - 1; j++) {
+				System.out.print(&#34; &#34;);
+			}
+			for (int j = 0; j &lt;= i; j++) {
+				System.out.print(&#34;* &#34;);
+			}
+			System.out.println();
+		}
+	}
+}
+</code></pre><p><em>Output:</em></p>
+<pre tabindex="0"><code>$ javac Pattern2.java
+
+$ java Pattern2
+
+Enter number of line for the pattern: 5
+    *
+   * *
+  * * *
+ * * * *
+* * * * *
+</code></pre></div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2017-08-06</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/java-assignment-1/" data-title="[OOP (CS 594D)] Assignment 1" data-via="debakar_roy" data-hashtags="Java,Assignment,Programming,Tutorial"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/java-assignment-1/" data-hashtag="Java"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/java-assignment-1/" data-title="[OOP (CS 594D)] Assignment 1"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/java-assignment-1/" data-title="[OOP (CS 594D)] Assignment 1"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/java-assignment-1/" data-title="[OOP (CS 594D)] Assignment 1"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/java/">Java</a>,&nbsp;<a href="/tags/assignment/">Assignment</a>,&nbsp;<a href="/tags/programming/">Programming</a>,&nbsp;<a href="/tags/tutorial/">Tutorial</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/oracle-dbms-day-5/" class="prev" rel="prev" title="[Training] DBMS with Oracle Day 5"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[Training] DBMS with Oracle Day 5</a>
+            <a href="/posts/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" class="next" rel="next" title="Understanding the very first few lines of basic C&#43;&#43; code">Understanding the very first few lines of basic C++ code<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

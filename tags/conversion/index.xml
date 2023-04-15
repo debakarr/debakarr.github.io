@@ -1,0 +1,31 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Conversion - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/conversion/</link>
+        <description>Conversion - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/conversion/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 108. Convert Sorted Array to Binary Search Tree</title>
+    <link>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</link>
+    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</guid>
+    <description><![CDATA[Convert Sorted Array to Binary Search Tree Link to original Problem on LeetCode
+Given an array where elements are sorted in ascending order, convert it to a height balanced BST.
+For this problem, a height-balanced binary tree is defined as a binary tree in which the depth of the two subtrees of every node never differ by more than 1.
+Example:
+Given the sorted array: [-10,-3,0,5,9],
+One possible answer is: [0,-3,9,-10,null,5], which represents the following height balanced BST:]]></description>
+</item>
+<item>
+    <title>[LeetCode] 13. Roman to Integer</title>
+    <link>http://debakarr.github.io/posts/roman-to-integer/</link>
+    <pubDate>Wed, 28 Aug 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/roman-to-integer/</guid>
+    <description><![CDATA[Roman to Integer Link to original Problem on LeetCode
+Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.
+Symbol Value I 1 V 5 X 10 L 50 C 100 D 500 M 1000
+For example, two is written as II in Roman numeral, just two one&rsquo;s added together. Twelve is written as, XII, which is simply X + II. The number twenty seven is written as XXVIIi, which is XX + V + II.]]></description>
+</item>
+</channel>
+</rss>

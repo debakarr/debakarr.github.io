@@ -1,0 +1,30 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Web Development - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/web-development/</link>
+        <description>Web Development - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/web-development/" rel="self" type="application/rss+xml" /><item>
+    <title>Building a Restful API using JAX-RS</title>
+    <link>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</link>
+    <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</guid>
+    <description><![CDATA[1. What are the tools needed?
+2. Basic setup
+3. Setting up Tomcat Server and Postman
+4. Structure
+5. Book Model
+6. Book Database
+7. Book Services
+8. Book Resource
+9. GET
+10. PUSH
+11. PUT
+12. DELETE
+13. Query
+-Get Book(s) by title
+-Get Book(s) by subject ID
+Another thing we are going to use is called Postman. Postman is an HTTP Request composer. It helps you test your API in a very efficient way.]]></description>
+</item>
+</channel>
+</rss>

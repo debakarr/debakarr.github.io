@@ -1,0 +1,19 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Merge Sorted Array - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/merge-sorted-array/</link>
+        <description>Merge Sorted Array - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 17 Jun 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/merge-sorted-array/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 88. Merge Sorted Array</title>
+    <link>http://debakarr.github.io/posts/merge-sorted-array/</link>
+    <pubDate>Mon, 17 Jun 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/merge-sorted-array/</guid>
+    <description><![CDATA[Merge Sorted Array Link to original Problem on LeetCode
+Given two sorted integer arrays nums1 and nums2, merge nums2 into nums1 as one sorted array.
+Note:
+The number of elements initialized in nums1 and nums2 are m and n respectively. You may assume that nums1 has enough space (size that is greater or equal to m + n) to hold additional elements from nums2. Example:
+Input: nums1 = [1,2,3,0,0,0], m = 3 nums2 = [2,5,6], n = 3]]></description>
+</item>
+</channel>
+</rss>

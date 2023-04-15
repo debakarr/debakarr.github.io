@@ -1,0 +1,37 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Binary Search Tree - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/binary-search-tree/</link>
+        <description>Binary Search Tree - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/binary-search-tree/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 108. Convert Sorted Array to Binary Search Tree</title>
+    <link>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</link>
+    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</guid>
+    <description><![CDATA[Convert Sorted Array to Binary Search Tree Link to original Problem on LeetCode
+Given an array where elements are sorted in ascending order, convert it to a height balanced BST.
+For this problem, a height-balanced binary tree is defined as a binary tree in which the depth of the two subtrees of every node never differ by more than 1.
+Example:
+Given the sorted array: [-10,-3,0,5,9],
+One possible answer is: [0,-3,9,-10,null,5], which represents the following height balanced BST:]]></description>
+</item>
+<item>
+    <title>[LeetCode] 230. Kth Smallest Element in a BST</title>
+    <link>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</link>
+    <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</guid>
+    <description><![CDATA[Kth Smallest Element in a BST Link to original Problem on LeetCode
+Given a binary search tree, write a function kthSmallest to find the kth smallest element in it.
+Note: You may assume k is always valid, 1 ≤ k ≤ BST&rsquo;s total elements.
+Example 1:
+Input: root = [3,1,4,null,2], k = 1
+Output: 1
+Example 2:
+Input: root = [5,3,6,2,4,null,null,1], k = 3
+Output: 3
+Follow up: What if the BST is modified (insert/delete operations) often and you need to find the kth smallest frequently?]]></description>
+</item>
+</channel>
+</rss>

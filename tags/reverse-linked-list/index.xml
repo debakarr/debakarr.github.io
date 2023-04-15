@@ -1,0 +1,24 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Reverse Linked List - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/reverse-linked-list/</link>
+        <description>Reverse Linked List - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/reverse-linked-list/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 206. Reverse Linked List</title>
+    <link>http://debakarr.github.io/posts/reverse-linked-list/</link>
+    <pubDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/reverse-linked-list/</guid>
+    <description><![CDATA[Reverse Linked List Link to original Problem on LeetCode
+Reverse a singly linked list.
+Example:
+Input: 1-&gt;2-&gt;3-&gt;4-&gt;5-&gt;NULL Output: 5-&gt;4-&gt;3-&gt;2-&gt;1-&gt;NULL
+Follow up:
+A linked list can be reversed either iteratively or recursively. Could you implement both?
+Company: Adobe, Amazon, MakeMyTrip, Microsoft, Qualcomm, Samsung
+Solution (Iterative):
+Time Complexity: Space Complexity:
+class Solution(object): def reverseList(self, head): &#34;&#34;&#34; :type head: ListNode :rtype: ListNode &#34;&#34;&#34; # Video Explanation: https://youtu.be/sYcOK51hl-A # Credit: mycodeschool prev = None curr = head while curr: next = curr.]]></description>
+</item>
+</channel>
+</rss>

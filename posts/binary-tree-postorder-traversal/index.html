@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[LeetCode] 145. Binary Tree Postorder Traversal - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="[LeetCode] 145. Binary Tree Postorder Traversal" />
+<meta property="og:description" content="Binary Tree Postorder Traversal Link to original Problem on LeetCode
+Given a binary tree, return the postorder traversal of its nodes&rsquo; values.
+Example:
+Output: [3,2,1]
+Follow up: Recursive solution is trivial, could you do it iteratively?
+Company: Microsoft, Amazon
+Recursive Solution:
+# Definition for a binary tree node. # class TreeNode(object): # def __init__(self, x): # self.val = x # self.left = None # self.right = None class Solution(object): def postorderTraversal(self, root): &#34;&#34;&#34; :type root: TreeNode :rtype: List[int] &#34;&#34;&#34; # Runtime: 16 ms # Memory Usage: 11." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2019-05-15T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-05-15T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[LeetCode] 145. Binary Tree Postorder Traversal"/>
+<meta name="twitter:description" content="Binary Tree Postorder Traversal Link to original Problem on LeetCode
+Given a binary tree, return the postorder traversal of its nodes&rsquo; values.
+Example:
+Output: [3,2,1]
+Follow up: Recursive solution is trivial, could you do it iteratively?
+Company: Microsoft, Amazon
+Recursive Solution:
+# Definition for a binary tree node. # class TreeNode(object): # def __init__(self, x): # self.val = x # self.left = None # self.right = None class Solution(object): def postorderTraversal(self, root): &#34;&#34;&#34; :type root: TreeNode :rtype: List[int] &#34;&#34;&#34; # Runtime: 16 ms # Memory Usage: 11."/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" /><link rel="prev" href="http://debakarr.github.io/posts/binary-tree-inorder-traversal/" /><link rel="next" href="http://debakarr.github.io/posts/binary-tree-preorder-traversal/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[LeetCode] 145. Binary Tree Postorder Traversal",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/binary-tree-postorder-traversal\/"
+        },"genre": "posts","keywords": "Algorithms, Binary Tree, Postorder Traversal, Programming","wordcount":  309 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/binary-tree-postorder-traversal\/","datePublished": "2019-05-15T00:00:00+00:00","dateModified": "2019-05-15T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[LeetCode] 145. Binary Tree Postorder Traversal</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/algorithms/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Algorithms</a>&nbsp;<a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a>&nbsp;<a href="/categories/leetcode/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>LeetCode</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2019-05-15">2019-05-15</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;309 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;2 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#binary-tree-postorder-traversal">Binary Tree Postorder Traversal</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="binary-tree-postorder-traversal">Binary Tree Postorder Traversal</h3>
+<p><a href="https://leetcode.com/problems/binary-tree-postorder-traversal/" target="_blank" rel="noopener noreffer ">Link to original Problem on LeetCode</a></p>
+<p>Given a binary tree, return the <em>postorder</em> traversal of its nodes&rsquo; values.</p>
+<p><strong>Example:</strong></p>
+<!-- raw HTML omitted -->
+<!-- raw HTML omitted -->
+<blockquote>
+<p>Output: [3,2,1]</p>
+</blockquote>
+<p><strong>Follow up</strong>: Recursive solution is trivial, could you do it iteratively?</p>
+<p><strong>Company:</strong>
+<em>Microsoft</em>, <em>Amazon</em></p>
+<p><strong>Recursive Solution:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># Definition for a binary tree node.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># class TreeNode(object):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     def __init__(self, x):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         self.val = x</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         self.left = None</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         self.right = None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution</span>(object):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">postorderTraversal</span>(self, root):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        :type root: TreeNode
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        :rtype: List[int]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Runtime: 16 ms</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Memory Usage: 11.9 MB</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Normal recursion solution</span>
+</span></span><span style="display:flex;"><span>        returnList <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>doPostOrderTraversal(root, returnList)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> returnList
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">doPostOrderTraversal</span>(self, root, returnList):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> root:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>doPostOrderTraversal(root<span style="color:#f92672">.</span>left, returnList)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>doPostOrderTraversal(root<span style="color:#f92672">.</span>right, returnList)
+</span></span><span style="display:flex;"><span>        returnList<span style="color:#f92672">.</span>append(root<span style="color:#f92672">.</span>val)
+</span></span></code></pre></div><p><strong>Iterative Solution:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># Definition for a binary tree node.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># class TreeNode(object):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     def __init__(self, x):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         self.val = x</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         self.left = None</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#         self.right = None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Solution</span>(object):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">postorderTraversal</span>(self, root):
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        :type root: TreeNode
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        :rtype: List[int]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Runtime: 8 ms</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Memory Usage: 11.8 MB</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># The idea here is to maintain 2 stack.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># One will be use to traverse the tree and keep track of left and right child</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># In the second stack we will keep on pushing those node whose child we have visited</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># If tree is empty then return empty list</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> root <span style="color:#f92672">==</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Initialize two empty list.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># These list we can use to implement 2 stack</span>
+</span></span><span style="display:flex;"><span>        firstStack, secondStack <span style="color:#f92672">=</span> [], []
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Add root to the 1st Stack</span>
+</span></span><span style="display:flex;"><span>        firstStack<span style="color:#f92672">.</span>append(root)
+</span></span><span style="display:flex;"><span>        returnList <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># While first stack is not empty, add the top of 1st stack to 2nd stack</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Add left and right of the pushed node to 1st stack</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> firstStack:
+</span></span><span style="display:flex;"><span>            moveToSecond <span style="color:#f92672">=</span> firstStack<span style="color:#f92672">.</span>pop()
+</span></span><span style="display:flex;"><span>            secondStack<span style="color:#f92672">.</span>append(moveToSecond)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> moveToSecond<span style="color:#f92672">.</span>left:
+</span></span><span style="display:flex;"><span>                firstStack<span style="color:#f92672">.</span>append(moveToSecond<span style="color:#f92672">.</span>left)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> moveToSecond<span style="color:#f92672">.</span>right:
+</span></span><span style="display:flex;"><span>                firstStack<span style="color:#f92672">.</span>append(moveToSecond<span style="color:#f92672">.</span>right)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># While second stack is not empty then push the top node to returnList</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> secondStack:
+</span></span><span style="display:flex;"><span>            returnList<span style="color:#f92672">.</span>append(secondStack<span style="color:#f92672">.</span>pop()<span style="color:#f92672">.</span>val)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> returnList
+</span></span></code></pre></div><!-- raw HTML omitted -->
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2019-05-15</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" data-title="[LeetCode] 145. Binary Tree Postorder Traversal" data-via="debakar_roy" data-hashtags="Algorithms,Binary Tree,Postorder Traversal,Programming"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" data-hashtag="Algorithms"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" data-title="[LeetCode] 145. Binary Tree Postorder Traversal"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" data-title="[LeetCode] 145. Binary Tree Postorder Traversal"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/binary-tree-postorder-traversal/" data-title="[LeetCode] 145. Binary Tree Postorder Traversal"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/algorithms/">Algorithms</a>,&nbsp;<a href="/tags/binary-tree/">Binary Tree</a>,&nbsp;<a href="/tags/postorder-traversal/">Postorder Traversal</a>,&nbsp;<a href="/tags/programming/">Programming</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/binary-tree-inorder-traversal/" class="prev" rel="prev" title="[LeetCode] 94. Binary Tree Inorder Traversal"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[LeetCode] 94. Binary Tree Inorder Traversal</a>
+            <a href="/posts/binary-tree-preorder-traversal/" class="next" rel="next" title="[LeetCode] 144. Binary Tree Preorder Traversal">[LeetCode] 144. Binary Tree Preorder Traversal<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>
