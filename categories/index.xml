@@ -3,7 +3,39 @@
         <title>Categories - Category - Debakar Roy</title>
         <link>http://debakarr.github.io/categories/</link>
         <description>Categories - Category - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+    <title>Automation</title>
+    <link>http://debakarr.github.io/categories/automation/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/categories/automation/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>DevOps</title>
+    <link>http://debakarr.github.io/categories/devops/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/categories/devops/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Infrastructure</title>
+    <link>http://debakarr.github.io/categories/infrastructure/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/categories/infrastructure/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Software Development</title>
+    <link>http://debakarr.github.io/categories/software-development/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/categories/software-development/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>Algorithms</title>
     <link>http://debakarr.github.io/categories/algorithms/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
@@ -49,38 +81,6 @@
     <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/categories/machine-learning/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>API</title>
-    <link>http://debakarr.github.io/categories/api/</link>
-    <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/categories/api/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Web Development</title>
-    <link>http://debakarr.github.io/categories/web-development/</link>
-    <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/categories/web-development/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>C&#43;&#43;</title>
-    <link>http://debakarr.github.io/categories/c&#43;&#43;/</link>
-    <pubDate>Sun, 20 Aug 2017 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/categories/c&#43;&#43;/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Java</title>
-    <link>http://debakarr.github.io/categories/java/</link>
-    <pubDate>Sun, 06 Aug 2017 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/categories/java/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>

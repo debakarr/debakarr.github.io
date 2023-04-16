@@ -3,7 +3,17 @@
         <title>Tutorial - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/tutorial/</link>
         <description>Tutorial - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+    <title>Day 1: Understanding DevOps, its principles, and benefits</title>
+    <link>http://debakarr.github.io/posts/day1-devops/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/day1-devops/</guid>
+    <description><![CDATA[Planned ContentWeek 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Week 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Week 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>[LeetCode] 347. Top K Frequent Elements</title>
     <link>http://debakarr.github.io/posts/top-k-frequent-elements/</link>
     <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
@@ -111,20 +121,6 @@ This is something I should have mentioned in the first blog. In general, a schem
 So first of all what is database?
 A database is a collection of information kept an organized way, for the ease of retrieval.
 Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture.]]></description>
-</item>
-<item>
-    <title>How to build a reddit to twitter bot</title>
-    <link>http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/</link>
-    <pubDate>Mon, 19 Jun 2017 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/</guid>
-    <description><![CDATA[First of all what will be this bot doing actually?
-Ans. This bot will be tweeting any new post on a particular subreddit to your twitter bot account. In my case it will be tweeting any new tweets from /r/anime
-Can I have a look on the finished product?
-Ans. Here you go
-So what do I actually need to create the bot?
-Ans.
-Some Basic Programming knowlegde and how to run terminal.]]></description>
 </item>
 </channel>
 </rss>

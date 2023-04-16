@@ -3,84 +3,84 @@
         <title>Tags - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+    <title>Automation</title>
+    <link>http://debakarr.github.io/tags/automation/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/automation/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>DevOps</title>
+    <link>http://debakarr.github.io/tags/devops/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/devops/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Docker</title>
+    <link>http://debakarr.github.io/tags/docker/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/docker/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Git</title>
+    <link>http://debakarr.github.io/tags/git/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/git/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>How-to</title>
+    <link>http://debakarr.github.io/tags/how-to/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/how-to/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Jenkins</title>
+    <link>http://debakarr.github.io/tags/jenkins/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/jenkins/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Kubernetes</title>
+    <link>http://debakarr.github.io/tags/kubernetes/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/kubernetes/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Monitoring</title>
+    <link>http://debakarr.github.io/tags/monitoring/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/monitoring/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Tutorial</title>
+    <link>http://debakarr.github.io/tags/tutorial/</link>
+    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/tutorial/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>Algorithms</title>
     <link>http://debakarr.github.io/tags/algorithms/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/algorithms/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Arrays</title>
-    <link>http://debakarr.github.io/tags/arrays/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/arrays/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Binary Search Tree</title>
-    <link>http://debakarr.github.io/tags/binary-search-tree/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/binary-search-tree/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Conversion</title>
-    <link>http://debakarr.github.io/tags/conversion/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/conversion/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Programming</title>
-    <link>http://debakarr.github.io/tags/programming/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/programming/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Randomization</title>
-    <link>http://debakarr.github.io/tags/randomization/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/randomization/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Shuffle</title>
-    <link>http://debakarr.github.io/tags/shuffle/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/shuffle/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Column Number</title>
-    <link>http://debakarr.github.io/tags/column-number/</link>
-    <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/column-number/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Excel</title>
-    <link>http://debakarr.github.io/tags/excel/</link>
-    <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/excel/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Kth Smallest</title>
-    <link>http://debakarr.github.io/tags/kth-smallest/</link>
-    <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/kth-smallest/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>
