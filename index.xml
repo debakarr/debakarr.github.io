@@ -3,17 +3,37 @@
         <title>Debakar Roy</title>
         <link>http://debakarr.github.io/</link>
         <description>Welcome to my Blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</lastBuildDate>
             <atom:link href="http://debakarr.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD)</title>
+    <link>http://debakarr.github.io/posts/day3-devops/</link>
+    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/day3-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
+    <title>Day 2: Exploring the DevOps lifecycle and its stages</title>
+    <link>http://debakarr.github.io/posts/day2-devops/</link>
+    <pubDate>Mon, 17 Apr 2023 07:53:56 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/day2-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 1: Understanding DevOps, its principles, and benefits</title>
     <link>http://debakarr.github.io/posts/day1-devops/</link>
     <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/posts/day1-devops/</guid>
-    <description><![CDATA[Planned ContentWeek 1: Introduction to DevOps
-Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Week 2: Version Control Systems
-Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Week 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>[LeetCode] 108. Convert Sorted Array to Binary Search Tree</title>
@@ -119,35 +139,6 @@ Time Complexity: O(n log n) Space Complexity: O(1)]]></description>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/posts/top-interview-questions/</guid>
     <description><![CDATA[Top Programming Questions [Updated] ]]></description>
-</item>
-<item>
-    <title>[LeetCode] 13. Roman to Integer</title>
-    <link>http://debakarr.github.io/posts/roman-to-integer/</link>
-    <pubDate>Wed, 28 Aug 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/roman-to-integer/</guid>
-    <description><![CDATA[Roman to Integer Link to original Problem on LeetCode
-Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.
-Symbol Value I 1 V 5 X 10 L 50 C 100 D 500 M 1000
-For example, two is written as II in Roman numeral, just two one&rsquo;s added together. Twelve is written as, XII, which is simply X + II. The number twenty seven is written as XXVIIi, which is XX + V + II.]]></description>
-</item>
-<item>
-    <title>[LeetCode] 169. Majority Element</title>
-    <link>http://debakarr.github.io/posts/majority-element/</link>
-    <pubDate>Tue, 27 Aug 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/majority-element/</guid>
-    <description><![CDATA[Majority Element Link to original Problem on LeetCode
-Given an array of size n, find the majority element. The majority element is the element that appears more than ⌊ n/2 ⌋ times.
-You may assume that the array is non-empty and the majority element always exist in the array.
-Example 1:
-Input: [3,2,3]
-Output: 3
-Example 2:
-Input: [2,2,1,1,1,2,2]
-Output: 2
-Company: Yahoo, Google, Amazon, Microsoft
-Solution (Using Hashing - 2 pass):]]></description>
 </item>
 </channel>
 </rss>
