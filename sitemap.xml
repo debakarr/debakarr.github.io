@@ -2,11 +2,15 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
+            <loc>http://debakarr.github.io/posts/day6-devops/</loc><lastmod>2023-04-21T15:24:16&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/</loc><lastmod>2023-04-21T15:24:16&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/</loc><lastmod>2023-04-21T15:24:16&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/day5-devops/</loc><lastmod>2023-04-21T13:23:45&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/day4-devops/</loc><lastmod>2023-04-19T08:10:41&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/automation/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/automation/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/posts/day3-devops/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/devops/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/devops/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/docker/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
@@ -15,7 +19,6 @@
             <loc>http://debakarr.github.io/tags/jenkins/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/kubernetes/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/monitoring/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/posts/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/software-development/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/tutorial/</loc><lastmod>2023-04-18T21:11:28&#43;05:30</lastmod></url><url>

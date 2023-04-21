@@ -3,9 +3,39 @@
         <title>Debakar Roy</title>
         <link>http://debakarr.github.io/</link>
         <description>Welcome to my Blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</lastBuildDate>
             <atom:link href="http://debakarr.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>Day 6: Introduction to Git</title>
+    <link>http://debakarr.github.io/posts/day6-devops/</link>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/day6-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
+    <title>Day 5: Studying DevOps culture and best practices</title>
+    <link>http://debakarr.github.io/posts/day5-devops/</link>
+    <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/day5-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
+    <title>Day 4: Familiarizing with common DevOps tools and technologies</title>
+    <link>http://debakarr.github.io/posts/day4-devops/</link>
+    <pubDate>Wed, 19 Apr 2023 08:10:41 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/day4-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD)</title>
     <link>http://debakarr.github.io/posts/day3-devops/</link>
     <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
@@ -98,47 +128,6 @@ Example 2:
 Input: root = [5,3,6,2,4,null,null,1], k = 3
 Output: 3
 Follow up: What if the BST is modified (insert/delete operations) often and you need to find the kth smallest frequently?]]></description>
-</item>
-<item>
-    <title>[LeetCode] 122. Best Time to Buy and Sell Stock II</title>
-    <link>http://debakarr.github.io/posts/best-time-to-buy-and-sell-stock-ii/</link>
-    <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/best-time-to-buy-and-sell-stock-ii/</guid>
-    <description><![CDATA[Best Time to Buy and Sell Stock II Link to original Problem on LeetCode
-Say you have an array for which the ith element is the price of a given stock on day i.
-Design an algorithm to find the maximum profit. You may complete as many transactions as you like (i.e., buy one and sell one share of the stock multiple times).
-Note: You may not engage in multiple transactions at the same time (i.]]></description>
-</item>
-<item>
-    <title>[LeetCode] 217. Contains Duplicate</title>
-    <link>http://debakarr.github.io/posts/contains-duplicate/</link>
-    <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/contains-duplicate/</guid>
-    <description><![CDATA[Contains Duplicate Link to original Problem on LeetCode
-Given an array of integers, find if the array contains any duplicates.
-Your function should return true if any value appears at least twice in the array, and it should return false if every element is distinct.
-Example 1:
-Input: [1,2,3,1]
-Output: true
-Example 2:
-Input: [1,2,3,4]
-Output: false
-Example 3:
-Input: [1,1,1,3,3,4,3,2,4,2]
-Output: true
-Company: Amazon
-Solution (Using Sorting):
-Time Complexity: O(n log n) Space Complexity: O(1)]]></description>
-</item>
-<item>
-    <title>Top Programming Questions [Updated]</title>
-    <link>http://debakarr.github.io/posts/top-interview-questions/</link>
-    <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/top-interview-questions/</guid>
-    <description><![CDATA[Top Programming Questions [Updated] ]]></description>
 </item>
 </channel>
 </rss>
