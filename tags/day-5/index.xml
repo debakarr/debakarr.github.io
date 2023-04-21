@@ -5,10 +5,10 @@
         <description>Day 5 - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Jul 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/day-5/" rel="self" type="application/rss+xml" /><item>
     <title>[Training] DBMS with Oracle Day 5</title>
-    <link>http://debakarr.github.io/posts/oracle-dbms-day-5/</link>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-5/</link>
     <pubDate>Thu, 27 Jul 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/oracle-dbms-day-5/</guid>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-5/</guid>
     <description><![CDATA[This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at PL/SQL Cursor, Procedure, Function, and Trigger. This will complete the very basics of PL/SQL.
 So what is cursor?
 Cursor is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use SELECT or any DML (INSERT, DELETE, UPDATE or MERGE) then cursor holds the rows (one or more) returned by a SQL statement.]]></description>

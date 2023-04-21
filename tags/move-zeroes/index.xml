@@ -5,10 +5,10 @@
         <description>Move Zeroes - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/move-zeroes/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 283. Move Zeroes</title>
-    <link>http://debakarr.github.io/posts/move-zeroes/</link>
+    <link>http://debakarr.github.io/posts/leetcode/move-zeroes/</link>
     <pubDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/move-zeroes/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/move-zeroes/</guid>
     <description><![CDATA[Move Zeroes Link to original Problem on LeetCode
 Given an array nums, write a function to move all 0&rsquo;s to the end of it while maintaining the relative order of the non-zero elements.
 Example:

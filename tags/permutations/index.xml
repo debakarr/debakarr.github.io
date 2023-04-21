@@ -5,10 +5,10 @@
         <description>Permutations - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/permutations/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 46. Permutations</title>
-    <link>http://debakarr.github.io/posts/permutations/</link>
+    <link>http://debakarr.github.io/posts/leetcode/permutations/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/permutations/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/permutations/</guid>
     <description><![CDATA[Permutations Link to original Problem on LeetCode
 Given a collection of distinct integers, return all possible permutations.
 Example:

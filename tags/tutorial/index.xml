@@ -5,70 +5,70 @@
         <description>Tutorial - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
     <title>Day 6: Introduction to Git</title>
-    <link>http://debakarr.github.io/posts/day6-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day6-devops/</link>
     <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day6-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day6-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 5: Studying DevOps culture and best practices</title>
-    <link>http://debakarr.github.io/posts/day5-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day5-devops/</link>
     <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day5-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day5-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 4: Familiarizing with common DevOps tools and technologies</title>
-    <link>http://debakarr.github.io/posts/day4-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day4-devops/</link>
     <pubDate>Wed, 19 Apr 2023 08:10:41 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day4-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day4-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD)</title>
-    <link>http://debakarr.github.io/posts/day3-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day3-devops/</link>
     <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day3-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day3-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 2: Exploring the DevOps lifecycle and its stages</title>
-    <link>http://debakarr.github.io/posts/day2-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day2-devops/</link>
     <pubDate>Mon, 17 Apr 2023 07:53:56 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day2-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day2-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 1: Understanding DevOps, its principles, and benefits</title>
-    <link>http://debakarr.github.io/posts/day1-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day1-devops/</link>
     <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day1-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day1-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>[LeetCode] 347. Top K Frequent Elements</title>
-    <link>http://debakarr.github.io/posts/top-k-frequent-elements/</link>
+    <link>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</link>
     <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/top-k-frequent-elements/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</guid>
     <description><![CDATA[Top K Frequent Elements Link to original Problem on LeetCode
 Given a non-empty array of integers, return the k most frequent elements.
 Example 1:
@@ -80,18 +80,18 @@ You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your al
 </item>
 <item>
     <title>TensorFlow Basic</title>
-    <link>http://debakarr.github.io/posts/tensorflow-basics/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</link>
     <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/tensorflow-basics/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</guid>
     <description><![CDATA[TensorFlow Basic I made this post for revision purpose. This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great).]]></description>
 </item>
 <item>
     <title>Building a Restful API using JAX-RS</title>
-    <link>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</link>
     <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</guid>
     <description><![CDATA[1. What are the tools needed?
 2. Basic setup
 3. Setting up Tomcat Server and Postman
@@ -111,10 +111,10 @@ Another thing we are going to use is called Postman. Postman is an HTTP Request 
 </item>
 <item>
     <title>Understanding the very first few lines of basic C&#43;&#43; code</title>
-    <link>http://debakarr.github.io/posts/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</link>
     <pubDate>Sun, 20 Aug 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</guid>
     <description><![CDATA[So most of the students in Computer Science Department of a B.Tech college have written code in C++ at some point in their life.
 Let me begin with a small code snippet.
 #include&lt;iostream&gt; using namespace std; namespace abc { int a = 100; } int a = 200; int main() { int a = 300; cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl; cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl; cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl; return (0); } Running the code produce this output:]]></description>

@@ -5,10 +5,10 @@
         <description>Web Development - Category - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/categories/web-development/" rel="self" type="application/rss+xml" /><item>
     <title>Building a Restful API using JAX-RS</title>
-    <link>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</link>
     <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</guid>
     <description><![CDATA[1. What are the tools needed?
 2. Basic setup
 3. Setting up Tomcat Server and Postman
@@ -28,10 +28,10 @@ Another thing we are going to use is called Postman. Postman is an HTTP Request 
 </item>
 <item>
     <title>How to build a reddit to twitter bot</title>
-    <link>http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/how-to-create-reddit-to-twitter-bot/</link>
     <pubDate>Mon, 19 Jun 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/how-to-create-reddit-to-twitter-bot/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/how-to-create-reddit-to-twitter-bot/</guid>
     <description><![CDATA[First of all what will be this bot doing actually?
 Ans. This bot will be tweeting any new post on a particular subreddit to your twitter bot account. In my case it will be tweeting any new tweets from /r/anime
 Can I have a look on the finished product?

@@ -5,10 +5,10 @@
         <description>Delete Node in a Linked List - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/delete-node-in-a-linked-list/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 237. Delete Node in a Linked List</title>
-    <link>http://debakarr.github.io/posts/delete-node-in-a-linked-list/</link>
+    <link>http://debakarr.github.io/posts/leetcode/delete-node-in-a-linked-list/</link>
     <pubDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/delete-node-in-a-linked-list/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/delete-node-in-a-linked-list/</guid>
     <description><![CDATA[Delete Node in a Linked List Link to original Problem on LeetCode
 Write a function to delete a node (except the tail) in a singly linked list, given only access to that node.
 Given linked list &ndash; head = [4,5,1,9], which looks like following:

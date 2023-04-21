@@ -5,10 +5,10 @@
         <description>Coding Interview - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 13 May 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/coding-interview/" rel="self" type="application/rss+xml" /><item>
     <title>Coding Interview: Warm Up</title>
-    <link>http://debakarr.github.io/posts/coding-interview-warmup-1/</link>
+    <link>http://debakarr.github.io/posts/leetcode/coding-interview-warmup-1/</link>
     <pubDate>Mon, 13 May 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/coding-interview-warmup-1/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/coding-interview-warmup-1/</guid>
     <description><![CDATA[FizzBuzz Link to original Problem on LeetCode
 Write a program that outputs the string representation of numbers from 1 to n.
 But for multiples of three, it should output “Fizz” instead of the number and for the multiples of five output “Buzz”. For numbers which are multiples of both three and five output “FizzBuzz”.

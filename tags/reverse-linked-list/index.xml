@@ -5,10 +5,10 @@
         <description>Reverse Linked List - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/reverse-linked-list/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 206. Reverse Linked List</title>
-    <link>http://debakarr.github.io/posts/reverse-linked-list/</link>
+    <link>http://debakarr.github.io/posts/leetcode/reverse-linked-list/</link>
     <pubDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/reverse-linked-list/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/reverse-linked-list/</guid>
     <description><![CDATA[Reverse Linked List Link to original Problem on LeetCode
 Reverse a singly linked list.
 Example:

@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[Training] DBMS with Oracle Day 4 - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="[Training] DBMS with Oracle Day 4" />
+<meta property="og:description" content="If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically DBMS with Oracle.
+If you haven&rsquo;t yet read my previous post then feel free to go to this link for part 1 and this link for part 2.
+Now today we are going to look at something called PL/SQL and also we will do some exercise to get a grip of PL/SQL." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2017-07-24T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-07-24T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="[Training] DBMS with Oracle Day 4"/>
+<meta name="twitter:description" content="If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically DBMS with Oracle.
+If you haven&rsquo;t yet read my previous post then feel free to go to this link for part 1 and this link for part 2.
+Now today we are going to look at something called PL/SQL and also we will do some exercise to get a grip of PL/SQL."/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" /><link rel="prev" href="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/" /><link rel="next" href="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-5/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[Training] DBMS with Oracle Day 4",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/oracle_dbms\/oracle-dbms-day-4\/"
+        },"genre": "posts","keywords": "Oracle, DBMS, Database, SQL, Tutorial, Day 4","wordcount":  1520 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/oracle_dbms\/oracle-dbms-day-4\/","datePublished": "2017-07-24T00:00:00+00:00","dateModified": "2017-07-24T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[Training] DBMS with Oracle Day 4</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/database-management/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Database Management</a>&nbsp;<a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2017-07-24">2017-07-24</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1520 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;8 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#er-diagram"><strong>ER Diagram</strong></a></li>
+        <li><a href="#relational-schema"><strong>Relational Schema</strong></a></li>
+        <li><a href="#batch">BATCH</a></li>
+        <li><a href="#customer">CUSTOMER</a></li>
+        <li><a href="#empoyee">EMPOYEE</a></li>
+        <li><a href="#product">PRODUCT</a></li>
+        <li><a href="#sales">SALES</a></li>
+        <li><a href="#supplier">SUPPLIER</a></li>
+        <li><a href="#supply">SUPPLY</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/joyWfPr.png"
+        data-srcset="http://i.imgur.com/joyWfPr.png, http://i.imgur.com/joyWfPr.png 1.5x, http://i.imgur.com/joyWfPr.png 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/joyWfPr.png"
+        title="http://i.imgur.com/joyWfPr.png" /></p>
+<!-- raw HTML omitted -->
+<p>If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically <strong><code>DBMS with Oracle</code></strong>.</p>
+<p>If you haven&rsquo;t yet read my previous post then feel free to go to <a href="https://dibakarroy1997.github.io/BakaDigest/2017/07/18/oracle-dbms-day-1.html" target="_blank" rel="noopener noreffer ">this link</a> for <strong>part 1</strong> and <a href="https://dibakarroy1997.github.io/BakaDigest/2017/07/20/oracle-dbms-day-3.html" target="_blank" rel="noopener noreffer ">this link</a> for <strong>part 2</strong>.</p>
+<!-- raw HTML omitted -->
+<p>Now today we are going to look at something called <strong>PL/SQL</strong> and also we will do some exercise to get a grip of PL/SQL.</p>
+<!-- raw HTML omitted -->
+<p><strong>So first what is PL/SQL?</strong></p>
+<p><strong>PL/SQL</strong> stands for <strong><code>Procedural Language-Standard Query Language</code></strong>. It is also a case-insensitive programming language. In SQL we are able to execute one statement at a time whereas in PL/SQL we can combine many SQL statements and execute all of them at once.</p>
+<p>PL/SQL follows a predefined syntax</p>
+<h3 id="er-diagram"><strong>ER Diagram</strong></h3>
+<p>I made it in a rush, so it might not be as good as it should have been.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/30i1Ztb.png"
+        data-srcset="http://i.imgur.com/30i1Ztb.png, http://i.imgur.com/30i1Ztb.png 1.5x, http://i.imgur.com/30i1Ztb.png 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/30i1Ztb.png"
+        title="http://i.imgur.com/30i1Ztb.png" /></p>
+<h3 id="relational-schema"><strong>Relational Schema</strong></h3>
+<p>Trust me it&rsquo;s totally correct diagram as because I didn&rsquo;t messed up anything and let SQL Developer handle it all.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/3TUZhoJ.png"
+        data-srcset="http://i.imgur.com/3TUZhoJ.png, http://i.imgur.com/3TUZhoJ.png 1.5x, http://i.imgur.com/3TUZhoJ.png 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/3TUZhoJ.png"
+        title="http://i.imgur.com/3TUZhoJ.png" /></p>
+<!-- raw HTML omitted -->
+<p><strong>What we are going to do?</strong></p>
+<p>Taking this <strong><code>schema</code></strong> as a base we are going to create few <strong><code>tables</code></strong>. I will just put up all the code to create the tables.</p>
+<!-- raw HTML omitted -->
+<h3 id="batch">BATCH</h3>
+<pre tabindex="0"><code>
+CREATE TABLE BATCH 
+
+(
+
+  B_ID NUMBER(4, 0) NOT NULL 
+
+, MAF_DATE DATE NOT NULL 
+
+, EXP_DATE DATE NOT NULL 
+
+, B_QTY NUMBER NOT NULL 
+
+, S_ID NUMBER(3, 0) NOT NULL 
+
+, CONSTRAINT BATCH_PK PRIMARY KEY 
+
+  (
+
+    B_ID 
+
+  )
+
+);
+
+
+
+ALTER TABLE BATCH
+
+ADD CONSTRAINT BATCH_FK1 FOREIGN KEY
+
+(
+
+  S_ID 
+
+)
+
+REFERENCES SUPPLIER
+
+(
+
+  S_ID 
+
+);
+</code></pre><!-- raw HTML omitted -->
+<h3 id="customer">CUSTOMER</h3>
+<pre tabindex="0"><code>
+CREATE TABLE CUSTOMER 
+
+(
+
+  C_ID NUMBER(8, 0) NOT NULL 
+
+, C_NAME VARCHAR2(30 BYTE) NOT NULL 
+
+, C_PHONE NUMBER NOT NULL 
+
+, CONSTRAINT CUSTOMER_PK PRIMARY KEY 
+
+  (
+
+    C_ID 
+
+  )
+
+);
+</code></pre><!-- raw HTML omitted -->
+<h3 id="empoyee">EMPOYEE</h3>
+<pre tabindex="0"><code>
+CREATE TABLE EMPLOYEE 
+
+(
+
+  E_ID NUMBER(6, 0) NOT NULL 
+
+, COUNTER_NO NUMBER NOT NULL 
+
+, E_PHONE NUMBER(10, 0) NOT NULL 
+
+, E_NAME VARCHAR2(30 BYTE) NOT NULL 
+
+, CONSTRAINT EMPLOYEE_PK PRIMARY KEY 
+
+  (
+
+    E_ID 
+
+  )
+
+);
+</code></pre><!-- raw HTML omitted -->
+<h3 id="product">PRODUCT</h3>
+<pre tabindex="0"><code>
+CREATE TABLE PRODUCT 
+
+(
+
+  P_ID NUMBER(5, 0) NOT NULL 
+
+, P_NAME VARCHAR2(100 BYTE) NOT NULL 
+
+, P_PRICE NUMBER(9, 2) NOT NULL 
+
+, B_ID NUMBER(4, 0) NOT NULL 
+
+, P_QTY NUMBER NOT NULL 
+
+, CONSTRAINT PRODUCT_PK PRIMARY KEY 
+
+  (
+
+    P_ID 
+
+  )
+
+);
+
+
+
+ALTER TABLE PRODUCT
+
+ADD CONSTRAINT PRODUCT_UK1 UNIQUE 
+
+(
+
+  B_ID 
+
+);
+
+
+
+ALTER TABLE PRODUCT
+
+ADD CONSTRAINT PRODUCT_FK1 FOREIGN KEY
+
+(
+
+  B_ID 
+
+)
+
+REFERENCES BATCH
+
+(
+
+  B_ID 
+
+);
+</code></pre><!-- raw HTML omitted -->
+<h3 id="sales">SALES</h3>
+<pre tabindex="0"><code>
+CREATE TABLE SALES 
+
+(
+
+  C_ID NUMBER(8, 0) NOT NULL 
+
+, E_ID NUMBER(6, 0) NOT NULL 
+
+, P_ID NUMBER(5, 0) NOT NULL 
+
+, PUR_QTY NUMBER NOT NULL 
+
+, PUR_DATE DATE NOT NULL 
+
+);
+
+
+
+ALTER TABLE SALES
+
+ADD CONSTRAINT SALES_FK1 FOREIGN KEY
+
+(
+
+  C_ID 
+
+)
+
+REFERENCES CUSTOMER
+
+(
+
+  C_ID 
+
+);
+
+
+
+ALTER TABLE SALES
+
+ADD CONSTRAINT SALES_FK3 FOREIGN KEY
+
+(
+
+  P_ID 
+
+)
+
+REFERENCES PRODUCT
+
+(
+
+  P_ID 
+
+);
+</code></pre><!-- raw HTML omitted -->
+<h3 id="supplier">SUPPLIER</h3>
+<pre tabindex="0"><code>
+CREATE TABLE SUPPLIER 
+
+(
+
+  S_ID NUMBER(3, 0) NOT NULL 
+
+, S_NAME VARCHAR2(30 BYTE) NOT NULL 
+
+, S_ADDRESS VARCHAR2(60 BYTE) NOT NULL 
+
+, S_PHONE NUMBER(10, 0) NOT NULL 
+
+, S_EMAIL VARCHAR2(30 BYTE) NOT NULL 
+
+, CONSTRAINT SUPPLIER_PK PRIMARY KEY 
+
+  (
+
+    S_ID 
+
+  )
+
+);
+
+
+
+ALTER TABLE SUPPLIER
+
+ADD CONSTRAINT SUPPLIER_UK1 UNIQUE 
+
+(
+
+  S_PHONE 
+
+, S_EMAIL 
+
+)
+</code></pre><!-- raw HTML omitted -->
+<h3 id="supply">SUPPLY</h3>
+<pre tabindex="0"><code>
+CREATE TABLE SUPPLY 
+
+(
+
+  S_ID NUMBER(3, 0) NOT NULL 
+
+, B_ID NUMBER(4, 0) NOT NULL 
+
+, SUPPLY_DATE DATE NOT NULL 
+
+, P_ID NUMBER(5, 0) NOT NULL 
+
+);
+
+
+
+ALTER TABLE SUPPLY
+
+ADD CONSTRAINT SUPPLY_FK1 FOREIGN KEY
+
+(
+
+  S_ID 
+
+)
+
+REFERENCES SUPPLIER
+
+(
+
+  S_ID 
+
+);
+
+
+
+ALTER TABLE SUPPLY
+
+ADD CONSTRAINT SUPPLY_FK2 FOREIGN KEY
+
+(
+
+  B_ID 
+
+)
+
+REFERENCES BATCH
+
+(
+
+  B_ID 
+
+);
+
+
+
+ALTER TABLE SUPPLY
+
+ADD CONSTRAINT SUPPLY_FK3 FOREIGN KEY
+
+(
+
+  P_ID 
+
+)
+
+REFERENCES PRODUCT
+
+(
+
+  P_ID 
+
+);
+</code></pre><!-- raw HTML omitted -->
+<p>If you have done Java before then you might know that everything is encapsulated inside so called <strong><code>class</code></strong>. In PL/SQL encapsulated inside so called <strong><code>blocks</code></strong>. Now there are two types of <strong><code>blocks</code></strong>. One is called anonymous block while the other is called  <strong><code>named block</code></strong>. As the name suggests the anonymous block does not have any name and thus can&rsquo;t be used later on( can&rsquo;t be saved inside a database). While the named block can be referred later on ( as we move on we will come across something like <strong><code>procedure</code></strong>, <strong><code>function</code></strong> and <strong><code>package</code></strong>.</p>
+<!-- raw HTML omitted -->
+<p>Let&rsquo;s start with an anonymous block.</p>
+<p>Here&rsquo;s a syntax for a proper anonymous block:</p>
+<pre tabindex="0"><code>
+DECLARE
+
+  Declaration Statements 
+
+ BEGIN
+
+  Executable statements
+
+ Exception 
+
+  Exception handling statements
+
+ END;
+</code></pre><p>Here ** <code>Declare</code> ** is used to declare variables.  Here&rsquo;s one example:</p>
+<pre tabindex="0"><code>
+DECLARE
+
+  V_NAME VARCHAR2(30);
+
+  V_PHONE NUMBER(10);
+
+  V_CONSTANT	CONSTANT NUMBER:=0;
+</code></pre><p><strong>NOTE:</strong> Here we use <code>:=</code> to assign a value to a variable. In most of the languages, we use <code>=</code> only.</p>
+<!-- raw HTML omitted -->
+<p>Execution Section starts with <strong><code>BEGIN</code></strong></p>
+<pre tabindex="0"><code>
+ BEGIN
+
+  SELECT E_Name, E_ID, E_Phone INTO V_Name, V_ID, V_Phone
+
+  FROM EMPLOYEE WHERE E_ID =100;
+
+  DBMS_OUTPUT.PUT_LINE(‘Employee Name ’||V_Name||’ ‘||V_ID ||&#39; &#39;||V_Phone);
+
+ END;
+</code></pre><p><strong>NOTE:</strong> To assign the variables value from the table we can use <strong><code>INTO</code></strong>.</p>
+<!-- raw HTML omitted -->
+<p>In the end we can also put Exceptional Handling block. Here&rsquo;s an example:</p>
+<pre tabindex="0"><code>
+EXCEPTION 
+
+  WHEN NO_DATA_FOUND THEN
+
+  DBMS_OUTPUT.PUT_LINE (‘No Employee Found with ’||V_ID);
+</code></pre><p><strong>NOTE:</strong> Exception Block is optional. You can also leave it. In that case, system will throw an Exception (Which is obviously not user-friendly)</p>
+<!-- raw HTML omitted -->
+<p>Whenever you want to display data to the user using values from the database, you have to use one statement in particular.</p>
+<p><strong><code>SET SERVEROUTPUT ON</code></strong></p>
+<p>This takes us to a very interesting topic which is totally out of scope in regard to this blog post. Therefore if you really want to know about it contact your DBMS Professor or message me on Twitter or Facebook.</p>
+<!-- raw HTML omitted -->
+<p>Whenever you want to store a value in a variable you first need to provide it a data type.It is best practice to make sure that you have provided the correct data type to correct variable. Let me give you an example.</p>
+<pre tabindex="0"><code>
+DECLARE
+
+ V_Name VARCHAR2(15);
+
+BEGIN
+
+ SELECT E_NAME INTO V_Name WHERE E_ID =1005;
+
+
+
+END;
+</code></pre><p>In this code, E_NAME has 30 bytes (VARCHAR2 (30)) but V_Name can only store 15 bytes. Thus we will not get the desired value. For this thing only we use   <strong><code>Anchored Datatype (% Type)</code></strong>.</p>
+<p>Here&rsquo;s the syntax:</p>
+<pre tabindex="0"><code>
+variable_name typed-attribute%type
+</code></pre><p>So if I rewrite my previous code snippet it will be something like this:</p>
+<pre tabindex="0"><code>
+DECLARE
+
+ V_Name EMPLOYEE.E_NAME%TYPE;
+
+BEGIN
+
+ SELECT E_NAME INTO V_Name WHERE E_ID =1005;
+
+END;
+</code></pre><!-- raw HTML omitted -->
+<p>IF-THEN-ELSIF Control Statements in PL/SQL</p>
+<p>Here&rsquo;s the syntax:</p>
+<pre tabindex="0"><code>
+IF CONDITION 1 THEN
+
+  STATEMENT 1;
+
+ ELSIF CONDITION 2 THEN
+
+  STATEMENT 2;
+
+ ELSIF CONDITION 3 THEN
+
+  STATEMENT 3;
+
+  ...
+
+ ELSE
+
+  STATEMENT N;
+
+ END IF;
+</code></pre><!-- raw HTML omitted -->
+<p>Similarly we have LOOP</p>
+<p>Here&rsquo;s the syntax:</p>
+<pre tabindex="0"><code>
+LOOP
+
+  Statement 1;
+
+  Statement 2;
+
+  …
+
+  Statement 3;
+
+ END LOOP;
+</code></pre><!-- raw HTML omitted -->
+<p>CASE in PL/SQL</p>
+<p>Here&rsquo;s the syntax:</p>
+<pre tabindex="0"><code>
+CASE [ expression ] 
+
+   WHEN condition_1 THEN 
+
+      result_1 
+
+   WHEN condition_2 THEN 
+
+      result_2 ... 
+
+   WHEN condition_n THEN 
+
+      result_n ELSE result 
+
+END CASE;
+</code></pre><p>Here&rsquo;s an example of how to take a number from the user and determine whether it is even or odd.</p>
+<pre tabindex="0"><code>
+SET SERVEROUTPUT ON;
+
+DECLARE
+
+    VALUE1 NUMBER:= &amp;NUMBER1;  
+
+    REMAINDER1 NUMBER;
+
+BEGIN
+
+    REMAINDER1 := MOD(VALUE1, 2);
+
+    CASE REMAINDER1
+
+        WHEN 0 THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;EVEN NUMBER&#39;);
+
+        WHEN 1 THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;ODD NUMBER&#39;);
+
+        END CASE;
+
+END;
+</code></pre><p>Here&rsquo;s other example in which you can know the day of the week in which you were born.</p>
+<pre tabindex="0"><code>
+SET SERVEROUTPUT ON;
+
+DECLARE
+
+    V_DATE DATE:= TO_DATE(&#39;&amp;BIRTHDAY&#39;, &#39;DD-MON-YYYY&#39;);
+
+    V_DAY VARCHAR2(20);
+
+BEGIN
+
+    V_DAY:=TO_CHAR(V_DATE,&#39;D&#39;);
+
+    CASE V_DAY
+
+        WHEN &#39;1&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;SUNDAY&#39;);
+
+        WHEN &#39;2&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;MONDAY&#39;);
+
+        WHEN &#39;3&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;TUESDAY&#39;);
+
+        WHEN &#39;4&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;WEDNESDAY&#39;);
+
+        WHEN &#39;5&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;THURSDAY&#39;);
+
+        WHEN &#39;6&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;FRIDAY&#39;);
+
+        WHEN &#39;7&#39; THEN
+
+            DBMS_OUTPUT.PUT_LINE(&#39;SATURDAY&#39;);
+
+        END CASE;        
+
+END;
+</code></pre><!-- raw HTML omitted -->
+<p>Now sometimes we want to Auto increment few values which are generally primary key. In Oracle, we don&rsquo;t have <strong><code>AUTO_INCREMENT</code></strong>. In place of that, we can use   <strong><code>SEQUENCE</code></strong>. Here&rsquo;s the syntax for the sequence:</p>
+<pre tabindex="0"><code>
+CREATE SEQUENCE sequence_name MINVALUE value 
+
+MAXVALUE value 
+
+START WITH value 
+
+INCREMENT BY value 
+
+CACHE value;
+</code></pre><p>In case you didn&rsquo;t provide <strong><code>MAXVALUE</code></strong> it will by default set it to 999999999999999999999999999.</p>
+<p>Here&rsquo;s an example to create a sequence for P_ID.</p>
+<pre tabindex="0"><code>
+CREATE SEQUENCE P_SEQUENCE
+
+START WITH 10006
+
+INCREMENT BY 1;
+
+/
+
+INSERT INTO PRODUCT (P_ID, P_NAME, P_PRICE, B_ID, P_QTY) VALUES (P_SEQUENCE.NEXTVAL, &#39;FORMAL PANTS&#39;, 2000, 1009, 20);
+</code></pre><!-- raw HTML omitted -->
+<p>Also, we can make temporary tables called <strong><code>VIEW</code></strong>. To hold data temporary. Generally, view is used to combine data from two or more table and to do a query on the resultant table to get the desired output.</p>
+<p><strong>Let&rsquo;s Create a view for finding the average sale between two dates given by the user.</strong></p>
+<p>Here&rsquo;s the code:</p>
+<pre tabindex="0"><code>
+CREATE OR REPLACE VIEW TEMP_SALES_PRODUCT AS
+
+SELECT P_ID,  SUM(PUR_QTY) T_QTY, SUM(PUR_QTY * (SELECT P_PRICE FROM PRODUCT WHERE PRODUCT.P_ID = SALES.P_ID)) T_PRICE, PUR_DATE FROM SALES GROUP BY PUR_DATE,P_ID;
+</code></pre><!-- raw HTML omitted -->
+<p>Now we can use   <strong><code>LOOP</code></strong>  to loop between the date provided by the user.</p>
+<p>Here&rsquo;s the code:</p>
+<pre tabindex="0"><code>
+SET SERVEROUTPUT ON;
+
+DECLARE
+
+    L_DATE DATE:= TO_DATE(&#39;&amp;DATE_VALUE1&#39;, &#39;DD-MON-YYYY&#39;);
+
+    E_DATE DATE:= TO_DATE(&#39;&amp;DATE_VALUE2&#39;, &#39;DD-MON-YYYY&#39;);
+
+    C1 NUMBER;
+
+BEGIN
+
+    LOOP
+
+        SELECT AVG(T_PRICE) INTO C1 FROM TEMP_SALES_PRODUCT WHERE PUR_DATE = L_DATE;
+
+        DBMS_OUTPUT.PUT_LINE(&#39;AVERAGE PURCHASE PRICE ON &#39; || L_DATE || &#39; = &#39; || C1);
+
+        L_DATE:=L_DATE+1;
+
+        EXIT WHEN L_DATE &gt; E_DATE;
+
+    END LOOP;
+
+END;
+</code></pre><!-- raw HTML omitted -->
+<p>As a excersice you can try to do this:</p>
+<p><strong>Take input from the user to take as many supplier detail as he wants.</strong></p>
+<!-- raw HTML omitted -->
+<p>I guess this is too much to take in, in one go. So I will stop it here. In next post we will take about <strong><code>Cursor, Procedure, Function and Trigger</code></strong>. And that will be the last blog post of <strong>[Training] DBMS with Oracle</strong>.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2017-07-24</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" data-title="[Training] DBMS with Oracle Day 4" data-via="debakar_roy" data-hashtags="Oracle,DBMS,Database,SQL,Tutorial,Day 4"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" data-hashtag="Oracle"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" data-title="[Training] DBMS with Oracle Day 4"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" data-title="[Training] DBMS with Oracle Day 4"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/" data-title="[Training] DBMS with Oracle Day 4"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/oracle/">Oracle</a>,&nbsp;<a href="/tags/dbms/">DBMS</a>,&nbsp;<a href="/tags/database/">Database</a>,&nbsp;<a href="/tags/sql/">SQL</a>,&nbsp;<a href="/tags/tutorial/">Tutorial</a>,&nbsp;<a href="/tags/day-4/">Day 4</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/oracle_dbms/oracle-dbms-day-3/" class="prev" rel="prev" title="[Training] DBMS with Oracle Day 3"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[Training] DBMS with Oracle Day 3</a>
+            <a href="/posts/oracle_dbms/oracle-dbms-day-5/" class="next" rel="next" title="[Training] DBMS with Oracle Day 5">[Training] DBMS with Oracle Day 5<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

@@ -5,10 +5,10 @@
         <description>Generate Parentheses - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/generate-parentheses/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 22. Generate Parentheses</title>
-    <link>http://debakarr.github.io/posts/generate-parentheses/</link>
+    <link>http://debakarr.github.io/posts/leetcode/generate-parentheses/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/generate-parentheses/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/generate-parentheses/</guid>
     <description><![CDATA[Generate Parentheses Link to original Problem on LeetCode
 Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
 For example, given n = 3, a solution set is:

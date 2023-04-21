@@ -5,10 +5,10 @@
         <description>Day 3 - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 20 Jul 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/day-3/" rel="self" type="application/rss+xml" /><item>
     <title>[Training] DBMS with Oracle Day 3</title>
-    <link>http://debakarr.github.io/posts/oracle-dbms-day-3/</link>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/</link>
     <pubDate>Thu, 20 Jul 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/oracle-dbms-day-3/</guid>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/</guid>
     <description><![CDATA[So in this blog basically we are going to cover up the things done by me on the second day of my Oracle DBMS Training. Although I am not going to use the same schema I used during the 2nd day of my training.
 So without further delay, lets dig in.
 First thing first. What is a schema?

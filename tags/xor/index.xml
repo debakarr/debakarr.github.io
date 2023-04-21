@@ -5,10 +5,10 @@
         <description>XOR - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/xor/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 136. Single Number</title>
-    <link>http://debakarr.github.io/posts/single-number/</link>
+    <link>http://debakarr.github.io/posts/leetcode/single-number/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/single-number/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/single-number/</guid>
     <description><![CDATA[Single Number Link to original Problem on LeetCode
 Given a non-empty array of integers, every element appears twice except for one. Find that single one.
 Note:

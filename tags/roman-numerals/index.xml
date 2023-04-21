@@ -5,10 +5,10 @@
         <description>Roman Numerals - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 28 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/roman-numerals/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 13. Roman to Integer</title>
-    <link>http://debakarr.github.io/posts/roman-to-integer/</link>
+    <link>http://debakarr.github.io/posts/leetcode/roman-to-integer/</link>
     <pubDate>Wed, 28 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/roman-to-integer/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/roman-to-integer/</guid>
     <description><![CDATA[Roman to Integer Link to original Problem on LeetCode
 Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.
 Symbol Value I 1 V 5 X 10 L 50 C 100 D 500 M 1000

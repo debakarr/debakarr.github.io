@@ -5,10 +5,10 @@
         <description>Randomization - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/randomization/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 384. Shuffle an Array</title>
-    <link>http://debakarr.github.io/posts/shuffle-an-array/</link>
+    <link>http://debakarr.github.io/posts/leetcode/shuffle-an-array/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/shuffle-an-array/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/shuffle-an-array/</guid>
     <description><![CDATA[Shuffle an Array Link to original Problem on LeetCode
 Shuffle a set of numbers without duplicates.
 Example:

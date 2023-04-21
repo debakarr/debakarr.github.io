@@ -5,10 +5,10 @@
         <description>Algorithms - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/algorithms/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 108. Convert Sorted Array to Binary Search Tree</title>
-    <link>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</link>
+    <link>http://debakarr.github.io/posts/leetcode/convert-sorted-array-to-binary-search-tree/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/convert-sorted-array-to-binary-search-tree/</guid>
     <description><![CDATA[Convert Sorted Array to Binary Search Tree Link to original Problem on LeetCode
 Given an array where elements are sorted in ascending order, convert it to a height balanced BST.
 For this problem, a height-balanced binary tree is defined as a binary tree in which the depth of the two subtrees of every node never differ by more than 1.
@@ -18,10 +18,10 @@ One possible answer is: [0,-3,9,-10,null,5], which represents the following heig
 </item>
 <item>
     <title>[LeetCode] 384. Shuffle an Array</title>
-    <link>http://debakarr.github.io/posts/shuffle-an-array/</link>
+    <link>http://debakarr.github.io/posts/leetcode/shuffle-an-array/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/shuffle-an-array/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/shuffle-an-array/</guid>
     <description><![CDATA[Shuffle an Array Link to original Problem on LeetCode
 Shuffle a set of numbers without duplicates.
 Example:
@@ -29,10 +29,10 @@ Example:
 </item>
 <item>
     <title>[LeetCode] 171. Excel Sheet Column Number</title>
-    <link>http://debakarr.github.io/posts/excel-sheet-column-number/</link>
+    <link>http://debakarr.github.io/posts/leetcode/excel-sheet-column-number/</link>
     <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/excel-sheet-column-number/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/excel-sheet-column-number/</guid>
     <description><![CDATA[Excel Sheet Column Number Link to original Problem on LeetCode
 Given a column title as appear in an Excel sheet, return its corresponding column number.
 For example:
@@ -52,10 +52,10 @@ class Solution(object): def titleToNumber(self, s): &#34;&#34;&#34; :type s: str
 </item>
 <item>
     <title>[LeetCode] 230. Kth Smallest Element in a BST</title>
-    <link>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</link>
+    <link>http://debakarr.github.io/posts/leetcode/kth-smallest-element-in-a-bst/</link>
     <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/kth-smallest-element-in-a-bst/</guid>
     <description><![CDATA[Kth Smallest Element in a BST Link to original Problem on LeetCode
 Given a binary search tree, write a function kthSmallest to find the kth smallest element in it.
 Note: You may assume k is always valid, 1 ≤ k ≤ BST&rsquo;s total elements.
@@ -69,10 +69,10 @@ Follow up: What if the BST is modified (insert/delete operations) often and you 
 </item>
 <item>
     <title>[LeetCode] 122. Best Time to Buy and Sell Stock II</title>
-    <link>http://debakarr.github.io/posts/best-time-to-buy-and-sell-stock-ii/</link>
+    <link>http://debakarr.github.io/posts/leetcode/best-time-to-buy-and-sell-stock-ii/</link>
     <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/best-time-to-buy-and-sell-stock-ii/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/best-time-to-buy-and-sell-stock-ii/</guid>
     <description><![CDATA[Best Time to Buy and Sell Stock II Link to original Problem on LeetCode
 Say you have an array for which the ith element is the price of a given stock on day i.
 Design an algorithm to find the maximum profit. You may complete as many transactions as you like (i.e., buy one and sell one share of the stock multiple times).
@@ -80,10 +80,10 @@ Note: You may not engage in multiple transactions at the same time (i.]]></descr
 </item>
 <item>
     <title>[LeetCode] 217. Contains Duplicate</title>
-    <link>http://debakarr.github.io/posts/contains-duplicate/</link>
+    <link>http://debakarr.github.io/posts/leetcode/contains-duplicate/</link>
     <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/contains-duplicate/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/contains-duplicate/</guid>
     <description><![CDATA[Contains Duplicate Link to original Problem on LeetCode
 Given an array of integers, find if the array contains any duplicates.
 Your function should return true if any value appears at least twice in the array, and it should return false if every element is distinct.
@@ -102,10 +102,10 @@ Time Complexity: O(n log n) Space Complexity: O(1)]]></description>
 </item>
 <item>
     <title>[LeetCode] 13. Roman to Integer</title>
-    <link>http://debakarr.github.io/posts/roman-to-integer/</link>
+    <link>http://debakarr.github.io/posts/leetcode/roman-to-integer/</link>
     <pubDate>Wed, 28 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/roman-to-integer/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/roman-to-integer/</guid>
     <description><![CDATA[Roman to Integer Link to original Problem on LeetCode
 Roman numerals are represented by seven different symbols: I, V, X, L, C, D and M.
 Symbol Value I 1 V 5 X 10 L 50 C 100 D 500 M 1000
@@ -113,10 +113,10 @@ For example, two is written as II in Roman numeral, just two one&rsquo;s added t
 </item>
 <item>
     <title>[LeetCode] 169. Majority Element</title>
-    <link>http://debakarr.github.io/posts/majority-element/</link>
+    <link>http://debakarr.github.io/posts/leetcode/majority-element/</link>
     <pubDate>Tue, 27 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/majority-element/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/majority-element/</guid>
     <description><![CDATA[Majority Element Link to original Problem on LeetCode
 Given an array of size n, find the majority element. The majority element is the element that appears more than ⌊ n/2 ⌋ times.
 You may assume that the array is non-empty and the majority element always exist in the array.
@@ -131,10 +131,10 @@ Solution (Using Hashing - 2 pass):]]></description>
 </item>
 <item>
     <title>[LeetCode] 78. Subsets</title>
-    <link>http://debakarr.github.io/posts/subsets/</link>
+    <link>http://debakarr.github.io/posts/leetcode/subsets/</link>
     <pubDate>Thu, 08 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/subsets/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/subsets/</guid>
     <description><![CDATA[Subsets Link to original Problem on LeetCode
 Given a set of distinct integers, nums, return all possible subsets (the power set).
 Note: The solution set must not contain duplicate subsets.
@@ -149,10 +149,10 @@ class Solution(object): def subsets(self, nums): &#34;&#34;&#34; :type nums: Lis
 </item>
 <item>
     <title>[LeetCode] 144. Binary Tree Preorder Traversal</title>
-    <link>http://debakarr.github.io/posts/binary-tree-preorder-traversal/</link>
+    <link>http://debakarr.github.io/posts/leetcode/binary-tree-preorder-traversal/</link>
     <pubDate>Wed, 15 May 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/binary-tree-preorder-traversal/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/binary-tree-preorder-traversal/</guid>
     <description><![CDATA[Binary Tree Preorder Traversal Link to original Problem on LeetCode
 Given a binary tree, return the preorder traversal of its nodes&rsquo; values.
 Example:

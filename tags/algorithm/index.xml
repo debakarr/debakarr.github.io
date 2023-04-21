@@ -5,18 +5,18 @@
         <description>Algorithm - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/algorithm/" rel="self" type="application/rss+xml" /><item>
     <title>Top Programming Questions [Updated]</title>
-    <link>http://debakarr.github.io/posts/top-interview-questions/</link>
+    <link>http://debakarr.github.io/posts/leetcode/top-interview-questions/</link>
     <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/top-interview-questions/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/top-interview-questions/</guid>
     <description><![CDATA[Top Programming Questions [Updated] ]]></description>
 </item>
 <item>
     <title>[LeetCode] 347. Top K Frequent Elements</title>
-    <link>http://debakarr.github.io/posts/top-k-frequent-elements/</link>
+    <link>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</link>
     <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/top-k-frequent-elements/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</guid>
     <description><![CDATA[Top K Frequent Elements Link to original Problem on LeetCode
 Given a non-empty array of integers, return the k most frequent elements.
 Example 1:
@@ -28,10 +28,10 @@ You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your al
 </item>
 <item>
     <title>[LeetCode] 237. Delete Node in a Linked List</title>
-    <link>http://debakarr.github.io/posts/delete-node-in-a-linked-list/</link>
+    <link>http://debakarr.github.io/posts/leetcode/delete-node-in-a-linked-list/</link>
     <pubDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/delete-node-in-a-linked-list/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/delete-node-in-a-linked-list/</guid>
     <description><![CDATA[Delete Node in a Linked List Link to original Problem on LeetCode
 Write a function to delete a node (except the tail) in a singly linked list, given only access to that node.
 Given linked list &ndash; head = [4,5,1,9], which looks like following:
@@ -42,10 +42,10 @@ Explanation: You are given the second node with value 5, the linked list should 
 </item>
 <item>
     <title>[LeetCode] 283. Move Zeroes</title>
-    <link>http://debakarr.github.io/posts/move-zeroes/</link>
+    <link>http://debakarr.github.io/posts/leetcode/move-zeroes/</link>
     <pubDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/move-zeroes/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/move-zeroes/</guid>
     <description><![CDATA[Move Zeroes Link to original Problem on LeetCode
 Given an array nums, write a function to move all 0&rsquo;s to the end of it while maintaining the relative order of the non-zero elements.
 Example:
@@ -59,10 +59,10 @@ class Solution(object): def moveZeroes(self, nums): &#34;&#34;&#34; :type nums: 
 </item>
 <item>
     <title>[LeetCode] 206. Reverse Linked List</title>
-    <link>http://debakarr.github.io/posts/reverse-linked-list/</link>
+    <link>http://debakarr.github.io/posts/leetcode/reverse-linked-list/</link>
     <pubDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/reverse-linked-list/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/reverse-linked-list/</guid>
     <description><![CDATA[Reverse Linked List Link to original Problem on LeetCode
 Reverse a singly linked list.
 Example:
@@ -76,10 +76,10 @@ class Solution(object): def reverseList(self, head): &#34;&#34;&#34; :type head:
 </item>
 <item>
     <title>[LeetCode] 238. Product of Array Except Self</title>
-    <link>http://debakarr.github.io/posts/product-of-array-except-self/</link>
+    <link>http://debakarr.github.io/posts/leetcode/product-of-array-except-self/</link>
     <pubDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/product-of-array-except-self/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/product-of-array-except-self/</guid>
     <description><![CDATA[Product of Array Except Self Link to original Problem on LeetCode
 Given an array nums of n integers where n &gt; 1, return an array output such that output[i] is equal to the product of all the elements of nums except nums[i].
 Example:
@@ -89,10 +89,10 @@ Follow up: Could you solve it with constant space complexity? (The output array 
 </item>
 <item>
     <title>[Leetcode] 104. Maximum Depth of Binary Tree</title>
-    <link>http://debakarr.github.io/posts/maximum-depth-of-binary-tree/</link>
+    <link>http://debakarr.github.io/posts/leetcode/maximum-depth-of-binary-tree/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/maximum-depth-of-binary-tree/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/maximum-depth-of-binary-tree/</guid>
     <description><![CDATA[Maximum Depth of Binary Tree Link to original Problem on LeetCode
 Given a binary tree, find its maximum depth.
 The maximum depth is the number of nodes along the longest path from the root node down to the farthest leaf node.
@@ -105,10 +105,10 @@ Solution (Iterative using breadth first search):]]></description>
 </item>
 <item>
     <title>[LeetCode] 136. Single Number</title>
-    <link>http://debakarr.github.io/posts/single-number/</link>
+    <link>http://debakarr.github.io/posts/leetcode/single-number/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/single-number/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/single-number/</guid>
     <description><![CDATA[Single Number Link to original Problem on LeetCode
 Given a non-empty array of integers, every element appears twice except for one. Find that single one.
 Note:
@@ -124,10 +124,10 @@ class Solution(object): def singleNumber(self, nums): &#34;&#34;&#34; :type nums
 </item>
 <item>
     <title>[LeetCode] 22. Generate Parentheses</title>
-    <link>http://debakarr.github.io/posts/generate-parentheses/</link>
+    <link>http://debakarr.github.io/posts/leetcode/generate-parentheses/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/generate-parentheses/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/generate-parentheses/</guid>
     <description><![CDATA[Generate Parentheses Link to original Problem on LeetCode
 Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
 For example, given n = 3, a solution set is:
@@ -139,10 +139,10 @@ class Solution(object): def generateParenthesis(self, n): &#34;&#34;&#34; :type 
 </item>
 <item>
     <title>[LeetCode] 344. Reverse String</title>
-    <link>http://debakarr.github.io/posts/reverse-string/</link>
+    <link>http://debakarr.github.io/posts/leetcode/reverse-string/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/reverse-string/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/reverse-string/</guid>
     <description><![CDATA[Reverse String Link to original Problem on LeetCode
 Write a function that reverses a string. The input string is given as an array of characters char[].
 Do not allocate extra space for another array, you must do this by modifying the input array in-place with O(1) extra memory.

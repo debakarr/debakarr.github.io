@@ -5,10 +5,10 @@
         <description>Web Development - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/web-development/" rel="self" type="application/rss+xml" /><item>
     <title>Building a Restful API using JAX-RS</title>
-    <link>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</link>
     <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/building-a-restful-api-using-jax-rs/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</guid>
     <description><![CDATA[1. What are the tools needed?
 2. Basic setup
 3. Setting up Tomcat Server and Postman

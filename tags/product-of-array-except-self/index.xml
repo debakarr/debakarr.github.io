@@ -5,10 +5,10 @@
         <description>Product of Array Except Self - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/product-of-array-except-self/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 238. Product of Array Except Self</title>
-    <link>http://debakarr.github.io/posts/product-of-array-except-self/</link>
+    <link>http://debakarr.github.io/posts/leetcode/product-of-array-except-self/</link>
     <pubDate>Wed, 24 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/product-of-array-except-self/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/product-of-array-except-self/</guid>
     <description><![CDATA[Product of Array Except Self Link to original Problem on LeetCode
 Given an array nums of n integers where n &gt; 1, return an array output such that output[i] is equal to the product of all the elements of nums except nums[i].
 Example:

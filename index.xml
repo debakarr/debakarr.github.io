@@ -7,70 +7,70 @@
             <atom:link href="http://debakarr.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
     <title>Day 6: Introduction to Git</title>
-    <link>http://debakarr.github.io/posts/day6-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day6-devops/</link>
     <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day6-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day6-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 5: Studying DevOps culture and best practices</title>
-    <link>http://debakarr.github.io/posts/day5-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day5-devops/</link>
     <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day5-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day5-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 4: Familiarizing with common DevOps tools and technologies</title>
-    <link>http://debakarr.github.io/posts/day4-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day4-devops/</link>
     <pubDate>Wed, 19 Apr 2023 08:10:41 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day4-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day4-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD)</title>
-    <link>http://debakarr.github.io/posts/day3-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day3-devops/</link>
     <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day3-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day3-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 2: Exploring the DevOps lifecycle and its stages</title>
-    <link>http://debakarr.github.io/posts/day2-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day2-devops/</link>
     <pubDate>Mon, 17 Apr 2023 07:53:56 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day2-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day2-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>Day 1: Understanding DevOps, its principles, and benefits</title>
-    <link>http://debakarr.github.io/posts/day1-devops/</link>
+    <link>http://debakarr.github.io/posts/devops/day1-devops/</link>
     <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/day1-devops/</guid>
+    <guid>http://debakarr.github.io/posts/devops/day1-devops/</guid>
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
 </item>
 <item>
     <title>[LeetCode] 108. Convert Sorted Array to Binary Search Tree</title>
-    <link>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</link>
+    <link>http://debakarr.github.io/posts/leetcode/convert-sorted-array-to-binary-search-tree/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/convert-sorted-array-to-binary-search-tree/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/convert-sorted-array-to-binary-search-tree/</guid>
     <description><![CDATA[Convert Sorted Array to Binary Search Tree Link to original Problem on LeetCode
 Given an array where elements are sorted in ascending order, convert it to a height balanced BST.
 For this problem, a height-balanced binary tree is defined as a binary tree in which the depth of the two subtrees of every node never differ by more than 1.
@@ -80,10 +80,10 @@ One possible answer is: [0,-3,9,-10,null,5], which represents the following heig
 </item>
 <item>
     <title>[LeetCode] 384. Shuffle an Array</title>
-    <link>http://debakarr.github.io/posts/shuffle-an-array/</link>
+    <link>http://debakarr.github.io/posts/leetcode/shuffle-an-array/</link>
     <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/shuffle-an-array/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/shuffle-an-array/</guid>
     <description><![CDATA[Shuffle an Array Link to original Problem on LeetCode
 Shuffle a set of numbers without duplicates.
 Example:
@@ -91,10 +91,10 @@ Example:
 </item>
 <item>
     <title>[LeetCode] 171. Excel Sheet Column Number</title>
-    <link>http://debakarr.github.io/posts/excel-sheet-column-number/</link>
+    <link>http://debakarr.github.io/posts/leetcode/excel-sheet-column-number/</link>
     <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/excel-sheet-column-number/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/excel-sheet-column-number/</guid>
     <description><![CDATA[Excel Sheet Column Number Link to original Problem on LeetCode
 Given a column title as appear in an Excel sheet, return its corresponding column number.
 For example:
@@ -114,10 +114,10 @@ class Solution(object): def titleToNumber(self, s): &#34;&#34;&#34; :type s: str
 </item>
 <item>
     <title>[LeetCode] 230. Kth Smallest Element in a BST</title>
-    <link>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</link>
+    <link>http://debakarr.github.io/posts/leetcode/kth-smallest-element-in-a-bst/</link>
     <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/kth-smallest-element-in-a-bst/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/kth-smallest-element-in-a-bst/</guid>
     <description><![CDATA[Kth Smallest Element in a BST Link to original Problem on LeetCode
 Given a binary search tree, write a function kthSmallest to find the kth smallest element in it.
 Note: You may assume k is always valid, 1 ≤ k ≤ BST&rsquo;s total elements.

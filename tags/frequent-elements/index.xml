@@ -5,10 +5,10 @@
         <description>Frequent Elements - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/frequent-elements/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 347. Top K Frequent Elements</title>
-    <link>http://debakarr.github.io/posts/top-k-frequent-elements/</link>
+    <link>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</link>
     <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/top-k-frequent-elements/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</guid>
     <description><![CDATA[Top K Frequent Elements Link to original Problem on LeetCode
 Given a non-empty array of integers, return the k most frequent elements.
 Example 1:

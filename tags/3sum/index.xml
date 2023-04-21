@@ -5,10 +5,10 @@
         <description>3Sum - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Mon, 17 Jun 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/3sum/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 15. 3Sum</title>
-    <link>http://debakarr.github.io/posts/3sum/</link>
+    <link>http://debakarr.github.io/posts/leetcode/3sum/</link>
     <pubDate>Mon, 17 Jun 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/3sum/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/3sum/</guid>
     <description><![CDATA[3Sum Link to original Problem on LeetCode
 Given an array nums of n integers, are there elements a, b, c in nums such that a + b + c = 0? Find all unique triplets in the array which gives the sum of zero.
 Note:

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Understanding the very first few lines of basic C&#43;&#43; code - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="Understanding the very first few lines of basic C&#43;&#43; code" />
+<meta property="og:description" content="So most of the students in Computer Science Department of a B.Tech college have written code in C&#43;&#43; at some point in their life.
+Let me begin with a small code snippet.
+#include&lt;iostream&gt; using namespace std; namespace abc { int a = 100; } int a = 200; int main() { int a = 300; cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl; cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl; cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl; return (0); } Running the code produce this output:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2017-08-20T00:00:00+00:00" />
+<meta property="article:modified_time" content="2017-08-20T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Understanding the very first few lines of basic C&#43;&#43; code"/>
+<meta name="twitter:description" content="So most of the students in Computer Science Department of a B.Tech college have written code in C&#43;&#43; at some point in their life.
+Let me begin with a small code snippet.
+#include&lt;iostream&gt; using namespace std; namespace abc { int a = 100; } int a = 200; int main() { int a = 300; cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl; cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl; cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl; return (0); } Running the code produce this output:"/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" /><link rel="prev" href="http://debakarr.github.io/posts/basics_learning/java-assignment-1/" /><link rel="next" href="http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Understanding the very first few lines of basic C++ code",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/basics_learning\/understanding-the-very-first-few-lines-of-basic-c\u002b\u002b-code\/"
+        },"genre": "posts","keywords": "C\u002b\u002b, Code, Basics, Tutorial, Understanding","wordcount":  749 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/basics_learning\/understanding-the-very-first-few-lines-of-basic-c\u002b\u002b-code\/","datePublished": "2017-08-20T00:00:00+00:00","dateModified": "2017-08-20T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Understanding the very first few lines of basic C++ code</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a>&nbsp;<a href="/categories/c++/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>C++</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2017-08-20">2017-08-20</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;749 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;4 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents"></nav></div>
+            </div><div class="content" id="content"><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="http://i.imgur.com/NrUx8p9.jpg"
+        data-srcset="http://i.imgur.com/NrUx8p9.jpg, http://i.imgur.com/NrUx8p9.jpg 1.5x, http://i.imgur.com/NrUx8p9.jpg 2x"
+        data-sizes="auto"
+        alt="http://i.imgur.com/NrUx8p9.jpg"
+        title="http://i.imgur.com/NrUx8p9.jpg" /></p>
+<!-- raw HTML omitted -->
+<p>So most of the students in Computer Science Department of a B.Tech college have written code in C++ at some point in their life.</p>
+<!-- raw HTML omitted -->
+<p>Let me begin with a small code snippet.</p>
+<pre tabindex="0"><code>#include&lt;iostream&gt;
+
+using namespace std;
+
+namespace abc {
+int a = 100;
+}
+
+int a = 200;
+
+int main() {
+	int a = 300;
+
+	cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl;
+	cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl;
+	cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl;
+	return (0);
+}
+</code></pre><p>Running the code produce this output:</p>
+<pre tabindex="0"><code>abc::a = 100
+::a = 200
+a = 300
+</code></pre><!-- raw HTML omitted -->
+<p>If you look at the code you will see we always start with something like <code>#include&lt;iostream&gt;</code>, then add some more <code>#include&lt;...&gt;</code> (if needed). We usually call them header file. But if you have ever written code in C language then you might be curious why do we use a header file without <code>.h</code> at the end in C++ (and why not with <code>.h</code> like we used to do while writing code in C). The reason behind is rather simple but it has too many chain elements. The simple answer to this question is <code>iostream</code> is a part of C++ standard header while <code>iostream.h</code> is not. <code>iostream.h</code> is disapproved by some latest C++ compiler. To be more precise there is no mention of <code>iostream.h</code> at all in the current C++ standard (<a href="https://www.iso.org/standard/68564.html" target="_blank" rel="noopener noreffer ">ISO/IEC DIS 14882</a>).</p>
+<p>Again we can use headers like <code>stdio.h</code> in C++ without any problem. But that is not the convention. C++ is derived from C and hence we permitted to use the header we previously used in C. But in C++ application you shouldn&rsquo;t use <code>stdio.h</code>, but you should use instead <code>cstdio</code>. You can use most of the C header in C++ but all you need to do is remove the <code>.h</code> part and add <code>c</code> before the header name.
+example:</p>
+<pre tabindex="0"><code>#include&lt;cstdio&gt;
+#include&lt;cstddef&gt;
+#include&lt;cstring&gt;
+#include&lt;cwchar&gt;
+</code></pre><!-- raw HTML omitted -->
+<p>Now coming to next part i.e. <code>using namespace std</code>. Why do we use it?</p>
+<p>Try omitting using namespace std and run the code.</p>
+<pre tabindex="0"><code>#include&lt;iostream&gt;
+
+//using namespace std;
+
+namespace abc {
+int a = 100;
+}
+
+int a = 200;
+
+int main() {
+	int a = 300;
+
+	cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl;
+	cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl;
+	cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl;
+	return (0);
+}
+</code></pre><p>You will get an error which looks something like this:</p>
+<p><code>error: 'cout' was not declared in this scope</code></p>
+<p>When you use a C++ library without <code>.h</code>, such as <code>#include&lt;iostream&gt; </code> then it load all the symbols in <code>iostream</code> header file inside <code>std</code> namespace (We will discuss namespace in next part).</p>
+<p>NOTE: The std (abbrevate for standard) namespace is empty by default. Header symbols a loaded in <code>std</code> namespace when they are include without <code>.h</code>.</p>
+<p>If you omit <code>using namespace std</code> then, you will not be able to use the reference such as <code>cout</code> or <code>cin</code> or even <code>endl</code>. What is actually a namespace? Although this cannot be answered in a single blog post as namespace is a very advanced topic in C++. Though to be logical here, <code>namespace</code> is nothing but a container. It contains a set of symbols. When you use <code>using namespace std</code> it actually invokes this:</p>
+<pre tabindex="0"><code>namespace std
+{
+#include &lt;iostream.h&gt;
+};
+</code></pre><!-- raw HTML omitted -->
+<pre tabindex="0"><code>#include&lt;iostream&gt;
+
+//using namespace std;
+
+namespace abc {
+int a = 100;
+}
+
+int a = 200;
+
+int main() {
+	int a = 300;
+
+	std::cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; std::endl;
+	std::cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; std::endl;
+	std::cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; std::endl;
+	return (0);
+}
+</code></pre><p>So what using namespace std does so that we can use <code>cout</code> without <code>std::</code>? Basically, it loads all the symbols in C++ Standard Library and makes them <code>global</code> (To understand this you need to have a perfect knowledge of scope, or carry along this blog. I will try to make it more clear).</p>
+<!-- raw HTML omitted -->
+<p>So now let&rsquo;s talk about what we learn at the beginning, that using namespace std will load all the standard library symbols as well as make them global. So we can use <code>cout</code> in place of <code>std::cout</code> as <code>cout</code> is now global and we haven&rsquo;t redefined in inside main function (So only <code>cout</code> will work. No need of <code>::cout</code>. Thought that will work too). So this is how all this works.</p>
+<!-- raw HTML omitted -->
+<p>I hope you like reading this blog. If you have any question then feel free to comment below. Also if you like, you can share it with your friends.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2017-08-20</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" data-title="Understanding the very first few lines of basic C&#43;&#43; code" data-via="debakar_roy" data-hashtags="C&#43;&#43;,Code,Basics,Tutorial,Understanding"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" data-hashtag="C&#43;&#43;"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" data-title="Understanding the very first few lines of basic C&#43;&#43; code"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" data-title="Understanding the very first few lines of basic C&#43;&#43; code"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/" data-title="Understanding the very first few lines of basic C&#43;&#43; code"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/c&#43;&#43;/">C&#43;&#43;</a>,&nbsp;<a href="/tags/code/">Code</a>,&nbsp;<a href="/tags/basics/">Basics</a>,&nbsp;<a href="/tags/tutorial/">Tutorial</a>,&nbsp;<a href="/tags/understanding/">Understanding</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/basics_learning/java-assignment-1/" class="prev" rel="prev" title="[OOP (CS 594D)] Assignment 1"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[OOP (CS 594D)] Assignment 1</a>
+            <a href="/posts/basics_learning/building-a-restful-api-using-jax-rs/" class="next" rel="next" title="Building a Restful API using JAX-RS">Building a Restful API using JAX-RS<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+</html>

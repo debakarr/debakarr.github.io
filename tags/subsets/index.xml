@@ -5,10 +5,10 @@
         <description>Subsets - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 08 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/subsets/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 78. Subsets</title>
-    <link>http://debakarr.github.io/posts/subsets/</link>
+    <link>http://debakarr.github.io/posts/leetcode/subsets/</link>
     <pubDate>Thu, 08 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/subsets/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/subsets/</guid>
     <description><![CDATA[Subsets Link to original Problem on LeetCode
 Given a set of distinct integers, nums, return all possible subsets (the power set).
 Note: The solution set must not contain duplicate subsets.

@@ -5,10 +5,10 @@
         <description>Python - Category - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/categories/python/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 347. Top K Frequent Elements</title>
-    <link>http://debakarr.github.io/posts/top-k-frequent-elements/</link>
+    <link>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</link>
     <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/top-k-frequent-elements/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</guid>
     <description><![CDATA[Top K Frequent Elements Link to original Problem on LeetCode
 Given a non-empty array of integers, return the k most frequent elements.
 Example 1:
@@ -20,10 +20,10 @@ You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your al
 </item>
 <item>
     <title>TensorFlow Basic</title>
-    <link>http://debakarr.github.io/posts/tensorflow-basics/</link>
+    <link>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</link>
     <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/tensorflow-basics/</guid>
+    <guid>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</guid>
     <description><![CDATA[TensorFlow Basic I made this post for revision purpose. This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great).]]></description>
 </item>
 </channel>

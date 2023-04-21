@@ -5,10 +5,10 @@
         <description>String - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/string/" rel="self" type="application/rss+xml" /><item>
     <title>[LeetCode] 22. Generate Parentheses</title>
-    <link>http://debakarr.github.io/posts/generate-parentheses/</link>
+    <link>http://debakarr.github.io/posts/leetcode/generate-parentheses/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/generate-parentheses/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/generate-parentheses/</guid>
     <description><![CDATA[Generate Parentheses Link to original Problem on LeetCode
 Given n pairs of parentheses, write a function to generate all combinations of well-formed parentheses.
 For example, given n = 3, a solution set is:
@@ -20,10 +20,10 @@ class Solution(object): def generateParenthesis(self, n): &#34;&#34;&#34; :type 
 </item>
 <item>
     <title>[LeetCode] 344. Reverse String</title>
-    <link>http://debakarr.github.io/posts/reverse-string/</link>
+    <link>http://debakarr.github.io/posts/leetcode/reverse-string/</link>
     <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/reverse-string/</guid>
+    <guid>http://debakarr.github.io/posts/leetcode/reverse-string/</guid>
     <description><![CDATA[Reverse String Link to original Problem on LeetCode
 Write a function that reverses a string. The input string is given as an array of characters char[].
 Do not allocate extra space for another array, you must do this by modifying the input array in-place with O(1) extra memory.
