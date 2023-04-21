@@ -3,84 +3,84 @@
         <title>Tags - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
-    <title>Automation</title>
-    <link>http://debakarr.github.io/tags/automation/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/automation/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
     <title>DevOps</title>
     <link>http://debakarr.github.io/tags/devops/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/devops/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
-    <title>Docker</title>
-    <link>http://debakarr.github.io/tags/docker/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/docker/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>How-to</title>
-    <link>http://debakarr.github.io/tags/how-to/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/how-to/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Jenkins</title>
-    <link>http://debakarr.github.io/tags/jenkins/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/jenkins/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Kubernetes</title>
-    <link>http://debakarr.github.io/tags/kubernetes/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/kubernetes/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Monitoring</title>
-    <link>http://debakarr.github.io/tags/monitoring/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/monitoring/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Tutorial</title>
-    <link>http://debakarr.github.io/tags/tutorial/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/tutorial/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
     <title>Git</title>
     <link>http://debakarr.github.io/tags/git/</link>
-    <pubDate>Mon, 17 Apr 2023 07:53:56 &#43;0530</pubDate>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/git/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
-    <title>Algorithms</title>
-    <link>http://debakarr.github.io/tags/algorithms/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <title>GitHub</title>
+    <link>http://debakarr.github.io/tags/github/</link>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
-    <guid>http://debakarr.github.io/tags/algorithms/</guid>
+    <guid>http://debakarr.github.io/tags/github/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>How-to</title>
+    <link>http://debakarr.github.io/tags/how-to/</link>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/how-to/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Tutorial</title>
+    <link>http://debakarr.github.io/tags/tutorial/</link>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/tutorial/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Best-Practice</title>
+    <link>http://debakarr.github.io/tags/best-practice/</link>
+    <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/best-practice/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>GitHub Documentation</title>
+    <link>http://debakarr.github.io/tags/github-documentation/</link>
+    <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/github-documentation/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Automation</title>
+    <link>http://debakarr.github.io/tags/automation/</link>
+    <pubDate>Wed, 19 Apr 2023 08:10:41 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/automation/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Docker</title>
+    <link>http://debakarr.github.io/tags/docker/</link>
+    <pubDate>Wed, 19 Apr 2023 08:10:41 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/docker/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Jenkins</title>
+    <link>http://debakarr.github.io/tags/jenkins/</link>
+    <pubDate>Wed, 19 Apr 2023 08:10:41 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/jenkins/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>

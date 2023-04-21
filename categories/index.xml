@@ -3,10 +3,10 @@
         <title>Categories - Category - Debakar Roy</title>
         <link>http://debakarr.github.io/categories/</link>
         <description>Categories - Category - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/categories/" rel="self" type="application/rss+xml" /><item>
     <title>Automation</title>
     <link>http://debakarr.github.io/categories/automation/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/categories/automation/</guid>
     <description><![CDATA[]]></description>
@@ -14,15 +14,23 @@
 <item>
     <title>DevOps</title>
     <link>http://debakarr.github.io/categories/devops/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/categories/devops/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
+    <title>Git</title>
+    <link>http://debakarr.github.io/categories/git/</link>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/categories/git/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>Infrastructure</title>
     <link>http://debakarr.github.io/categories/infrastructure/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/categories/infrastructure/</guid>
     <description><![CDATA[]]></description>
@@ -30,7 +38,7 @@
 <item>
     <title>Software Development</title>
     <link>http://debakarr.github.io/categories/software-development/</link>
-    <pubDate>Tue, 18 Apr 2023 21:11:28 &#43;0530</pubDate>
+    <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/categories/software-development/</guid>
     <description><![CDATA[]]></description>
@@ -73,14 +81,6 @@
     <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/categories/python/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Machine Learning</title>
-    <link>http://debakarr.github.io/categories/machine-learning/</link>
-    <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/categories/machine-learning/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>
