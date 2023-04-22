@@ -3,9 +3,19 @@
         <title>Debakar Roy</title>
         <link>http://debakarr.github.io/</link>
         <description>Welcome to my Blog</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</lastBuildDate>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 22 Apr 2023 17:43:13 &#43;0530</lastBuildDate>
             <atom:link href="http://debakarr.github.io/index.xml" rel="self" type="application/rss+xml" />
         <item>
+    <title>Day 7: Basic Git commands (`git init`, `git add`, `git commit`, `git status`)</title>
+    <link>http://debakarr.github.io/posts/devops/day7-devops/</link>
+    <pubDate>Sat, 22 Apr 2023 17:43:13 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day7-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 6: Introduction to Git</title>
     <link>http://debakarr.github.io/posts/devops/day6-devops/</link>
     <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
@@ -111,23 +121,6 @@ Company: Amazon
 Solution (Using Hash Map):
 Time Complexity: O(n) Space Complexity: O(1)
 class Solution(object): def titleToNumber(self, s): &#34;&#34;&#34; :type s: str :rtype: int &#34;&#34;&#34; # First create a dictionary containing key &#39;A&#39; to &#39;Z&#39; # assigning &#39;A&#39;: 1, &#39;B&#39;: 2, &#39;C&#39;: 3, .]]></description>
-</item>
-<item>
-    <title>[LeetCode] 230. Kth Smallest Element in a BST</title>
-    <link>http://debakarr.github.io/posts/leetcode/kth-smallest-element-in-a-bst/</link>
-    <pubDate>Thu, 05 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/leetcode/kth-smallest-element-in-a-bst/</guid>
-    <description><![CDATA[Kth Smallest Element in a BST Link to original Problem on LeetCode
-Given a binary search tree, write a function kthSmallest to find the kth smallest element in it.
-Note: You may assume k is always valid, 1 ≤ k ≤ BST&rsquo;s total elements.
-Example 1:
-Input: root = [3,1,4,null,2], k = 1
-Output: 1
-Example 2:
-Input: root = [5,3,6,2,4,null,null,1], k = 3
-Output: 3
-Follow up: What if the BST is modified (insert/delete operations) often and you need to find the kth smallest frequently?]]></description>
 </item>
 </channel>
 </rss>

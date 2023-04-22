@@ -3,7 +3,17 @@
         <title>Tutorial - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/tutorial/</link>
         <description>Tutorial - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 22 Apr 2023 17:43:13 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+    <title>Day 7: Basic Git commands (`git init`, `git add`, `git commit`, `git status`)</title>
+    <link>http://debakarr.github.io/posts/devops/day7-devops/</link>
+    <pubDate>Sat, 22 Apr 2023 17:43:13 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day7-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 6: Introduction to Git</title>
     <link>http://debakarr.github.io/posts/devops/day6-devops/</link>
     <pubDate>Fri, 21 Apr 2023 15:24:16 &#43;0530</pubDate>
@@ -108,16 +118,6 @@ You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your al
 -Get Book(s) by title
 -Get Book(s) by subject ID
 Another thing we are going to use is called Postman. Postman is an HTTP Request composer. It helps you test your API in a very efficient way.]]></description>
-</item>
-<item>
-    <title>Understanding the very first few lines of basic C&#43;&#43; code</title>
-    <link>http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</link>
-    <pubDate>Sun, 20 Aug 2017 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/basics_learning/understanding-the-very-first-few-lines-of-basic-c&#43;&#43;-code/</guid>
-    <description><![CDATA[So most of the students in Computer Science Department of a B.Tech college have written code in C++ at some point in their life.
-Let me begin with a small code snippet.
-#include&lt;iostream&gt; using namespace std; namespace abc { int a = 100; } int a = 200; int main() { int a = 300; cout &lt;&lt; &#34;abc::a = &#34; &lt;&lt; abc::a &lt;&lt; endl; cout &lt;&lt; &#34;::a = &#34; &lt;&lt;::a &lt;&lt; endl; cout &lt;&lt; &#34;a = &#34; &lt;&lt; a &lt;&lt; endl; return (0); } Running the code produce this output:]]></description>
 </item>
 </channel>
 </rss>
