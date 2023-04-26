@@ -3,7 +3,27 @@
         <title>Tutorial - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/tutorial/</link>
         <description>Tutorial - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 22 Apr 2023 17:43:13 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/tutorial/" rel="self" type="application/rss+xml" /><item>
+    <title>Day 9: Remote repositories and collaboration with Git</title>
+    <link>http://debakarr.github.io/posts/devops/day9-devops/</link>
+    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day9-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
+    <title>Day 8: Branching and merging in Git</title>
+    <link>http://debakarr.github.io/posts/devops/day8-devops/</link>
+    <pubDate>Tue, 25 Apr 2023 15:31:43 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day8-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 7: Basic Git commands (`git init`, `git add`, `git commit`, `git status`)</title>
     <link>http://debakarr.github.io/posts/devops/day7-devops/</link>
     <pubDate>Sat, 22 Apr 2023 17:43:13 &#43;0530</pubDate>
@@ -87,37 +107,6 @@ Example 2:
 Input: nums = [1], k = 1 Output: [1]
 Note:
 You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your algorithm&rsquo;s time complexity must be better than O(n log n), where n is the array&rsquo;s size.]]></description>
-</item>
-<item>
-    <title>TensorFlow Basic</title>
-    <link>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</link>
-    <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</guid>
-    <description><![CDATA[TensorFlow Basic I made this post for revision purpose. This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great).]]></description>
-</item>
-<item>
-    <title>Building a Restful API using JAX-RS</title>
-    <link>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</link>
-    <pubDate>Wed, 27 Sep 2017 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/basics_learning/building-a-restful-api-using-jax-rs/</guid>
-    <description><![CDATA[1. What are the tools needed?
-2. Basic setup
-3. Setting up Tomcat Server and Postman
-4. Structure
-5. Book Model
-6. Book Database
-7. Book Services
-8. Book Resource
-9. GET
-10. PUSH
-11. PUT
-12. DELETE
-13. Query
--Get Book(s) by title
--Get Book(s) by subject ID
-Another thing we are going to use is called Postman. Postman is an HTTP Request composer. It helps you test your API in a very efficient way.]]></description>
 </item>
 </channel>
 </rss>
