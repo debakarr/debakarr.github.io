@@ -3,7 +3,17 @@
         <title>How-to - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/how-to/</link>
         <description>How-to - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/how-to/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/how-to/" rel="self" type="application/rss+xml" /><item>
+    <title>Day 10: Git workflows and best practices</title>
+    <link>http://debakarr.github.io/posts/devops/day10-devops/</link>
+    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day10-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 9: Remote repositories and collaboration with Git</title>
     <link>http://debakarr.github.io/posts/devops/day9-devops/</link>
     <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
@@ -92,20 +102,6 @@ Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git com
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
-</item>
-<item>
-    <title>How to build a reddit to twitter bot</title>
-    <link>http://debakarr.github.io/posts/basics_learning/how-to-create-reddit-to-twitter-bot/</link>
-    <pubDate>Mon, 19 Jun 2017 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/basics_learning/how-to-create-reddit-to-twitter-bot/</guid>
-    <description><![CDATA[First of all what will be this bot doing actually?
-Ans. This bot will be tweeting any new post on a particular subreddit to your twitter bot account. In my case it will be tweeting any new tweets from /r/anime
-Can I have a look on the finished product?
-Ans. Here you go
-So what do I actually need to create the bot?
-Ans.
-Some Basic Programming knowlegde and how to run terminal.]]></description>
 </item>
 </channel>
 </rss>

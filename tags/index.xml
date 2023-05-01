@@ -3,18 +3,58 @@
         <title>Tags - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
     <title>DevOps</title>
     <link>http://debakarr.github.io/tags/devops/</link>
-    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
+    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/devops/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
+    <title>Jenkins</title>
+    <link>http://debakarr.github.io/tags/jenkins/</link>
+    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/jenkins/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Tutorial</title>
+    <link>http://debakarr.github.io/tags/tutorial/</link>
+    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/tutorial/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>CircleCI</title>
+    <link>http://debakarr.github.io/tags/circleci/</link>
+    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/circleci/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>GitHub Actions</title>
+    <link>http://debakarr.github.io/tags/github-actions/</link>
+    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/github-actions/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Travis CI</title>
+    <link>http://debakarr.github.io/tags/travis-ci/</link>
+    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/travis-ci/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>Git</title>
     <link>http://debakarr.github.io/tags/git/</link>
-    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
+    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/git/</guid>
     <description><![CDATA[]]></description>
@@ -22,7 +62,7 @@
 <item>
     <title>GitHub</title>
     <link>http://debakarr.github.io/tags/github/</link>
-    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
+    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/github/</guid>
     <description><![CDATA[]]></description>
@@ -30,7 +70,7 @@
 <item>
     <title>How-to</title>
     <link>http://debakarr.github.io/tags/how-to/</link>
-    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
+    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/how-to/</guid>
     <description><![CDATA[]]></description>
@@ -38,49 +78,9 @@
 <item>
     <title>Remote Repository</title>
     <link>http://debakarr.github.io/tags/remote-repository/</link>
-    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
+    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/remote-repository/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Tutorial</title>
-    <link>http://debakarr.github.io/tags/tutorial/</link>
-    <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/tutorial/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Branching</title>
-    <link>http://debakarr.github.io/tags/branching/</link>
-    <pubDate>Tue, 25 Apr 2023 15:31:43 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/branching/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Merging</title>
-    <link>http://debakarr.github.io/tags/merging/</link>
-    <pubDate>Tue, 25 Apr 2023 15:31:43 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/merging/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Best-Practice</title>
-    <link>http://debakarr.github.io/tags/best-practice/</link>
-    <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/best-practice/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>GitHub Documentation</title>
-    <link>http://debakarr.github.io/tags/github-documentation/</link>
-    <pubDate>Fri, 21 Apr 2023 13:23:45 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/github-documentation/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>

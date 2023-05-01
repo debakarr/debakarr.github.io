@@ -3,7 +3,37 @@
         <title>All Posts - Debakar Roy</title>
         <link>http://debakarr.github.io/posts/</link>
         <description>All Posts | Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/posts/" rel="self" type="application/rss+xml" /><item>
+    <title>Day 12: Jenkins - Installation and configuration</title>
+    <link>http://debakarr.github.io/posts/devops/day12-devops/</link>
+    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day12-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
+    <title>Day 11: Introduction to CI/CD</title>
+    <link>http://debakarr.github.io/posts/devops/day11-devops/</link>
+    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day11-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
+    <title>Day 10: Git workflows and best practices</title>
+    <link>http://debakarr.github.io/posts/devops/day10-devops/</link>
+    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day10-devops/</guid>
+    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 9: Remote repositories and collaboration with Git</title>
     <link>http://debakarr.github.io/posts/devops/day9-devops/</link>
     <pubDate>Wed, 26 Apr 2023 17:00:27 &#43;0530</pubDate>
@@ -72,39 +102,6 @@ Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git com
     <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
-</item>
-<item>
-    <title>Day 2: Exploring the DevOps lifecycle and its stages</title>
-    <link>http://debakarr.github.io/posts/devops/day2-devops/</link>
-    <pubDate>Mon, 17 Apr 2023 07:53:56 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/devops/day2-devops/</guid>
-    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
-Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
-Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
-</item>
-<item>
-    <title>Day 1: Understanding DevOps, its principles, and benefits</title>
-    <link>http://debakarr.github.io/posts/devops/day1-devops/</link>
-    <pubDate>Sun, 16 Apr 2023 09:51:30 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/devops/day1-devops/</guid>
-    <description><![CDATA[Planned ContentPart 1: Introduction to DevOps
-Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
-Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
-</item>
-<item>
-    <title>[LeetCode] 108. Convert Sorted Array to Binary Search Tree</title>
-    <link>http://debakarr.github.io/posts/leetcode/convert-sorted-array-to-binary-search-tree/</link>
-    <pubDate>Fri, 06 Sep 2019 00:00:00 &#43;0000</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/leetcode/convert-sorted-array-to-binary-search-tree/</guid>
-    <description><![CDATA[Convert Sorted Array to Binary Search Tree Link to original Problem on LeetCode
-Given an array where elements are sorted in ascending order, convert it to a height balanced BST.
-For this problem, a height-balanced binary tree is defined as a binary tree in which the depth of the two subtrees of every node never differ by more than 1.
-Example:
-Given the sorted array: [-10,-3,0,5,9],
-One possible answer is: [0,-3,9,-10,null,5], which represents the following height balanced BST:]]></description>
 </item>
 </channel>
 </rss>
