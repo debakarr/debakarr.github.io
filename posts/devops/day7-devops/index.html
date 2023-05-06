@@ -38,7 +38,7 @@ Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git com
             },"description": ""
     }
     </script></head>
-    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('auto' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'auto' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
 
         <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
     <div class="header-wrapper">
@@ -46,7 +46,18 @@ Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git com
             <a href="/" title="Debakar Roy">Debakar Roy</a>
         </div>
         <div class="menu">
-            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
                     <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
                 </a></div>
         </div>
@@ -61,11 +72,32 @@ Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git com
                 <span></span><span></span><span></span>
             </div>
         </div>
-        <div class="menu" id="menu-mobile"><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
                 <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
             </a></div>
     </div>
-</header><main class="main">
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
                 <div class="container"><div class="toc" id="toc-auto">
             <h2 class="toc-title">Contents</h2>
             <div class="toc-content" id="toc-content-auto"></div>
@@ -291,43 +323,43 @@ Syntax: <code>git commit -m &quot;Commit Message&quot;</code></p>
 <p><code>git status</code> is the subcommand which displays the current status of a Git repository. The output shows which branch you&rsquo;re currently on, which files have been modified, which files are staged for commit, and which files are not tracked by Git.</p>
 <p>Here are some scenarios you might see in git status.</p>
 <h3 id="scenario-1-no-changes">Scenario 1: No changes</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ git status
-</span></span><span style="display:flex;"><span>On branch master
-</span></span><span style="display:flex;"><span>nothing to commit, working tree clean
-</span></span></code></pre></div><h3 id="scenario-2-untacked-files">Scenario 2: Untacked files</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ git status
-</span></span><span style="display:flex;"><span>On branch master
-</span></span><span style="display:flex;"><span>Untracked files:
-</span></span><span style="display:flex;"><span>  (use &#34;git add &lt;file&gt;...&#34; to include in what will be committed)
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
-</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>        file.txt
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
-</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>nothing added to commit but untracked files present (use &#34;git add&#34; to track)
-</span></span></code></pre></div><h3 id="scenario-3-changes-to-be-committed">Scenario 3: Changes to be committed</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ git status
-</span></span><span style="display:flex;"><span>On branch master
-</span></span><span style="display:flex;"><span>Changes to be committed:
-</span></span><span style="display:flex;"><span>  (use &#34;git restore --staged &lt;file&gt;...&#34; to unstage)
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
-</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>        modified:   file.txt
-</span></span></code></pre></div><h3 id="scenario-4-changes-not-staged-for-commit">Scenario 4: Changes not staged for commit</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ git status
-</span></span><span style="display:flex;"><span>On branch master
-</span></span><span style="display:flex;"><span>Changes not staged for commit:
-</span></span><span style="display:flex;"><span>  (use &#34;git add &lt;file&gt;...&#34; to update what will be committed)
-</span></span><span style="display:flex;"><span>  (use &#34;git restore &lt;file&gt;...&#34; to discard changes in working directory)
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
-</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>        modified:   file.txt
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
-</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>no changes added to commit (use &#34;git add&#34; and/or &#34;git commit -a&#34;)
-</span></span></code></pre></div><h3 id="scenario-5-changes-in-branch-ahead-of-remote">Scenario 5: Changes in branch ahead of remote</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ git status
-</span></span><span style="display:flex;"><span>On branch master
-</span></span><span style="display:flex;"><span>Your branch is ahead of &#39;origin/master&#39; by 1 commit.
-</span></span><span style="display:flex;"><span>  (use &#34;git push&#34; to publish your local commits)
-</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
-</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>nothing to commit, working tree clean
-</span></span></code></pre></div><div class="details admonition tip open">
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> git status
+</span></span><span class="line"><span class="cl"><span class="go">On branch master
+</span></span></span><span class="line"><span class="cl"><span class="go">nothing to commit, working tree clean
+</span></span></span></code></pre></div><h3 id="scenario-2-untacked-files">Scenario 2: Untacked files</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> git status
+</span></span><span class="line"><span class="cl"><span class="go">On branch master
+</span></span></span><span class="line"><span class="cl"><span class="go">Untracked files:
+</span></span></span><span class="line"><span class="cl"><span class="go">  (use &#34;git add &lt;file&gt;...&#34; to include in what will be committed)
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">        file.txt
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">nothing added to commit but untracked files present (use &#34;git add&#34; to track)
+</span></span></span></code></pre></div><h3 id="scenario-3-changes-to-be-committed">Scenario 3: Changes to be committed</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> git status
+</span></span><span class="line"><span class="cl"><span class="go">On branch master
+</span></span></span><span class="line"><span class="cl"><span class="go">Changes to be committed:
+</span></span></span><span class="line"><span class="cl"><span class="go">  (use &#34;git restore --staged &lt;file&gt;...&#34; to unstage)
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">        modified:   file.txt
+</span></span></span></code></pre></div><h3 id="scenario-4-changes-not-staged-for-commit">Scenario 4: Changes not staged for commit</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> git status
+</span></span><span class="line"><span class="cl"><span class="go">On branch master
+</span></span></span><span class="line"><span class="cl"><span class="go">Changes not staged for commit:
+</span></span></span><span class="line"><span class="cl"><span class="go">  (use &#34;git add &lt;file&gt;...&#34; to update what will be committed)
+</span></span></span><span class="line"><span class="cl"><span class="go">  (use &#34;git restore &lt;file&gt;...&#34; to discard changes in working directory)
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">        modified:   file.txt
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">no changes added to commit (use &#34;git add&#34; and/or &#34;git commit -a&#34;)
+</span></span></span></code></pre></div><h3 id="scenario-5-changes-in-branch-ahead-of-remote">Scenario 5: Changes in branch ahead of remote</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> git status
+</span></span><span class="line"><span class="cl"><span class="go">On branch master
+</span></span></span><span class="line"><span class="cl"><span class="go">Your branch is ahead of &#39;origin/master&#39; by 1 commit.
+</span></span></span><span class="line"><span class="cl"><span class="go">  (use &#34;git push&#34; to publish your local commits)
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">nothing to commit, working tree clean
+</span></span></span></code></pre></div><div class="details admonition tip open">
         <div class="details-summary admonition-title">
             <i class="icon fas fa-lightbulb fa-fw" aria-hidden="true"></i>git status --short<i class="details-icon fas fa-angle-right fa-fw" aria-hidden="true"></i>
         </div>
@@ -383,7 +415,7 @@ Syntax: <code>git commit -m &quot;Commit Message&quot;</code></p>
 </article></div>
             </main><footer class="footer">
         <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
-                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="/" target="_blank"></a></span></div>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/debakarr" target="_blank">Debakar Roy</a></span></div>
         </div>
     </footer></div>
 
@@ -392,5 +424,8 @@ Syntax: <code>git commit -m &quot;Commit Message&quot;</code></p>
             </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
                 <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
             </a>
-        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"data":{"id-1":"sequenceDiagram\n    participant Workspace\n    participant Index\n    participant LocalRepo as Local Repository\n    participant GitCommands as Git Commands\n\n    GitCommands-\u003e\u003eWorkspace: git init\n    Note over Workspace: Initialized as a Git repository\n    GitCommands-\u003e\u003eWorkspace: Create or modify files\n    GitCommands-\u003e\u003eWorkspace: git status\n    Note over Workspace: Shows untracked/modified files\n\n    GitCommands-\u003e\u003eIndex: git add \u003cfile\u003e\n    Note over Index: Stages changes for a file\n    GitCommands-\u003e\u003eWorkspace: git status\n    Note over Workspace: Shows staged changes\n\n    GitCommands-\u003e\u003eLocalRepo: git commit -m \"Message\"\n    Note over LocalRepo: Commit staged changes\n    GitCommands-\u003e\u003eWorkspace: git status\n    Note over Workspace: Shows clean working tree"}};</script><script type="text/javascript" src="/js/theme.min.js"></script></body>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mermaid@9.1.3/dist/mermaid.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"data":{"id-1":"sequenceDiagram\n    participant Workspace\n    participant Index\n    participant LocalRepo as Local Repository\n    participant GitCommands as Git Commands\n\n    GitCommands-\u003e\u003eWorkspace: git init\n    Note over Workspace: Initialized as a Git repository\n    GitCommands-\u003e\u003eWorkspace: Create or modify files\n    GitCommands-\u003e\u003eWorkspace: git status\n    Note over Workspace: Shows untracked/modified files\n\n    GitCommands-\u003e\u003eIndex: git add \u003cfile\u003e\n    Note over Index: Stages changes for a file\n    GitCommands-\u003e\u003eWorkspace: git status\n    Note over Workspace: Shows staged changes\n\n    GitCommands-\u003e\u003eLocalRepo: git commit -m \"Message\"\n    Note over LocalRepo: Commit staged changes\n    GitCommands-\u003e\u003eWorkspace: git status\n    Note over Workspace: Shows clean working tree"},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-NK0GCLFZCV', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-NK0GCLFZCV" async></script></body>
 </html>
