@@ -3,10 +3,18 @@
         <title>Tags - Tag - Debakar Roy</title>
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
-        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><lastBuildDate>Wed, 03 May 2023 10:29:46 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+    <title>Best Practices</title>
+    <link>http://debakarr.github.io/tags/best-practices/</link>
+    <pubDate>Wed, 03 May 2023 10:29:46 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/best-practices/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>DevOps</title>
     <link>http://debakarr.github.io/tags/devops/</link>
-    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
+    <pubDate>Wed, 03 May 2023 10:29:46 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/devops/</guid>
     <description><![CDATA[]]></description>
@@ -14,7 +22,7 @@
 <item>
     <title>Jenkins</title>
     <link>http://debakarr.github.io/tags/jenkins/</link>
-    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
+    <pubDate>Wed, 03 May 2023 10:29:46 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/jenkins/</guid>
     <description><![CDATA[]]></description>
@@ -22,39 +30,15 @@
 <item>
     <title>Tutorial</title>
     <link>http://debakarr.github.io/tags/tutorial/</link>
-    <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
+    <pubDate>Wed, 03 May 2023 10:29:46 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/tutorial/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
-    <title>CircleCI</title>
-    <link>http://debakarr.github.io/tags/circleci/</link>
-    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/circleci/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>GitHub Actions</title>
-    <link>http://debakarr.github.io/tags/github-actions/</link>
-    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/github-actions/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Travis CI</title>
-    <link>http://debakarr.github.io/tags/travis-ci/</link>
-    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
-    <author>Author</author>
-    <guid>http://debakarr.github.io/tags/travis-ci/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
     <title>Git</title>
     <link>http://debakarr.github.io/tags/git/</link>
-    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
+    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/git/</guid>
     <description><![CDATA[]]></description>
@@ -62,25 +46,41 @@
 <item>
     <title>GitHub</title>
     <link>http://debakarr.github.io/tags/github/</link>
-    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
+    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
     <author>Author</author>
     <guid>http://debakarr.github.io/tags/github/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
-    <title>How-to</title>
-    <link>http://debakarr.github.io/tags/how-to/</link>
-    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
+    <title>Jenkins Credential</title>
+    <link>http://debakarr.github.io/tags/jenkins-credential/</link>
+    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
     <author>Author</author>
-    <guid>http://debakarr.github.io/tags/how-to/</guid>
+    <guid>http://debakarr.github.io/tags/jenkins-credential/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
-    <title>Remote Repository</title>
-    <link>http://debakarr.github.io/tags/remote-repository/</link>
-    <pubDate>Thu, 27 Apr 2023 13:40:15 &#43;0530</pubDate>
+    <title>Jenkins Pipeline</title>
+    <link>http://debakarr.github.io/tags/jenkins-pipeline/</link>
+    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
     <author>Author</author>
-    <guid>http://debakarr.github.io/tags/remote-repository/</guid>
+    <guid>http://debakarr.github.io/tags/jenkins-pipeline/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Multibranch Pipeline</title>
+    <link>http://debakarr.github.io/tags/multibranch-pipeline/</link>
+    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/multibranch-pipeline/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Shared Libraries</title>
+    <link>http://debakarr.github.io/tags/shared-libraries/</link>
+    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
+    <author>Author</author>
+    <guid>http://debakarr.github.io/tags/shared-libraries/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>
