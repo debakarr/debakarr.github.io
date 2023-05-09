@@ -4,18 +4,42 @@
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
-            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Fri, 05 May 2023 12:31:09 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sun, 07 May 2023 16:01:58 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
     <title>Ansible</title>
     <link>http://debakarr.github.io/tags/ansible/</link>
-    <pubDate>Fri, 05 May 2023 12:31:09 &#43;0530</pubDate>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/ansible/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
+    <title>Ansible Roles</title>
+    <link>http://debakarr.github.io/tags/ansible-roles/</link>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/ansible-roles/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Ansible-Galaxy</title>
+    <link>http://debakarr.github.io/tags/ansible-galaxy/</link>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/ansible-galaxy/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Best Pactice</title>
+    <link>http://debakarr.github.io/tags/best-pactice/</link>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/best-pactice/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>DevOps</title>
     <link>http://debakarr.github.io/tags/devops/</link>
-    <pubDate>Fri, 05 May 2023 12:31:09 &#43;0530</pubDate>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/devops/</guid>
     <description><![CDATA[]]></description>
@@ -23,7 +47,7 @@
 <item>
     <title>Jenkins</title>
     <link>http://debakarr.github.io/tags/jenkins/</link>
-    <pubDate>Fri, 05 May 2023 12:31:09 &#43;0530</pubDate>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/jenkins/</guid>
     <description><![CDATA[]]></description>
@@ -31,9 +55,25 @@
 <item>
     <title>Tutorial</title>
     <link>http://debakarr.github.io/tags/tutorial/</link>
-    <pubDate>Fri, 05 May 2023 12:31:09 &#43;0530</pubDate>
+    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/tutorial/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Ad-hoc command</title>
+    <link>http://debakarr.github.io/tags/ad-hoc-command/</link>
+    <pubDate>Sat, 06 May 2023 16:01:51 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/ad-hoc-command/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Playbook</title>
+    <link>http://debakarr.github.io/tags/playbook/</link>
+    <pubDate>Sat, 06 May 2023 16:01:51 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/playbook/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
@@ -42,46 +82,6 @@
     <pubDate>Thu, 04 May 2023 11:24:57 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/best-practices/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Git</title>
-    <link>http://debakarr.github.io/tags/git/</link>
-    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/git/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>GitHub</title>
-    <link>http://debakarr.github.io/tags/github/</link>
-    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/github/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Jenkins Credential</title>
-    <link>http://debakarr.github.io/tags/jenkins-credential/</link>
-    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/jenkins-credential/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Jenkins Pipeline</title>
-    <link>http://debakarr.github.io/tags/jenkins-pipeline/</link>
-    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/jenkins-pipeline/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Multibranch Pipeline</title>
-    <link>http://debakarr.github.io/tags/multibranch-pipeline/</link>
-    <pubDate>Tue, 02 May 2023 09:35:33 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/multibranch-pipeline/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>

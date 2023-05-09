@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Day18: Ansible - Ad-hoc commands and playbooks - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="Day18: Ansible - Ad-hoc commands and playbooks" />
+<meta property="og:description" content="ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/devops/day18-devops/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-05-06T16:01:51+05:30" />
+<meta property="article:modified_time" content="2023-05-06T16:01:51+05:30" /><meta property="og:site_name" content="Debakar Roy" />
+<meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Day18: Ansible - Ad-hoc commands and playbooks"/>
+<meta name="twitter:description" content="ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)"/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/devops/day18-devops/" /><link rel="prev" href="http://debakarr.github.io/posts/devops/day17-devops/" /><link rel="next" href="http://debakarr.github.io/posts/devops/day19-devops/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Day18: Ansible - Ad-hoc commands and playbooks",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/devops\/day18-devops\/"
+        },"genre": "posts","keywords": "DevOps, CI\/CD, Jenkins, Tutorial, Ansible, Playbook, Ad-hoc command","wordcount":  910 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/devops\/day18-devops\/","datePublished": "2023-05-06T16:01:51+05:30","dateModified": "2023-05-06T16:01:51+05:30","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Day18: Ansible - Ad-hoc commands and playbooks</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/devops/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>DevOps</a>&nbsp;<a href="/categories/software-development/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Software Development</a>&nbsp;<a href="/categories/automation/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Automation</a>&nbsp;<a href="/categories/infrastructure/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Infrastructure</a>&nbsp;<a href="/categories/ansible/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Ansible</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-06">2023-05-06</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;910 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#introduction">Introduction:</a></li>
+    <li><a href="#setup">Setup</a>
+      <ul>
+        <li><a href="#ansible-ad-hoc-commands">Ansible Ad-hoc commands</a></li>
+        <li><a href="#ansible-playbook">Ansible Playbook</a></li>
+        <li><a href="#conclusion">Conclusion</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><div class="details admonition info">
+        <div class="details-summary admonition-title">
+            <i class="icon fas fa-info-circle fa-fw" aria-hidden="true"></i>Content<i class="details-icon fas fa-angle-right fa-fw" aria-hidden="true"></i>
+        </div>
+        <div class="details-content">
+            <div class="admonition-content"><p><strong>Part 1: Introduction to DevOps</strong></p>
+<ul>
+<li><a href="day1-devops" rel="">Day 1: Understanding DevOps, its principles, and benefits</a></li>
+<li><a href="/posts/devops/day2-devops" rel="">Day 2: Exploring the DevOps lifecycle and its stages</a></li>
+<li><a href="/posts/devops/day3-devops" rel="">Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD)</a></li>
+<li><a href="/posts/devops/day4-devops" rel="">Day 4: Familiarizing with common DevOps tools and technologies</a></li>
+<li><a href="/posts/devops/day5-devops" rel="">Day 5: Studying DevOps culture and best practices</a></li>
+</ul>
+<p><strong>Part 2: Version Control Systems</strong></p>
+<ul>
+<li><a href="/posts/devops/day6-devops" rel="">Day 6: Introduction to Git</a></li>
+<li><a href="/posts/devops/day7-devops" rel="">Day 7: Basic Git commands (<code>git init</code>, <code>git add</code>, <code>git commit</code>, <code>git status</code>)</a></li>
+<li><a href="/posts/devops/day8-devops" rel="">Day 8: Branching and merging in Git</a></li>
+<li><a href="/posts/devops/day9-devops" rel="">Day 9: Remote repositories and collaboration with Git</a></li>
+<li><a href="/posts/devops/day10-devops" rel="">Day 10: Git workflows and best practices</a></li>
+</ul>
+<p><strong>Part 3: Continuous Integration and Continuous Deployment (CI/CD)</strong></p>
+<ul>
+<li><a href="/posts/devops/day11-devops" rel="">Day 11: Introduction to CI/CD</a></li>
+<li><a href="/posts/devops/day12-devops" rel="">Day 12: Jenkins - Installation and configuration</a></li>
+<li><a href="/posts/devops/day13-devops" rel="">Day 13: Jenkins - Creating and managing jobs</a></li>
+<li><a href="/posts/devops/day14-devops" rel="">Day 14: Jenkins - Integrating with Git</a></li>
+<li><a href="/posts/devops/day15-devops" rel="">Day 15: Jenkins - Pipelines and best practices</a></li>
+</ul>
+<p><strong>Part 4: Configuration Management</strong></p>
+<ul>
+<li><a href="/posts/devops/day16-devops" rel="">Day 16: Introduction to configuration management</a></li>
+<li><a href="/posts/devops/day17-devops" rel="">Day 17: Ansible - Installation and configuration</a></li>
+<li><strong><a href="/posts/devops/day18-devops" rel="">Day 18: Ansible - Ad-hoc commands and playbook</a></strong></li>
+<li>Day 19: Ansible - Roles and best practices</li>
+<li>Day 20: Puppet and Chef - Overview and comparison</li>
+</ul>
+<p><strong>Part 5: Infrastructure as Code</strong></p>
+<ul>
+<li>Day 21: Introduction to Infrastructure as Code (IaC)</li>
+<li>Day 22: Terraform - Installation and configuration</li>
+<li>Day 23: Terraform - Writing and applying configuration files</li>
+<li>Day 24: Terraform - Modules and best practices</li>
+<li>Day 25: CloudFormation (AWS) - Overview and comparison</li>
+</ul>
+<p><strong>Part 6: Containerization</strong></p>
+<ul>
+<li>Day 26: Introduction to containerization</li>
+<li>Day 27: Docker - Installation and configuration</li>
+<li>Day 28: Docker - Building and managing images</li>
+<li>Day 29: Docker - Running and managing containers</li>
+<li>Day 30: Docker Compose and best practices</li>
+</ul>
+<p><strong>Part 7: Container Orchestration</strong></p>
+<ul>
+<li>Day 31: Introduction to container orchestration</li>
+<li>Day 32: Kubernetes - Architecture and components</li>
+<li>Day 33: Kubernetes - Deployments, services, and storage</li>
+<li>Day 34: Kubernetes - ConfigMaps and secrets</li>
+<li>Day 35: Kubernetes - Best practices and Helm</li>
+</ul>
+<p><strong>Part 8: Monitoring and Logging</strong></p>
+<ul>
+<li>Day 36: Introduction to monitoring and logging</li>
+<li>Day 37: Prometheus - Installation and configuration</li>
+<li>Day 38: Prometheus - Querying and alerting</li>
+<li>Day 39: Grafana - Installation and configuration</li>
+<li>Day 40: ELK Stack (Elasticsearch, Logstash, Kibana) - Overview and comparison</li>
+</ul>
+<p><strong>Part 9: Cloud Platforms</strong></p>
+<ul>
+<li>Day 41: Introduction to cloud platforms</li>
+<li>Day 42: AWS - EC2, S3, and RDS</li>
+<li>Day 43: AWS - IAM, VPC, and ELB</li>
+<li>Day 44: Azure - Virtual Machines, Storage, and SQL Database</li>
+<li>Day 45: Google Cloud Platform - Compute Engine, Storage, and Cloud SQL</li>
+</ul>
+<p><strong>Part 10: DevOps Security</strong></p>
+<ul>
+<li>Day 46: Introduction to DevOps security</li>
+<li>Day 47: Security best practices for CI/CD pipelines</li>
+<li>Day 48: Infrastructure and application security</li>
+<li>Day 49: Container and Kubernetes security</li>
+<li>Day 50: Cloud security and compliance</li>
+</ul>
+</div>
+        </div>
+    </div>
+<hr>
+<h2 id="introduction">Introduction:</h2>
+<p>Ansible is a powerful automation tool that simplifies complex tasks in IT environments. In this blog post, we will explore Ansible ad-hoc commands and playbooks. Ad-hoc commands are a quick way to execute simple tasks on remote hosts, while playbooks allow you to create reusable and more complex automation workflows.</p>
+<h2 id="setup">Setup</h2>
+<p>I had setup 1 Ubuntu ansible controller and 3 Debian ansible host machine.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://i.imgur.com/SPBcnvv.png"
+        data-srcset="https://i.imgur.com/SPBcnvv.png, https://i.imgur.com/SPBcnvv.png 1.5x, https://i.imgur.com/SPBcnvv.png 2x"
+        data-sizes="auto"
+        alt="https://i.imgur.com/SPBcnvv.png"
+        title="https://i.imgur.com/SPBcnvv.png" /></p>
+<h3 id="ansible-ad-hoc-commands">Ansible Ad-hoc commands</h3>
+<p>Ad-hoc commands are a great way to perform quick tasks on your remote hosts without the need for a playbook. These commands are executed directly from the command line and are useful for simple tasks like checking the status of a service or creating a new user.</p>
+<hr>
+<p>Here are some examples of Ansible ad-hoc commands:</p>
+<h4 id="check-if-linux-host-are-reachable">Check if linux host are reachable</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">ansible linux-host -m ping
+</span></span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://i.imgur.com/m0Nndbs.png"
+        data-srcset="https://i.imgur.com/m0Nndbs.png, https://i.imgur.com/m0Nndbs.png 1.5x, https://i.imgur.com/m0Nndbs.png 2x"
+        data-sizes="auto"
+        alt="https://i.imgur.com/m0Nndbs.png"
+        title="https://i.imgur.com/m0Nndbs.png" /></p>
+<hr>
+<h4 id="check-uptime-of-all-the-linux-host">Check uptime of all the linux host</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">ansible linux-host -m command -a &#34;uptime&#34;
+</span></span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://i.imgur.com/LIdBX0u.png"
+        data-srcset="https://i.imgur.com/LIdBX0u.png, https://i.imgur.com/LIdBX0u.png 1.5x, https://i.imgur.com/LIdBX0u.png 2x"
+        data-sizes="auto"
+        alt="https://i.imgur.com/LIdBX0u.png"
+        title="https://i.imgur.com/LIdBX0u.png" /></p>
+<hr>
+<h4 id="use-ansiblebuiltinshell-module">Use <code>ansible/builtin.shell</code> module</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">ansible linux-host -m ansible.builtin.shell -a &#39;echo $TERM&#39;
+</span></span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://i.imgur.com/vvGEDlR.png"
+        data-srcset="https://i.imgur.com/vvGEDlR.png, https://i.imgur.com/vvGEDlR.png 1.5x, https://i.imgur.com/vvGEDlR.png 2x"
+        data-sizes="auto"
+        alt="https://i.imgur.com/vvGEDlR.png"
+        title="https://i.imgur.com/vvGEDlR.png" /></p>
+<hr>
+<h4 id="use-ansiblebuiltincopy-module">Use <code>ansible.builtin.copy</code> module</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">ansible linux-host -m ansible.builtin.copy -a &#34;src=/etc/hosts dest=/tmp/hosts&#34;
+</span></span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://i.imgur.com/udlo1Tl.png"
+        data-srcset="https://i.imgur.com/udlo1Tl.png, https://i.imgur.com/udlo1Tl.png 1.5x, https://i.imgur.com/udlo1Tl.png 2x"
+        data-sizes="auto"
+        alt="https://i.imgur.com/udlo1Tl.png"
+        title="https://i.imgur.com/udlo1Tl.png" /></p>
+<hr>
+<p>Keep in mind that ad-hoc commands are not suitable for complex tasks, and their usage should be limited to simple and quick tasks.</p>
+<hr>
+<h3 id="ansible-playbook">Ansible Playbook</h3>
+<p>Playbooks are the core of Ansible&rsquo;s automation capabilities. They are written in YAML and define a series of tasks to be executed on remote hosts. Playbooks can be easily shared, reused, and versioned, making them ideal for more complex tasks and workflows.</p>
+<p>Here&rsquo;s a simple example of an Ansible playbook that installs and configures the Apache web server on multiple Debian hosts under the &ldquo;linux-host&rdquo; group:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-yaml" data-lang="yaml"><span class="line"><span class="cl"><span class="nn">---</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Install and configure Apache on Debian hosts</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">hosts</span><span class="p">:</span><span class="w"> </span><span class="l">linux-host</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">become</span><span class="p">:</span><span class="w"> </span><span class="kc">yes</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">tasks</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Update package index</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">apt</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">update_cache</span><span class="p">:</span><span class="w"> </span><span class="kc">yes</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Install Apache</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">apt</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">apache2</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l">present</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Start and enable Apache service</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">service</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">apache2</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l">started</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="kc">yes</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">  </span><span class="nt">handlers</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span>- <span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">Restart Apache</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">      </span><span class="nt">service</span><span class="p">:</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l">apache2</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="nt">state</span><span class="p">:</span><span class="w"> </span><span class="l">restarted</span><span class="w">
+</span></span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://i.imgur.com/N9kF0E7.png"
+        data-srcset="https://i.imgur.com/N9kF0E7.png, https://i.imgur.com/N9kF0E7.png 1.5x, https://i.imgur.com/N9kF0E7.png 2x"
+        data-sizes="auto"
+        alt="https://i.imgur.com/N9kF0E7.png"
+        title="https://i.imgur.com/N9kF0E7.png" /></p>
+<p>In this playbook, we first update the package index on all hosts in the &ldquo;linux-host&rdquo; group. Then, we install the Apache web server using the apt module. Finally, we start and enable the Apache service, and create a handler to restart the service if any changes are made.</p>
+<p>To run this playbook, save it as apache_setup.yml and execute the following command:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">ansible-playbook apache_setup.yml
+</span></span></span></code></pre></div><p>This playbook will install and configure the Apache web server on all Debian hosts in the &ldquo;linux-host&rdquo; group.</p>
+<hr>
+<h3 id="conclusion">Conclusion</h3>
+<p>In this blog post, we have explored Ansible ad-hoc commands and playbooks. Ad-hoc commands are useful for quick and simple tasks, while playbooks provide a more powerful and reusable way to automate complex tasks and workflows.</p>
+<p>As you continue to learn and use Ansible, you&rsquo;ll find that these tools can greatly simplify your IT automation tasks and improve your overall workflow.</p>
+<hr>
+<p>Few more resources one can read:</p>
+<ul>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.ansible.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.ansible.com, https://www.google.com/s2/favicons?domain=docs.ansible.com 1.5x, https://www.google.com/s2/favicons?domain=docs.ansible.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.ansible.com"
+        title="favicon-docs.ansible.com" /><a href="https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html" target="_blank" rel="noopener noreffer ">Introduction to ad hoc commands</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=www.middlewareinventory.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=www.middlewareinventory.com, https://www.google.com/s2/favicons?domain=www.middlewareinventory.com 1.5x, https://www.google.com/s2/favicons?domain=www.middlewareinventory.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=www.middlewareinventory.com"
+        title="favicon-www.middlewareinventory.com" /><a href="https://www.middlewareinventory.com/blog/ansible-ad-hoc-commands/" target="_blank" rel="noopener noreffer ">CI/CD concepts</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=www.redhat.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=www.redhat.com, https://www.google.com/s2/favicons?domain=www.redhat.com 1.5x, https://www.google.com/s2/favicons?domain=www.redhat.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=www.redhat.com"
+        title="favicon-www.redhat.com" /><a href="https://www.redhat.com/sysadmin/software-packages-ansible" target="_blank" rel="noopener noreffer ">How to install software packages with an Ansible playbook</a></li>
+</ul>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2023-05-06</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/devops/day18-devops/" data-title="Day18: Ansible - Ad-hoc commands and playbooks" data-via="debakar_roy" data-hashtags="DevOps,CI/CD,Jenkins,Tutorial,Ansible,Playbook,Ad-hoc command"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/devops/day18-devops/" data-hashtag="DevOps"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/devops/day18-devops/" data-title="Day18: Ansible - Ad-hoc commands and playbooks"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/devops/day18-devops/" data-title="Day18: Ansible - Ad-hoc commands and playbooks"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/devops/day18-devops/" data-title="Day18: Ansible - Ad-hoc commands and playbooks"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/devops/">DevOps</a>,&nbsp;<a href="/tags/ci/cd/">CI/CD</a>,&nbsp;<a href="/tags/jenkins/">Jenkins</a>,&nbsp;<a href="/tags/tutorial/">Tutorial</a>,&nbsp;<a href="/tags/ansible/">Ansible</a>,&nbsp;<a href="/tags/playbook/">Playbook</a>,&nbsp;<a href="/tags/ad-hoc-command/">Ad-hoc command</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/devops/day17-devops/" class="prev" rel="prev" title="Day 17: Ansible - Installation and configuration"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Day 17: Ansible - Installation and configuration</a>
+            <a href="/posts/devops/day19-devops/" class="next" rel="next" title="Day 19: Ansible - Roles and best practices">Day 19: Ansible - Roles and best practices<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.111.3">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2023</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/debakarr" target="_blank">Debakar Roy</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-NK0GCLFZCV', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-NK0GCLFZCV" async></script></body>
+</html>
