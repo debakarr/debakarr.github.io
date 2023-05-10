@@ -4,7 +4,17 @@
         <link>http://debakarr.github.io/categories/software-development/</link>
         <description>Software Development - Category - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
-            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Mon, 08 May 2023 16:11:18 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/categories/software-development/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Tue, 09 May 2023 10:43:39 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/categories/software-development/" rel="self" type="application/rss+xml" /><item>
+    <title>Day 21: Introduction to Infrastructure as Code (IaC)</title>
+    <link>http://debakarr.github.io/posts/devops/day21-devops/</link>
+    <pubDate>Tue, 09 May 2023 10:43:39 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/devops/day21-devops/</guid>
+    <description><![CDATA[ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
+</item>
+<item>
     <title>Day 20: Puppet and Chef - Overview and comparison</title>
     <link>http://debakarr.github.io/posts/devops/day20-devops/</link>
     <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
@@ -90,16 +100,6 @@ Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git com
     <pubDate>Sat, 29 Apr 2023 10:14:30 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/posts/devops/day12-devops/</guid>
-    <description><![CDATA[ContentPart 1: Introduction to DevOps
-Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
-Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
-</item>
-<item>
-    <title>Day 11: Introduction to CI/CD</title>
-    <link>http://debakarr.github.io/posts/devops/day11-devops/</link>
-    <pubDate>Fri, 28 Apr 2023 09:19:15 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/posts/devops/day11-devops/</guid>
     <description><![CDATA[ContentPart 1: Introduction to DevOps
 Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
 Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)]]></description>
