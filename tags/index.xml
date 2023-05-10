@@ -4,12 +4,60 @@
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
-            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sun, 07 May 2023 16:01:58 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Mon, 08 May 2023 16:11:18 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
     <title>Ansible</title>
     <link>http://debakarr.github.io/tags/ansible/</link>
-    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/ansible/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Chef</title>
+    <link>http://debakarr.github.io/tags/chef/</link>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/chef/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Comparision</title>
+    <link>http://debakarr.github.io/tags/comparision/</link>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/comparision/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>DevOps</title>
+    <link>http://debakarr.github.io/tags/devops/</link>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/devops/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Jenkins</title>
+    <link>http://debakarr.github.io/tags/jenkins/</link>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/jenkins/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Puppet</title>
+    <link>http://debakarr.github.io/tags/puppet/</link>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/puppet/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Tutorial</title>
+    <link>http://debakarr.github.io/tags/tutorial/</link>
+    <pubDate>Mon, 08 May 2023 16:11:18 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/tutorial/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
@@ -34,54 +82,6 @@
     <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/best-pactice/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>DevOps</title>
-    <link>http://debakarr.github.io/tags/devops/</link>
-    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/devops/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Jenkins</title>
-    <link>http://debakarr.github.io/tags/jenkins/</link>
-    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/jenkins/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Tutorial</title>
-    <link>http://debakarr.github.io/tags/tutorial/</link>
-    <pubDate>Sun, 07 May 2023 16:01:58 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/tutorial/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Ad-hoc command</title>
-    <link>http://debakarr.github.io/tags/ad-hoc-command/</link>
-    <pubDate>Sat, 06 May 2023 16:01:51 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/ad-hoc-command/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Playbook</title>
-    <link>http://debakarr.github.io/tags/playbook/</link>
-    <pubDate>Sat, 06 May 2023 16:01:51 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/playbook/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Best Practices</title>
-    <link>http://debakarr.github.io/tags/best-practices/</link>
-    <pubDate>Thu, 04 May 2023 11:24:57 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/best-practices/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>

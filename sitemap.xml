@@ -2,24 +2,28 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
-            <loc>http://debakarr.github.io/tags/ansible/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/ansible/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/ansible/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/ansible/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/automation/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/best-pactice/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/chef/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/comparision/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/devops/day20-devops/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/devops/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/devops/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/infrastructure/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/jenkins/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/puppet/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/software-development/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/tutorial/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/ansible-roles/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/ansible-galaxy/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/automation/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/best-pactice/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/best-pactice/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/posts/devops/day19-devops/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/tags/devops/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/devops/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/infrastructure/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/tags/jenkins/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/posts/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/software-development/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/tags/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/tags/tutorial/</loc><lastmod>2023-05-07T16:01:58&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/ad-hoc-command/</loc><lastmod>2023-05-06T16:01:51&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/posts/devops/day18-devops/</loc><lastmod>2023-05-06T16:01:51&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/playbook/</loc><lastmod>2023-05-06T16:01:51&#43;05:30</lastmod></url><url>
