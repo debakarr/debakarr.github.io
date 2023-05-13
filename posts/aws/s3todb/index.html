@@ -29,7 +29,7 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/debakarr.github.io\/posts\/aws\/s3todb\/"
-        },"genre": "posts","keywords": "DevOps, AWS, S3, SQS, Serverless, Lambda","wordcount":  980 ,
+        },"genre": "posts","keywords": "DevOps, AWS, S3, SQS, Serverless, Lambda","wordcount":  1017 ,
         "url": "http:\/\/debakarr.github.io\/posts\/aws\/s3todb\/","datePublished": "2023-05-13T13:40:00+05:30","dateModified": "2023-05-13T13:40:00+05:30","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -103,7 +103,7 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Serverless Workflow to Process Files Uploaded to Amazon S3</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/devops/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>DevOps</a>&nbsp;<a href="/categories/aws/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AWS</a>&nbsp;<a href="/categories/s3/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>S3</a>&nbsp;<a href="/categories/sqs/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>SQS</a>&nbsp;<a href="/categories/serverless/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Serverless</a>&nbsp;<a href="/categories/lambda/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Lambda</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-13">2023-05-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;980 words&nbsp;
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-13">2023-05-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1017 words&nbsp;
                 <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
@@ -738,7 +738,30 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
             <div class="admonition-content">Please note that you will have to modify it as per your account name and S3 bucket name.</div>
         </div>
     </div>
-<p><img
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;Version&#34;</span><span class="p">:</span> <span class="s2">&#34;2012-10-17&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;Id&#34;</span><span class="p">:</span> <span class="s2">&#34;JSONProcessingQueue-ID&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;Statement&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Sid&#34;</span><span class="p">:</span> <span class="s2">&#34;JSONProcessingQueue-statement-ID&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Effect&#34;</span><span class="p">:</span> <span class="s2">&#34;Allow&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Principal&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;AWS&#34;</span><span class="p">:</span> <span class="s2">&#34;*&#34;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">},</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Action&#34;</span><span class="p">:</span> <span class="s2">&#34;SQS:SendMessage&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Resource&#34;</span><span class="p">:</span> <span class="s2">&#34;arn:aws:sqs:us-east-1:CHANGE-WITH-YOUR-ACCOUNT-ID:JSONProcessingQueue&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Condition&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;StringEquals&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;aws:SourceAccount&#34;</span><span class="p">:</span> <span class="s2">&#34;CHANGE-WITH-YOUR-ACCOUNT-ID&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;ArnLike&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;aws:SourceArn&#34;</span><span class="p">:</span> <span class="s2">&#34;arn:aws:s3:*:*:CHANGE-WITH-YOUR-BUCKET-NAME&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><img
         class="lazyload"
         src="/svg/loading.min.svg"
         data-src="/posts/aws/s3todb/create-queue/modify-access-policy.jpg"
