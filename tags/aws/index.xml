@@ -1,0 +1,18 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>AWS - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/aws/</link>
+        <description>AWS - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sat, 13 May 2023 13:40:00 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/aws/" rel="self" type="application/rss+xml" /><item>
+    <title>Serverless Workflow to Process Files Uploaded to Amazon S3</title>
+    <link>http://debakarr.github.io/posts/aws/s3todb/</link>
+    <pubDate>Sat, 13 May 2023 13:40:00 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/aws/s3todb/</guid>
+    <description><![CDATA[This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.
+Thing it covers:
+Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lambda Function to process the message in SQS queue. We can process the file in AWS Lambda Function if required.]]></description>
+</item>
+</channel>
+</rss>

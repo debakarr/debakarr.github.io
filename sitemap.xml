@@ -2,19 +2,30 @@
     xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
     xmlns:xhtml="http://www.w3.org/1999/xhtml"
     ><url>
+            <loc>http://debakarr.github.io/tags/aws/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/aws/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/devops/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/devops/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/lambda/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/lambda/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/s3/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/s3/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/serverless/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/serverless/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/posts/aws/s3todb/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/sqs/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/categories/sqs/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
+            <loc>http://debakarr.github.io/tags/</loc><lastmod>2023-05-13T13:40:00&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/automation/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/posts/devops/day21-devops/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/tags/devops/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/categories/devops/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/iac/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/iac/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/infrastructure/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/jenkins/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/posts/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/categories/software-development/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
-            <loc>http://debakarr.github.io/tags/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/terraform/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/tutorial/</loc><lastmod>2023-05-09T10:43:39&#43;05:30</lastmod></url><url>
             <loc>http://debakarr.github.io/tags/chef/</loc><lastmod>2023-05-08T16:11:18&#43;05:30</lastmod></url><url>
