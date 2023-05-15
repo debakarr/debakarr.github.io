@@ -6,8 +6,7 @@
         <meta name="robots" content="noodp" />
         <title>Serverless Workflow to Process Files Uploaded to Amazon S3 - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="Serverless Workflow to Process Files Uploaded to Amazon S3" />
 <meta property="og:description" content="This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.
-Thing it covers:
-Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lambda Function to process the message in SQS queue. We can process the file in AWS Lambda Function if required." />
+Source code for diagramfrom diagrams import Cluster, Diagram from diagrams.aws.compute import Lambda from diagrams.aws.database import Dynamodb from diagrams.aws.integration import SQS from diagrams.aws.storage import S3 with Diagram(&#34;Serverless Workflow&#34;, graph_attr={&#34;margin&#34;: &#34;-1&#34;}, show=False): with Cluster(&#34;Amazon S3&#34;): s3_bucket = S3(&#34;JSONFilesBucket&#34;) with Cluster(&#34;AWS SQS&#34;): dlq = SQS(&#34;DeadLetterQueue&#34;) json_processing_queue = SQS(&#34;JSONProcessingQueue&#34;) json_processing_queue - dlq with Cluster(&#34;AWS Lambda&#34;): lambda_function = Lambda(&#34;ProcessJSONFiles&#34;) with Cluster(&#34;Amazon DynamoDB&#34;): dynamodb_table = Dynamodb(&#34;JSONItemTable&#34;) s3_bucket &gt;&gt; json_processing_queue &gt;&gt; lambda_function &gt;&gt; dynamodb_table Thing it covers:" />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="http://debakarr.github.io/posts/aws/s3todb/" /><meta property="article:section" content="posts" />
 <meta property="article:published_time" content="2023-05-13T13:40:00+05:30" />
@@ -15,8 +14,7 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
 <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Serverless Workflow to Process Files Uploaded to Amazon S3"/>
 <meta name="twitter:description" content="This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.
-Thing it covers:
-Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lambda Function to process the message in SQS queue. We can process the file in AWS Lambda Function if required."/>
+Source code for diagramfrom diagrams import Cluster, Diagram from diagrams.aws.compute import Lambda from diagrams.aws.database import Dynamodb from diagrams.aws.integration import SQS from diagrams.aws.storage import S3 with Diagram(&#34;Serverless Workflow&#34;, graph_attr={&#34;margin&#34;: &#34;-1&#34;}, show=False): with Cluster(&#34;Amazon S3&#34;): s3_bucket = S3(&#34;JSONFilesBucket&#34;) with Cluster(&#34;AWS SQS&#34;): dlq = SQS(&#34;DeadLetterQueue&#34;) json_processing_queue = SQS(&#34;JSONProcessingQueue&#34;) json_processing_queue - dlq with Cluster(&#34;AWS Lambda&#34;): lambda_function = Lambda(&#34;ProcessJSONFiles&#34;) with Cluster(&#34;Amazon DynamoDB&#34;): dynamodb_table = Dynamodb(&#34;JSONItemTable&#34;) s3_bucket &gt;&gt; json_processing_queue &gt;&gt; lambda_function &gt;&gt; dynamodb_table Thing it covers:"/>
 <meta name="application-name" content="Debakar Roy">
 <meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/aws/s3todb/" /><link rel="prev" href="http://debakarr.github.io/posts/devops/day21-devops/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
         <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -29,7 +27,7 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
         "mainEntityOfPage": {
             "@type": "WebPage",
             "@id": "http:\/\/debakarr.github.io\/posts\/aws\/s3todb\/"
-        },"genre": "posts","keywords": "DevOps, AWS, S3, SQS, Serverless, Lambda","wordcount":  1017 ,
+        },"genre": "posts","keywords": "DevOps, AWS, S3, SQS, Serverless, Lambda","wordcount":  1085 ,
         "url": "http:\/\/debakarr.github.io\/posts\/aws\/s3todb\/","datePublished": "2023-05-13T13:40:00+05:30","dateModified": "2023-05-13T13:40:00+05:30","publisher": {
             "@type": "Organization",
             "name": ""},"author": {
@@ -103,8 +101,8 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
             <div class="toc-content" id="toc-content-auto"></div>
         </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Serverless Workflow to Process Files Uploaded to Amazon S3</h1><div class="post-meta">
             <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/devops/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>DevOps</a>&nbsp;<a href="/categories/aws/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AWS</a>&nbsp;<a href="/categories/s3/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>S3</a>&nbsp;<a href="/categories/sqs/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>SQS</a>&nbsp;<a href="/categories/serverless/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Serverless</a>&nbsp;<a href="/categories/lambda/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Lambda</a></span></div>
-            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-13">2023-05-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1017 words&nbsp;
-                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;5 minutes&nbsp;</div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-13">2023-05-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1085 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;6 minutes&nbsp;</div>
         </div><div class="details toc" id="toc-static"  data-kept="">
                 <div class="details-summary toc-title">
                     <span>Contents</span>
@@ -131,6 +129,44 @@ Efficiently process AWS S3 events using AWS SQS Message Queues. Trigger AWS Lamb
   </ul>
 </nav></div>
             </div><div class="content" id="content"><p>This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/serverless_workflow.png"
+        data-srcset="/posts/aws/s3todb/serverless_workflow.png, /posts/aws/s3todb/serverless_workflow.png 1.5x, /posts/aws/s3todb/serverless_workflow.png 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/serverless_workflow.png"
+        title="/posts/aws/s3todb/serverless_workflow.png" width="984" height="700" /></p>
+<div class="details admonition info">
+        <div class="details-summary admonition-title">
+            <i class="icon fas fa-info-circle fa-fw" aria-hidden="true"></i>Source code for diagram<i class="details-icon fas fa-angle-right fa-fw" aria-hidden="true"></i>
+        </div>
+        <div class="details-content">
+            <div class="admonition-content"><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams</span> <span class="kn">import</span> <span class="n">Cluster</span><span class="p">,</span> <span class="n">Diagram</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.compute</span> <span class="kn">import</span> <span class="n">Lambda</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.database</span> <span class="kn">import</span> <span class="n">Dynamodb</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.integration</span> <span class="kn">import</span> <span class="n">SQS</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.storage</span> <span class="kn">import</span> <span class="n">S3</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">Diagram</span><span class="p">(</span><span class="s2">&#34;Serverless Workflow&#34;</span><span class="p">,</span> <span class="n">graph_attr</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;margin&#34;</span><span class="p">:</span> <span class="s2">&#34;-1&#34;</span><span class="p">},</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;Amazon S3&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">s3_bucket</span> <span class="o">=</span> <span class="n">S3</span><span class="p">(</span><span class="s2">&#34;JSONFilesBucket&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;AWS SQS&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dlq</span> <span class="o">=</span> <span class="n">SQS</span><span class="p">(</span><span class="s2">&#34;DeadLetterQueue&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">json_processing_queue</span> <span class="o">=</span> <span class="n">SQS</span><span class="p">(</span><span class="s2">&#34;JSONProcessingQueue&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">json_processing_queue</span> <span class="o">-</span> <span class="n">dlq</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;AWS Lambda&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">lambda_function</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="s2">&#34;ProcessJSONFiles&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;Amazon DynamoDB&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dynamodb_table</span> <span class="o">=</span> <span class="n">Dynamodb</span><span class="p">(</span><span class="s2">&#34;JSONItemTable&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">s3_bucket</span> <span class="o">&gt;&gt;</span> <span class="n">json_processing_queue</span> <span class="o">&gt;&gt;</span> <span class="n">lambda_function</span> <span class="o">&gt;&gt;</span> <span class="n">dynamodb_table</span>
+</span></span></code></pre></div></div>
+        </div>
+    </div>
 <p>Thing it covers:</p>
 <ul>
 <li>Efficiently process AWS S3 events using AWS SQS Message Queues.</li>
