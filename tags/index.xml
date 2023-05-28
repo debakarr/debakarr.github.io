@@ -4,20 +4,36 @@
         <link>http://debakarr.github.io/tags/</link>
         <description>Tags - Tag - Debakar Roy</description>
         <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
-            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sat, 13 May 2023 13:40:00 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
-    <title>AWS</title>
-    <link>http://debakarr.github.io/tags/aws/</link>
-    <pubDate>Sat, 13 May 2023 13:40:00 &#43;0530</pubDate>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sun, 14 May 2023 12:20:40 &#43;0530</lastBuildDate><atom:link href="http://debakarr.github.io/tags/" rel="self" type="application/rss+xml" /><item>
+    <title>Containerization</title>
+    <link>http://debakarr.github.io/tags/containerization/</link>
+    <pubDate>Sun, 14 May 2023 12:20:40 &#43;0530</pubDate>
     <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/aws/</guid>
+    <guid>http://debakarr.github.io/tags/containerization/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
     <title>DevOps</title>
     <link>http://debakarr.github.io/tags/devops/</link>
-    <pubDate>Sat, 13 May 2023 13:40:00 &#43;0530</pubDate>
+    <pubDate>Sun, 14 May 2023 12:20:40 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/devops/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Docker</title>
+    <link>http://debakarr.github.io/tags/docker/</link>
+    <pubDate>Sun, 14 May 2023 12:20:40 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/docker/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>AWS</title>
+    <link>http://debakarr.github.io/tags/aws/</link>
+    <pubDate>Sat, 13 May 2023 13:40:00 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/aws/</guid>
     <description><![CDATA[]]></description>
 </item>
 <item>
@@ -53,35 +69,19 @@
     <description><![CDATA[]]></description>
 </item>
 <item>
+    <title>Alternatives</title>
+    <link>http://debakarr.github.io/tags/alternatives/</link>
+    <pubDate>Sat, 13 May 2023 12:12:43 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/tags/alternatives/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
     <title>IaC</title>
     <link>http://debakarr.github.io/tags/iac/</link>
-    <pubDate>Tue, 09 May 2023 10:43:39 &#43;0530</pubDate>
+    <pubDate>Sat, 13 May 2023 12:12:43 &#43;0530</pubDate>
     <author>Debakar Roy</author>
     <guid>http://debakarr.github.io/tags/iac/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Jenkins</title>
-    <link>http://debakarr.github.io/tags/jenkins/</link>
-    <pubDate>Tue, 09 May 2023 10:43:39 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/jenkins/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Terraform</title>
-    <link>http://debakarr.github.io/tags/terraform/</link>
-    <pubDate>Tue, 09 May 2023 10:43:39 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/terraform/</guid>
-    <description><![CDATA[]]></description>
-</item>
-<item>
-    <title>Tutorial</title>
-    <link>http://debakarr.github.io/tags/tutorial/</link>
-    <pubDate>Tue, 09 May 2023 10:43:39 &#43;0530</pubDate>
-    <author>Debakar Roy</author>
-    <guid>http://debakarr.github.io/tags/tutorial/</guid>
     <description><![CDATA[]]></description>
 </item>
 </channel>
