@@ -1,0 +1,18 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Day 4 - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/day-4/</link>
+        <description>Day 4 - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Mon, 24 Jul 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/day-4/" rel="self" type="application/rss+xml" /><item>
+    <title>[Training] DBMS with Oracle Day 4</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/</link>
+    <pubDate>Mon, 24 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/</guid>
+    <description><![CDATA[If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically DBMS with Oracle.
+If you haven&rsquo;t yet read my previous post then feel free to go to this link for part 1 and this link for part 2.
+Now today we are going to look at something called PL/SQL and also we will do some exercise to get a grip of PL/SQL.]]></description>
+</item>
+</channel>
+</rss>

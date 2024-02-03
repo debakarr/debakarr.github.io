@@ -1,0 +1,19 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Day 1 - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/day-1/</link>
+        <description>Day 1 - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Tue, 18 Jul 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/day-1/" rel="self" type="application/rss+xml" /><item>
+    <title>[Training] DBMS with Oracle Day 1</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-1/</link>
+    <pubDate>Tue, 18 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-1/</guid>
+    <description><![CDATA[In this post, I am going to wrap up all the things I learned during my first class on &lsquo;DBMS with Oracle&rsquo;. The training lecture is given by &lsquo;Rahul Sohal&rsquo;, CTO &amp; Resource Management Lead of iandwe.in.
+So first of all what is database?
+A database is a collection of information kept an organized way, for the ease of retrieval.
+Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture.]]></description>
+</item>
+</channel>
+</rss>

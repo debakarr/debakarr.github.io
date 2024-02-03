@@ -1,0 +1,25 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Move Zeroes - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/move-zeroes/</link>
+        <description>Move Zeroes - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/move-zeroes/" rel="self" type="application/rss+xml" /><item>
+    <title>[LeetCode] 283. Move Zeroes</title>
+    <link>http://debakarr.github.io/posts/leetcode/move-zeroes/</link>
+    <pubDate>Thu, 25 Jul 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/leetcode/move-zeroes/</guid>
+    <description><![CDATA[Move Zeroes Link to original Problem on LeetCode
+Given an array nums, write a function to move all 0&rsquo;s to the end of it while maintaining the relative order of the non-zero elements.
+Example:
+Input: [0,1,0,3,12] Output: [1,3,12,0,0]
+Note:
+You must do this in-place without making a copy of the array. Minimize the total number of operations.
+Company: Amazon, Bloomberg, Paytm, Samsung
+Solution:
+Time Complexity: O(n) Space Complexity: O(1)
+class Solution(object): def moveZeroes(self, nums): &#34;&#34;&#34; :type nums: List[int] :rtype: None Do not return anything, modify nums in-place instead.]]></description>
+</item>
+</channel>
+</rss>

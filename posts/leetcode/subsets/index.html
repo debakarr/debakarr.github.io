@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>[LeetCode] 78. Subsets - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="[LeetCode] 78. Subsets" />
+<meta property="og:description" content="Subsets Link to original Problem on LeetCode
+Given a set of distinct integers, nums, return all possible subsets (the power set).
+Note: The solution set must not contain duplicate subsets.
+Example:
+Input: nums = [1,2,3]
+Output:
+[ [3], [1], [2], [1,2,3], [1,3], [2,3], [1,2], [] ]
+Company: Amazon, Microsoft
+Solution (Using Iteration):
+Time Complexity: Space Complexity:
+class Solution(object): def subsets(self, nums): &#34;&#34;&#34; :type nums: List[int] :rtype: List[List[int]] &#34;&#34;&#34; # Let&#39;s take an example, say we have nums = [1, 2, 3] # Initially we have an empty subset in the result i." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/leetcode/subsets/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2019-08-08T00:00:00+00:00" />
+<meta property="article:modified_time" content="2019-08-08T00:00:00+00:00" /><meta property="og:site_name" content="Debakar Roy" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="[LeetCode] 78. Subsets"/>
+<meta name="twitter:description" content="Subsets Link to original Problem on LeetCode
+Given a set of distinct integers, nums, return all possible subsets (the power set).
+Note: The solution set must not contain duplicate subsets.
+Example:
+Input: nums = [1,2,3]
+Output:
+[ [3], [1], [2], [1,2,3], [1,3], [2,3], [1,2], [] ]
+Company: Amazon, Microsoft
+Solution (Using Iteration):
+Time Complexity: Space Complexity:
+class Solution(object): def subsets(self, nums): &#34;&#34;&#34; :type nums: List[int] :rtype: List[List[int]] &#34;&#34;&#34; # Let&#39;s take an example, say we have nums = [1, 2, 3] # Initially we have an empty subset in the result i."/>
+<meta name="twitter:site" content="@debakar_roy"/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/leetcode/subsets/" /><link rel="prev" href="http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/" /><link rel="next" href="http://debakarr.github.io/posts/leetcode/majority-element/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "[LeetCode] 78. Subsets",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/leetcode\/subsets\/"
+        },"genre": "posts","keywords": "Algorithms, Subsets, Combinations, Backtracking, Recursion, Programming","wordcount":  455 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/leetcode\/subsets\/","datePublished": "2019-08-08T00:00:00+00:00","dateModified": "2019-08-08T00:00:00+00:00","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">[LeetCode] 78. Subsets</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/algorithms/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Algorithms</a>&nbsp;<a href="/categories/programming/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Programming</a>&nbsp;<a href="/categories/leetcode/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>LeetCode</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2019-08-08">2019-08-08</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;455 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;3 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#subsets">Subsets</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><h3 id="subsets">Subsets</h3>
+<p><a href="https://leetcode.com/problems/subsets/" target="_blank" rel="noopener noreffer ">Link to original Problem on LeetCode</a></p>
+<p>Given a set of <strong>distinct</strong> integers, <em>nums</em>, return all possible subsets (the power set).</p>
+<p><strong>Note:</strong> The solution set must not contain duplicate subsets.</p>
+<p><strong>Example:</strong></p>
+<p><strong>Input:</strong> nums = [1,2,3]</p>
+<p><strong>Output:</strong></p>
+<p>[
+[3],
+[1],
+[2],
+[1,2,3],
+[1,3],
+[2,3],
+[1,2],
+[]
+]</p>
+<p><strong>Company:</strong>
+<em>Amazon</em>, <em>Microsoft</em></p>
+<p><strong>Solution (Using Iteration):</strong></p>
+<p><strong>Time Complexity:</strong>
+<strong>Space Complexity:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">subsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :type nums: List[int]
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :rtype: List[List[int]]
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Let&#39;s take an example, say we have nums = [1, 2, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Initially we have an empty subset in the result i.e. result = [[]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Adding [1] to each element of result (i.e. [[]], one element)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [] + [1] = [1]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   we have result = [[], [1]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Adding [2] to each element of result (i.e.[[], [1]], two element)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [] + [2] = [2]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1] + [2] = [1, 2]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   we have result = [[], [1], [2], [1, 2]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Adding [] to each element of result (i.e.[[], [1], [2], [1, 2]], four element)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [] + [3] = [3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1] + [3] = [1, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [2] + [3] = [2, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1, 2] + [3] = [1, 2, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   we have result = [[], [1], [2], [1, 2], [3], [1, 3], [2, 3], [1, 2, 3]]</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="p">[[]]</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">nums</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temp</span> <span class="o">=</span> <span class="n">result</span><span class="p">[:]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">temp</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">res</span> <span class="o">+</span> <span class="p">[</span><span class="n">num</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">result</span>
+</span></span></code></pre></div><p><strong>Solution (Using Recursion):</strong></p>
+<p><strong>Time Complexity:</strong>
+<strong>Space Complexity:</strong></p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">Solution</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">subsets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :type nums: List[int]
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :rtype: List[List[int]]
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Let&#39;s take the same example, say we have nums = [1, 2, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Initially we have an empty subset in the result i.e. result = [[]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Adding [3] to each element of result (i.e. [[]], one element)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [3] + [] = [3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   we have result = [[], [3]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Adding [2] to each element of result (i.e.[[], [3]], two element)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [2] + [] = [2]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [2] + [3] = [2, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   we have result = [[], [3], [2], [2, 3]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># Adding [1] to each element of result (i.e.[[], [3], [2], [2, 3], four element)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1] + [] = [1]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1] + [3] = [1, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1] + [2] = [1, 2]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   [1] + [2, 3] = [1, 2, 3]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">#   we have result = [[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># This is kinda iterative approch which can be implemented rescursively </span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">subsetsHelper</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="p">[],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">result</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">subsetsHelper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nums</span><span class="p">,</span> <span class="n">subset</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">nums</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subset</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">subsetsHelper</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">subset</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">subsetsHelper</span><span class="p">(</span><span class="n">nums</span><span class="p">,</span> <span class="n">subset</span> <span class="o">+</span> <span class="p">[</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">]],</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+</span></span></code></pre></div><!-- raw HTML omitted -->
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2019-08-08</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/leetcode/subsets/" data-title="[LeetCode] 78. Subsets" data-via="debakar_roy" data-hashtags="Algorithms,Subsets,Combinations,Backtracking,Recursion,Programming"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/leetcode/subsets/" data-hashtag="Algorithms"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/leetcode/subsets/" data-title="[LeetCode] 78. Subsets"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/leetcode/subsets/" data-title="[LeetCode] 78. Subsets"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/leetcode/subsets/" data-title="[LeetCode] 78. Subsets"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/algorithms/">Algorithms</a>,&nbsp;<a href="/tags/subsets/">Subsets</a>,&nbsp;<a href="/tags/combinations/">Combinations</a>,&nbsp;<a href="/tags/backtracking/">Backtracking</a>,&nbsp;<a href="/tags/recursion/">Recursion</a>,&nbsp;<a href="/tags/programming/">Programming</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/leetcode/top-k-frequent-elements/" class="prev" rel="prev" title="[LeetCode] 347. Top K Frequent Elements"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>[LeetCode] 347. Top K Frequent Elements</a>
+            <a href="/posts/leetcode/majority-element/" class="next" rel="next" title="[LeetCode] 169. Majority Element">[LeetCode] 169. Majority Element<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.122.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/debakarr" target="_blank">Debakar Roy</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-NK0GCLFZCV', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-NK0GCLFZCV" async></script></body>
+</html>

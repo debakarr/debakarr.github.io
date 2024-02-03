@@ -1,0 +1,50 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Oracle - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/oracle/</link>
+        <description>Oracle - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Thu, 27 Jul 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/oracle/" rel="self" type="application/rss+xml" /><item>
+    <title>[Training] DBMS with Oracle Day 5</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-5/</link>
+    <pubDate>Thu, 27 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-5/</guid>
+    <description><![CDATA[This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at PL/SQL Cursor, Procedure, Function, and Trigger. This will complete the very basics of PL/SQL.
+So what is cursor?
+Cursor is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use SELECT or any DML (INSERT, DELETE, UPDATE or MERGE) then cursor holds the rows (one or more) returned by a SQL statement.]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 4</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/</link>
+    <pubDate>Mon, 24 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-4/</guid>
+    <description><![CDATA[If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically DBMS with Oracle.
+If you haven&rsquo;t yet read my previous post then feel free to go to this link for part 1 and this link for part 2.
+Now today we are going to look at something called PL/SQL and also we will do some exercise to get a grip of PL/SQL.]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 3</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/</link>
+    <pubDate>Thu, 20 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/</guid>
+    <description><![CDATA[So in this blog basically we are going to cover up the things done by me on the second day of my Oracle DBMS Training. Although I am not going to use the same schema I used during the 2nd day of my training.
+So without further delay, lets dig in.
+First thing first. What is a schema?
+This is something I should have mentioned in the first blog. In general, a schema is a set of tables, sproc(stored procedure) and other objects that make up a whole database.]]></description>
+</item>
+<item>
+    <title>[Training] DBMS with Oracle Day 1</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-1/</link>
+    <pubDate>Tue, 18 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-1/</guid>
+    <description><![CDATA[In this post, I am going to wrap up all the things I learned during my first class on &lsquo;DBMS with Oracle&rsquo;. The training lecture is given by &lsquo;Rahul Sohal&rsquo;, CTO &amp; Resource Management Lead of iandwe.in.
+So first of all what is database?
+A database is a collection of information kept an organized way, for the ease of retrieval.
+Facebook has its own database. Think about yesterday when you logged in your account and like all those posts, share certain stuff, commented on a picture.]]></description>
+</item>
+</channel>
+</rss>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Day 29: Docker - Running and managing containers - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="Day 29: Docker - Running and managing containers" />
+<meta property="og:description" content="ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/devops/day29-devops/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-05-17T12:20:49+05:30" />
+<meta property="article:modified_time" content="2023-05-17T12:20:49+05:30" /><meta property="og:site_name" content="Debakar Roy" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Day 29: Docker - Running and managing containers"/>
+<meta name="twitter:description" content="ContentPart 1: Introduction to DevOps
+Day 1: Understanding DevOps, its principles, and benefits Day 2: Exploring the DevOps lifecycle and its stages Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD) Day 4: Familiarizing with common DevOps tools and technologies Day 5: Studying DevOps culture and best practices Part 2: Version Control Systems
+Day 6: Introduction to Git Day 7: Basic Git commands (git init, git add, git commit, git status) Day 8: Branching and merging in Git Day 9: Remote repositories and collaboration with Git Day 10: Git workflows and best practices Part 3: Continuous Integration and Continuous Deployment (CI/CD)"/>
+<meta name="twitter:site" content="@debakar_roy"/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/devops/day29-devops/" /><link rel="prev" href="http://debakarr.github.io/posts/devops/day28-devops/" /><link rel="next" href="http://debakarr.github.io/posts/daily_snippets/delete_old_branch/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Day 29: Docker - Running and managing containers",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/devops\/day29-devops\/"
+        },"genre": "posts","keywords": "DevOps, CI\/CD, Containerization, Docker","wordcount":  2069 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/devops\/day29-devops\/","datePublished": "2023-05-17T12:20:49+05:30","dateModified": "2023-05-17T12:20:49+05:30","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Day 29: Docker - Running and managing containers</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/devops/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>DevOps</a>&nbsp;<a href="/categories/software-development/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Software Development</a>&nbsp;<a href="/categories/automation/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Automation</a>&nbsp;<a href="/categories/infrastructure/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Infrastructure</a>&nbsp;<a href="/categories/containerization/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Containerization</a>&nbsp;<a href="/categories/docker/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Docker</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-17">2023-05-17</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;2069 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;10 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#running-docker-container">Running docker container</a></li>
+        <li><a href="#managing-docker-containers">Managing Docker Containers</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><div class="details admonition info">
+        <div class="details-summary admonition-title">
+            <i class="icon fas fa-info-circle fa-fw" aria-hidden="true"></i>Content<i class="details-icon fas fa-angle-right fa-fw" aria-hidden="true"></i>
+        </div>
+        <div class="details-content">
+            <div class="admonition-content"><p><strong>Part 1: Introduction to DevOps</strong></p>
+<ul>
+<li><a href="day1-devops" rel="">Day 1: Understanding DevOps, its principles, and benefits</a></li>
+<li><a href="/posts/devops/day2-devops" rel="">Day 2: Exploring the DevOps lifecycle and its stages</a></li>
+<li><a href="/posts/devops/day3-devops" rel="">Day 3: Introduction to Continuous Integration (CI) and Continuous Deployment (CD)</a></li>
+<li><a href="/posts/devops/day4-devops" rel="">Day 4: Familiarizing with common DevOps tools and technologies</a></li>
+<li><a href="/posts/devops/day5-devops" rel="">Day 5: Studying DevOps culture and best practices</a></li>
+</ul>
+<p><strong>Part 2: Version Control Systems</strong></p>
+<ul>
+<li><a href="/posts/devops/day6-devops" rel="">Day 6: Introduction to Git</a></li>
+<li><a href="/posts/devops/day7-devops" rel="">Day 7: Basic Git commands (<code>git init</code>, <code>git add</code>, <code>git commit</code>, <code>git status</code>)</a></li>
+<li><a href="/posts/devops/day8-devops" rel="">Day 8: Branching and merging in Git</a></li>
+<li><a href="/posts/devops/day9-devops" rel="">Day 9: Remote repositories and collaboration with Git</a></li>
+<li><a href="/posts/devops/day10-devops" rel="">Day 10: Git workflows and best practices</a></li>
+</ul>
+<p><strong>Part 3: Continuous Integration and Continuous Deployment (CI/CD)</strong></p>
+<ul>
+<li><a href="/posts/devops/day11-devops" rel="">Day 11: Introduction to CI/CD</a></li>
+<li><a href="/posts/devops/day12-devops" rel="">Day 12: Jenkins - Installation and configuration</a></li>
+<li><a href="/posts/devops/day13-devops" rel="">Day 13: Jenkins - Creating and managing jobs</a></li>
+<li><a href="/posts/devops/day14-devops" rel="">Day 14: Jenkins - Integrating with Git</a></li>
+<li><a href="/posts/devops/day15-devops" rel="">Day 15: Jenkins - Pipelines and best practices</a></li>
+</ul>
+<p><strong>Part 4: Configuration Management</strong></p>
+<ul>
+<li><a href="/posts/devops/day16-devops" rel="">Day 16: Introduction to configuration management</a></li>
+<li><a href="/posts/devops/day17-devops" rel="">Day 17: Ansible - Installation and configuration</a></li>
+<li><a href="/posts/devops/day18-devops" rel="">Day 18: Ansible - Ad-hoc commands and playbook</a></li>
+<li><a href="/posts/devops/day19-devops" rel="">Day 19: Ansible - Roles and best practices</a></li>
+<li><a href="/posts/devops/day20-devops" rel="">Day 20: Puppet and Chef - Overview and comparison</a></li>
+</ul>
+<p><strong>Part 5: Infrastructure as Code</strong></p>
+<ul>
+<li><a href="/posts/devops/day21-devops" rel="">Day 21: Introduction to Infrastructure as Code (IaC)</a></li>
+<li><a href="/posts/devops/day22-devops" rel="">Day 22: Terraform - Installation and configuration</a></li>
+<li><a href="/posts/devops/day23-devops" rel="">Day 23: Terraform - Writing and applying configuration files</a></li>
+<li><a href="/posts/devops/day24-devops" rel="">Day 24: Terraform - Modules and best practices</a></li>
+<li><strong><a href="/posts/devops/day25-devops" rel="">Day 25: CloudFormation (AWS) - Overview and comparison</a></strong></li>
+</ul>
+<p><strong>Part 6: Containerization</strong></p>
+<ul>
+<li><a href="/posts/devops/day26-devops" rel="">Day 26: Introduction to containerization</a></li>
+<li><a href="/posts/devops/day27-devops" rel="">Day 27: Docker - Installation and configuration</a></li>
+<li><a href="/posts/devops/day28-devops" rel="">Day 28: Docker - Building and managing images</a></li>
+<li><strong><a href="/posts/devops/day29-devops" rel="">Day 29: Docker - Running and managing containers</a></strong></li>
+<li>Day 30: Docker Compose and best practices</li>
+</ul>
+<p><strong>Part 7: Container Orchestration</strong></p>
+<ul>
+<li>Day 31: Introduction to container orchestration</li>
+<li>Day 32: Kubernetes - Architecture and components</li>
+<li>Day 33: Kubernetes - Deployments, services, and storage</li>
+<li>Day 34: Kubernetes - ConfigMaps and secrets</li>
+<li>Day 35: Kubernetes - Best practices and Helm</li>
+</ul>
+<p><strong>Part 8: Monitoring and Logging</strong></p>
+<ul>
+<li>Day 36: Introduction to monitoring and logging</li>
+<li>Day 37: Prometheus - Installation and configuration</li>
+<li>Day 38: Prometheus - Querying and alerting</li>
+<li>Day 39: Grafana - Installation and configuration</li>
+<li>Day 40: ELK Stack (Elasticsearch, Logstash, Kibana) - Overview and comparison</li>
+</ul>
+<p><strong>Part 9: Cloud Platforms</strong></p>
+<ul>
+<li>Day 41: Introduction to cloud platforms</li>
+<li>Day 42: AWS - EC2, S3, and RDS</li>
+<li>Day 43: AWS - IAM, VPC, and ELB</li>
+<li>Day 44: Azure - Virtual Machines, Storage, and SQL Database</li>
+<li>Day 45: Google Cloud Platform - Compute Engine, Storage, and Cloud SQL</li>
+</ul>
+<p><strong>Part 10: DevOps Security</strong></p>
+<ul>
+<li>Day 46: Introduction to DevOps security</li>
+<li>Day 47: Security best practices for CI/CD pipelines</li>
+<li>Day 48: Infrastructure and application security</li>
+<li>Day 49: Container and Kubernetes security</li>
+<li>Day 50: Cloud security and compliance</li>
+</ul>
+</div>
+        </div>
+    </div>
+<p>Containers are lightweight, isolated environments that encapsulate applications, making them portable and easy to deploy. Docker provides powerful tools and commands to run, monitor, and manage containers efficiently. So, let&rsquo;s explore how to unleash the full potential of Docker containers.</p>
+<h3 id="running-docker-container">Running docker container</h3>
+<p>To run a Docker container, you need a Docker image as a blueprint. If you already have an image, you can use the <code>docker run</code> command to start a container based on that image. If the image is not available locally, it will be pulled first and then we run the container. Let&rsquo;s take a look at an example:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> docker run -d -p 8080:80 --name my-nginx nginx:latest
+</span></span><span class="line"><span class="cl"><span class="go">Unable to find image &#39;nginx:latest&#39; locally
+</span></span></span><span class="line"><span class="cl"><span class="go">latest: Pulling from library/nginx
+</span></span></span><span class="line"><span class="cl"><span class="go">f03b40093957: Pull complete
+</span></span></span><span class="line"><span class="cl"><span class="go">eed12bbd6494: Pull complete
+</span></span></span><span class="line"><span class="cl"><span class="go">fa7eb8c8eee8: Pull complete
+</span></span></span><span class="line"><span class="cl"><span class="go">7ff3b2b12318: Pull complete
+</span></span></span><span class="line"><span class="cl"><span class="go">0f67c7de5f2c: Pull complete
+</span></span></span><span class="line"><span class="cl"><span class="go">831f51541d38: Pull complete
+</span></span></span><span class="line"><span class="cl"><span class="go">Digest: sha256:af296b188c7b7df99ba960ca614439c99cb7cf252ed7bbc23e90cfda59092305
+</span></span></span><span class="line"><span class="cl"><span class="go">Status: Downloaded newer image for nginx:latest
+</span></span></span><span class="line"><span class="cl"><span class="go">d90a8f6684b2e0820878bbd575d553e82f3976c61ff593ad7fa93f1538c7ef40
+</span></span></span></code></pre></div><ul>
+<li>We use the <code>-d</code> flag to run the container in detached mode, which means it will run in the background.</li>
+<li>The <code>-p</code> flag is used to publish port 80 of the container to port 8080 on the host machine. This allows accessing the Nginx web server running inside the container through <code>http://localhost:8080</code>.</li>
+<li>The <code>--name</code> flag assigns a name to the container, in this case, <code>my-nginx</code>.</li>
+<li>We specify the image to use as <code>nginx:latest</code>, which pulls the latest version of the Nginx image from the Docker Hub registry.</li>
+</ul>
+<h3 id="managing-docker-containers">Managing Docker Containers</h3>
+<p>Once you have your containers up and running, you&rsquo;ll want to manage and monitor them effectively. Docker provides several commands to help you accomplish this:</p>
+<ol>
+<li>
+<p><code>docker ps</code>: This command lists all the running containers on your system, displaying details such as the container ID, image used, status, ports, and names.</p>
+</li>
+<li>
+<p><code>docker stop &lt;container&gt;</code>: Use this command to gracefully stop a running container. Replace <code>&lt;container&gt;</code> with either the container ID or the container name.</p>
+</li>
+<li>
+<p><code>docker start &lt;container&gt;</code>: This command starts a stopped container. Again, replace <code>&lt;container&gt;</code> with the container ID or name.</p>
+</li>
+<li>
+<p><code>docker restart &lt;container&gt;</code>: If you need to restart a running container, you can use this command. It stops the container and starts it again.</p>
+</li>
+<li>
+<p><code>docker logs &lt;container&gt;</code>: To view the logs of a specific container, use this command. It displays the output and logs generated by the container&rsquo;s processes.</p>
+</li>
+<li>
+<p><code>docker exec -it &lt;container&gt; &lt;command&gt;</code>: This command allows you to execute a command inside a running container. Use the <code>-it</code> flags to open an interactive terminal session. Replace <code>&lt;container&gt;</code> with the container ID or name, and <code>&lt;command&gt;</code> with the desired command.</p>
+</li>
+<li>
+<p><code>docker rm &lt;container&gt;</code>: If you want to remove a stopped container, you can use this command. It permanently deletes the container. Again, replace <code>&lt;container&gt;</code> with the container ID or name.</p>
+</li>
+</ol>
+<h4 id="example">Example</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">#</span> Run the Nginx container in detached mode, mapping port <span class="m">7400</span> on the host to port <span class="m">80</span> in the container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker run -d -p 7400:80 --name my-nginx nginx:latest
+</span></span><span class="line"><span class="cl"><span class="go">786cddb4675284e38479da5592f03179ffeea651e1423f38db832cf86a3eccac
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> List the running containers
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker ps
+</span></span><span class="line"><span class="cl"><span class="go">CONTAINER ID   IMAGE                           COMMAND                  CREATED         STATUS         PORTS                                              NAMES
+</span></span></span><span class="line"><span class="cl"><span class="go">786cddb46752   nginx:latest                    &#34;/docker-entrypoint.…&#34;   7 seconds ago   Up 3 seconds   0.0.0.0:7400-&gt;80/tcp                               my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go">ac4d4ba5db97   postgres:latest                 &#34;docker-entrypoint.s…&#34;   6 days ago      Up 6 hours     0.0.0.0:5432-&gt;5432/tcp                             postgres
+</span></span></span><span class="line"><span class="cl"><span class="go">f76dc8e0a2ae   docker:dind                     &#34;dockerd-entrypoint.…&#34;   6 days ago      Up 6 hours     2375/tcp, 0.0.0.0:2376-&gt;2376/tcp                   jenkins-docker
+</span></span></span><span class="line"><span class="cl"><span class="go">e676b19a399b   myjenkins-blueocean:2.387.3-1   &#34;/usr/bin/tini -- /u…&#34;   6 days ago      Up 6 hours     0.0.0.0:8080-&gt;8080/tcp, 0.0.0.0:50000-&gt;50000/tcp   jenkins-blueocean
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Stop the my-nginx container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker stop my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> List the running containers <span class="o">(</span>my-nginx is stopped, so it doesn<span class="err">&#39;</span>t shows up<span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker ps
+</span></span><span class="line"><span class="cl"><span class="go">CONTAINER ID   IMAGE                           COMMAND                  CREATED      STATUS       PORTS                                              NAMES
+</span></span></span><span class="line"><span class="cl"><span class="go">ac4d4ba5db97   postgres:latest                 &#34;docker-entrypoint.s…&#34;   6 days ago   Up 6 hours   0.0.0.0:5432-&gt;5432/tcp                             postgres
+</span></span></span><span class="line"><span class="cl"><span class="go">f76dc8e0a2ae   docker:dind                     &#34;dockerd-entrypoint.…&#34;   6 days ago   Up 6 hours   2375/tcp, 0.0.0.0:2376-&gt;2376/tcp                   jenkins-docker
+</span></span></span><span class="line"><span class="cl"><span class="go">e676b19a399b   myjenkins-blueocean:2.387.3-1   &#34;/usr/bin/tini -- /u…&#34;   6 days ago   Up 6 hours   0.0.0.0:8080-&gt;8080/tcp, 0.0.0.0:50000-&gt;50000/tcp   jenkins-blueocean
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> List all containers <span class="o">(</span>including stopped ones<span class="o">)</span>
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker ps -a
+</span></span><span class="line"><span class="cl"><span class="go">CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS                     PORTS                                              NAMES
+</span></span></span><span class="line"><span class="cl"><span class="go">786cddb46752   nginx:latest                    &#34;/docker-entrypoint.…&#34;   26 seconds ago   Exited (0) 9 seconds ago                                                      my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go">ac4d4ba5db97   postgres:latest                 &#34;docker-entrypoint.s…&#34;   6 days ago       Up 6 hours                 0.0.0.0:5432-&gt;5432/tcp                             postgres
+</span></span></span><span class="line"><span class="cl"><span class="go">f76dc8e0a2ae   docker:dind                     &#34;dockerd-entrypoint.…&#34;   6 days ago       Up 6 hours                 2375/tcp, 0.0.0.0:2376-&gt;2376/tcp                   jenkins-docker
+</span></span></span><span class="line"><span class="cl"><span class="go">e676b19a399b   myjenkins-blueocean:2.387.3-1   &#34;/usr/bin/tini -- /u…&#34;   6 days ago       Up 6 hours                 0.0.0.0:8080-&gt;8080/tcp, 0.0.0.0:50000-&gt;50000/tcp   jenkins-blueocean
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Start the my-nginx container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker start my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> List the running containers
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker ps
+</span></span><span class="line"><span class="cl"><span class="go">CONTAINER ID   IMAGE                           COMMAND                  CREATED          STATUS         PORTS                                              NAMES
+</span></span></span><span class="line"><span class="cl"><span class="go">786cddb46752   nginx:latest                    &#34;/docker-entrypoint.…&#34;   38 seconds ago   Up 2 seconds   0.0.0.0:7400-&gt;80/tcp                               my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go">ac4d4ba5db97   postgres:latest                 &#34;docker-entrypoint.s…&#34;   6 days ago       Up 6 hours     0.0.0.0:5432-&gt;5432/tcp                             postgres
+</span></span></span><span class="line"><span class="cl"><span class="go">f76dc8e0a2ae   docker:dind                     &#34;dockerd-entrypoint.…&#34;   6 days ago       Up 6 hours     2375/tcp, 0.0.0.0:2376-&gt;2376/tcp                   jenkins-docker
+</span></span></span><span class="line"><span class="cl"><span class="go">e676b19a399b   myjenkins-blueocean:2.387.3-1   &#34;/usr/bin/tini -- /u…&#34;   6 days ago       Up 6 hours     0.0.0.0:8080-&gt;8080/tcp, 0.0.0.0:50000-&gt;50000/tcp   jenkins-blueocean
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Restart the my-nginx container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker restart my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> View the logs of the my-nginx container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker logs my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">10-listen-on-ipv6-by-default.sh: info: Getting the checksum of /etc/nginx/conf.d/default.conf
+</span></span></span><span class="line"><span class="cl"><span class="go">10-listen-on-ipv6-by-default.sh: info: Enabled listen on IPv6 in /etc/nginx/conf.d/default.conf
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Configuration complete; ready for start up
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: using the &#34;epoll&#34; event method
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: nginx/1.25.0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: built by gcc 10.2.1 20210110 (Debian 10.2.1-6)
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: OS: Linux 5.15.90.1-microsoft-standard-WSL2
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: start worker processes
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: start worker process 28
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: start worker process 29
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:11 [notice] 1#1: start worker process 30
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 28#28: gracefully shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 28#28: exiting
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 28#28: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 29#29: gracefully shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 29#29: exiting
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 29#29: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 30#30: gracefully shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 30#30: exiting
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:22 [notice] 30#30: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: signal 17 (SIGCHLD) received from 28
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: worker process 28 exited with code 0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: signal 29 (SIGIO) received
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: signal 17 (SIGCHLD) received from 30
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: worker process 30 exited with code 0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: signal 29 (SIGIO) received
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: signal 17 (SIGCHLD) received from 29
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: worker process 29 exited with code 0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:23 [notice] 1#1: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">10-listen-on-ipv6-by-default.sh: info: IPv6 listen already enabled
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Configuration complete; ready for start up
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: using the &#34;epoll&#34; event method
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: nginx/1.25.0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: built by gcc 10.2.1 20210110 (Debian 10.2.1-6)
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: OS: Linux 5.15.90.1-microsoft-standard-WSL2
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: start worker processes
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: start worker process 22
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: start worker process 23
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:42 [notice] 1#1: start worker process 24
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 1#1: signal 3 (SIGQUIT) received, shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 23#23: gracefully shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 22#22: gracefully shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 22#22: exiting
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 23#23: exiting
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 22#22: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 23#23: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 24#24: gracefully shutting down
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 24#24: exiting
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:53 [notice] 24#24: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: signal 17 (SIGCHLD) received from 22
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: worker process 22 exited with code 0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: signal 29 (SIGIO) received
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: signal 17 (SIGCHLD) received from 23
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: worker process 23 exited with code 0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: signal 29 (SIGIO) received
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: signal 17 (SIGCHLD) received from 24
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: worker process 24 exited with code 0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:53:54 [notice] 1#1: exit
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: /docker-entrypoint.d/ is not empty, will attempt to perform configuration
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Looking for shell scripts in /docker-entrypoint.d/
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/10-listen-on-ipv6-by-default.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">10-listen-on-ipv6-by-default.sh: info: IPv6 listen already enabled
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/20-envsubst-on-templates.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Launching /docker-entrypoint.d/30-tune-worker-processes.sh
+</span></span></span><span class="line"><span class="cl"><span class="go">/docker-entrypoint.sh: Configuration complete; ready for start up
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: using the &#34;epoll&#34; event method
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: nginx/1.25.0
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: built by gcc 10.2.1 20210110 (Debian 10.2.1-6)
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: OS: Linux 5.15.90.1-microsoft-standard-WSL2
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: getrlimit(RLIMIT_NOFILE): 1048576:1048576
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: start worker processes
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: start worker process 22
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: start worker process 23
+</span></span></span><span class="line"><span class="cl"><span class="go">2023/05/28 12:54:01 [notice] 1#1: start worker process 24
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Access the shell of the my-nginx container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker <span class="nb">exec</span> -it my-nginx /bin/bash
+</span></span><span class="line"><span class="cl"><span class="go">root@786cddb46752:/# curl localhost:80
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;!DOCTYPE html&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;html&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;head&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;title&gt;Welcome to nginx!&lt;/title&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;style&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">html { color-scheme: light dark; }
+</span></span></span><span class="line"><span class="cl"><span class="go">body { width: 35em; margin: 0 auto;
+</span></span></span><span class="line"><span class="cl"><span class="go">font-family: Tahoma, Verdana, Arial, sans-serif; }
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;/style&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;/head&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;body&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;h1&gt;Welcome to nginx!&lt;/h1&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;p&gt;If you see this page, the nginx web server is successfully installed and
+</span></span></span><span class="line"><span class="cl"><span class="go">working. Further configuration is required.&lt;/p&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">&lt;p&gt;For online documentation and support please refer to
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;a href=&#34;http://nginx.org/&#34;&gt;nginx.org&lt;/a&gt;.&lt;br/&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">Commercial support is available at
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;a href=&#34;http://nginx.com/&#34;&gt;nginx.com&lt;/a&gt;.&lt;/p&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">&lt;p&gt;&lt;em&gt;Thank you for using nginx.&lt;/em&gt;&lt;/p&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;/body&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">&lt;/html&gt;
+</span></span></span><span class="line"><span class="cl"><span class="go">root@786cddb46752:/# exit
+</span></span></span><span class="line"><span class="cl"><span class="go">exit
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Attempting to remove a running container <span class="o">(</span>my-nginx<span class="o">)</span> results in an error because the container is still running. It needs to be stopped before removal.
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker rm my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">Error response from daemon: You cannot remove a running container 786cddb4675284e38479da5592f03179ffeea651e1423f38db832cf86a3eccac. Stop the container before attempting removal or force remove
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Stop my-nginx container
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker stop my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> Now remove works
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker rm my-nginx
+</span></span><span class="line"><span class="cl"><span class="go">my-nginx
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="gp">#</span> We don<span class="err">&#39;</span>t see my-nginx container anymore
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> docker ps -a
+</span></span><span class="line"><span class="cl"><span class="go">CONTAINER ID   IMAGE                           COMMAND                  CREATED      STATUS       PORTS                                              NAMES
+</span></span></span><span class="line"><span class="cl"><span class="go">ac4d4ba5db97   postgres:latest                 &#34;docker-entrypoint.s…&#34;   6 days ago   Up 6 hours   0.0.0.0:5432-&gt;5432/tcp                             postgres
+</span></span></span><span class="line"><span class="cl"><span class="go">f76dc8e0a2ae   docker:dind                     &#34;dockerd-entrypoint.…&#34;   6 days ago   Up 6 hours   2375/tcp, 0.0.0.0:2376-&gt;2376/tcp                   jenkins-docker
+</span></span></span><span class="line"><span class="cl"><span class="go">e676b19a399b   myjenkins-blueocean:2.387.3-1   &#34;/usr/bin/tini -- /u…&#34;   6 days ago   Up 6 hours   0.0.0.0:8080-&gt;8080/tcp, 0.0.0.0:50000-&gt;50000/tcp   jenkins-blueocean
+</span></span></span></code></pre></div><p>Reference:</p>
+<ul>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/run/" target="_blank" rel="noopener noreffer ">docker run</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/ps/" target="_blank" rel="noopener noreffer ">docker ps</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/stop/" target="_blank" rel="noopener noreffer ">docker stop</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/start/" target="_blank" rel="noopener noreffer ">docker start</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/restart/" target="_blank" rel="noopener noreffer ">docker restart</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/logs/" target="_blank" rel="noopener noreffer ">docker logs</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/exec/" target="_blank" rel="noopener noreffer ">docker exec</a></li>
+<li><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        data-srcset="https://www.google.com/s2/favicons?domain=docs.docker.com, https://www.google.com/s2/favicons?domain=docs.docker.com 1.5x, https://www.google.com/s2/favicons?domain=docs.docker.com 2x"
+        data-sizes="auto"
+        alt="https://www.google.com/s2/favicons?domain=docs.docker.com"
+        title="favicon-docs.docker.com" /><a href="https://docs.docker.com/engine/reference/commandline/rm/" target="_blank" rel="noopener noreffer ">docker rm</a></li>
+</ul>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2023-05-17</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/devops/day29-devops/" data-title="Day 29: Docker - Running and managing containers" data-via="debakar_roy" data-hashtags="DevOps,CI/CD,Containerization,Docker"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/devops/day29-devops/" data-hashtag="DevOps"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/devops/day29-devops/" data-title="Day 29: Docker - Running and managing containers"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/devops/day29-devops/" data-title="Day 29: Docker - Running and managing containers"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/devops/day29-devops/" data-title="Day 29: Docker - Running and managing containers"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/devops/">DevOps</a>,&nbsp;<a href="/tags/ci/cd/">CI/CD</a>,&nbsp;<a href="/tags/containerization/">Containerization</a>,&nbsp;<a href="/tags/docker/">Docker</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/devops/day28-devops/" class="prev" rel="prev" title="Day 28: Docker - Building and managing images"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Day 28: Docker - Building and managing images</a>
+            <a href="/posts/daily_snippets/delete_old_branch/" class="next" rel="next" title="Delete stale git branches">Delete stale git branches<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.122.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/debakarr" target="_blank">Debakar Roy</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-NK0GCLFZCV', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-NK0GCLFZCV" async></script></body>
+</html>

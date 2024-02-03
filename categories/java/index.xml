@@ -1,0 +1,19 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Java - Category - Debakar Roy</title>
+        <link>http://debakarr.github.io/categories/java/</link>
+        <description>Java - Category - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sun, 06 Aug 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/categories/java/" rel="self" type="application/rss+xml" /><item>
+    <title>[OOP (CS 594D)] Assignment 1</title>
+    <link>http://debakarr.github.io/posts/basics_learning/java-assignment-1/</link>
+    <pubDate>Sun, 06 Aug 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/basics_learning/java-assignment-1/</guid>
+    <description><![CDATA[Assignment 1 Write a Java program to print &ldquo;Hello World&rdquo;. Source code:
+public class HelloWorldnormal {public static void main(String[] args) {System.out.println(&#34;Hello World&#34;);}} Output:
+$ javac HelloWorldnormal.java$ java HelloWorldnormalHello World Write a Java program to.pront &ldquo;Hello World&rdquo;, where &lsquo;World&rsquo; will be taken from command line argument. Source code:
+public class HelloWorldCLA {public static void main(String[] args) {System.out.println(&#34;Hello &#34; + args[0]);}} Output:]]></description>
+</item>
+</channel>
+</rss>

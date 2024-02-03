@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noodp" />
+        <title>Serverless Workflow to Process Files Uploaded to Amazon S3 - Debakar Roy</title><meta name="Description" content="Welcome to my Blog"><meta property="og:title" content="Serverless Workflow to Process Files Uploaded to Amazon S3" />
+<meta property="og:description" content="This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.
+Source code for diagramfrom diagrams import Cluster, Diagram from diagrams.aws.compute import Lambda from diagrams.aws.database import Dynamodb from diagrams.aws.integration import SQS from diagrams.aws.storage import S3 with Diagram(&#34;Serverless Workflow&#34;, graph_attr={&#34;margin&#34;: &#34;-1&#34;}, show=False): with Cluster(&#34;Amazon S3&#34;): s3_bucket = S3(&#34;JSONFilesBucket&#34;) with Cluster(&#34;AWS SQS&#34;): dlq = SQS(&#34;DeadLetterQueue&#34;) json_processing_queue = SQS(&#34;JSONProcessingQueue&#34;) json_processing_queue - dlq with Cluster(&#34;AWS Lambda&#34;): lambda_function = Lambda(&#34;ProcessJSONFiles&#34;) with Cluster(&#34;Amazon DynamoDB&#34;): dynamodb_table = Dynamodb(&#34;JSONItemTable&#34;) s3_bucket &gt;&gt; json_processing_queue &gt;&gt; lambda_function &gt;&gt; dynamodb_table Thing it covers:" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="http://debakarr.github.io/posts/aws/s3todb/" /><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2023-05-13T13:40:00+05:30" />
+<meta property="article:modified_time" content="2023-05-13T13:40:00+05:30" /><meta property="og:site_name" content="Debakar Roy" />
+
+<meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Serverless Workflow to Process Files Uploaded to Amazon S3"/>
+<meta name="twitter:description" content="This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.
+Source code for diagramfrom diagrams import Cluster, Diagram from diagrams.aws.compute import Lambda from diagrams.aws.database import Dynamodb from diagrams.aws.integration import SQS from diagrams.aws.storage import S3 with Diagram(&#34;Serverless Workflow&#34;, graph_attr={&#34;margin&#34;: &#34;-1&#34;}, show=False): with Cluster(&#34;Amazon S3&#34;): s3_bucket = S3(&#34;JSONFilesBucket&#34;) with Cluster(&#34;AWS SQS&#34;): dlq = SQS(&#34;DeadLetterQueue&#34;) json_processing_queue = SQS(&#34;JSONProcessingQueue&#34;) json_processing_queue - dlq with Cluster(&#34;AWS Lambda&#34;): lambda_function = Lambda(&#34;ProcessJSONFiles&#34;) with Cluster(&#34;Amazon DynamoDB&#34;): dynamodb_table = Dynamodb(&#34;JSONItemTable&#34;) s3_bucket &gt;&gt; json_processing_queue &gt;&gt; lambda_function &gt;&gt; dynamodb_table Thing it covers:"/>
+<meta name="twitter:site" content="@debakar_roy"/>
+<meta name="application-name" content="Debakar Roy">
+<meta name="apple-mobile-web-app-title" content="Debakar Roy"><meta name="theme-color" content="#ffffff"><meta name="msapplication-TileColor" content="#da532c"><link rel="icon" href="https://i.imgur.com/T0fcnXo.png"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png"><link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5"><link rel="manifest" href="/site.webmanifest"><link rel="canonical" href="http://debakarr.github.io/posts/aws/s3todb/" /><link rel="prev" href="http://debakarr.github.io/posts/devops/day25-devops/" /><link rel="next" href="http://debakarr.github.io/posts/devops/day26-devops/" /><link rel="stylesheet" href="/css/style.min.css"><link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css"></noscript><link rel="preload" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css"></noscript><script type="application/ld+json">
+    {
+        "@context": "http://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Serverless Workflow to Process Files Uploaded to Amazon S3",
+        "inLanguage": "en-us",
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "http:\/\/debakarr.github.io\/posts\/aws\/s3todb\/"
+        },"genre": "posts","keywords": "DevOps, AWS, S3, SQS, Serverless, Lambda","wordcount":  1085 ,
+        "url": "http:\/\/debakarr.github.io\/posts\/aws\/s3todb\/","datePublished": "2023-05-13T13:40:00+05:30","dateModified": "2023-05-13T13:40:00+05:30","publisher": {
+            "@type": "Organization",
+            "name": ""},"author": {
+                "@type": "Person",
+                "name": "Debakar Roy"
+            },"description": ""
+    }
+    </script></head>
+    <body data-header-desktop="fixed" data-header-mobile="auto"><script type="text/javascript">(window.localStorage && localStorage.getItem('theme') ? localStorage.getItem('theme') === 'dark' : ('dark' === 'auto' ? window.matchMedia('(prefers-color-scheme: dark)').matches : 'dark' === 'dark')) && document.body.setAttribute('theme', 'dark');</script>
+
+        <div id="mask"></div><div class="wrapper"><header class="desktop" id="header-desktop">
+    <div class="header-wrapper">
+        <div class="header-title">
+            <a href="/" title="Debakar Roy">Debakar Roy</a>
+        </div>
+        <div class="menu">
+            <div class="menu-inner"><a class="menu-item" href="/posts/"> Posts </a><a class="menu-item" href="/tags/"> Tags </a><a class="menu-item" href="/categories/"> Categories </a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume"> Resume </a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i>  </a><span class="menu-item delimiter"></span><span class="menu-item search" id="search-desktop">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-desktop">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-desktop" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-desktop" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-desktop">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </span><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                    <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+                </a></div>
+        </div>
+    </div>
+</header><header class="mobile" id="header-mobile">
+    <div class="header-container">
+        <div class="header-wrapper">
+            <div class="header-title">
+                <a href="/" title="Debakar Roy">Debakar Roy</a>
+            </div>
+            <div class="menu-toggle" id="menu-toggle-mobile">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+        <div class="menu" id="menu-mobile"><div class="search-wrapper">
+                    <div class="search mobile" id="search-mobile">
+                        <input type="text" placeholder="Search titles or contents..." id="search-input-mobile">
+                        <a href="javascript:void(0);" class="search-button search-toggle" id="search-toggle-mobile" title="Search">
+                            <i class="fas fa-search fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <a href="javascript:void(0);" class="search-button search-clear" id="search-clear-mobile" title="Clear">
+                            <i class="fas fa-times-circle fa-fw" aria-hidden="true"></i>
+                        </a>
+                        <span class="search-button search-loading" id="search-loading-mobile">
+                            <i class="fas fa-spinner fa-fw fa-spin" aria-hidden="true"></i>
+                        </span>
+                    </div>
+                    <a href="javascript:void(0);" class="search-cancel" id="search-cancel-mobile">
+                        Cancel
+                    </a>
+                </div><a class="menu-item" href="/posts/" title="">Posts</a><a class="menu-item" href="/tags/" title="">Tags</a><a class="menu-item" href="/categories/" title="">Categories</a><a class="menu-item" href="/resume/debakar_roy_resume.pdf" title="Resume">Resume</a><a class="menu-item" href="https://github.com/debakarr/debakarr.github.io" title="GitHub" rel="noopener noreffer" target="_blank"><i class='fab fa-github fa-fw' aria-hidden='true'></i></a><a href="javascript:void(0);" class="menu-item theme-switch" title="Switch Theme">
+                <i class="fas fa-adjust fa-fw" aria-hidden="true"></i>
+            </a></div>
+    </div>
+</header><div class="search-dropdown desktop">
+        <div id="search-dropdown-desktop"></div>
+    </div>
+    <div class="search-dropdown mobile">
+        <div id="search-dropdown-mobile"></div>
+    </div><main class="main">
+                <div class="container"><div class="toc" id="toc-auto">
+            <h2 class="toc-title">Contents</h2>
+            <div class="toc-content" id="toc-content-auto"></div>
+        </div><article class="page single"><h1 class="single-title animate__animated animate__flipInX">Serverless Workflow to Process Files Uploaded to Amazon S3</h1><div class="post-meta">
+            <div class="post-meta-line"><span class="post-author"><a href="https://github.com/debakarr" title="Author" target="_blank" rel="noopener noreffer author" class="author"><i class="fas fa-user-circle fa-fw" aria-hidden="true"></i>Debakar Roy</a></span>&nbsp;<span class="post-category">included in <a href="/categories/devops/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>DevOps</a>&nbsp;<a href="/categories/aws/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>AWS</a>&nbsp;<a href="/categories/s3/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>S3</a>&nbsp;<a href="/categories/sqs/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>SQS</a>&nbsp;<a href="/categories/serverless/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Serverless</a>&nbsp;<a href="/categories/lambda/"><i class="far fa-folder fa-fw" aria-hidden="true"></i>Lambda</a></span></div>
+            <div class="post-meta-line"><i class="far fa-calendar-alt fa-fw" aria-hidden="true"></i>&nbsp;<time datetime="2023-05-13">2023-05-13</time>&nbsp;<i class="fas fa-pencil-alt fa-fw" aria-hidden="true"></i>&nbsp;1085 words&nbsp;
+                <i class="far fa-clock fa-fw" aria-hidden="true"></i>&nbsp;6 minutes&nbsp;</div>
+        </div><div class="details toc" id="toc-static"  data-kept="">
+                <div class="details-summary toc-title">
+                    <span>Contents</span>
+                    <span><i class="details-icon fas fa-angle-right" aria-hidden="true"></i></span>
+                </div>
+                <div class="details-content toc-content" id="toc-content-static"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#creating-s3-bucket-for-storing-files">Creating S3 bucket for storing files</a></li>
+    <li><a href="#creating-table-in-dynamodb">Creating Table in DynamoDB</a></li>
+    <li><a href="#create-lambda-function">Create Lambda Function</a>
+      <ul>
+        <li><a href="#create-role-for-lambda-function">Create role for Lambda Function</a></li>
+        <li><a href="#create-lambda-function-1">Create Lambda Function</a></li>
+      </ul>
+    </li>
+    <li><a href="#application-integration">Application integration</a>
+      <ul>
+        <li><a href="#creating-dead-letter-queue">Creating dead-letter queue</a></li>
+        <li><a href="#create-queue-for-s3-bucket-event-notification">Create queue for S3 bucket event notification</a></li>
+      </ul>
+    </li>
+    <li><a href="#push-event-notification-from-s3-to-sqs">Push event notification from S3 to SQS</a></li>
+    <li><a href="#try-out-to-see-if-the-dynamodb-database-is-getting-updated-on-new-push">Try out to see if the DynamoDB database is getting updated on new push</a></li>
+  </ul>
+</nav></div>
+            </div><div class="content" id="content"><p>This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.</p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/serverless_workflow.png"
+        data-srcset="/posts/aws/s3todb/serverless_workflow.png, /posts/aws/s3todb/serverless_workflow.png 1.5x, /posts/aws/s3todb/serverless_workflow.png 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/serverless_workflow.png"
+        title="/posts/aws/s3todb/serverless_workflow.png" width="984" height="700" /></p>
+<div class="details admonition info">
+        <div class="details-summary admonition-title">
+            <i class="icon fas fa-info-circle fa-fw" aria-hidden="true"></i>Source code for diagram<i class="details-icon fas fa-angle-right fa-fw" aria-hidden="true"></i>
+        </div>
+        <div class="details-content">
+            <div class="admonition-content"><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams</span> <span class="kn">import</span> <span class="n">Cluster</span><span class="p">,</span> <span class="n">Diagram</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.compute</span> <span class="kn">import</span> <span class="n">Lambda</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.database</span> <span class="kn">import</span> <span class="n">Dynamodb</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.integration</span> <span class="kn">import</span> <span class="n">SQS</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">diagrams.aws.storage</span> <span class="kn">import</span> <span class="n">S3</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="n">Diagram</span><span class="p">(</span><span class="s2">&#34;Serverless Workflow&#34;</span><span class="p">,</span> <span class="n">graph_attr</span><span class="o">=</span><span class="p">{</span><span class="s2">&#34;margin&#34;</span><span class="p">:</span> <span class="s2">&#34;-1&#34;</span><span class="p">},</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;Amazon S3&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">s3_bucket</span> <span class="o">=</span> <span class="n">S3</span><span class="p">(</span><span class="s2">&#34;JSONFilesBucket&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;AWS SQS&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dlq</span> <span class="o">=</span> <span class="n">SQS</span><span class="p">(</span><span class="s2">&#34;DeadLetterQueue&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">json_processing_queue</span> <span class="o">=</span> <span class="n">SQS</span><span class="p">(</span><span class="s2">&#34;JSONProcessingQueue&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">json_processing_queue</span> <span class="o">-</span> <span class="n">dlq</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;AWS Lambda&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">lambda_function</span> <span class="o">=</span> <span class="n">Lambda</span><span class="p">(</span><span class="s2">&#34;ProcessJSONFiles&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">with</span> <span class="n">Cluster</span><span class="p">(</span><span class="s2">&#34;Amazon DynamoDB&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">dynamodb_table</span> <span class="o">=</span> <span class="n">Dynamodb</span><span class="p">(</span><span class="s2">&#34;JSONItemTable&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">s3_bucket</span> <span class="o">&gt;&gt;</span> <span class="n">json_processing_queue</span> <span class="o">&gt;&gt;</span> <span class="n">lambda_function</span> <span class="o">&gt;&gt;</span> <span class="n">dynamodb_table</span>
+</span></span></code></pre></div></div>
+        </div>
+    </div>
+<p>Thing it covers:</p>
+<ul>
+<li>Efficiently process AWS S3 events using AWS SQS Message Queues.</li>
+<li>Trigger AWS Lambda Function to process the message in SQS queue.</li>
+<li>We can process the file in AWS Lambda Function if required.</li>
+<li>Store the data to AWS DynamoDB. This is written throught the AWS Lambda Funtion.</li>
+<li>IAM Role can be used to manage access.</li>
+</ul>
+<h2 id="creating-s3-bucket-for-storing-files">Creating S3 bucket for storing files</h2>
+<ul>
+<li>Navigate to <a href="console.aws.amazon.com/console/home" rel="">console.aws.amazon.com/console/home</a></li>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-bucket/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/create-bucket/click-services.jpg, /posts/aws/s3todb/create-bucket/click-services.jpg 1.5x, /posts/aws/s3todb/create-bucket/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-bucket/click-services.jpg"
+        title="/posts/aws/s3todb/create-bucket/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Storage&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-bucket/click-storage.jpg"
+        data-srcset="/posts/aws/s3todb/create-bucket/click-storage.jpg, /posts/aws/s3todb/create-bucket/click-storage.jpg 1.5x, /posts/aws/s3todb/create-bucket/click-storage.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-bucket/click-storage.jpg"
+        title="/posts/aws/s3todb/create-bucket/click-storage.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;S3&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-bucket/click-s3.jpg"
+        data-srcset="/posts/aws/s3todb/create-bucket/click-s3.jpg, /posts/aws/s3todb/create-bucket/click-s3.jpg 1.5x, /posts/aws/s3todb/create-bucket/click-s3.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-bucket/click-s3.jpg"
+        title="/posts/aws/s3todb/create-bucket/click-s3.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create bucket&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-bucket/click-create-button1.jpg"
+        data-srcset="/posts/aws/s3todb/create-bucket/click-create-button1.jpg, /posts/aws/s3todb/create-bucket/click-create-button1.jpg 1.5x, /posts/aws/s3todb/create-bucket/click-create-button1.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-bucket/click-create-button1.jpg"
+        title="/posts/aws/s3todb/create-bucket/click-create-button1.jpg" width="640" height="350" /></p>
+<ul>
+<li>Give some unique name for bucket like &ldquo;json-processing-bucket&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-bucket/name-bucket.jpg"
+        data-srcset="/posts/aws/s3todb/create-bucket/name-bucket.jpg, /posts/aws/s3todb/create-bucket/name-bucket.jpg 1.5x, /posts/aws/s3todb/create-bucket/name-bucket.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-bucket/name-bucket.jpg"
+        title="/posts/aws/s3todb/create-bucket/name-bucket.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create bucket&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-bucket/click-create-button2.jpg"
+        data-srcset="/posts/aws/s3todb/create-bucket/click-create-button2.jpg, /posts/aws/s3todb/create-bucket/click-create-button2.jpg 1.5x, /posts/aws/s3todb/create-bucket/click-create-button2.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-bucket/click-create-button2.jpg"
+        title="/posts/aws/s3todb/create-bucket/click-create-button2.jpg" width="640" height="350" /></p>
+<h2 id="creating-table-in-dynamodb">Creating Table in DynamoDB</h2>
+<ul>
+<li>Navigate to <a href="console.aws.amazon.com/console/home" rel="">console.aws.amazon.com/console/home</a></li>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-table-in-db/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/create-table-in-db/click-services.jpg, /posts/aws/s3todb/create-table-in-db/click-services.jpg 1.5x, /posts/aws/s3todb/create-table-in-db/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-table-in-db/click-services.jpg"
+        title="/posts/aws/s3todb/create-table-in-db/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Database&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-table-in-db/click-database.jpg"
+        data-srcset="/posts/aws/s3todb/create-table-in-db/click-database.jpg, /posts/aws/s3todb/create-table-in-db/click-database.jpg 1.5x, /posts/aws/s3todb/create-table-in-db/click-database.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-table-in-db/click-database.jpg"
+        title="/posts/aws/s3todb/create-table-in-db/click-database.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;DynamoDB&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg"
+        data-srcset="/posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg, /posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg 1.5x, /posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg"
+        title="/posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create table&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-table-in-db/click-create-table1.jpg"
+        data-srcset="/posts/aws/s3todb/create-table-in-db/click-create-table1.jpg, /posts/aws/s3todb/create-table-in-db/click-create-table1.jpg 1.5x, /posts/aws/s3todb/create-table-in-db/click-create-table1.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-table-in-db/click-create-table1.jpg"
+        title="/posts/aws/s3todb/create-table-in-db/click-create-table1.jpg" width="640" height="350" /></p>
+<ul>
+<li>Give some unique name for DB Table like &ldquo;JSONItemTable&rdquo; and provide a primary key like &ldquo;id&rdquo;. This will be later used to update data via the AWS Lambda function.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-table-in-db/table-data.jpg"
+        data-srcset="/posts/aws/s3todb/create-table-in-db/table-data.jpg, /posts/aws/s3todb/create-table-in-db/table-data.jpg 1.5x, /posts/aws/s3todb/create-table-in-db/table-data.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-table-in-db/table-data.jpg"
+        title="/posts/aws/s3todb/create-table-in-db/table-data.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create table&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-table-in-db/click-create-table2.jpg"
+        data-srcset="/posts/aws/s3todb/create-table-in-db/click-create-table2.jpg, /posts/aws/s3todb/create-table-in-db/click-create-table2.jpg 1.5x, /posts/aws/s3todb/create-table-in-db/click-create-table2.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-table-in-db/click-create-table2.jpg"
+        title="/posts/aws/s3todb/create-table-in-db/click-create-table2.jpg" width="640" height="350" /></p>
+<h2 id="create-lambda-function">Create Lambda Function</h2>
+<h3 id="create-role-for-lambda-function">Create role for Lambda Function</h3>
+<p>Before creating Lambda Function we can set role and limit access to what this lambda funtion can do. Basically we want this Lambda Function to:</p>
+<ul>
+<li>Have read access to S3 bucket -&gt; This is possible via <strong>AmazonS3ReadOnlyAccess</strong></li>
+<li>Receive message form SQS -&gt; This is possible via <strong>AWSLambdaSQSQueueExecutionRole</strong></li>
+<li>Have write access to Dynamo DB -&gt; <strong>AmazonDynamoDBFullAccess</strong></li>
+<li>Have write access to CloudWatch in case we want to debug -&gt; <strong>AWSLambdaBasicExecutionRole</strong></li>
+</ul>
+<p>To create this role</p>
+<ul>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-services.jpg, /posts/aws/s3todb/create-role-for-lambda/click-services.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-services.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Security, Identity, &amp; Compliance&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg, /posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;IAM&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-iam.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-iam.jpg, /posts/aws/s3todb/create-role-for-lambda/click-iam.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-iam.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-iam.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-iam.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Roles&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-role.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-role.jpg, /posts/aws/s3todb/create-role-for-lambda/click-role.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-role.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-role.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-role.jpg" width="483" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create role&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg, /posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg" width="640" height="329" /></p>
+<ul>
+<li>Select &ldquo;AWS Service&rdquo; and the &ldquo;Lambda&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg, /posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Next&rdquo;</li>
+<li>Filter the roles. You can filter with this &ldquo;AmazonS3ReadOnlyAccess|AWSLambdaSQSQueueExecutionRole|AmazonDynamoDBFullAccess|AWSLambdaBasicExecutionRole&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/filter.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/filter.jpg, /posts/aws/s3todb/create-role-for-lambda/filter.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/filter.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/filter.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/filter.jpg" width="640" height="350" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/select-role.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/select-role.jpg, /posts/aws/s3todb/create-role-for-lambda/select-role.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/select-role.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/select-role.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/select-role.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Next&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg, /posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg" width="640" height="350" /></p>
+<ul>
+<li>Provide a name to the role like &ldquo;LambdaRoleForJSONItems&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg, /posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create role&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg"
+        data-srcset="/posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg, /posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg 1.5x, /posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg"
+        title="/posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg" width="640" height="350" /></p>
+<h3 id="create-lambda-function-1">Create Lambda Function</h3>
+<ul>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-services.jpg, /posts/aws/s3todb/create-lambda/click-services.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-services.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-services.jpg" width="800" height="438" /></p>
+<ul>
+<li>Click &ldquo;Compute&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-compute.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-compute.jpg, /posts/aws/s3todb/create-lambda/click-compute.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-compute.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-compute.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-compute.jpg" width="800" height="438" /></p>
+<ul>
+<li>Click &ldquo;Lambda&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-lambda.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-lambda.jpg, /posts/aws/s3todb/create-lambda/click-lambda.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-lambda.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-lambda.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-lambda.jpg" width="800" height="438" /></p>
+<ul>
+<li>Click &ldquo;Create function&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-create-function.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-create-function.jpg, /posts/aws/s3todb/create-lambda/click-create-function.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-create-function.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-create-function.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-create-function.jpg" width="800" height="438" /></p>
+<ul>
+<li>Click &ldquo;Author from scrach&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg, /posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg" width="800" height="438" /></p>
+<ul>
+<li>Provide a Function name. Here I am calling it &ldquo;JSONProcessingLambdaFunctionTriggeredBySQS&rdquo;. Also I am going to use Python as Runtime.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/config-lambda1.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/config-lambda1.jpg, /posts/aws/s3todb/create-lambda/config-lambda1.jpg 1.5x, /posts/aws/s3todb/create-lambda/config-lambda1.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/config-lambda1.jpg"
+        title="/posts/aws/s3todb/create-lambda/config-lambda1.jpg" width="800" height="437" /></p>
+<ul>
+<li>Now we can use the role which we created and link it with this Lambda Function.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/config-lambda-role.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/config-lambda-role.jpg, /posts/aws/s3todb/create-lambda/config-lambda-role.jpg 1.5x, /posts/aws/s3todb/create-lambda/config-lambda-role.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/config-lambda-role.jpg"
+        title="/posts/aws/s3todb/create-lambda/config-lambda-role.jpg" width="800" height="438" /></p>
+<ul>
+<li>Click on &ldquo;Create function&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-create-function2.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-create-function2.jpg, /posts/aws/s3todb/create-lambda/click-create-function2.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-create-function2.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-create-function2.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-create-function2.jpg" width="800" height="438" /></p>
+<ul>
+<li>Next screen we can add the Lambda &ldquo;Code&rdquo;. I am going to add the Python Code. It is well documented.</li>
+</ul>
+<p>Please open the code block below to view the complete code.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">json</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">logging</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">random</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">boto3</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">sqs_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;sqs&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">dynamo_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">resource</span><span class="p">(</span><span class="s1">&#39;dynamodb&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">s3_client</span> <span class="o">=</span> <span class="n">boto3</span><span class="o">.</span><span class="n">client</span><span class="p">(</span><span class="s1">&#39;s3&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Set up logger</span>
+</span></span><span class="line"><span class="cl"><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">lambda_handler</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Log SQS event</span>
+</span></span><span class="line"><span class="cl">    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Received SQS event&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;event&#39;</span><span class="p">:</span> <span class="n">event</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;awsRequestId&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">aws_request_id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;functionName&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">function_name</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Extract S3 event from SQS message body</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s3_event</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s1">&#39;Records&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;body&#39;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Log S3 event</span>
+</span></span><span class="line"><span class="cl">    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Received S3 event&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;event&#39;</span><span class="p">:</span> <span class="n">s3_event</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;awsRequestId&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">aws_request_id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;functionName&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">function_name</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Extract source bucket and key from S3 event</span>
+</span></span><span class="line"><span class="cl">    <span class="n">src_bucket</span> <span class="o">=</span> <span class="n">s3_event</span><span class="p">[</span><span class="s1">&#39;Records&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;s3&#39;</span><span class="p">][</span><span class="s1">&#39;bucket&#39;</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">src_key</span> <span class="o">=</span> <span class="n">s3_event</span><span class="p">[</span><span class="s1">&#39;Records&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;s3&#39;</span><span class="p">][</span><span class="s1">&#39;object&#39;</span><span class="p">][</span><span class="s1">&#39;key&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Set parameters for getting S3 object</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s3_params</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;Bucket&#39;</span><span class="p">:</span> <span class="n">src_bucket</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;Key&#39;</span><span class="p">:</span> <span class="n">src_key</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Get S3 object and read its content as string</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s3_obj</span> <span class="o">=</span> <span class="n">s3_client</span><span class="o">.</span><span class="n">get_object</span><span class="p">(</span><span class="o">**</span><span class="n">s3_params</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s3_body</span> <span class="o">=</span> <span class="n">s3_obj</span><span class="p">[</span><span class="s1">&#39;Body&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Log S3 object body</span>
+</span></span><span class="line"><span class="cl">    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Retrieved S3 object body&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;s3ObjectBody&#39;</span><span class="p">:</span> <span class="n">s3_body</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;awsRequestId&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">aws_request_id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;functionName&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">function_name</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Parse S3 object body as JSON</span>
+</span></span><span class="line"><span class="cl">    <span class="n">item</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s3_body</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Generate a random ID and add it to the JSON item</span>
+</span></span><span class="line"><span class="cl">    <span class="n">item</span><span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">()</span> <span class="o">*</span> <span class="p">(</span><span class="mi">10</span><span class="o">**</span><span class="mi">16</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Get DynamoDB table for processed items</span>
+</span></span><span class="line"><span class="cl">    <span class="n">processed_items_table</span> <span class="o">=</span> <span class="n">dynamo_client</span><span class="o">.</span><span class="n">Table</span><span class="p">(</span><span class="s1">&#39;JSONItemTable&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Put the JSON item into the DynamoDB table</span>
+</span></span><span class="line"><span class="cl">    <span class="n">result</span> <span class="o">=</span> <span class="n">processed_items_table</span><span class="o">.</span><span class="n">put_item</span><span class="p">(</span><span class="n">Item</span><span class="o">=</span><span class="n">item</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Log result</span>
+</span></span><span class="line"><span class="cl">    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">({</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;message&#39;</span><span class="p">:</span> <span class="s1">&#39;Put item into DynamoDB table&#39;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;result&#39;</span><span class="p">:</span> <span class="n">result</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;awsRequestId&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">aws_request_id</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;functionName&#39;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">function_name</span>
+</span></span><span class="line"><span class="cl">    <span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">result</span>
+</span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-code.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-code.jpg, /posts/aws/s3todb/create-lambda/click-code.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-code.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-code.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-code.jpg" width="800" height="437" /></p>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/paste-code.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/paste-code.jpg, /posts/aws/s3todb/create-lambda/paste-code.jpg 1.5x, /posts/aws/s3todb/create-lambda/paste-code.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/paste-code.jpg"
+        title="/posts/aws/s3todb/create-lambda/paste-code.jpg" width="800" height="437" /></p>
+<ul>
+<li>Click &ldquo;Deploy&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-lambda/click-deploy.jpg"
+        data-srcset="/posts/aws/s3todb/create-lambda/click-deploy.jpg, /posts/aws/s3todb/create-lambda/click-deploy.jpg 1.5x, /posts/aws/s3todb/create-lambda/click-deploy.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-lambda/click-deploy.jpg"
+        title="/posts/aws/s3todb/create-lambda/click-deploy.jpg" width="800" height="438" /></p>
+<h2 id="application-integration">Application integration</h2>
+<p>Here we would like to a queue which will take the input from S3 bucket and pass it to our Lambda function.</p>
+<p>To have high resilience we will also have a <strong>dead-letter queue</strong> which will be containing all the json which are not processed properly. We will have a retention of 14 days for those json items.</p>
+<h3 id="creating-dead-letter-queue">Creating dead-letter queue</h3>
+<ul>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-services.jpg, /posts/aws/s3todb/create-queue/click-services.jpg 1.5x, /posts/aws/s3todb/create-queue/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-services.jpg"
+        title="/posts/aws/s3todb/create-queue/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Application Integration&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-application-integration.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-application-integration.jpg, /posts/aws/s3todb/create-queue/click-application-integration.jpg 1.5x, /posts/aws/s3todb/create-queue/click-application-integration.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-application-integration.jpg"
+        title="/posts/aws/s3todb/create-queue/click-application-integration.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Simple Queue Service&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-simple-queue-service.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-simple-queue-service.jpg, /posts/aws/s3todb/create-queue/click-simple-queue-service.jpg 1.5x, /posts/aws/s3todb/create-queue/click-simple-queue-service.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-simple-queue-service.jpg"
+        title="/posts/aws/s3todb/create-queue/click-simple-queue-service.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create queue&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-create-queue.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-create-queue.jpg, /posts/aws/s3todb/create-queue/click-create-queue.jpg 1.5x, /posts/aws/s3todb/create-queue/click-create-queue.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-create-queue.jpg"
+        title="/posts/aws/s3todb/create-queue/click-create-queue.jpg" width="640" height="350" /></p>
+<ul>
+<li>Provide a name to dead-letter queue. Here I am giving it a name &ldquo;JSONDeadLetterQueue&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg, /posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg 1.5x, /posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg"
+        title="/posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg" width="640" height="350" /></p>
+<ul>
+<li>We can also set the retention policy. For now I am setting it to 14 days.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg, /posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg 1.5x, /posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg"
+        title="/posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create queue&rdquo;.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-create-queue2.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-create-queue2.jpg, /posts/aws/s3todb/create-queue/click-create-queue2.jpg 1.5x, /posts/aws/s3todb/create-queue/click-create-queue2.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-create-queue2.jpg"
+        title="/posts/aws/s3todb/create-queue/click-create-queue2.jpg" width="640" height="350" /></p>
+<h3 id="create-queue-for-s3-bucket-event-notification">Create queue for S3 bucket event notification</h3>
+<ul>
+<li>Click back &ldquo;Queue&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-back-queue.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-back-queue.jpg, /posts/aws/s3todb/create-queue/click-back-queue.jpg 1.5x, /posts/aws/s3todb/create-queue/click-back-queue.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-back-queue.jpg"
+        title="/posts/aws/s3todb/create-queue/click-back-queue.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create queue&rdquo; again.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-create-queue3.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-create-queue3.jpg, /posts/aws/s3todb/create-queue/click-create-queue3.jpg 1.5x, /posts/aws/s3todb/create-queue/click-create-queue3.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-create-queue3.jpg"
+        title="/posts/aws/s3todb/create-queue/click-create-queue3.jpg" width="640" height="350" /></p>
+<ul>
+<li>Set the name for the queue. I am naming it &ldquo;JSONProcessingQueue&rdquo;.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/queue-config.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/queue-config.jpg, /posts/aws/s3todb/create-queue/queue-config.jpg 1.5x, /posts/aws/s3todb/create-queue/queue-config.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/queue-config.jpg"
+        title="/posts/aws/s3todb/create-queue/queue-config.jpg" width="640" height="350" /></p>
+<ul>
+<li>Next step will be to modify the access policy for the queue. For this you will need the account ID as well as the S3 bucket name. You can get the account ID under the profile name.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/copy-account-number.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/copy-account-number.jpg, /posts/aws/s3todb/create-queue/copy-account-number.jpg 1.5x, /posts/aws/s3todb/create-queue/copy-account-number.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/copy-account-number.jpg"
+        title="/posts/aws/s3todb/create-queue/copy-account-number.jpg" width="640" height="350" /></p>
+<ul>
+<li>Under &ldquo;Access policy&rdquo; click on &ldquo;Advanced&rdquo; and paste the following json.</li>
+</ul>
+<div class="details admonition warning open">
+        <div class="details-summary admonition-title">
+            <i class="icon fas fa-exclamation-triangle fa-fw" aria-hidden="true"></i>Replace with yours<i class="details-icon fas fa-angle-right fa-fw" aria-hidden="true"></i>
+        </div>
+        <div class="details-content">
+            <div class="admonition-content">Please note that you will have to modify it as per your account name and S3 bucket name.</div>
+        </div>
+    </div>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-json" data-lang="json"><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;Version&#34;</span><span class="p">:</span> <span class="s2">&#34;2012-10-17&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;Id&#34;</span><span class="p">:</span> <span class="s2">&#34;JSONProcessingQueue-ID&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">  <span class="nt">&#34;Statement&#34;</span><span class="p">:</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Sid&#34;</span><span class="p">:</span> <span class="s2">&#34;JSONProcessingQueue-statement-ID&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Effect&#34;</span><span class="p">:</span> <span class="s2">&#34;Allow&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Principal&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;AWS&#34;</span><span class="p">:</span> <span class="s2">&#34;*&#34;</span>
+</span></span><span class="line"><span class="cl">      <span class="p">},</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Action&#34;</span><span class="p">:</span> <span class="s2">&#34;SQS:SendMessage&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Resource&#34;</span><span class="p">:</span> <span class="s2">&#34;arn:aws:sqs:us-east-1:CHANGE-WITH-YOUR-ACCOUNT-ID:JSONProcessingQueue&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">      <span class="nt">&#34;Condition&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;StringEquals&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;aws:SourceAccount&#34;</span><span class="p">:</span> <span class="s2">&#34;CHANGE-WITH-YOUR-ACCOUNT-ID&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">},</span>
+</span></span><span class="line"><span class="cl">        <span class="nt">&#34;ArnLike&#34;</span><span class="p">:</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">          <span class="nt">&#34;aws:SourceArn&#34;</span><span class="p">:</span> <span class="s2">&#34;arn:aws:s3:*:*:CHANGE-WITH-YOUR-BUCKET-NAME&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">      <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/modify-access-policy.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/modify-access-policy.jpg, /posts/aws/s3todb/create-queue/modify-access-policy.jpg 1.5x, /posts/aws/s3todb/create-queue/modify-access-policy.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/modify-access-policy.jpg"
+        title="/posts/aws/s3todb/create-queue/modify-access-policy.jpg" width="640" height="350" /></p>
+<ul>
+<li>Select the dead-letter queue we had created in the previous section.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/set-dead-queue.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/set-dead-queue.jpg, /posts/aws/s3todb/create-queue/set-dead-queue.jpg 1.5x, /posts/aws/s3todb/create-queue/set-dead-queue.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/set-dead-queue.jpg"
+        title="/posts/aws/s3todb/create-queue/set-dead-queue.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create queue&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-create-queue4.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-create-queue4.jpg, /posts/aws/s3todb/create-queue/click-create-queue4.jpg 1.5x, /posts/aws/s3todb/create-queue/click-create-queue4.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-create-queue4.jpg"
+        title="/posts/aws/s3todb/create-queue/click-create-queue4.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Lambda triggers&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-lambda-trigger.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-lambda-trigger.jpg, /posts/aws/s3todb/create-queue/click-lambda-trigger.jpg 1.5x, /posts/aws/s3todb/create-queue/click-lambda-trigger.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-lambda-trigger.jpg"
+        title="/posts/aws/s3todb/create-queue/click-lambda-trigger.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Configure Lambda function trigger&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg, /posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg 1.5x, /posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg"
+        title="/posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg" width="640" height="350" /></p>
+<ul>
+<li>Select the lambda function which we created before.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/select-the-lambda-function.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/select-the-lambda-function.jpg, /posts/aws/s3todb/create-queue/select-the-lambda-function.jpg 1.5x, /posts/aws/s3todb/create-queue/select-the-lambda-function.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/select-the-lambda-function.jpg"
+        title="/posts/aws/s3todb/create-queue/select-the-lambda-function.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Save&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/create-queue/click-save.jpg"
+        data-srcset="/posts/aws/s3todb/create-queue/click-save.jpg, /posts/aws/s3todb/create-queue/click-save.jpg 1.5x, /posts/aws/s3todb/create-queue/click-save.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/create-queue/click-save.jpg"
+        title="/posts/aws/s3todb/create-queue/click-save.jpg" width="640" height="350" /></p>
+<h2 id="push-event-notification-from-s3-to-sqs">Push event notification from S3 to SQS</h2>
+<ul>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-services.jpg, /posts/aws/s3todb/s3-event-notification/click-services.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-services.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Storage&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-storage.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-storage.jpg, /posts/aws/s3todb/s3-event-notification/click-storage.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-storage.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-storage.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-storage.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;S3&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-s3.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-s3.jpg, /posts/aws/s3todb/s3-event-notification/click-s3.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-s3.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-s3.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-s3.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;json-processing-bucket&rdquo; (Your bucket name might be different)</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg, /posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Properties&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-properties.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-properties.jpg, /posts/aws/s3todb/s3-event-notification/click-properties.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-properties.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-properties.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-properties.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Create event notification&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg, /posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg" width="640" height="350" /></p>
+<ul>
+<li>Give the event notification a name. I have give name as &ldquo;sqs-event-notification&rdquo;. Also I have given access to All object creation. So anytime a new object is pushed to S3, it will trigger a event to the SQS.</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/event-notification-config.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/event-notification-config.jpg, /posts/aws/s3todb/s3-event-notification/event-notification-config.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/event-notification-config.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/event-notification-config.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/event-notification-config.jpg" width="640" height="346" /></p>
+<ul>
+<li>We can link the SQS under &ldquo;Destination&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg, /posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Save changes&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/s3-event-notification/click-save-changes.jpg"
+        data-srcset="/posts/aws/s3todb/s3-event-notification/click-save-changes.jpg, /posts/aws/s3todb/s3-event-notification/click-save-changes.jpg 1.5x, /posts/aws/s3todb/s3-event-notification/click-save-changes.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/s3-event-notification/click-save-changes.jpg"
+        title="/posts/aws/s3todb/s3-event-notification/click-save-changes.jpg" width="640" height="350" /></p>
+<h2 id="try-out-to-see-if-the-dynamodb-database-is-getting-updated-on-new-push">Try out to see if the DynamoDB database is getting updated on new push</h2>
+<ul>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-services.jpg, /posts/aws/s3todb/upload-to-s3/click-services.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-services.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Storage&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-storage.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-storage.jpg, /posts/aws/s3todb/upload-to-s3/click-storage.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-storage.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-storage.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-storage.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;S3&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-s3.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-s3.jpg, /posts/aws/s3todb/upload-to-s3/click-s3.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-s3.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-s3.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-s3.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;json-processing-bucket&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg, /posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Upload&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-upload.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-upload.jpg, /posts/aws/s3todb/upload-to-s3/click-upload.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-upload.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-upload.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-upload.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Add files&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-add-files.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-add-files.jpg, /posts/aws/s3todb/upload-to-s3/click-add-files.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-add-files.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-add-files.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-add-files.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Upload&rdquo; and select the file. For demostration purpose try to upload a valid JSON file</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/upload.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/upload.jpg, /posts/aws/s3todb/upload-to-s3/upload.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/upload.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/upload.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/upload.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Services&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-services.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-services.jpg, /posts/aws/s3todb/upload-to-s3/click-services.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-services.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-services.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-services.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Database&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-database.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-database.jpg, /posts/aws/s3todb/upload-to-s3/click-database.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-database.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-database.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-database.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;DynamoDB&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg, /posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Tables&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-tables.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-tables.jpg, /posts/aws/s3todb/upload-to-s3/click-tables.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-tables.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-tables.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-tables.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;JSONItemTable&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg, /posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg" width="640" height="350" /></p>
+<ul>
+<li>Click &ldquo;Explore table items&rdquo;</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg, /posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg" width="640" height="350" /></p>
+<ul>
+<li>Verify that the data is uploaded properly</li>
+</ul>
+<p><img
+        class="lazyload"
+        src="/svg/loading.min.svg"
+        data-src="/posts/aws/s3todb/upload-to-s3/verify-data.jpg"
+        data-srcset="/posts/aws/s3todb/upload-to-s3/verify-data.jpg, /posts/aws/s3todb/upload-to-s3/verify-data.jpg 1.5x, /posts/aws/s3todb/upload-to-s3/verify-data.jpg 2x"
+        data-sizes="auto"
+        alt="/posts/aws/s3todb/upload-to-s3/verify-data.jpg"
+        title="/posts/aws/s3todb/upload-to-s3/verify-data.jpg" width="640" height="350" /></p>
+<p>That covers the whole process of deploying a simple serverless application using AWS lambda.</p>
+</div><div class="post-footer" id="post-footer">
+    <div class="post-info">
+        <div class="post-info-line">
+            <div class="post-info-mod">
+                <span>Updated on 2023-05-13</span>
+            </div></div>
+        <div class="post-info-line">
+            <div class="post-info-md"></div>
+            <div class="post-info-share">
+                <span><a href="javascript:void(0);" title="Share on Twitter" data-sharer="twitter" data-url="http://debakarr.github.io/posts/aws/s3todb/" data-title="Serverless Workflow to Process Files Uploaded to Amazon S3" data-via="debakar_roy" data-hashtags="DevOps,AWS,S3,SQS,Serverless,Lambda"><i class="fab fa-twitter fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Facebook" data-sharer="facebook" data-url="http://debakarr.github.io/posts/aws/s3todb/" data-hashtag="DevOps"><i class="fab fa-facebook-square fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Hacker News" data-sharer="hackernews" data-url="http://debakarr.github.io/posts/aws/s3todb/" data-title="Serverless Workflow to Process Files Uploaded to Amazon S3"><i class="fab fa-hacker-news fa-fw" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on Line" data-sharer="line" data-url="http://debakarr.github.io/posts/aws/s3todb/" data-title="Serverless Workflow to Process Files Uploaded to Amazon S3"><i data-svg-src="https://cdn.jsdelivr.net/npm/simple-icons@7.3.0/icons/line.svg" aria-hidden="true"></i></a><a href="javascript:void(0);" title="Share on 微博" data-sharer="weibo" data-url="http://debakarr.github.io/posts/aws/s3todb/" data-title="Serverless Workflow to Process Files Uploaded to Amazon S3"><i class="fab fa-weibo fa-fw" aria-hidden="true"></i></a></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="post-info-more">
+        <section class="post-tags"><i class="fas fa-tags fa-fw" aria-hidden="true"></i>&nbsp;<a href="/tags/devops/">DevOps</a>,&nbsp;<a href="/tags/aws/">AWS</a>,&nbsp;<a href="/tags/s3/">S3</a>,&nbsp;<a href="/tags/sqs/">SQS</a>,&nbsp;<a href="/tags/serverless/">Serverless</a>,&nbsp;<a href="/tags/lambda/">Lambda</a></section>
+        <section>
+            <span><a href="javascript:void(0);" onclick="window.history.back();">Back</a></span>&nbsp;|&nbsp;<span><a href="/">Home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav"><a href="/posts/devops/day25-devops/" class="prev" rel="prev" title="Day 25: CloudFormation (AWS) - Overview and comparison"><i class="fas fa-angle-left fa-fw" aria-hidden="true"></i>Day 25: CloudFormation (AWS) - Overview and comparison</a>
+            <a href="/posts/devops/day26-devops/" class="next" rel="next" title="Day 26: Introduction to containerization">Day 26: Introduction to containerization<i class="fas fa-angle-right fa-fw" aria-hidden="true"></i></a></div>
+</div>
+</article></div>
+            </main><footer class="footer">
+        <div class="footer-container"><div class="footer-line">Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener noreffer" title="Hugo 0.122.0">Hugo</a> | Theme - <a href="https://github.com/dillonzq/LoveIt" target="_blank" rel="noopener noreffer" title="LoveIt 0.2.11"><i class="far fa-kiss-wink-heart fa-fw" aria-hidden="true"></i> LoveIt</a>
+                </div><div class="footer-line" itemscope itemtype="http://schema.org/CreativeWork"><i class="far fa-copyright fa-fw" aria-hidden="true"></i><span itemprop="copyrightYear">2022 - 2024</span><span class="author" itemprop="copyrightHolder">&nbsp;<a href="https://github.com/debakarr" target="_blank">Debakar Roy</a></span></div>
+        </div>
+    </footer></div>
+
+        <div id="fixed-buttons"><a href="#" id="back-to-top" class="fixed-button" title="Back to Top">
+                <i class="fas fa-arrow-up fa-fw" aria-hidden="true"></i>
+            </a><a href="#" id="view-comments" class="fixed-button" title="View Comments">
+                <i class="fas fa-comment fa-fw" aria-hidden="true"></i>
+            </a>
+        </div><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/autocomplete.js@0.38.1/dist/autocomplete.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lunr@2.3.9/lunr.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/lazysizes@5.3.2/lazysizes.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script><script type="text/javascript" src="https://cdn.jsdelivr.net/npm/sharer.js@0.5.1/sharer.min.js"></script><script type="text/javascript">window.config={"code":{"copyTitle":"Copy to clipboard","maxShownLines":50},"comment":{},"search":{"highlightTag":"em","lunrIndexURL":"/index.json","maxResultLength":10,"noResultsFound":"No results found","snippetLength":30,"type":"lunr"}};</script><script type="text/javascript" src="/js/theme.min.js"></script><script type="text/javascript">
+            window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());
+            gtag('config', 'G-NK0GCLFZCV', { 'anonymize_ip': true });
+        </script><script type="text/javascript" src="https://www.googletagmanager.com/gtag/js?id=G-NK0GCLFZCV" async></script></body>
+</html>

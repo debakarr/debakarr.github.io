@@ -1,0 +1,88 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Categories - Category - Debakar Roy</title>
+        <link>http://debakarr.github.io/categories/</link>
+        <description>Categories - Category - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Sat, 03 Feb 2024 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/categories/" rel="self" type="application/rss+xml" /><item>
+    <title>Git</title>
+    <link>http://debakarr.github.io/categories/git/</link>
+    <pubDate>Sat, 03 Feb 2024 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/git/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Script</title>
+    <link>http://debakarr.github.io/categories/script/</link>
+    <pubDate>Sat, 03 Feb 2024 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/script/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Utility</title>
+    <link>http://debakarr.github.io/categories/utility/</link>
+    <pubDate>Sat, 03 Feb 2024 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/utility/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Automation</title>
+    <link>http://debakarr.github.io/categories/automation/</link>
+    <pubDate>Wed, 17 May 2023 12:20:49 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/automation/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Containerization</title>
+    <link>http://debakarr.github.io/categories/containerization/</link>
+    <pubDate>Wed, 17 May 2023 12:20:49 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/containerization/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>DevOps</title>
+    <link>http://debakarr.github.io/categories/devops/</link>
+    <pubDate>Wed, 17 May 2023 12:20:49 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/devops/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Docker</title>
+    <link>http://debakarr.github.io/categories/docker/</link>
+    <pubDate>Wed, 17 May 2023 12:20:49 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/docker/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Infrastructure</title>
+    <link>http://debakarr.github.io/categories/infrastructure/</link>
+    <pubDate>Wed, 17 May 2023 12:20:49 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/infrastructure/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>Software Development</title>
+    <link>http://debakarr.github.io/categories/software-development/</link>
+    <pubDate>Wed, 17 May 2023 12:20:49 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/software-development/</guid>
+    <description><![CDATA[]]></description>
+</item>
+<item>
+    <title>AWS</title>
+    <link>http://debakarr.github.io/categories/aws/</link>
+    <pubDate>Sat, 13 May 2023 13:40:00 &#43;0530</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/categories/aws/</guid>
+    <description><![CDATA[]]></description>
+</item>
+</channel>
+</rss>

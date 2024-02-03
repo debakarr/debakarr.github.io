@@ -1,0 +1,58 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Python - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/python/</link>
+        <description>Python - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/python/" rel="self" type="application/rss+xml" /><item>
+    <title>Top Programming Questions [Updated]</title>
+    <link>http://debakarr.github.io/posts/leetcode/top-interview-questions/</link>
+    <pubDate>Wed, 04 Sep 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/leetcode/top-interview-questions/</guid>
+    <description><![CDATA[Top Programming Questions [Updated] ]]></description>
+</item>
+<item>
+    <title>[LeetCode] 347. Top K Frequent Elements</title>
+    <link>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</link>
+    <pubDate>Fri, 02 Aug 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/leetcode/top-k-frequent-elements/</guid>
+    <description><![CDATA[Top K Frequent Elements Link to original Problem on LeetCode
+Given a non-empty array of integers, return the k most frequent elements.
+Example 1:
+Input: nums = [1,1,1,2,2,3], k = 2 Output: [1,2]
+Example 2:
+Input: nums = [1], k = 1 Output: [1]
+Note:
+You may assume k is always valid, 1 ≤ k ≤ number of unique elements. Your algorithm&rsquo;s time complexity must be better than O(n log n), where n is the array&rsquo;s size.]]></description>
+</item>
+<item>
+    <title>[LeetCode] 136. Single Number</title>
+    <link>http://debakarr.github.io/posts/leetcode/single-number/</link>
+    <pubDate>Tue, 23 Jul 2019 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/leetcode/single-number/</guid>
+    <description><![CDATA[Single Number Link to original Problem on LeetCode
+Given a non-empty array of integers, every element appears twice except for one. Find that single one.
+Note:
+Your algorithm should have a linear runtime complexity. Could you implement it without using extra memory?
+Example 1:
+Input: [2,2,1] Output: 1
+Example 2:
+Input: [4,1,2,1,2] Output: 4
+Company: Amazon
+Solution (Using HashMap):
+Time Complexity: O(n) Space Complexity: O(n)
+class Solution(object): def singleNumber(self, nums): &#34;&#34;&#34; :type nums: List[int] :rtype: int &#34;&#34;&#34; # Keep a dictionary count and at the end just check whether any number has a count of 1 numCount = {} for num in nums: numCount[num] = numCount.]]></description>
+</item>
+<item>
+    <title>TensorFlow Basic</title>
+    <link>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</link>
+    <pubDate>Fri, 26 Jan 2018 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/basics_learning/tensorflow-basics/</guid>
+    <description><![CDATA[TensorFlow Basic I made this post for revision purpose. This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great).]]></description>
+</item>
+</channel>
+</rss>

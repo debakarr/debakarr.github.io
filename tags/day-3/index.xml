@@ -1,0 +1,19 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title>Day 3 - Tag - Debakar Roy</title>
+        <link>http://debakarr.github.io/tags/day-3/</link>
+        <description>Day 3 - Tag - Debakar Roy</description>
+        <generator>Hugo -- gohugo.io</generator><language>en-us</language><managingEditor>debakar.roy@outlook.com (Debakar Roy)</managingEditor>
+            <webMaster>debakar.roy@outlook.com (Debakar Roy)</webMaster><lastBuildDate>Thu, 20 Jul 2017 00:00:00 &#43;0000</lastBuildDate><atom:link href="http://debakarr.github.io/tags/day-3/" rel="self" type="application/rss+xml" /><item>
+    <title>[Training] DBMS with Oracle Day 3</title>
+    <link>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/</link>
+    <pubDate>Thu, 20 Jul 2017 00:00:00 &#43;0000</pubDate>
+    <author>Debakar Roy</author>
+    <guid>http://debakarr.github.io/posts/oracle_dbms/oracle-dbms-day-3/</guid>
+    <description><![CDATA[So in this blog basically we are going to cover up the things done by me on the second day of my Oracle DBMS Training. Although I am not going to use the same schema I used during the 2nd day of my training.
+So without further delay, lets dig in.
+First thing first. What is a schema?
+This is something I should have mentioned in the first blog. In general, a schema is a set of tables, sproc(stored procedure) and other objects that make up a whole database.]]></description>
+</item>
+</channel>
+</rss>
