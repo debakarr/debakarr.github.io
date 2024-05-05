@@ -1,4 +1,5 @@
 \documentclass{muratcan_cv}
+\usepackage{multicol}
 
 \setname{Debakar Roy}{}
 \setmobile{+91 8391887283}
@@ -17,32 +18,53 @@
 %
 \section{Experience}
 %
-\datedexperience{Intel Corporation}{August 2019 - Present}
-\explanation{Software Engineer}{Karnataka, IN}
+\datedexperience{Intel Corporation}{August 2022 - Present}
+\explanation{Infrastructure and DevOps - SDE II / Tech Lead}{Karnataka, IN}
 \explanationdetail{
 	\smallskip
 	\coloredbullet\ %
-	Developed and implemented automation solutions in multiple domains, including power management, sensor technology, artificial intelligence (computer vision), security, and type-C subsystems.
-	    
-	\smallskip 
-	\coloredbullet\ %
-	Utilized industry-standard DevOps tools to establish an efficient continuous integration and delivery (CI/CD) pipeline for delivering the framework and libraries.
-	     
-	\smallskip
-	\coloredbullet\ %
-	Established a remote execution environment that enabled testers to execute scenarios without the need to be physically present in front of the test setup, resulting in increased efficiency and flexibility.
+        Architected and maintained test automation frameworks, resulting in \$1M savings by prioritizing critical bugs and enabling off-hours runs, boosting efficiency.
+        
+        \smallskip 
+        \coloredbullet\ %
+        Engineered scalable microservices solutions with RESTful APIs, optimizing execution across 1000+ systems, significantly improving scalability and utilization.
+        
+        \smallskip
+        \coloredbullet\ %
+        Standardized CI/CD pipelines across the organization using Jenkins shared libraries and agent templates, reducing new project setup time to 5 minutes and fostering rapid development cycles.
+        
+        \smallskip
+        \coloredbullet\ %
+        Led AI productivity initiatives, applying AI in code generation, documentation, and more, boosting productivity by 30\%.
+        
+        \smallskip
+        \coloredbullet\ %
+        Delivered Python training to 1200+ employees, saving \$1.2M and promoting continuous learning.
+        
+        \smallskip
+        \coloredbullet\ %
+        Tech lead for 4+ annual projects, guiding 20+ engineers towards technical excellence and goal alignment.
 	
 	\smallskip
+}
+%
+\datedexperience{Intel Corporation}{August 2019 - August 2022}
+\explanation{Software Engineer}{Karnataka, IN}
+\explanationdetail{
 	\coloredbullet\ %
-	Served as a core contributor and maintainer of the framework, responsible for overseeing the code review process to maintain high standards of quality throughout the code base.
-
-    \smallskip
-    \coloredbullet\ %
-    Trained multiple developers at team, organizational, and geographical levels in various DevOps topics, providing expertise and guidance in implementing best practices and driving efficiency in software development processes.
-	
-	\smallskip
-	\coloredbullet\ %
-	Leverage Knowledge in Python, Poetry (Python package manager), Jenkins, Docker, Kubernetes, Terraform, VNC, Serial port communication.
+        Pioneered test content automation across 6+ domains, including AI and Power Management, for Windows Functional Validation, automating over 1200 test cases, which constituted 15\% of the manual test plan.
+        
+        \smallskip 
+        \coloredbullet\ %
+        Was instrumental in overseeing a distributed codebase with contributions from 50+ developers, ensuring high code quality and consistency.
+        
+        \smallskip
+        \coloredbullet\ %
+        Established an efficient CI/CD pipeline with industry-standard DevOps tools, reducing deployment times by 20\%, increasing deployment frequency by 3x, and enhancing development efficiency across 4+ projects.
+        
+        \smallskip
+        \coloredbullet\ %
+        Led a 30-member development team's technical ramp-up, creating 40+ documentation guides, which cut project onboarding time by 50\% and boosted knowledge sharing efficiency by 40\%.
 	     
 	\smallskip
 }
@@ -52,11 +74,11 @@
 \explanationdetail{ 
 	\smallskip 
 	\coloredbullet\ %
-	RFKPI Automation: Python based in-house automation framework to automate RF performance and compliance to 3GPP for all operating modes (2G, 3G, and 4G) during development and production.
+	Developed a Python-based automation framework for RF performance and compliance automation.
 	     
 	\smallskip
 	\coloredbullet\ %
-	Leverage knowledge in Git, Intel XMM modems, programmed in Python using PyCharm IDE, run on CMW and Anritsu Wideband Radio Communication Tester.
+	Leveraged Git, Intel XMM modems, Python, PyCharm IDE, CMW, and Anritsu Wideband Radio Communication Tester.
 	     
 	%  \smallskip
 	\bigskip
@@ -76,84 +98,56 @@
 %
 \newcommand{\skillfour}{\createskill{DevOps}{Jenkins \cpshalf Kubernetes \cpshalf Docker \cpshalf CloudFoundry \cpshalf Rancher \cpshalf Terraform}}
 %
-\newcommand{\skillfive}{\createskill{Languages}{\textbf{\emph{Native:}} \ \  Hindi \ \ \textbf{\emph{Fluent:}} \ \ English \ \ \textbf{\emph{Beginner:}} \ \  Japanese \cpshalf Korean \cpshalf Mandarin }}
+\newcommand{\skillfive}{\createskill{Database Technologies}{\textbf{\emph{Experienced:}} \ \ MongoDB \cpshalf Redis}}
 %
-\createskills{\skillone, \skilltwo, \skillthree, \skillfour, \skillfive}
+\newcommand{\skillsix}{\createskill{Languages}{\textbf{\emph{Native:}} \ \  Hindi \ \ \textbf{\emph{Fluent:}} \ \ English \ \ \textbf{\emph{Beginner:}} \ \  Japanese \cpshalf Korean \cpshalf Mandarin }}
+%
+\createskills{\skillone, \skilltwo, \skillthree, \skillfour, \skillfive, \skillsix}
 %
 \section{Projects}
-%
+\begin{multicols}{2} % Start a two-column layout
+\noindent % Prevents indentation of the first line in each column
+\datedexperience{kodekloud-downloader}{April 2023}
+\explanation{Download Manager for KodeKloud}{\href{https://github.com/debakarr/kodekloud-downloader}{\faGithub\ \footnotesize Source}}
+\explanationdetail{
+    \smallskip 
+    \coloredbullet\ %
+    Developed a download manager for KodeKloud with features for downloading video lessons and quizzes.
+}
+
 \datedexperience{kisskh-dl}{July 2022}
-\explanation{Simple CDrama/KDrama downloader}{\href{https://github.com/debakarr/kisskh-dl}{\faGithub\ \footnotesize Source}}
+\explanation{CDrama/KDrama Downloader}{\href{https://github.com/debakarr/kisskh-dl}{\faGithub\ \footnotesize Source}}
 \explanationdetail{
-	\smallskip 
-	\coloredbullet\ %
-	Developed a python package with a command line interface to download CDrama/KDrama. 
-	     
-	     
-	\smallskip
-	\coloredbullet\ %
-	Incorporate conversion of m3u8 stream into mp4/mkv.
-	     
-	\smallskip
-	\coloredbullet\ %
-	Implement the CI/CD to deploy a Python package in PyPI when new tag is applied to the repository.
-	     
-	\smallskip
-	\coloredbullet\ %
-	Utilized: Python, requests, click. 
-	     
-	\smallskip
+    \smallskip 
+    \coloredbullet\ %
+    Created a command-line tool for downloading and decrypting shows from kisskh.co.
 }
-%
-\datedexperience{Fetch Random Technical Tweets}{December 2022}
-\explanation{Fetch random technical tweets from pre-defined Twitter users}{\href{https://fetch-random-tech-tweet.vercel.app/}{\faGithub\ \footnotesize Source}} 
-\explanationdetail{
-	\smallskip
-	\coloredbullet\ %
-	Developed a Vue application and deployed it in Vercel. 
-	    
-	\smallskip 
-	\coloredbullet\ %
-	Integrated the app with a REST API backed up with json-server in Vercel.
-	      
-	\smallskip
-	\coloredbullet\ %
-	Developed a scheduled automated pipeline which updates the database used by REST API.  
-	
-	\smallskip
-	\coloredbullet\ %
-	Utilized: Vue, Python, Twitter API, json-server. 
-	     
-	\smallskip
-}
-%
+
+\columnbreak % This command forces the following content into the next column
+
 \datedexperience{Flappy NEAT}{February 2018}
-\explanation{Play Flappy Bird using NeuroEvolution of Augmenting Topologies}{\href{https://github.com/debakarr/Flappy-Bird-using-NeuroEvolution-of-Augmenting-Topologies/}{\faGithub\ \footnotesize Source}} 
+\explanation{NeuroEvolution Game}{\href{https://github.com/debakarr/Flappy-Bird-using-NeuroEvolution-of-Augmenting-Topologies/}{\faGithub\ \footnotesize Source}} 
 \explanationdetail{
-	\smallskip
-	\coloredbullet\ %
-	Implementation of NeuroEvolution of Augmenting Topologies algorithm and visualizing the result with the help of Flappy Bird game i.e. using Genetic Algorithm to evolve Neural Networks.
-	    
-	\smallskip 
-	\coloredbullet\ %
-	Utilized: Python, Numpy, pygame.
-	
-	\smallskip
-	%
+    \smallskip
+    \coloredbullet\ %
+    Implemented a Flappy Bird game using the NeuroEvolution of Augmenting Topologies algorithm.
 }
+
 \datedexperience{Myanimelist Data Set Creator}{February 2018}
-\explanation{Parse and store data of Myanimelist for Data Analytics}{\href{https://github.com/debakarr/myanimelist-data-set-creator/}{\faGithub\ \footnotesize Source}}
+\explanation{Anime Data Parser}{\href{https://github.com/debakarr/myanimelist-data-set-creator/}{\faGithub\ \footnotesize Source}}
+\explanationdetail{
+    \smallskip
+    \coloredbullet\ %
+    Created a tool for parsing and storing myanimelist.net data.
+}
+\end{multicols} % End the two-column layout
+%
+\section{Open Source Contributions}
 \explanationdetail{
 	\smallskip
 	\coloredbullet\ %
-	Developed using Python to create MyAnimeList Anime and User data set using REST API. Planned on using it for a recommendation system.
-	    
-	\smallskip 
-	\coloredbullet\ %
-	Utilized: Python, Numpy, pygame.
-	
+	Contributed to various open source projects, enhancing functionality and fixing bugs. My contributions can be viewed on my GitHub profile: \href{https://github.com/debakarr}{https://github.com/debakarr}.
 	\smallskip
-	%  \bigskip
 }
 %
 \end{document}
