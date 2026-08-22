@@ -60,25 +60,31 @@ const roles = ['DevOps Engineer', 'Cloud Enthusiast', 'Automation Nerd', 'Occasi
   </section>
 
   <script define:vars={{ roles }}>
+    // Inline scripts re-execute after view-transition swaps into this page:
+    // cancel any previous loop so timers don't stack up.
+    clearTimeout(window.__typeTimer);
     const el = document.getElementById('typewriter');
+    if (!el) return;
     let roleIndex = 0;
     let charIndex = 0;
     let deleting = false;
 
     function tick() {
-      const role = roles[roleIndex];
-      charIndex += deleting ? -1 : 1;
-      el.textContent = role.slice(0, charIndex);
-      let delay = deleting ? 40 : 75;
-      if (!deleting && charIndex === role.length) {
-        delay = 1800;
-        deleting = true;
-      } else if (deleting && charIndex === 0) {
-        deleting = false;
-        roleIndex = (roleIndex + 1) % roles.length;
-        delay = 400;
-      }
-      setTimeout(tick, delay);
+      window.__typeTimer = setTimeout(() => {
+        const role = roles[roleIndex];
+        charIndex += deleting ? -1 : 1;
+        el.textContent = role.slice(0, charIndex);
+        let delay = deleting ? 40 : 75;
+        if (!deleting && charIndex === role.length) {
+          delay = 1800;
+          deleting = true;
+        } else if (deleting && charIndex === 0) {
+          deleting = false;
+          roleIndex = (roleIndex + 1) % roles.length;
+          delay = 400;
+        }
+        tick();
+      }, delay);
     }
     tick();
   </script>

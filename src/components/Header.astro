@@ -123,16 +123,25 @@ import { siGithub } from 'simple-icons';
 </style>
 
 <script>
-  const toggle = document.getElementById('menu-toggle');
-  const menu = document.getElementById('mobile-menu');
-  toggle?.addEventListener('click', () => {
-    const expanded = toggle.getAttribute('aria-expanded') === 'true';
-    toggle.setAttribute('aria-expanded', String(!expanded));
-    menu?.toggleAttribute('hidden', expanded);
-  });
+  // View transitions swap the header DOM on navigation while module scripts run
+  // only once: delegate clicks on `document` so handlers keep working.
+  document.addEventListener('click', (e) => {
+    const target = e.target instanceof Element ? e.target : null;
+    if (!target) return;
 
-  document.getElementById('theme-toggle')?.addEventListener('click', () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    const themeBtn = target.closest('#theme-toggle');
+    if (themeBtn) {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      return;
+    }
+
+    const menuBtn = target.closest('#menu-toggle');
+    if (menuBtn) {
+      const menu = document.getElementById('mobile-menu');
+      const expanded = menuBtn.getAttribute('aria-expanded') === 'true';
+      menuBtn.setAttribute('aria-expanded', String(!expanded));
+      menu?.toggleAttribute('hidden', expanded);
+    }
   });
 </script>
