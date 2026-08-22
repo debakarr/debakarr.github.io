@@ -7,7 +7,8 @@
     "dev": "astro dev",
     "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
-    "extract": "node scripts/extract-posts.mjs"
+    "extract": "node scripts/extract-posts.mjs",
+    "resume": "docker run --rm -v \"$PWD/resume\":/work -w /work texlive/texlive:latest latexmk -xelatex -interaction=nonstopmode -halt-on-error resume.tex && cp resume/resume.pdf public/resume/debakar_roy_resume.pdf"
   },
   "dependencies": {
     "@astrojs/rss": "^4.0.11",

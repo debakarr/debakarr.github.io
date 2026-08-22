@@ -10,3 +10,13 @@ npm-debug.log*
 .env.production
 # macOS
 .DS_Store
+
+# generated resume artifacts
+resume/*.pdf
+resume/*.aux
+resume/*.log
+resume/*.fls
+resume/*.fdb_latexmk
+resume/*.xdv
+resume/*.out
+public/resume/*.pdf
