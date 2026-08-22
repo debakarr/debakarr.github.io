@@ -1,0 +1,29 @@
+---
+import SocialLinks from './SocialLinks.astro';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-line">
+  <div class="mx-auto flex max-w-4xl flex-col items-center gap-4 px-4 py-10 sm:px-6">
+    <SocialLinks />
+    <p class="text-xs text-muted">
+      © {year} Debakar Roy · Built with
+      <a
+        href="https://astro.build"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="font-medium text-accent hover:underline">Astro</a
+      >
+      &amp;
+      <a
+        href="https://tailwindcss.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="font-medium text-accent hover:underline">Tailwind CSS</a
+      >
+      ·
+      <a href="/rss.xml" class="hover:text-accent">RSS</a>
+    </p>
+  </div>
+</footer>

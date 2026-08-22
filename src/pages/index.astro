@@ -1,0 +1,85 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SocialLinks from '../components/SocialLinks.astro';
+import { formatDate } from '../utils';
+
+const posts = (await getCollection('posts'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf())
+  .slice(0, 8);
+
+const roles = ['DevOps Engineer', 'Cloud Enthusiast', 'Automation Nerd', 'Occasional Blogger'];
+---
+
+<BaseLayout>
+  <section class="relative overflow-hidden">
+    <div class="dot-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
+    <div class="relative flex flex-col items-center gap-5 pb-14 pt-16 text-center sm:pt-20">
+      <img
+        src="/avatar.png"
+        alt="Debakar Roy"
+        width="96"
+        height="96"
+        class="h-24 w-24 rounded-full ring-2 ring-line transition hover:ring-accent"
+        transition:name="avatar"
+      />
+      <h1 class="text-4xl font-bold tracking-tight sm:text-5xl">Debakar Roy</h1>
+      <p class="font-mono text-sm text-muted" aria-live="polite">
+        <span id="typewriter"></span><span class="type-cursor" aria-hidden="true"></span>
+      </p>
+      <p class="max-w-md text-balance text-muted">
+        Welcome to my blog — notes on DevOps, AWS, automation and everything in between.
+      </p>
+      <SocialLinks />
+    </div>
+  </section>
+
+  <section class="pb-16">
+    <div class="mb-6 flex items-end justify-between">
+      <h2 class="text-lg font-semibold tracking-tight">Latest writing</h2>
+      <a href="/posts" class="text-sm text-muted transition-colors hover:text-accent">View all →</a>
+    </div>
+    <ul class="flex flex-col divide-y divide-line">
+      {
+        posts.map((post) => (
+          <li>
+            <a
+              href={`/posts/${post.id}`}
+              class="post-row group flex items-baseline justify-between gap-4 py-3"
+            >
+              <span class="truncate font-medium text-ink group-hover:text-accent">{post.data.title}</span>
+              <time datetime={post.data.date.toISOString()} class="shrink-0 font-mono text-xs text-muted tabular-nums">
+                {formatDate(post.data.date)}
+              </time>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <script define:vars={{ roles }}>
+    const el = document.getElementById('typewriter');
+    let roleIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+
+    function tick() {
+      const role = roles[roleIndex];
+      charIndex += deleting ? -1 : 1;
+      el.textContent = role.slice(0, charIndex);
+      let delay = deleting ? 40 : 75;
+      if (!deleting && charIndex === role.length) {
+        delay = 1800;
+        deleting = true;
+      } else if (deleting && charIndex === 0) {
+        deleting = false;
+        roleIndex = (roleIndex + 1) % roles.length;
+        delay = 400;
+      }
+      setTimeout(tick, delay);
+    }
+    tick();
+  </script>
+</BaseLayout>

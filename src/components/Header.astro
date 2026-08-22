@@ -1,0 +1,138 @@
+---
+import { siGithub } from 'simple-icons';
+---
+
+<header
+  class="sticky top-0 z-40 border-b border-line bg-surface/80 backdrop-blur-md"
+>
+  <div class="mx-auto flex h-16 max-w-4xl items-center justify-between gap-4 px-4 sm:px-6">
+    <a href="/" class="flex items-center gap-2.5 font-semibold tracking-tight">
+      <img
+        src="/avatar.png"
+        alt=""
+        width="28"
+        height="28"
+        class="h-7 w-7 rounded-full ring-2 ring-line"
+      />
+      <span>Debakar Roy</span>
+    </a>
+
+    <nav class="hidden items-center gap-1 text-sm md:flex" aria-label="Main">
+      <a href="/posts" class="nav-link">Posts</a>
+      <a href="/tags" class="nav-link">Tags</a>
+      <a href="/categories" class="nav-link">Categories</a>
+      <a href="/resume/debakar_roy_resume.pdf" class="nav-link" target="_blank">Resume</a>
+      <span class="mx-1 h-4 w-px bg-line"></span>
+      <button type="button" id="search-open" class="nav-link flex items-center gap-1.5" aria-label="Search">
+        <svg viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4" aria-hidden="true">
+          <path
+            fill-rule="evenodd"
+            d="M9 3.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11ZM2 9a7 7 0 1 1 12.452 4.391l3.328 3.329a.75.75 0 1 1-1.06 1.06l-3.329-3.328A7 7 0 0 1 2 9Z"
+            clip-rule="evenodd"></path>
+        </svg>
+        <kbd class="hidden rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-muted lg:inline"
+          >⌘K</kbd
+        >
+      </button>
+      <a
+        href="https://github.com/debakarr/debakarr.github.io"
+        title="GitHub"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="nav-link"
+      >
+        <svg viewBox="0 0 24 24" class="h-[18px] w-[18px] fill-current" aria-hidden="true">
+          <path d={siGithub.path}></path>
+        </svg>
+      </a>
+      <button type="button" id="theme-toggle" class="nav-link" aria-label="Toggle theme">
+        <svg
+          class="h-[18px] w-[18px] dark:hidden"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"></path>
+        </svg>
+        <svg
+          class="hidden h-[18px] w-[18px] dark:block"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"></path>
+        </svg>
+      </button>
+    </nav>
+
+    <button
+      type="button"
+      id="menu-toggle"
+      class="rounded-lg p-2 text-muted hover:text-ink md:hidden"
+      aria-label="Menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-6 w-6" aria-hidden="true">
+        <path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div id="mobile-menu" hidden class="border-t border-line px-4 pb-4 pt-2 md:hidden">
+    <nav class="flex flex-col text-sm" aria-label="Mobile">
+      <a href="/posts" class="mobile-link">Posts</a>
+      <a href="/tags" class="mobile-link">Tags</a>
+      <a href="/categories" class="mobile-link">Categories</a>
+      <a href="/resume/debakar_roy_resume.pdf" class="mobile-link" target="_blank">Resume</a>
+      <button type="button" id="search-open-mobile" class="mobile-link text-left">Search</button>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .nav-link {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.625rem;
+    color: var(--color-muted);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+  .nav-link:hover {
+    color: var(--color-ink);
+    background-color: var(--surface-raised);
+  }
+  .mobile-link {
+    padding: 0.625rem 0.25rem;
+    color: var(--color-muted);
+  }
+  .mobile-link:hover {
+    color: var(--color-ink);
+  }
+</style>
+
+<script>
+  const toggle = document.getElementById('menu-toggle');
+  const menu = document.getElementById('mobile-menu');
+  toggle?.addEventListener('click', () => {
+    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!expanded));
+    menu?.toggleAttribute('hidden', expanded);
+  });
+
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  });
+</script>

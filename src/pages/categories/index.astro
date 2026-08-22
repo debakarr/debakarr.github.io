@@ -1,0 +1,35 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { slugify } from '../../utils';
+
+const posts = (await getCollection('posts')).filter((p) => !p.data.draft);
+
+const categoryCounts = new Map<string, { display: string; count: number }>();
+for (const post of posts) {
+  for (const category of post.data.categories) {
+    const slug = slugify(category);
+    const entry = categoryCounts.get(slug) ?? { display: category, count: 0 };
+    entry.count++;
+    categoryCounts.set(slug, entry);
+  }
+}
+const categories = [...categoryCounts.entries()].sort((a, b) => b[1].count - a[1].count);
+---
+
+<BaseLayout title="Categories — Debakar Roy" description="Browse posts by category.">
+  <div class="py-10">
+    <h1 class="mb-2 text-3xl font-bold tracking-tight">Categories</h1>
+    <p class="mb-8 text-sm text-muted">{categories.length} categories across {posts.length} posts.</p>
+    <div class="flex flex-wrap gap-x-1 gap-y-2">
+      {
+        categories.map(([slug, { display, count }]) => (
+          <a href={`/categories/${slug}`} class="group rounded-full border border-line px-3.5 py-1.5 text-sm">
+            <span class="font-medium group-hover:text-accent">{display}</span>
+            <span class="ml-1.5 font-mono text-xs text-muted tabular-nums">{count}</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

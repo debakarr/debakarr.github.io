@@ -1,0 +1,38 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate, slugify } from '../../utils';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const tags = new Set<string>();
+  posts.forEach((p) => p.data.tags.forEach((t) => tags.add(slugify(t))));
+  return [...tags].map((tag) => ({ params: { tag }, props: { tag } }));
+}
+
+const { tag } = Astro.props;
+const posts = (await getCollection('posts'))
+  .filter((p) => !p.data.draft && p.data.tags.some((t) => slugify(t) === tag))
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+---
+
+<BaseLayout title={`#${tag} — Debakar Roy`} description={`Posts tagged with ${tag}.`}>
+  <div class="py-10">
+    <a href="/tags" class="text-sm text-muted transition-colors hover:text-accent">← All tags</a>
+    <h1 class="mb-8 mt-4 text-3xl font-bold tracking-tight">#{tag}</h1>
+    <ul class="flex flex-col divide-y divide-line">
+      {
+        posts.map((post) => (
+          <li>
+            <a href={`/posts/${post.id}`} class="post-row group flex items-baseline justify-between gap-4 py-3">
+              <span class="truncate font-medium group-hover:text-accent">{post.data.title}</span>
+              <time datetime={post.data.date.toISOString()} class="shrink-0 font-mono text-xs text-muted tabular-nums">
+                {formatDate(post.data.date)}
+              </time>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</BaseLayout>

@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { slugify } from '../../utils';
+
+const posts = (await getCollection('posts')).filter((p) => !p.data.draft);
+
+const tagCounts = new Map<string, { display: string; count: number }>();
+for (const post of posts) {
+  for (const tag of post.data.tags) {
+    const slug = slugify(tag);
+    const entry = tagCounts.get(slug) ?? { display: tag, count: 0 };
+    entry.count++;
+    tagCounts.set(slug, entry);
+  }
+}
+const tags = [...tagCounts.entries()].sort((a, b) => b[1].count - a[1].count);
+
+const categoryCounts = new Map<string, { display: string; count: number }>();
+for (const post of posts) {
+  for (const category of post.data.categories) {
+    const slug = slugify(category);
+    const entry = categoryCounts.get(slug) ?? { display: category, count: 0 };
+    entry.count++;
+    categoryCounts.set(slug, entry);
+  }
+}
+const categories = [...categoryCounts.entries()].sort((a, b) => b[1].count - a[1].count);
+---
+
+<BaseLayout title="Tags & Categories — Debakar Roy" description="Browse posts by tag and category.">
+  <div class="py-10">
+    <h1 class="mb-2 text-3xl font-bold tracking-tight">Tags</h1>
+    <p class="mb-6 text-sm text-muted">{tags.length} tags across {posts.length} posts.</p>
+    <div class="mb-12 flex flex-wrap gap-x-1 gap-y-2">
+      {
+        tags.map(([slug, { display, count }]) => (
+          <a href={`/tags/${slug}`} class="group px-2 py-1 text-sm">
+            <span class="font-medium group-hover:text-accent">#{display}</span>
+            <span class="ml-1 font-mono text-xs text-muted tabular-nums">{count}</span>
+          </a>
+        ))
+      }
+    </div>
+
+    <h2 class="mb-2 text-2xl font-bold tracking-tight">Categories</h2>
+    <p class="mb-6 text-sm text-muted">{categories.length} categories.</p>
+    <div class="flex flex-wrap gap-x-1 gap-y-2">
+      {
+        categories.map(([slug, { display, count }]) => (
+          <a href={`/categories/${slug}`} class="group rounded-full border border-line px-3.5 py-1.5 text-sm">
+            <span class="font-medium group-hover:text-accent">{display}</span>
+            <span class="ml-1.5 font-mono text-xs text-muted tabular-nums">{count}</span>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

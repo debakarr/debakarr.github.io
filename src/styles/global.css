@@ -1,0 +1,153 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/typography';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+}
+
+:root {
+  --surface: #fafafa;
+  --surface-raised: #ffffff;
+  --line: #e4e4e7;
+  --ink: #18181b;
+  --muted: #71717a;
+  --accent: #6366f1;
+  --accent-strong: #4f46e5;
+  color-scheme: light;
+}
+
+.dark {
+  --surface: #09090b;
+  --surface-raised: #18181b;
+  --line: #27272a;
+  --ink: #f4f4f5;
+  --muted: #a1a1aa;
+  --accent: #818cf8;
+  --accent-strong: #a5b4fc;
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background-color: var(--surface);
+  color: var(--ink);
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+}
+
+::selection {
+  background-color: color-mix(in oklab, var(--accent) 30%, transparent);
+}
+
+/* --- Shiki dual theme wiring (class-based) --- */
+html.dark .astro-code,
+html.dark .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+
+.astro-code {
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  padding: 1rem 1.25rem;
+}
+
+/* --- Prose refinements --- */
+.prose {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+.prose :where(code):not(:where(pre code)) {
+  overflow-wrap: anywhere;
+}
+.prose table {
+  display: block;
+  max-width: max-content;
+  width: 100%;
+  overflow-x: auto;
+}
+.prose img {
+  border-radius: 0.75rem;
+  border: 1px solid var(--line);
+  margin-inline: auto;
+}
+.prose pre {
+  position: relative;
+}
+.prose blockquote p:first-of-type strong {
+  letter-spacing: 0.02em;
+}
+.prose :where(code):not(:where(pre code)) {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--accent-strong);
+  font-weight: 500;
+  padding: 0.15em 0.4em;
+  border-radius: 0.375rem;
+}
+.dark .prose :where(code):not(:where(pre code)) {
+  background: rgba(129, 140, 248, 0.14);
+}
+
+/* --- Hero dot grid --- */
+.dot-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, var(--muted) 35%, transparent) 1px,
+    transparent 0
+  );
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 40%, transparent 100%);
+}
+
+/* --- Typewriter cursor --- */
+.type-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1.15em;
+  background: var(--accent);
+  vertical-align: text-bottom;
+  animation: blink 1s step-end infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* --- Post list rows --- */
+.post-row {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+.post-row:hover {
+  transform: translateX(4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .type-cursor {
+    animation: none;
+  }
+  .post-row:hover {
+    transform: none;
+  }
+}

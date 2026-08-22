@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="404 — Debakar Roy">
+  <div class="flex flex-col items-center gap-4 py-28 text-center">
+    <p class="font-mono text-7xl font-bold text-accent">404</p>
+    <h1 class="text-2xl font-semibold tracking-tight">This page went up in the cloud.</h1>
+    <p class="max-w-sm text-sm text-muted">
+      The page you're looking for doesn't exist or has been moved.
+    </p>
+    <div class="mt-2 flex gap-3">
+      <a
+        href="/"
+        class="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:brightness-110 dark:text-zinc-950"
+      >
+        Back home
+      </a>
+      <a
+        href="/posts"
+        class="rounded-lg border border-line px-4 py-2 text-sm font-medium transition-colors hover:border-accent hover:text-accent"
+      >
+        Browse posts
+      </a>
+    </div>
+  </div>
+</BaseLayout>

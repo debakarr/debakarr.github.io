@@ -1,0 +1,64 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { formatDate, slugify } from '../../utils';
+
+const posts = (await getCollection('posts'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
+
+const categorySet = [...new Set(posts.flatMap((p) => p.data.categories))];
+
+const byYear = new Map<number, typeof posts>();
+for (const post of posts) {
+  const year = post.data.date.getFullYear();
+  if (!byYear.has(year)) byYear.set(year, []);
+  byYear.get(year)!.push(post);
+}
+const years = [...byYear.keys()].sort((a, b) => b - a);
+---
+
+<BaseLayout title="Posts — Debakar Roy" description="All blog posts by Debakar Roy.">
+  <div class="py-10">
+    <h1 class="mb-3 text-3xl font-bold tracking-tight">Posts</h1>
+    <p class="mb-6 text-sm text-muted">{posts.length} posts and counting.</p>
+    <div class="mb-10 flex flex-wrap gap-2">
+      {
+        categorySet.map((category) => (
+          <a
+            href={`/categories/${slugify(category)}`}
+            class="rounded-full border border-line px-3 py-1 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-accent"
+          >
+            {category}
+          </a>
+        ))
+      }
+    </div>
+
+    {
+      years.map((year) => (
+        <section class="mb-10">
+          <h2 class="mb-2 font-mono text-sm font-semibold text-accent">{year}</h2>
+          <ul class="flex flex-col divide-y divide-line">
+            {byYear.get(year)!.map((post) => (
+              <li>
+                <a
+                  href={`/posts/${post.id}`}
+                  class="post-row group flex items-baseline justify-between gap-4 py-3"
+                >
+                  <span class="truncate font-medium group-hover:text-accent">{post.data.title}</span>
+                  <time
+                    datetime={post.data.date.toISOString()}
+                    class="shrink-0 font-mono text-xs text-muted tabular-nums"
+                  >
+                    {formatDate(post.data.date)}
+                  </time>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>
