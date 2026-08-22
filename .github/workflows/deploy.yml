@@ -35,7 +35,7 @@ jobs:
           latexmk_use_xelatex: true
 
       - name: Stage resume into site assets
-        run: cp resume/resume.pdf public/resume/debakar_roy_resume.pdf
+        run: mkdir -p public/resume && cp resume/resume.pdf public/resume/debakar_roy_resume.pdf
 
       - name: Install dependencies
         run: npm ci
