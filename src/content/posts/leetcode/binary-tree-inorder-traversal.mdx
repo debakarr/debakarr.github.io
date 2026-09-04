@@ -1,0 +1,117 @@
+---
+title: "[LeetCode] 94. Binary Tree Inorder Traversal"
+date: "2019-05-15"
+description: "Inorder records the node between its children. Interactive walkthrough with typed Python, recursive and iterative, in O(n) time, O(h) space."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Binary Tree", "Inorder Traversal", "Programming"]
+draft: false
+---
+
+import TreeTraversalVisualizer from '../../../components/visuals/TreeTraversalVisualizer.astro';
+
+> 🧠 **Remember:** “Inorder → left first, write it down, THEN go right.”
+
+## The problem — 20 seconds
+
+`root = [1,null,2,3]` → `[1,3,2]`.
+
+Record the left subtree, then the node, then the right subtree.
+
+[Original on LeetCode](https://leetcode.com/problems/binary-tree-inorder-traversal/)
+
+```text
+  1
+   \
+    2
+   /
+  3
+```
+
+```text
+left empty · visit 1 → [1] · go right
+go left · visit 3 → [1, 3] · back up
+visit 2 → [1, 3, 2] · done
+```
+
+That trace is the whole algorithm.
+
+## Your first instinct
+
+Recursion writes itself — the skeleton is three lines, and the follow-up (“could you do it iteratively?”) is the actual interview question:
+
+```text
+dfs(node): dfs(left) → visit(node) → dfs(right)
+```
+
+## The turning point
+
+All three share one skeleton; only the position of `visit` differs: middle here, first for preorder, last for postorder.
+
+Why inorder earns its own post: on a BST, left < node < right, so inorder yields values in **sorted order** — exactly what [Kth Smallest in a BST](/posts/leetcode/kth-smallest-element-in-a-bst) exploits.
+
+## Watch it work
+
+Press **Play**: badges land 1st → 5th as `[4, 2, 5, 1, 3]` — left, record, right.
+
+<TreeTraversalVisualizer mode="inorder" />
+
+## The code, for real
+
+Recursive primary — the recording line sits in the middle:
+
+```python
+from typing import Optional
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: Optional["TreeNode"] = None, right: Optional["TreeNode"] = None):
+        self.val, self.left, self.right = val, left, right
+
+class Solution:
+    def inorderTraversal(self, root: Optional[TreeNode]) -> list[int]:
+        out: list[int] = []
+        def dfs(node: Optional[TreeNode]) -> None:
+            if not node:
+                return
+            dfs(node.left)
+            out.append(node.val)  # visit IN THE MIDDLE
+            dfs(node.right)
+        dfs(root)
+        return out
+```
+
+Iterative secondary — push all the way left, pop, record, then swing right:
+
+```python
+from typing import Optional
+
+class Solution:
+    def inorderTraversal(self, root: Optional[TreeNode]) -> list[int]:
+        out: list[int] = []
+        stack: list[TreeNode] = []
+        cur = root
+        while cur or stack:
+            while cur:
+                stack.append(cur)
+                cur = cur.left
+            cur = stack.pop()
+            out.append(cur.val)
+            cur = cur.right
+        return out
+```
+
+## Why it works
+
+Invariant: every node enters `out` exactly once, after its whole left subtree and before its right, so `out` is always the inorder prefix recorded so far.
+
+```text
+n = 1,000 → ~1,000 visits · stack depth = tree height
+Time O(n), space O(h).
+```
+
+## 🧠 Remember
+
+> **Inorder → “node in the MIDDLE.”** `visit` between the children — on a BST, that middle position is what comes out sorted.
+
+🔁 **Try this:** recite `root = [1,null,2,3]` from memory, then compare with the other two.
+
+Related: [Binary Tree Preorder Traversal](/posts/leetcode/binary-tree-preorder-traversal) · [Binary Tree Postorder Traversal](/posts/leetcode/binary-tree-postorder-traversal) · [Kth Smallest in a BST](/posts/leetcode/kth-smallest-element-in-a-bst)

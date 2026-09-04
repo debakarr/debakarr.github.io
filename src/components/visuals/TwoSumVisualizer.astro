@@ -1,0 +1,389 @@
+---
+// TwoSumVisualizer.astro
+// Step-through player for Two Sum: complement-hunt metaphor.
+// No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
+interface Props {
+  id?: string;
+}
+const { id = "twosum-main" } = Astro.props;
+---
+
+<div class="tsviz" data-tsviz={id}>
+  <div class="tsviz-card">
+    <div class="tsviz-head">
+      <div>
+        <p class="tsviz-kicker">Interactive visual · Complement Hunt</p>
+        <h3 class="tsviz-title">Can you find the pair that sums to the target?</h3>
+        <p class="tsviz-sub">
+          Think of the hash map as a <strong>cloakroom</strong>: you hand in each number,
+          you get back a ticket (its index). For each new number you ask:
+          <em>“Is my complement already hanging in the cloakroom?”</em>
+        </p>
+      </div>
+      <div class="tsviz-presets" role="group" aria-label="Choose example">
+        <button type="button" data-preset="0" class="is-active">[2, 7, 11, 15] · 9</button>
+        <button type="button" data-preset="1">[3, 2, 4] · 6</button>
+        <button type="button" data-preset="2">[3, 3] · 6</button>
+      </div>
+    </div>
+
+    <div class="tsviz-stage">
+      <div class="tsviz-row-label">
+        <span>nums</span>
+        <span class="tsviz-target">target = <strong data-role="target">9</strong></span>
+      </div>
+      <div class="tsviz-array" data-role="array" aria-live="polite"></div>
+
+      <div class="tsviz-mid">
+        <div class="tsviz-complement" data-role="complement-box" aria-live="polite"></div>
+        <div class="tsviz-map-wrap">
+          <p class="tsviz-row-label"><span>cloakroom (seen map)</span><span data-role="map-size"></span></p>
+          <div class="tsviz-map" data-role="map"></div>
+        </div>
+      </div>
+
+      <p class="tsviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="tsviz-controls">
+      <div class="tsviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="tsviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 1</span>
+          <input type="range" data-role="slider" min="0" max="0" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="tsviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="tsviz-codegrid">
+      <div class="tsviz-code" aria-label="Algorithm code with current line highlighted">
+        <div data-code="0"><span class="ln">1</span><code>seen = {}  # cloakroom: number → index</code></div>
+        <div data-code="1"><span class="ln">2</span><code>for i, num in enumerate(nums):</code></div>
+        <div data-code="2"><span class="ln">3</span><code>  need = target - num  # complement wanted</code></div>
+        <div data-code="3"><span class="ln">4</span><code>  if need in seen: return [seen[need], i]</code></div>
+        <div data-code="4"><span class="ln">5</span><code>  seen[num] = i  # hang it in the cloakroom</code></div>
+      </div>
+      <div class="tsviz-quiz">
+        <p class="tsviz-quiz-title">Quick check — make it stick</p>
+        <p class="tsviz-quiz-q">What do we store in <code>seen</code>?</p>
+        <div class="tsviz-quiz-btns">
+          <button type="button" data-quiz="a">Complement → index</button>
+          <button type="button" data-quiz="b">Number → index</button>
+          <button type="button" data-quiz="c">Index → number</button>
+        </div>
+        <p class="tsviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="tsviz-mnemonic">🧠 Memory hook: <strong>“Need before keep.”</strong> Always <em>check the need</em> (complement) <em>before you keep</em> (store). That order is what prevents using the same element twice.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tsviz { margin: 1.75rem 0; }
+  .tsviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .tsviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .tsviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .tsviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .tsviz-sub strong, .tsviz-sub em { color: var(--ink); }
+  .tsviz-head { display: grid; gap: .9rem; margin-bottom: 1rem; }
+  @media (min-width: 720px) { .tsviz-head { grid-template-columns: 1fr auto; align-items: start; } }
+  .tsviz-presets { display: flex; flex-wrap: wrap; gap: .4rem; align-content: start; }
+  .tsviz-presets button {
+    font-family: var(--font-mono); font-size: .75rem;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: .35rem .7rem; color: var(--muted); background: transparent; cursor: pointer;
+  }
+  .tsviz-presets button.is-active, .tsviz-presets button:hover {
+    color: var(--accent-strong); border-color: var(--accent);
+  }
+  .tsviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .tsviz-target strong { color: var(--accent-strong); font-size: .95rem; }
+  .tsviz-array { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .tsviz-cell {
+    min-width: 3.2rem; text-align: center;
+    border: 1.5px solid var(--line); border-radius: .7rem;
+    padding: .5rem .6rem .4rem; background: var(--surface);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .tsviz-cell .v { font-weight: 800; font-size: 1.05rem; display: block; }
+  .tsviz-cell .i { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+  .tsviz-cell.is-current { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--accent); }
+  .tsviz-cell.is-found { border-color: #22c55e; background: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .tsviz-cell.is-dim { opacity: .55; }
+  .tsviz-mid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 720px) { .tsviz-mid { grid-template-columns: 1fr 1fr; } }
+  .tsviz-complement {
+    border: 1px dashed var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    font-size: .88rem; line-height: 1.55; background: color-mix(in oklab, var(--accent) 7%, transparent);
+    min-height: 5.2rem;
+  }
+  .tsviz-complement strong { color: var(--accent-strong); }
+  .tsviz-complement .hit { color: #16a34a; font-weight: 700; }
+  .tsviz-complement .miss { color: var(--muted); font-weight: 600; }
+  .tsviz-map {
+    display: flex; flex-wrap: wrap; gap: .4rem; min-height: 3.2rem;
+    border: 1px solid var(--line); border-radius: .8rem; padding: .6rem;
+    background: var(--surface);
+  }
+  .tsviz-chip {
+    font-family: var(--font-mono); font-size: .75rem;
+    border: 1px solid var(--line); border-radius: .55rem; padding: .3rem .5rem;
+    background: var(--surface-raised);
+  }
+  .tsviz-chip b { color: var(--accent-strong); }
+  .tsviz-empty { font-size: .8rem; color: var(--muted); }
+  .tsviz-caption {
+    margin: .9rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .tsviz-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .tsviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .tsviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .tsviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .tsviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .tsviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .tsviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .tsviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .tsviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .tsviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .tsviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .tsviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .tsviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .tsviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .tsviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .tsviz-code code { white-space: pre-wrap; }
+  .tsviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .tsviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .tsviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .tsviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .tsviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .tsviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .tsviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .tsviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .tsviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .tsviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) { .tsviz-cell { transition: none; } }
+</style>
+
+<script>
+  function initTwoSumViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+
+    const presets = [
+      { nums: [2, 7, 11, 15], target: 9 },
+      { nums: [3, 2, 4], target: 6 },
+      { nums: [3, 3], target: 6 },
+    ];
+    let presetIdx = 0;
+    let steps = [];
+    let idx = 0;
+    let timer = null;
+
+    const elArray = root.querySelector('[data-role="array"]');
+    const elTarget = root.querySelector('[data-role="target"]');
+    const elBox = root.querySelector('[data-role="complement-box"]');
+    const elMap = root.querySelector('[data-role="map"]');
+    const elMapSize = root.querySelector('[data-role="map-size"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll('[data-code]')];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    function buildSteps(nums, target) {
+      const out = [];
+      const seen = new Map();
+      out.push({
+        type: "start", i: -1, code: 0,
+        caption: `Start with an empty cloakroom. Target is ${target}. We will scan left → right, one number at a time.`,
+        seen: new Map(),
+      });
+      for (let i = 0; i < nums.length; i++) {
+        const num = nums[i];
+        const need = target - num;
+        const has = seen.has(need);
+        out.push({
+          type: has ? "hit" : "miss", i, num, need, code: has ? 3 : 2,
+          caption: has
+            ? `i=${i}, num=${num}. Need ${target}−${num} = ${need}. ${need} IS in the cloakroom at index ${seen.get(need)} → return [${seen.get(need)}, ${i}]. Done!`
+            : `i=${i}, num=${num}. Need ${target}−${num} = ${need}. ${need} is NOT in the cloakroom yet → hang ${num}→${i} and keep walking.`,
+          seen: new Map(seen),
+          found: has ? [seen.get(need), i] : null,
+        });
+        if (has) break;
+        seen.set(num, i);
+        // store step so the map visibly grows
+        out.push({
+          type: "store", i, num, need, code: 4,
+          caption: `Stored ${num}→${i}. Cloakroom now holds ${seen.size} ticket${seen.size > 1 ? "s" : ""}. Move to the next number.`,
+          seen: new Map(seen),
+        });
+      }
+      return out;
+    }
+
+    function render() {
+      const { nums, target } = presets[presetIdx];
+      const s = steps[idx];
+      elTarget.textContent = String(target);
+
+      elArray.innerHTML = "";
+      nums.forEach((n, i) => {
+        const d = document.createElement("div");
+        d.className = "tsviz-cell"
+          + (s.i === i ? " is-current" : "")
+          + (s.found && (i === s.found[0] || i === s.found[1]) ? " is-found" : "")
+          + (s.i >= 0 && i < s.i && !(s.found && (i === s.found[0] || i === s.found[1])) ? " is-dim" : "");
+        d.innerHTML = `<span class="v">${n}</span><span class="i">idx ${i}</span>`;
+        elArray.appendChild(d);
+      });
+
+      if (s.type === "start") {
+        elBox.innerHTML = `👀 Looking for two numbers that add to <strong>${target}</strong>.<br/>Press <strong>Next</strong> or <strong>Play</strong> to walk.`;
+      } else if (s.type === "hit") {
+        elBox.innerHTML = `num=<strong>${s.num}</strong> · need=<strong>${s.need}</strong><br/><span class="hit">✓ HIT — ${s.need} found → answer [${s.found[0]}, ${s.found[1]}]</span>`;
+      } else if (s.type === "miss") {
+        elBox.innerHTML = `num=<strong>${s.num}</strong> · need=<strong>${target}−${s.num}=${s.need}</strong><br/><span class="miss">✗ miss — keep it for later</span>`;
+      } else {
+        elBox.innerHTML = `filed <strong>${s.num}→${s.i}</strong> in the cloakroom.<br/>Next number, please…`;
+      }
+
+      elMap.innerHTML = "";
+      if (s.seen.size === 0) {
+        const e = document.createElement("span");
+        e.className = "tsviz-empty";
+        e.textContent = "(empty — nothing checked in yet)";
+        elMap.appendChild(e);
+      } else {
+        [...s.seen.entries()].forEach(([k, v]) => {
+          const c = document.createElement("span");
+          c.className = "tsviz-chip";
+          c.innerHTML = `<b>${k}</b> → ${v}`;
+          if (s.need === k && (s.type === "hit" || s.type === "miss")) {
+            c.style.borderColor = s.type === "hit" ? "#22c55e" : "var(--accent)";
+          }
+          elMap.appendChild(c);
+        });
+      }
+      elMapSize.textContent = s.seen.size ? `${s.seen.size} stored` : "";
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    root.querySelectorAll("[data-preset]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-preset]").forEach((x) => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        presetIdx = Number(b.dataset.preset);
+        stop();
+        steps = buildSteps(presets[presetIdx].nums, presets[presetIdx].target);
+        idx = 0;
+        render();
+      });
+    });
+
+    // Quiz
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (b.dataset.quiz === "b") {
+          b.classList.add("is-right");
+          feedback.textContent = "✓ Correct — number → index. Then complement lookup is O(1).";
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = "✗ Not quite — we store number → index, and ask “is target−num already there?”";
+        }
+      });
+    });
+
+    // keyboard: ←/→ when focused inside viz
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    steps = buildSteps(presets[0].nums, presets[0].target);
+    idx = 0;
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-tsviz]").forEach(initTwoSumViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

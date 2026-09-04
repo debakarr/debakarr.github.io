@@ -23,8 +23,8 @@ const { Content, headings } = await render(post);
 const toc = headings.filter((h) => h.depth <= 3);
 ---
 
-<BaseLayout title={`${post.data.title} — Debakar Roy`} description={post.data.description}>
-  <article class="py-10">
+<BaseLayout title={`${post.data.title} — Debakar Roy`} description={post.data.description} wide>
+  <article class="py-8 sm:py-10">
     <header class="mb-10 border-b border-line pb-8">
       <div class="mb-4 flex flex-wrap gap-2">
         {
@@ -46,12 +46,13 @@ const toc = headings.filter((h) => h.depth <= 3);
       </p>
     </header>
 
-    <div class="flex items-start gap-10">
+    <div class="flex items-start gap-8">
       <div
         class:list={[
-          'prose prose-zinc min-w-0 max-w-none dark:prose-invert',
+          'prose prose-zinc min-w-0 flex-1 max-w-none dark:prose-invert',
           'prose-headings:tracking-tight',
-          'prose-a:text-accent prose-a:no-underline hover:prose-a:underline',
+          'prose-p:leading-7 prose-li:leading-7',
+          'prose-a:text-accent prose-a:no-underline [&_a:hover]:underline',
         ]}
       >
         <Content />
@@ -71,7 +72,7 @@ const toc = headings.filter((h) => h.depth <= 3);
 
       {
         toc.length > 1 && (
-          <aside class="sticky top-24 hidden w-56 shrink-0 xl:block" aria-label="Table of contents">
+          <aside class="sticky top-24 hidden w-48 shrink-0 xl:block" aria-label="Table of contents">
             <p class="mb-3 font-mono text-xs font-semibold uppercase tracking-wider text-muted">On this page</p>
             <nav class="max-h-[70vh] space-y-2 overflow-y-auto text-sm">
               {toc.map((heading) => (
@@ -145,6 +146,13 @@ const toc = headings.filter((h) => h.depth <= 3);
     .prose pre {
       position: relative;
       padding-top: 2rem;
+    }
+    /* Readable text, full-width visuals: paragraphs stay ~70ch,
+       interactive visualizers / tables / code use the full column. */
+    .prose > p,
+    .prose > ul,
+    .prose > ol {
+      max-width: 70ch;
     }
   </style>
 </BaseLayout>

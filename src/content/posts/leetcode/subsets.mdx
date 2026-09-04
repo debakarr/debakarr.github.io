@@ -1,0 +1,92 @@
+---
+title: "[LeetCode] 78. Subsets"
+date: "2019-08-08"
+description: "Subsets = 2ⁿ yes/no decisions: interactive decision-tree walkthrough + typed Python backtracking."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Subsets", "Combinations", "Backtracking", "Recursion", "Programming"]
+draft: false
+---
+
+import DecisionTreeVisualizer from '../../../components/visuals/DecisionTreeVisualizer.astro';
+
+> 🧠 **Remember:** “In or out — 2ⁿ leaves.”
+
+## The problem — 20 seconds
+
+`nums = [1, 2, 3]` → 8 subsets: `[[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]]` (any order accepted).
+
+Return every possible subset — the power set. Integers are distinct, so no duplicate subsets to worry about.
+
+[Original on LeetCode](https://leetcode.com/problems/subsets/)
+
+Shrink it to `[1, 2]` first — 4 leaves hold the whole pattern:
+
+```text
+decide 1 → SKIP → decide 2 → SKIP → []
+                        → TAKE → [2]
+         → TAKE → decide 2 → SKIP → [1]
+                        → TAKE → [1, 2]
+```
+
+That is the whole algorithm. Everything below just names *why*.
+
+## Your first instinct
+
+Grow the answer as you walk the input — each new number doubles what you have:
+
+```python
+res: list[list[int]] = [[]]
+for x in nums:
+    res += [s + [x] for s in res]
+```
+
+It works, and it is short. But it hides the decision pattern that generalizes to every backtracking problem. The worse instinct is generating candidates loosely and deduping afterwards — exponential work multiplied by wasted filtering, when each subset could simply be built exactly once.
+
+## The turning point
+
+Each element is a yes/no choice, so the search space is a binary decision tree. Depth `i` means elements `0..i-1` are decided and nothing else is. A leaf is one subset, and there are exactly `2ⁿ` of them.
+
+Backtracking is just choose → explore → undo, walking that tree depth-first: SKIP the element and explore that half, come back, then TAKE it and explore the other half. No filtering step exists because wrong paths are never taken.
+
+## Watch it work
+
+Press **Play**. SKIP goes left, TAKE goes right, and leaves turn green as they are collected. Watch the full left half (`1` skipped) finish before `1` is ever taken — that is depth-first order.
+
+<DecisionTreeVisualizer id="subsets-main" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        ans: List[List[int]] = []
+        def dfs(i: int, path: List[int]) -> None:
+            if i == len(nums):
+                ans.append(path.copy())
+                return
+            dfs(i + 1, path)  # SKIP nums[i]
+            dfs(i + 1, path + [nums[i]])  # TAKE nums[i]
+        dfs(0, [])
+        return ans
+```
+
+Read it as the visual: leaf check, SKIP branch, TAKE branch — the same order you just watched. The `path + [nums[i]]` copy means there is nothing to undo by hand; each call owns its own path. The 3-line doubling loop above is the shortcut for this exact tree.
+
+## Why it works
+
+Invariant: at depth `i` we decided elements `0..i-1`. So a leaf (`i == n`) holds exactly one subset, every subset appears on exactly one root-to-leaf trail, and nothing is ever duplicated or missed.
+
+```text
+n = 3 → 2³ = 8 leaves · n = 20 → ~1M subsets
+Time O(n·2ⁿ) copying paths, stack O(n) plus the output itself.
+```
+
+## 🧠 Remember
+
+> **Subsets → “Each element: in or out. 2ⁿ leaves.”** SKIP first, TAKE second — the tree writes the code.
+
+🔁 **Try this:** what changes with duplicates (Subsets II)? (Hint: sort first, and skip a TAKE when the previous twin was skipped.) Or collect only size-`k` subsets?
+
+Related: [Permutations](/posts/leetcode/permutations) · [Generate Parentheses](/posts/leetcode/generate-parentheses)

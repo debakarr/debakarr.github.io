@@ -1,0 +1,90 @@
+---
+title: "[LeetCode] 3. Longest Substring Without Repeating Characters"
+date: "2019-05-14"
+description: "Don't restart on a repeat — slide left past it. Interactive sliding-window walkthrough with typed Python."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Sliding Window", "Strings", "Programming"]
+draft: false
+---
+
+import SlidingWindowVisualizer from '../../../components/visuals/SlidingWindowVisualizer.astro';
+
+> 🧠 **Remember:** “Instead of starting over, slide.”
+
+## The problem — 20 seconds
+
+`s = "abcabcbb"` → `3` (`"abc"`).
+
+Return the *length* of the longest chunk with all different characters. The characters must sit next to each other — substring, not subsequence.
+
+[Original on LeetCode](https://leetcode.com/problems/longest-substring-without-repeating-characters/)
+
+You walk left → right with a window. When the next character is already inside your window, where should the window go?
+
+```text
+a → window "a" · best 1
+b → window "ab" · best 2
+c → window "abc" · best 3
+a repeats → slide left past old a → window "bca" · best 3
+b repeats → slide left past old b → window "cab" · best 3
+c repeats → slide left past old c → window "abc" · best 3
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Check every substring:
+
+```python
+for i in range(len(s)):
+    for j in range(i, len(s)):
+        if all_unique(s[i : j + 1]):
+            best = max(best, j - i + 1)
+```
+
+For `n = 1,000` that is ~500,000 substrings, each re-scanned for repeats. We throw away the good tail of the window on every repeat — pure waste.
+
+## The turning point
+
+When `a` repeats, the only bad part is everything up to the *old* `a`. The tail after it (`"bc"`) is still fine.
+
+So don’t restart — slide `left` just past the previous sighting, and let `right` keep marching. That memory of “where did I last see this character?” is what a hash map gives us — but notice we *discovered* the slide before naming the tool.
+
+## Watch it work
+
+Press **Play**. Watch `left` jump on repeats, never backwards. Try `"bbbbb"` last — the window collapses to size one every step, yet `right` never stalls.
+
+<SlidingWindowVisualizer id="sliding-main" />
+
+## What the code is really saying
+
+```python
+class Solution:
+    def lengthOfLongestSubstring(self, s: str) -> int:
+        last: dict[str, int] = {}
+        left = best = 0
+        for right, ch in enumerate(s):
+            if ch in last:
+                left = max(left, last[ch] + 1)
+            last[ch] = right
+            best = max(best, right - left + 1)
+        return best
+```
+
+Read it as the visual: on a repeat, `left` slides past the last sighting; always record the new index, then refresh `best`. The code is the last step, not the first.
+
+Invariant: everything inside `[left..right]` is always duplicate-free, so `right - left + 1` is always a valid candidate.
+
+```text
+n = 1,000 → brute force ~500,000 re-scans · this way ~1,000 steps
+Time O(n), space O(n).
+```
+
+## 🧠 Remember
+
+> **Sliding window → “Instead of starting over, slide.”** Keep the good tail, drop only up to the repeat.
+
+🔁 **Try this:** what if the string is ASCII-only — how would you store `last`? What if you may repeat a character up to `k` times?
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [Contains Duplicate](/posts/leetcode/contains-duplicate) · [3Sum](/posts/leetcode/3sum)

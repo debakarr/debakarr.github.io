@@ -1,0 +1,103 @@
+---
+title: "[LeetCode] 53. Maximum Subarray"
+date: "2019-06-17"
+description: "Maximum Subarray in one pass: carry the streak or start over? Interactive Kadane walkthrough + Python 3 code."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Maximum Subarray", "Dynamic Programming", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import DPMountainVisualizer from '../../../components/visuals/DPMountainVisualizer.astro';
+
+> 🧠 **Remember:** “Continue the streak or start over?”
+
+## The problem — 20 seconds
+
+`nums = [-2, 1, -3, 4, -1, 2, 1, -5, 4]` → `6`, from subarray `[4, -1, 2, 1]`.
+
+Find the contiguous subarray with the largest sum and return that sum. At least one number counts, so an all-negative input returns the least-bad single element.
+
+[Original on LeetCode](https://leetcode.com/problems/maximum-subarray/)
+
+Walk the first four numbers with a running carry and a best-ever tracker:
+
+```text
+i=0 num=-2 → carry=-2  best=-2 (start here)
+i=1 num= 1 → carry= 1  best= 1 (restart: 1 > -2+1)
+i=2 num=-3 → carry=-2  best= 1 (continue: -2 > -3)
+i=3 num= 4 → carry= 4  best= 4 (restart: 4 > -2+4)
+→ rule: carry = best sum ENDING here, best = best seen anywhere
+```
+
+No algorithm name yet. Just stare at that trace: every step picks the better of two numbers.
+
+## Your first instinct
+
+Enumerate every subarray, score each one:
+
+```python
+best = nums[0]
+for i in range(len(nums)):
+    total = 0
+    for j in range(i, len(nums)):
+        total += nums[j]
+        best = max(best, total)
+```
+
+For `n = 1,000` that is ~500,000 sums. We recompute the same stretches over and over — pure waste. The follow-up divide-and-conquer works and is subtle, but it is overkill once you see the two-choice structure below.
+
+## The turning point
+
+Stand on one number. The best streak ending here has exactly two candidates: restart fresh at `num`, or continue the old streak with `carry + num`. Take the max. Then ask one more question: did that beat the best streak seen anywhere?
+
+Abandon the carry the moment it hurts you. A negative carry is dead weight — dropping it is not quitting, it is the optimal move.
+
+## Watch it work
+
+Press **Play**. At each bar compare `continue` vs `restart`, watch `carry` crawl and `best` ratchet up only on new highs. The green winner at the end is `[4, -1, 2, 1] = 6`.
+
+<DPMountainVisualizer id="dpmountain-main" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        carry = best = nums[0]
+        for num in nums[1:]:
+            carry = max(num, carry + num)  # continue or restart
+            best = max(best, carry)
+        return best
+```
+
+Read it as the visual: extend or restart, then maybe crown a new best. Prefer the cache-flavoured twin? Same idea, four lines:
+
+```python
+cache = nums[:]
+for i in range(1, len(cache)):
+    if cache[i - 1] > 0: cache[i] += cache[i - 1]
+return max(cache)
+```
+
+Adding the previous total only when it is positive *is* the continue-or-restart choice in disguise.
+
+## Why it works
+
+Invariant: after each step, `carry` is the best sum of a subarray ENDING here, and `best` is the best sum seen ANYWHERE so far. The ending-here case splits exhaustively — every valid streak either includes the previous element or starts now — so the local max is exact, and the global max follows.
+
+```text
+n = 100,000 → one pass, two variables
+Time O(n), space O(1).
+```
+
+All-negative `[-2, -1]`? Carry never finds a reason to extend, best stays `-1`. Correct by construction.
+
+## 🧠 Remember
+
+> **Maximum Subarray → “Continue the streak or start over?”** A negative carry drags you down — drop it.
+
+🔁 **Try this:** return the subarray itself, not just its sum? (Track where each carry started.) Feeling brave: what breaks in the circular version where the subarray may wrap around?
+
+Related: [Best Time to Buy and Sell Stock II](/posts/leetcode/best-time-to-buy-and-sell-stock-ii) · [Product of Array Except Self](/posts/leetcode/product-of-array-except-self)

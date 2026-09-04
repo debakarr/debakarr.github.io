@@ -1,0 +1,104 @@
+---
+title: "[LeetCode] 230. Kth Smallest Element in a BST"
+date: "2019-09-05"
+description: "BST + kth smallest means inorder: count pops until k. Interactive walkthrough + typed Python in O(h+k) time, O(h) space."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "BST", "Binary Search Tree", "Programming"]
+draft: false
+---
+
+import BSTVisualizer from '../../../components/visuals/BSTVisualizer.astro';
+
+> 🧠 **Remember:** “BST + kth smallest → think inorder.”
+
+## The problem — 20 seconds
+
+`root = [5,3,6,2,4,null,null,1]`, `k = 3` → `3`.
+
+Given a binary search tree, return the `k`th smallest value (`k` always valid).
+
+[Original on LeetCode](https://leetcode.com/problems/kth-smallest-element-in-a-bst/)
+
+A BST already orders itself: left descendants smaller, right bigger. The sorted order hides in the shape — just walk it in order.
+
+```text
+root = [3,1,4,null,2]: go left to 1, up to 2 (right of 1), then 3, then 4
+visit order: 1, 2, 3, 4 → k=1 is 1
+inorder on a BST always comes out sorted
+```
+
+That trace is the whole algorithm. Everything below just stops it early.
+
+## Your first instinct
+
+Do a full inorder traversal, collect every value, then index:
+
+```python
+def inorder(root):
+    return inorder(root.left) + [root.val] + inorder(root.right) if root else []
+
+return inorder(root)[k - 1]
+```
+
+It works, but it visits and stores all `n` values even when `k = 1` — O(n) time and O(n) space to answer “give me the first one”.
+
+## The turning point
+
+We do not need the whole sorted list — we need the `k`th pop. Count visits as they happen and return the moment `count == k`.
+
+An iterative stack does that: push left as far as possible, pop, count, step right. Each pop is the next-smallest node — no tail we never need.
+
+## Watch it work
+
+Press **Play** with `k = 3`: badges `1st→1, 2nd→2, 3rd→3` stop and celebrate at `3`. Try `k = 1` and `k = 6`, then scrub captions as `Current / Stack / Count / Decision`.
+
+<BSTVisualizer id="bst-main" />
+
+## What the code is really saying
+
+```python
+from typing import Optional
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: Optional["TreeNode"] = None, right: Optional["TreeNode"] = None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+class Solution:
+    def kthSmallest(self, root: Optional[TreeNode], k: int) -> int:
+        stack: list[TreeNode] = []
+        curr = root
+        count = 0
+        while curr or stack:
+            while curr:  # go left as far as possible
+                stack.append(curr)
+                curr = curr.left
+            curr = stack.pop()
+            count += 1
+            if count == k:
+                return curr.val
+            curr = curr.right
+        raise ValueError("k out of range")
+```
+
+Read it as the visual: push the left spine, pop and count, check `count == k`, else visit right and repeat. The code is the last step, not the first.
+
+## Why it works
+
+Invariant: popped nodes come out sorted. The stack holds ancestors whose left subtrees are done, so each pop is the smallest uncounted node.
+
+```text
+n visits avoided after k → we touch O(h + k) nodes, stack holds O(h)
+Time O(h + k), space O(h), where h is the height of the tree.
+```
+
+Balanced: `h = O(log n)`; skewed: `h = O(n)`.
+
+## 🧠 Remember
+
+> **BST + kth smallest → think inorder.** Count pops; stop at `k`.
+
+🔁 **Follow-up:** what if inserts/deletes happen often and `kthSmallest` is called constantly? Store each node's subtree size, then descend by counts in O(h) per query instead of walking.
+
+Related: [Binary Tree Inorder Traversal](/posts/leetcode/binary-tree-inorder-traversal) · [Convert Sorted Array to BST](/posts/leetcode/convert-sorted-array-to-binary-search-tree)

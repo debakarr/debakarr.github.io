@@ -1,0 +1,596 @@
+---
+// TwoPointerVisualizer.astro
+// Shared step-through player for two-pointer classics.
+// mode="threesum" | "merge" | "zeroes" — each mode is a self-contained
+// stage + step-builder + code sync + quiz + mnemonic.
+// No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
+interface Props {
+  id?: string;
+  mode: "threesum" | "merge" | "zeroes";
+}
+const { id = "tpviz", mode = "threesum" } = Astro.props;
+
+const META = {
+  threesum: {
+    kicker: "Interactive visual · Fix One, Converge Two",
+    title: "Can you trap a zero-sum triplet?",
+    sub: "Sort first, then <strong>fix one element</strong> and hunt with two pointers <strong>converging</strong> from both ends. The live sum tells you which side is wrong.",
+  },
+  merge: {
+    kicker: "Interactive visual · Back-Fill",
+    title: "Can you merge without clobbering?",
+    sub: "Both arrays are sorted, but <strong>nums1's tail is empty buffer</strong>. Write the biggest remaining element at <strong>w</strong> and walk backwards — nothing unmerged ever gets overwritten.",
+  },
+  zeroes: {
+    kicker: "Interactive visual · Packed Region",
+    title: "Can you pack the non-zeroes left?",
+    sub: "<strong>scan</strong> reads every slot, <strong>write</strong> marks where the next non-zero belongs. Everything left of <strong>write</strong> is packed and final.",
+  },
+} as const;
+---
+
+<div class="tpviz" data-tpviz={id} data-mode={mode}>
+  <div class="tpviz-card">
+    <div class="tpviz-head">
+      <div>
+        <p class="tpviz-kicker">{META[mode].kicker}</p>
+        <h3 class="tpviz-title">{META[mode].title}</h3>
+        <p class="tpviz-sub" set:html={META[mode].sub} />
+      </div>
+    </div>
+
+    <div class="tpviz-stage">
+      {mode === "threesum" && (
+        <>
+          <div class="tpviz-row-label">
+            <span>a (sorted)</span>
+            <span class="tpviz-target">need <strong>a+b+c = 0</strong></span>
+          </div>
+          <div class="tpviz-array" data-role="array" aria-live="polite"></div>
+          <div class="tpviz-legend" aria-hidden="true">
+            <span><i class="sw sw-i"></i>i (fixed)</span>
+            <span><i class="sw sw-lr"></i>L / R</span>
+            <span><i class="sw sw-out"></i>decided</span>
+          </div>
+          <div class="tpviz-mid">
+            <div class="tpviz-readout" data-role="sumbox" aria-live="polite"></div>
+            <div class="tpviz-map-wrap">
+              <p class="tpviz-row-label"><span>found triplets</span><span data-role="found-size"></span></p>
+              <div class="tpviz-map" data-role="found"></div>
+            </div>
+          </div>
+        </>
+      )}
+      {mode === "merge" && (
+        <>
+          <div class="tpviz-row-label">
+            <span>nums1 (m = 3 + buffer)</span>
+            <span class="tpviz-target">writes go to <strong data-role="w-label">w</strong></span>
+          </div>
+          <div class="tpviz-array" data-role="row1" aria-live="polite"></div>
+          <div class="tpviz-row-label"><span>nums2 (n = 3)</span></div>
+          <div class="tpviz-array" data-role="row2" aria-live="polite"></div>
+          <div class="tpviz-legend" aria-hidden="true">
+            <span><i class="sw sw-i"></i>p1 / p2</span>
+            <span><i class="sw sw-lr"></i>w (write)</span>
+            <span><i class="sw sw-out"></i>buffer</span>
+          </div>
+          <div class="tpviz-mid">
+            <div class="tpviz-readout" data-role="writebox" aria-live="polite"></div>
+            <div class="tpviz-map-wrap">
+              <p class="tpviz-row-label"><span>result</span><span data-role="done-size"></span></p>
+              <div class="tpviz-map" data-role="done"></div>
+            </div>
+          </div>
+        </>
+      )}
+      {mode === "zeroes" && (
+        <>
+          <div class="tpviz-row-label">
+            <span>nums</span>
+            <span class="tpviz-target"><strong>write</strong> = next packed slot</span>
+          </div>
+          <div class="tpviz-array" data-role="array" aria-live="polite"></div>
+          <div class="tpviz-legend" aria-hidden="true">
+            <span><i class="sw sw-lr"></i>write / scan</span>
+            <span><i class="sw sw-i"></i>packed ✓</span>
+            <span><i class="sw sw-out"></i>unscanned</span>
+          </div>
+          <div class="tpviz-readout" data-role="statusbox" aria-live="polite"></div>
+        </>
+      )}
+      <p class="tpviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="tpviz-controls">
+      <div class="tpviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="tpviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 1</span>
+          <input type="range" data-role="slider" min="0" max="0" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="tpviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="tpviz-codegrid">
+      {mode === "threesum" && (
+        <div class="tpviz-code" aria-label="Algorithm code with current line highlighted">
+          <div data-code="0"><span class="ln">1</span><code>a.sort(); for i… (skip dup i)</code></div>
+          <div data-code="1"><span class="ln">2</span><code>L,R=i+1,n-1; total=a[i]+a[L]+a[R]</code></div>
+          <div data-code="2"><span class="ln">3</span><code>total&lt;0→L+=1 · total&gt;0→R-=1</code></div>
+          <div data-code="3"><span class="ln">4</span><code>found: record + skip dups</code></div>
+        </div>
+      )}
+      {mode === "merge" && (
+        <div class="tpviz-code" aria-label="Algorithm code with current line highlighted">
+          <div data-code="0"><span class="ln">1</span><code>p1=m-1, p2=n-1, w=m+n-1</code></div>
+          <div data-code="1"><span class="ln">2</span><code>while p1&gt;=0 and p2&gt;=0:</code></div>
+          <div data-code="2"><span class="ln">3</span><code>write larger at w; move pointer; w-=1</code></div>
+          <div data-code="3"><span class="ln">4</span><code>copy leftover nums2</code></div>
+        </div>
+      )}
+      {mode === "zeroes" && (
+        <div class="tpviz-code" aria-label="Algorithm code with current line highlighted">
+          <div data-code="0"><span class="ln">1</span><code>w = 0</code></div>
+          <div data-code="1"><span class="ln">2</span><code>for s in range(n):</code></div>
+          <div data-code="2"><span class="ln">3</span><code>if a[s]!=0: swap(w,s); w+=1</code></div>
+        </div>
+      )}
+      <div class="tpviz-quiz">
+        <p class="tpviz-quiz-title">Quick check — make it stick</p>
+        {mode === "threesum" && (
+          <>
+            <p class="tpviz-quiz-q">Why sort first?</p>
+            <div class="tpviz-quiz-btns">
+              <button type="button" data-quiz="a">It just looks tidy</button>
+              <button type="button" data-quiz="b">So L/R moves have meaning: small side vs big side</button>
+              <button type="button" data-quiz="c">Hashing needs sorted input</button>
+            </div>
+          </>
+        )}
+        {mode === "merge" && (
+          <>
+            <p class="tpviz-quiz-q">Why fill from the back?</p>
+            <div class="tpviz-quiz-btns">
+              <button type="button" data-quiz="a">It runs faster</button>
+              <button type="button" data-quiz="b">Front-fill overwrites unmerged values</button>
+              <button type="button" data-quiz="c">LeetCode says so</button>
+            </div>
+          </>
+        )}
+        {mode === "zeroes" && (
+          <>
+            <p class="tpviz-quiz-q">What sits left of w?</p>
+            <div class="tpviz-quiz-btns">
+              <button type="button" data-quiz="a">Zeroes</button>
+              <button type="button" data-quiz="b">All processed non-zeroes, packed</button>
+              <button type="button" data-quiz="c">Unknown territory</button>
+            </div>
+          </>
+        )}
+        <p class="tpviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        {mode === "threesum" && (
+          <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Fix one, converge two — skip repeats.”</strong> Pin <em>i</em>, squeeze <em>L/R</em> inward, and let the sorted order kill duplicates.</p>
+        )}
+        {mode === "merge" && (
+          <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Biggest first, from the back.”</strong> The tail is free space — park the largest leftover there and nothing gets clobbered.</p>
+        )}
+        {mode === "zeroes" && (
+          <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Keep the good stuff packed on the left.”</strong> <em>w</em> is the border: packed non-zeroes left, zeroes-to-fix right.</p>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tpviz { margin: 1.75rem 0; }
+  .tpviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .tpviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .tpviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .tpviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .tpviz-sub strong, .tpviz-sub em { color: var(--ink); }
+  .tpviz-head { margin-bottom: 1rem; }
+  .tpviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .tpviz-target strong { color: var(--accent-strong); font-size: .95rem; }
+  .tpviz-array { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .tpviz-cell {
+    min-width: 3.2rem; text-align: center; position: relative;
+    border: 1.5px solid var(--line); border-radius: .7rem;
+    padding: .5rem .6rem .9rem; background: var(--surface);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .tpviz-cell .v { font-weight: 800; font-size: 1.05rem; display: block; }
+  .tpviz-cell .i { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+  .tpviz-cell .ptr {
+    position: absolute; left: 50%; bottom: .15rem; transform: translateX(-50%);
+    font-family: var(--font-mono); font-size: .62rem; font-weight: 700;
+    color: var(--accent-strong); white-space: nowrap;
+  }
+  .tpviz-cell.is-i { border-color: var(--accent-strong); box-shadow: 0 0 0 1px var(--accent-strong); }
+  .tpviz-cell.is-l, .tpviz-cell.is-r, .tpviz-cell.is-wline { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--accent); }
+  .tpviz-cell.is-out { opacity: .45; }
+  .tpviz-cell.is-found { border-color: #22c55e; background: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .tpviz-cell.is-packed { border-color: #22c55e; background: color-mix(in oklab, #22c55e 12%, var(--surface)); }
+  .tpviz-cell.is-buffer { border-style: dashed; background: color-mix(in oklab, var(--accent) 8%, var(--surface)); }
+  .tpviz-cell.is-swapped { border-color: #f59e0b; transform: translateY(-2px); box-shadow: 0 6px 18px -10px #f59e0b; }
+  .tpviz-legend { display: flex; flex-wrap: wrap; gap: .9rem; margin: .55rem 0 0; font-size: .75rem; color: var(--muted); }
+  .tpviz-legend .sw { display: inline-block; width: .7rem; height: .7rem; border-radius: .25rem; margin-right: .3rem; vertical-align: baseline; }
+  .sw-i { background: var(--accent-strong); }
+  .sw-lr { background: var(--accent); }
+  .sw-out { background: transparent; border: 1.5px dashed var(--line); }
+  .tpviz-mid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 720px) { .tpviz-mid { grid-template-columns: 1fr 1fr; } }
+  .tpviz-readout {
+    border: 1px dashed var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    font-size: .88rem; line-height: 1.55; background: color-mix(in oklab, var(--accent) 7%, transparent);
+    min-height: 5.2rem;
+  }
+  .tpviz-readout strong { color: var(--accent-strong); }
+  .tpviz-readout .low { color: var(--accent-strong); font-weight: 700; }
+  .tpviz-readout .high { color: #d97706; font-weight: 700; }
+  .tpviz-readout .hit { color: #16a34a; font-weight: 700; }
+  .tpviz-readout .miss { color: var(--muted); font-weight: 600; }
+  .tpviz-map {
+    display: flex; flex-wrap: wrap; gap: .4rem; min-height: 3.2rem;
+    border: 1px solid var(--line); border-radius: .8rem; padding: .6rem;
+    background: var(--surface);
+  }
+  .tpviz-chip {
+    font-family: var(--font-mono); font-size: .75rem;
+    border: 1px solid var(--line); border-radius: .55rem; padding: .3rem .5rem;
+    background: var(--surface-raised);
+  }
+  .tpviz-chip b { color: var(--accent-strong); }
+  .tpviz-chip.is-hit { border-color: #22c55e; }
+  .tpviz-empty { font-size: .8rem; color: var(--muted); }
+  .tpviz-caption {
+    margin: .9rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .tpviz-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .tpviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .tpviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .tpviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .tpviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .tpviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .tpviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .tpviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .tpviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .tpviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .tpviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .tpviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .tpviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .tpviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .tpviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .tpviz-code code { white-space: pre-wrap; }
+  .tpviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .tpviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .tpviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .tpviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .tpviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .tpviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .tpviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .tpviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .tpviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .tpviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) { .tpviz-cell { transition: none; } }
+</style>
+
+<script>
+  function initTpViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+    const mode = root.dataset.mode || "threesum";
+
+    const QUIZ = {
+      threesum: {
+        correct: "b",
+        ok: "✓ Correct — sorting gives every value a rank, so L sees the small side and R sees the big side.",
+        no: "✗ Not quite — sorting is what makes “too small → move L, too big → move R” meaningful.",
+      },
+      merge: {
+        correct: "b",
+        ok: "✓ Correct — the tail is empty buffer, so back-fill never overwrites anything unmerged.",
+        no: "✗ Not quite — writing at the front would clobber nums1 values you haven't merged yet.",
+      },
+      zeroes: {
+        correct: "b",
+        ok: "✓ Correct — w is the border: packed non-zeroes left, to-fix territory right.",
+        no: "✗ Not quite — everything left of w is already a processed non-zero, packed tight.",
+      },
+    };
+
+    function buildThree() {
+      // Full trace over a=[-4,-1,-1,0,1,2] for i=0 then i=1.
+      return [
+        { i: -1, L: -1, R: -1, total: null, code: 0, found: [],
+          caption: "Pointers: none yet · Decision: sort → [-4,-1,-1,0,1,2] · State: no triplets. Pin i=0 next." },
+        { i: 0, L: 1, R: 5, total: -3, code: 1, found: [],
+          caption: "Pointers: i=0(-4) L=1(-1) R=5(2) · Decision: total=-4+-1+2=-3, too small → L+=1 · State: found []." },
+        { i: 0, L: 2, R: 5, total: -3, code: 2, found: [],
+          caption: "Pointers: i=0 L=2(-1) R=5(2) · Decision: total=-3, too small → L+=1 · State: []." },
+        { i: 0, L: 3, R: 5, total: -2, code: 2, found: [],
+          caption: "Pointers: i=0 L=3(0) R=5(2) · Decision: total=-2, too small → L+=1 · State: []." },
+        { i: 0, L: 4, R: 5, total: -1, code: 2, found: [],
+          caption: "Pointers: i=0 L=4(1) R=5(2) · Decision: total=-1, too small → L+=1 → L==R, i=0 exhausted · State: []." },
+        { i: 1, L: 2, R: 5, total: 0, code: 1, found: [],
+          caption: "Pointers: i=1(-1) L=2(-1) R=5(2) · Decision: total=-1+-1+2=0 → found! · State: []." },
+        { i: 1, L: 3, R: 4, total: 0, code: 3, found: [[-1, -1, 2]], fresh: 0,
+          caption: "Pointers: L→3 R→4 (no adjacent dups to skip) · Decision: record [-1,-1,2] · State: 1 triplet." },
+        { i: 1, L: 4, R: 3, total: 0, code: 3, found: [[-1, -1, 2], [-1, 0, 1]], fresh: 1,
+          caption: "Pointers: L=3(0) R=4(1) gave total=0 → record [-1,0,1], L/R cross · Decision: i=1 done · State: 2 triplets." },
+        { i: 2, L: -1, R: -1, total: null, code: 0, found: [[-1, -1, 2], [-1, 0, 1]],
+          caption: "Pointers: i=2(-1) · Decision: a[2]==a[1], skip duplicate i · State: still 2 triplets." },
+        { i: 3, L: -1, R: -1, total: null, code: 0, found: [[-1, -1, 2], [-1, 0, 1]],
+          caption: "Pointers: i=3..n-3 checked the same way (sums run too big, pointers cross) · Decision: stop · State: final [[-1,-1,2],[-1,0,1]]." },
+      ];
+    }
+
+    function buildMerge() {
+      return [
+        { a1: [1, 2, 3, 0, 0, 0], a2: [2, 5, 6], p1: 2, p2: 2, w: 5, code: 0, wrote: -1,
+          caption: "Pointers: p1=2 p2=2 w=5 · Decision: back-fill from the ends · State: nums1=[1,2,3,0,0,0], buffer shaded." },
+        { a1: [1, 2, 3, 0, 0, 0], a2: [2, 5, 6], p1: 2, p2: 2, w: 5, code: 1, wrote: -1,
+          caption: "Pointers: p1=2(3) p2=2(6) · Decision: guard p1>=0 and p2>=0 holds → compare · State: unchanged." },
+        { a1: [1, 2, 3, 0, 0, 6], a2: [2, 5, 6], p1: 2, p2: 1, w: 4, code: 2, wrote: 5,
+          caption: "Pointers: 3 vs 6 → p2 wins · Decision: write 6 at w=5, p2→1, w→4 · State: nums1=[1,2,3,0,0,6]." },
+        { a1: [1, 2, 3, 0, 5, 6], a2: [2, 5, 6], p1: 2, p2: 0, w: 3, code: 2, wrote: 4,
+          caption: "Pointers: 3 vs 5 → p2 wins · Decision: write 5 at w=4, p2→0, w→3 · State: [1,2,3,0,5,6]." },
+        { a1: [1, 2, 3, 3, 5, 6], a2: [2, 5, 6], p1: 1, p2: 0, w: 2, code: 2, wrote: 3,
+          caption: "Pointers: 3 vs 2 → p1 wins · Decision: write 3 at w=3, p1→1, w→2 · State: [1,2,3,3,5,6]." },
+        { a1: [1, 2, 2, 3, 5, 6], a2: [2, 5, 6], p1: 1, p2: -1, w: 1, code: 2, wrote: 2,
+          caption: "Pointers: 2 vs 2 → tie goes to nums2 · Decision: write 2 at w=2, p2→-1, w→1 · State: [1,2,2,3,5,6]." },
+        { a1: [1, 2, 2, 3, 5, 6], a2: [2, 5, 6], p1: 1, p2: -1, w: 1, code: 3, wrote: -1, done: true,
+          caption: "Pointers: p2<0, loop exits · Decision: no leftover nums2 to copy · State: done → [1,2,2,3,5,6]." },
+      ];
+    }
+
+    function buildZeroes() {
+      return [
+        { a: [0, 1, 0, 3, 12], w: 0, s: -1, code: 0, swapped: [],
+          caption: "Pointers: w=0 s=— · Decision: scan starts · State: packed region left of w is empty." },
+        { a: [0, 1, 0, 3, 12], w: 0, s: 0, code: 1, swapped: [],
+          caption: "Pointers: w=0 s=0(0) · Decision: zero → leave it, no swap · State: packed []." },
+        { a: [1, 0, 0, 3, 12], w: 1, s: 1, code: 2, swapped: [0, 1],
+          caption: "Pointers: w=0 s=1(1) · Decision: non-zero → swap(w,s), w→1 · State: packed [1]." },
+        { a: [1, 0, 0, 3, 12], w: 1, s: 2, code: 1, swapped: [],
+          caption: "Pointers: w=1 s=2(0) · Decision: zero → leave it · State: packed [1]." },
+        { a: [1, 3, 0, 0, 12], w: 2, s: 3, code: 2, swapped: [1, 3],
+          caption: "Pointers: w=1 s=3(3) · Decision: non-zero → swap(w,s), w→2 · State: packed [1,3]." },
+        { a: [1, 3, 12, 0, 0], w: 3, s: 4, code: 2, swapped: [2, 4],
+          caption: "Pointers: w=2 s=4(12) · Decision: non-zero → swap(w,s), w→3 · State: packed [1,3,12]." },
+        { a: [1, 3, 12, 0, 0], w: 3, s: 5, code: 1, swapped: [], done: true,
+          caption: "Pointers: s exhausted · Decision: stop · State: done → [1,3,12,0,0], packed left of w=3." },
+      ];
+    }
+
+    const BUILDERS = { threesum: buildThree, merge: buildMerge, zeroes: buildZeroes };
+    let steps = BUILDERS[mode]();
+    let idx = 0;
+    let timer = null;
+
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll("[data-code]")];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    function cell(v, i, cls, ptr) {
+      return `<div class="tpviz-cell${cls}"><span class="v">${v}</span><span class="i">idx ${i}</span>${ptr ? `<span class="ptr">${ptr}</span>` : ""}</div>`;
+    }
+
+    function renderThree(s) {
+      const A = [-4, -1, -1, 0, 1, 2];
+      const elArray = root.querySelector('[data-role="array"]');
+      const elSum = root.querySelector('[data-role="sumbox"]');
+      const elFound = root.querySelector('[data-role="found"]');
+      const elFoundSize = root.querySelector('[data-role="found-size"]');
+      elArray.innerHTML = "";
+      A.forEach((v, i) => {
+        let cls = "";
+        const badges = [];
+        if (i === s.i) { cls += " is-i"; badges.push("i"); }
+        if (i === s.L) { cls += " is-l"; badges.push("L"); }
+        if (i === s.R) { cls += " is-r"; badges.push("R"); }
+        const active = s.L >= 0 && s.R >= 0 && s.L <= s.R;
+        if (s.i >= 0 && active && i !== s.i && (i < s.L || i > s.R)) cls += " is-out";
+        elArray.insertAdjacentHTML("beforeend", cell(v, i, cls, badges.join("·")));
+      });
+      if (s.total === null || s.total === undefined) {
+        elSum.innerHTML = s.found.length
+          ? `✅ <strong>${s.found.length} triplet${s.found.length > 1 ? "s" : ""}</strong> locked in. Sorted order already skipped the repeats.`
+          : `👀 Sorted and ready. <strong>Pin i</strong>, then squeeze <strong>L/R</strong> inward.`;
+      } else {
+        const cls = s.total === 0 ? "hit" : (s.total < 0 ? "low" : "high");
+        const word = s.total === 0 ? "✓ FOUND — record it" : (s.total < 0 ? "too small → L+=1" : "too big → R-=1");
+        elSum.innerHTML = `a+b+c = <strong>${A[s.i]}+${A[s.L]}+${A[s.R]}=${s.total}</strong><br/><span class="${cls}">${word}</span>`;
+      }
+      elFound.innerHTML = "";
+      if (!s.found.length) {
+        elFound.insertAdjacentHTML("beforeend", `<span class="tpviz-empty">(none yet — converge L/R onto one)</span>`);
+      } else {
+        s.found.forEach((t, k) => {
+          const hot = s.fresh === k ? " is-hit" : "";
+          elFound.insertAdjacentHTML("beforeend", `<span class="tpviz-chip${hot}">[<b>${t.join(", ")}</b>]</span>`);
+        });
+      }
+      elFoundSize.textContent = s.found.length ? `${s.found.length} found` : "";
+    }
+
+    function renderMerge(s) {
+      const elRow1 = root.querySelector('[data-role="row1"]');
+      const elRow2 = root.querySelector('[data-role="row2"]');
+      const elBox = root.querySelector('[data-role="writebox"]');
+      const elDone = root.querySelector('[data-role="done"]');
+      const elDoneSize = root.querySelector('[data-role="done-size"]');
+      const wLabel = root.querySelector('[data-role="w-label"]');
+      if (wLabel) wLabel.textContent = `w=${s.w}`;
+      elRow1.innerHTML = "";
+      s.a1.forEach((v, i) => {
+        let cls = "";
+        const badges = [];
+        if (i === s.p1) { cls += " is-i"; badges.push("p1"); }
+        if (i === s.w && !(s.done)) { cls += " is-wline"; badges.push("w"); }
+        if (i === s.wrote) cls += " is-found";
+        if (i >= 3 && i > s.w && !s.done) cls += " is-buffer";
+        if (s.done) cls += " is-found";
+        elRow1.insertAdjacentHTML("beforeend", cell(v, i, cls, badges.join("·")));
+      });
+      elRow2.innerHTML = "";
+      s.a2.forEach((v, i) => {
+        let cls = "";
+        let ptr = "";
+        if (i === s.p2) { cls += " is-l"; ptr = "p2"; }
+        if (s.done || i < s.p2 || s.p2 < 0) cls += " is-out";
+        elRow2.insertAdjacentHTML("beforeend", cell(v, i, cls, ptr));
+      });
+      if (s.done) {
+        elBox.innerHTML = `✅ Merged in place. <strong>[${s.a1.join(", ")}]</strong><br/><span class="hit">p2 exhausted — nothing left to copy</span>`;
+      } else if (s.code === 0 || s.code === 1) {
+        elBox.innerHTML = `p1=<strong>${s.p1}</strong> (${s.p1 >= 0 ? s.a1[s.p1] : "—"}) · p2=<strong>${s.p2}</strong> (${s.p2 >= 0 ? s.a2[s.p2] : "—"}) · w=<strong>${s.w}</strong><br/><span class="miss">next: write the larger at w</span>`;
+      } else {
+        elBox.innerHTML = `wrote <strong>${s.a1[s.wrote]}</strong> at w=${s.wrote}<br/>p1=<strong>${s.p1}</strong> · p2=<strong>${s.p2}</strong> · w=<strong>${s.w}</strong>`;
+      }
+      elDone.innerHTML = s.done
+        ? `<span class="tpviz-chip is-hit">[<b>${s.a1.join(", ")}</b>]</span>`
+        : `<span class="tpviz-empty">(final array appears here when p2 runs out)</span>`;
+      elDoneSize.textContent = s.done ? "done" : "";
+    }
+
+    function renderZeroes(s) {
+      const elArray = root.querySelector('[data-role="array"]');
+      const elBox = root.querySelector('[data-role="statusbox"]');
+      elArray.innerHTML = "";
+      s.a.forEach((v, i) => {
+        let cls = "";
+        const badges = [];
+        if (i < s.w) cls += " is-packed";
+        if (i === s.w && !s.done) { cls += " is-l"; badges.push("w"); }
+        if (i === s.s) { cls += " is-r"; badges.push("s"); }
+        if (s.swapped.includes(i)) cls += " is-swapped";
+        if (!s.done && s.s >= 0 && i > s.s) cls += " is-out";
+        elArray.insertAdjacentHTML("beforeend", cell(v, i, cls, badges.join("·")));
+      });
+      if (s.done) {
+        elBox.innerHTML = `✅ Done → <strong>[${s.a.join(", ")}]</strong><br/><span class="hit">packed [${s.a.slice(0, s.w).join(", ")}] left of w=${s.w}</span>`;
+      } else if (s.s < 0) {
+        elBox.innerHTML = `👀 <strong>scan</strong> reads, <strong>write</strong> places.<br/>Press <strong>Next</strong> or <strong>Play</strong> to sweep.`;
+      } else if (s.code === 2) {
+        elBox.innerHTML = `s=${s.s} → <strong>${s.a[s.s]}</strong> ≠ 0 → swap(w=${s.swapped[0]}, s=${s.swapped[1]})<br/><span class="hit">packed left of w=${s.w}</span>`;
+      } else {
+        elBox.innerHTML = `s=${s.s} → <strong>${s.a[s.s]}</strong> is 0 → skip<br/><span class="miss">w stays ${s.w}</span>`;
+      }
+    }
+
+    const RENDERERS = { threesum: renderThree, merge: renderMerge, zeroes: renderZeroes };
+
+    function render() {
+      const s = steps[idx];
+      RENDERERS[mode](s);
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    // Quiz
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        const q = QUIZ[mode];
+        if (b.dataset.quiz === q.correct) {
+          b.classList.add("is-right");
+          feedback.textContent = q.ok;
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = q.no;
+        }
+      });
+    });
+
+    // keyboard: ←/→ when focused inside viz
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    idx = 0;
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-tpviz]").forEach(initTpViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

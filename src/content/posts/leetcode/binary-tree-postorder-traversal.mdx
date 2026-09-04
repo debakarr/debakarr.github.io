@@ -1,0 +1,120 @@
+---
+title: "[LeetCode] 145. Binary Tree Postorder Traversal"
+date: "2019-05-15"
+description: "Postorder records the node after its children. Interactive walkthrough with typed Python, recursive and iterative, in O(n) time, O(h) space."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Binary Tree", "Postorder Traversal", "Programming"]
+draft: false
+---
+
+import TreeTraversalVisualizer from '../../../components/visuals/TreeTraversalVisualizer.astro';
+
+> 🧠 **Remember:** “Postorder → go left, go right, write it down LAST.”
+
+## The problem — 20 seconds
+
+`root = [1,null,2,3]` → `[3,2,1]`.
+
+Record the left subtree, then the right subtree, then the node.
+
+[Original on LeetCode](https://leetcode.com/problems/binary-tree-postorder-traversal/)
+
+```text
+  1
+   \
+    2
+   /
+  3
+```
+
+```text
+left empty · right subtree first
+visit 3 → [3] · back up · visit 2 → [3, 2]
+visit 1 → [3, 2, 1] · done — root lands last
+```
+
+That trace is the whole algorithm.
+
+## Your first instinct
+
+Recursion writes itself — the skeleton is three lines, and the follow-up (“could you do it iteratively?”) is the actual interview question:
+
+```text
+dfs(node): dfs(left) → dfs(right) → visit(node)
+```
+
+Recursion borrows the call stack; iteration simulates it by hand.
+
+## The turning point
+
+Preorder, inorder, and postorder share one skeleton. The *only* difference is the position of `visit`: last here, first for preorder, in the middle for inorder. Memorize positions, not three algorithms.
+
+Why postorder earns its own post: it is the cleanup order — delete children before the parent, and evaluate expression trees bottom-up, operands before operators.
+
+## Watch it work
+
+Press **Play**. On the shared tree the badges land 1st → 5th as `[4, 5, 2, 3, 1]`: both children before every parent, root dead last.
+
+<TreeTraversalVisualizer mode="postorder" />
+
+## The code, for real
+
+Recursive primary — the recording line sits last:
+
+```python
+from typing import Optional
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: Optional["TreeNode"] = None, right: Optional["TreeNode"] = None):
+        self.val, self.left, self.right = val, left, right
+
+class Solution:
+    def postorderTraversal(self, root: Optional[TreeNode]) -> list[int]:
+        out: list[int] = []
+        def dfs(node: Optional[TreeNode]) -> None:
+            if not node:
+                return
+            dfs(node.left)
+            dfs(node.right)
+            out.append(node.val)  # visit LAST
+        dfs(root)
+        return out
+```
+
+Iterative secondary — visit root-right-left, then reverse for left-right-root:
+
+```python
+from typing import Optional
+
+class Solution:
+    def postorderTraversal(self, root: Optional[TreeNode]) -> list[int]:
+        if not root:
+            return []
+        out: list[int] = []
+        stack: list[TreeNode] = [root]
+        while stack:
+            node = stack.pop()
+            out.append(node.val)
+            if node.left:
+                stack.append(node.left)
+            if node.right:
+                stack.append(node.right)
+        return out[::-1]
+```
+
+## Why it works
+
+Invariant: every node enters `out` exactly once, after both of its subtrees, so `out` is always the postorder prefix recorded so far.
+
+```text
+n = 1,000 → ~1,000 visits · stack depth = tree height
+Time O(n), space O(h).
+```
+
+## 🧠 Remember
+
+> **Postorder → “node LAST.”** `visit` after both children — children-before-parent is the whole use case.
+
+🔁 **Try this:** recite `root = [1,null,2,3]` from memory, then compare with the other two.
+
+Related: [Binary Tree Preorder Traversal](/posts/leetcode/binary-tree-preorder-traversal) · [Binary Tree Inorder Traversal](/posts/leetcode/binary-tree-inorder-traversal)

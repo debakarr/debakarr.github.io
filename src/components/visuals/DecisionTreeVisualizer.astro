@@ -1,0 +1,435 @@
+---
+// DecisionTreeVisualizer.astro
+// Step-through player for LeetCode 78 Subsets: TAKE/SKIP decision tree.
+// No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
+interface Props {
+  id?: string;
+}
+const { id = "subsets-main" } = Astro.props;
+---
+
+<div class="dtviz" data-dtviz={id}>
+  <div class="dtviz-card">
+    <div class="dtviz-head">
+      <div>
+        <p class="dtviz-kicker">Interactive visual · Decision Tree</p>
+        <h3 class="dtviz-title">Each element: take it or skip it?</h3>
+        <p class="dtviz-sub">
+          Every element is a <strong>yes/no choice</strong>. SKIP goes left,
+          TAKE goes right. Walk the tree depth-first and every leaf
+          is one subset — <em>2ⁿ leaves, 2ⁿ subsets</em>.
+        </p>
+      </div>
+    </div>
+
+    <div class="dtviz-stage">
+      <div class="dtviz-tree" data-role="tree" aria-label="Binary decision tree for nums [1, 2, 3]"></div>
+
+      <div class="dtviz-mid">
+        <div class="dtviz-state" data-role="state" aria-live="polite"></div>
+        <div class="dtviz-result-wrap">
+          <p class="dtviz-row-label"><span>collected subsets</span><span data-role="count"></span></p>
+          <div class="dtviz-result" data-role="result"></div>
+        </div>
+      </div>
+
+      <p class="dtviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="dtviz-controls">
+      <div class="dtviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="dtviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 15</span>
+          <input type="range" data-role="slider" min="0" max="14" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="dtviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="dtviz-codegrid">
+      <div class="dtviz-code" aria-label="Algorithm code with current line highlighted">
+        <div data-code="0"><span class="ln">1</span><code>def dfs(i, path):</code></div>
+        <div data-code="1"><span class="ln">2</span><code>  if i == len(nums): ans.append(path); return</code></div>
+        <div data-code="2"><span class="ln">3</span><code>  dfs(i+1, path)  # SKIP</code></div>
+        <div data-code="3"><span class="ln">4</span><code>  dfs(i+1, path+[nums[i]])  # TAKE</code></div>
+      </div>
+      <div class="dtviz-quiz">
+        <p class="dtviz-quiz-title">Quick check — make it stick</p>
+        <p class="dtviz-quiz-q">How many subsets for <code>n</code> elements?</p>
+        <div class="dtviz-quiz-btns">
+          <button type="button" data-quiz="a">n²</button>
+          <button type="button" data-quiz="b">2ⁿ</button>
+          <button type="button" data-quiz="c">n!</button>
+        </div>
+        <p class="dtviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="dtviz-mnemonic">🧠 Memory hook: <strong>“Each element: in or out. 2ⁿ leaves.”</strong> Every level doubles the leaves — one SKIP branch, one TAKE branch.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .dtviz { margin: 1.75rem 0; }
+  .dtviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .dtviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .dtviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .dtviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .dtviz-sub strong, .dtviz-sub em { color: var(--ink); }
+  .dtviz-head { display: grid; gap: .9rem; margin-bottom: 1rem; }
+  .dtviz-stage { display: grid; gap: .9rem; }
+  .dtviz-tree {
+    border: 1px solid var(--line); border-radius: .8rem;
+    background: var(--surface); padding: .5rem;
+    overflow-x: auto;
+  }
+  .dtviz-tree svg { display: block; width: 100%; min-width: 560px; height: auto; }
+  .dtviz-edge { stroke: var(--line); stroke-width: 1.5; }
+  .dtviz-edge.is-on { stroke: var(--accent); stroke-width: 2.5; }
+  .dtviz-edge-label {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: .04em;
+    fill: var(--muted);
+  }
+  .dtviz-edge-label.is-on { fill: var(--accent-strong); font-weight: 700; }
+  .dtviz-node rect {
+    fill: var(--surface-raised); stroke: var(--line); stroke-width: 1.5;
+    transition: fill .2s, stroke .2s;
+  }
+  .dtviz-node text {
+    font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+    fill: var(--ink); text-anchor: middle; dominant-baseline: central;
+  }
+  .dtviz-node.is-path rect { stroke: var(--accent); }
+  .dtviz-node.is-current rect {
+    stroke: var(--accent); stroke-width: 2.5;
+    fill: color-mix(in oklab, var(--accent) 18%, var(--surface-raised));
+  }
+  .dtviz-node.is-done rect {
+    stroke: #22c55e; stroke-width: 2;
+    fill: color-mix(in oklab, #22c55e 14%, var(--surface));
+  }
+  .dtviz-node.is-done text { fill: #16a34a; }
+  .dtviz-mid { display: grid; gap: .9rem; }
+  @media (min-width: 720px) { .dtviz-mid { grid-template-columns: 1fr 1fr; } }
+  .dtviz-state {
+    border: 1px dashed var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    font-size: .88rem; line-height: 1.55; background: color-mix(in oklab, var(--accent) 7%, transparent);
+    min-height: 5.2rem;
+  }
+  .dtviz-state strong { color: var(--accent-strong); }
+  .dtviz-state code { font-family: var(--font-mono); font-size: .8rem; }
+  .dtviz-state .take { color: #16a34a; font-weight: 700; }
+  .dtviz-state .skip { color: var(--muted); font-weight: 700; }
+  .dtviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .dtviz-result {
+    display: flex; flex-wrap: wrap; gap: .4rem; min-height: 3.2rem;
+    border: 1px solid var(--line); border-radius: .8rem; padding: .6rem;
+    background: var(--surface);
+  }
+  .dtviz-chip {
+    font-family: var(--font-mono); font-size: .75rem;
+    border: 1px solid #22c55e; border-radius: .55rem; padding: .3rem .5rem;
+    background: color-mix(in oklab, #22c55e 12%, var(--surface-raised));
+    color: var(--ink);
+  }
+  .dtviz-empty { font-size: .8rem; color: var(--muted); }
+  .dtviz-caption {
+    margin: .1rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+    font-family: var(--font-mono); font-size: .82rem;
+  }
+  .dtviz-controls { margin-top: .1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .dtviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .dtviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .dtviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .dtviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .dtviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .dtviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .dtviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .dtviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .dtviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .dtviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .dtviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .dtviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .dtviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .dtviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .dtviz-code code { white-space: pre-wrap; }
+  .dtviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .dtviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .dtviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .dtviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .dtviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .dtviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .dtviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .dtviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .dtviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .dtviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) {
+    .dtviz-node rect { transition: none; }
+  }
+</style>
+
+<script>
+  function initDecisionTreeViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+
+    // Tree geometry: 4 levels, SKIP = left child, TAKE = right child.
+    const NODES = [
+      { id: 0, x: 360, y: 30,  label: "[]",      path: [] },
+      { id: 1, x: 180, y: 120, label: "[]",      path: [] },
+      { id: 2, x: 540, y: 120, label: "[1]",     path: [1] },
+      { id: 3, x: 90,  y: 210, label: "[]",      path: [] },
+      { id: 4, x: 270, y: 210, label: "[2]",     path: [2] },
+      { id: 5, x: 450, y: 210, label: "[1]",     path: [1] },
+      { id: 6, x: 630, y: 210, label: "[1,2]",   path: [1, 2] },
+      { id: 7, x: 45,  y: 310, label: "[]",      path: [] },
+      { id: 8, x: 135, y: 310, label: "[3]",     path: [3] },
+      { id: 9, x: 225, y: 310, label: "[2]",     path: [2] },
+      { id: 10, x: 315, y: 310, label: "[2,3]",  path: [2, 3] },
+      { id: 11, x: 405, y: 310, label: "[1]",    path: [1] },
+      { id: 12, x: 495, y: 310, label: "[1,3]",  path: [1, 3] },
+      { id: 13, x: 585, y: 310, label: "[1,2]",  path: [1, 2] },
+      { id: 14, x: 675, y: 310, label: "[1,2,3]", path: [1, 2, 3] },
+    ];
+    const EDGES = [
+      { from: 0, to: 1, kind: "SKIP", n: 1 },
+      { from: 0, to: 2, kind: "TAKE", n: 1 },
+      { from: 1, to: 3, kind: "SKIP", n: 2 },
+      { from: 1, to: 4, kind: "TAKE", n: 2 },
+      { from: 2, to: 5, kind: "SKIP", n: 2 },
+      { from: 2, to: 6, kind: "TAKE", n: 2 },
+      { from: 3, to: 7, kind: "SKIP", n: 3 },
+      { from: 3, to: 8, kind: "TAKE", n: 3 },
+      { from: 4, to: 9, kind: "SKIP", n: 3 },
+      { from: 4, to: 10, kind: "TAKE", n: 3 },
+      { from: 5, to: 11, kind: "SKIP", n: 3 },
+      { from: 5, to: 12, kind: "TAKE", n: 3 },
+      { from: 6, to: 13, kind: "SKIP", n: 3 },
+      { from: 6, to: 14, kind: "TAKE", n: 3 },
+    ];
+    const PARENT = { 1: 0, 2: 0, 3: 1, 4: 1, 5: 2, 6: 2, 7: 3, 8: 3, 9: 4, 10: 4, 11: 5, 12: 5, 13: 6, 14: 6 };
+    const LEAF_OF = { 7: [], 8: [3], 9: [2], 10: [2, 3], 11: [1], 12: [1, 3], 13: [1, 2], 14: [1, 2, 3] };
+
+    // DFS, SKIP-branch first — matches the posted recursive helper order.
+    const R0 = [];
+    const R1 = [[]];
+    const R2 = [[], [3]];
+    const R3 = [[], [3], [2]];
+    const R4 = [[], [3], [2], [2, 3]];
+    const R5 = [[], [3], [2], [2, 3], [1]];
+    const R6 = [[], [3], [2], [2, 3], [1], [1, 3]];
+    const R7 = [[], [3], [2], [2, 3], [1], [1, 3], [1, 2]];
+    const R8 = [[], [3], [2], [2, 3], [1], [1, 3], [1, 2], [1, 2, 3]];
+    const steps = [
+      { nodeId: 0,  decision: "start",          code: 0, result: R0, caption: "dfs(i=0, path=[]) — root, nothing decided. Next: decide 1 (SKIP vs TAKE)." },
+      { nodeId: 1,  decision: "SKIP 1",         code: 2, result: R0, caption: "dfs(i=1, path=[]) — SKIPPED 1. Next: decide 2." },
+      { nodeId: 3,  decision: "SKIP 2",         code: 2, result: R0, caption: "dfs(i=2, path=[]) — SKIPPED 2. Next: decide 3." },
+      { nodeId: 7,  decision: "SKIP 3 → leaf",  code: 1, result: R1, caption: "dfs(i=3, path=[]) — i == len(nums). Collect [] → 1 subset." },
+      { nodeId: 8,  decision: "TAKE 3 → leaf",  code: 1, result: R2, caption: "dfs(i=3, path=[3]) — backtrack, TAKE 3. Collect [3] → 2 subsets." },
+      { nodeId: 4,  decision: "TAKE 2",         code: 3, result: R2, caption: "dfs(i=2, path=[2]) — back at depth 2, now TAKE 2. Next: decide 3." },
+      { nodeId: 9,  decision: "SKIP 3 → leaf",  code: 1, result: R3, caption: "dfs(i=3, path=[2]) — SKIPPED 3. Collect [2] → 3 subsets." },
+      { nodeId: 10, decision: "TAKE 3 → leaf",  code: 1, result: R4, caption: "dfs(i=3, path=[2,3]) — TAKE 3. Collect [2,3] → 4 subsets. Left half done." },
+      { nodeId: 2,  decision: "TAKE 1",         code: 3, result: R4, caption: "dfs(i=1, path=[1]) — back at depth 1, now TAKE 1. Next: decide 2." },
+      { nodeId: 5,  decision: "SKIP 2",         code: 2, result: R4, caption: "dfs(i=2, path=[1]) — SKIPPED 2. Next: decide 3." },
+      { nodeId: 11, decision: "SKIP 3 → leaf",  code: 1, result: R5, caption: "dfs(i=3, path=[1]) — SKIPPED 3. Collect [1] → 5 subsets." },
+      { nodeId: 12, decision: "TAKE 3 → leaf",  code: 1, result: R6, caption: "dfs(i=3, path=[1,3]) — TAKE 3. Collect [1,3] → 6 subsets." },
+      { nodeId: 6,  decision: "TAKE 2",         code: 3, result: R6, caption: "dfs(i=2, path=[1,2]) — back at depth 2, now TAKE 2. Next: decide 3." },
+      { nodeId: 13, decision: "SKIP 3 → leaf",  code: 1, result: R7, caption: "dfs(i=3, path=[1,2]) — SKIPPED 3. Collect [1,2] → 7 subsets." },
+      { nodeId: 14, decision: "TAKE 3 → leaf",  code: 1, result: R8, caption: "dfs(i=3, path=[1,2,3]) — TAKE 3. Collect [1,2,3] → 8 subsets. Done: 2³ = 8." },
+    ];
+
+    let idx = 0;
+    let timer = null;
+
+    const elTree = root.querySelector('[data-role="tree"]');
+    const elState = root.querySelector('[data-role="state"]');
+    const elResult = root.querySelector('[data-role="result"]');
+    const elCount = root.querySelector('[data-role="count"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll('[data-code]')];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    const byId = Object.fromEntries(NODES.map((n) => [n.id, n]));
+
+    function chainTo(id) {
+      const chain = [];
+      let cur = id;
+      while (cur !== undefined) {
+        chain.unshift(cur);
+        cur = PARENT[cur];
+      }
+      return chain;
+    }
+    function fmtPath(p) {
+      return "[" + p.join(", ") + "]";
+    }
+    function esc(s) {
+      return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    }
+
+    function render() {
+      const s = steps[idx];
+      const chain = chainTo(s.nodeId);
+      const chainSet = new Set(chain);
+      const doneLeafIds = new Set();
+      s.result.forEach((subset) => {
+        const key = JSON.stringify(subset);
+        for (const [lid, lpath] of Object.entries(LEAF_OF)) {
+          if (JSON.stringify(lpath) === key) doneLeafIds.add(Number(lid));
+        }
+      });
+
+      // SVG tree
+      const NW = 66, NH = 26;
+      let svg = `<svg viewBox="0 0 720 352" role="img" aria-label="Decision tree">`;
+      EDGES.forEach((e) => {
+        const a = byId[e.from], b = byId[e.to];
+        const on = chainSet.has(e.from) && chainSet.has(e.to);
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const lx = mx + (e.kind === "SKIP" ? -22 : 22);
+        svg += `<line class="dtviz-edge${on ? " is-on" : ""}" x1="${a.x}" y1="${a.y + NH / 2}" x2="${b.x}" y2="${b.y - NH / 2}"/>`;
+        svg += `<text class="dtviz-edge-label${on ? " is-on" : ""}" x="${lx}" y="${my}">${e.kind}</text>`;
+      });
+      NODES.forEach((n) => {
+        const cls = "dtviz-node"
+          + (n.id === s.nodeId ? " is-current" : "")
+          + (n.id !== s.nodeId && chainSet.has(n.id) ? " is-path" : "")
+          + (doneLeafIds.has(n.id) ? " is-done" : "");
+        svg += `<g class="${cls}"><rect x="${n.x - NW / 2}" y="${n.y - NH / 2}" width="${NW}" height="${NH}" rx="13"/><text x="${n.x}" y="${n.y}">${esc(n.label)}</text></g>`;
+      });
+      svg += `</svg>`;
+      elTree.innerHTML = svg;
+
+      // Side panel: current path + decision
+      const node = byId[s.nodeId];
+      const decCls = s.decision.startsWith("TAKE") ? "take" : (s.decision.startsWith("SKIP") ? "skip" : "");
+      elState.innerHTML = `path = <code><strong>${esc(fmtPath(node.path))}</strong></code><br/>`
+        + (s.decision === "start"
+          ? `decision: <span>— press <strong>Next</strong> or <strong>Play</strong> to decide 1 —</span>`
+          : `decision: <span class="${decCls}">${esc(s.decision)}</span>`);
+
+      // Result list with live count
+      elResult.innerHTML = "";
+      if (s.result.length === 0) {
+        const e = document.createElement("span");
+        e.className = "dtviz-empty";
+        e.textContent = "(empty — reach a leaf to collect a subset)";
+        elResult.appendChild(e);
+      } else {
+        s.result.forEach((subset) => {
+          const c = document.createElement("span");
+          c.className = "dtviz-chip";
+          c.textContent = fmtPath(subset);
+          elResult.appendChild(c);
+        });
+      }
+      elCount.textContent = `${s.result.length} / 8`;
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    // Quiz
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (b.dataset.quiz === "b") {
+          b.classList.add("is-right");
+          feedback.textContent = "✓ Correct — each of the n elements is in or out: 2ⁿ subsets.";
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = "✗ Not quite — each element doubles the count: in or out → 2ⁿ.";
+        }
+      });
+    });
+
+    // keyboard: ←/→ when focused inside viz
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    idx = 0;
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-dtviz]").forEach(initDecisionTreeViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

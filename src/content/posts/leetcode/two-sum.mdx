@@ -1,0 +1,93 @@
+---
+title: "[LeetCode] 1. Two Sum"
+date: "2019-05-14"
+description: "Two Sum in one pass: what do I need, and have I seen it? Interactive walkthrough + Python 3 code."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Two Sum", "Arrays", "HashMap", "Programming"]
+draft: false
+---
+
+import TwoSumVisualizer from '../../../components/visuals/TwoSumVisualizer.astro';
+
+> 🧠 **Remember:** “What do I need, and have I seen it?”
+
+## The problem — 20 seconds
+
+`nums = [2, 7, 11, 15]`, `target = 9` → `[0, 1]`.
+
+Return the *indices* of the two numbers that add up to `target`. One solution, never reuse the same element.
+
+[Original on LeetCode](https://leetcode.com/problems/two-sum/)
+
+You have a number. You know what number you need. **Have you already seen it?**
+
+```text
+current = 2 → need 9 − 2 = 7 → seen 7? ❌ → remember 2
+current = 7 → need 9 − 7 = 2 → seen 2? ✅ → [0, 1]
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Try every pair:
+
+```python
+for i in range(len(nums)):
+    for j in range(i + 1, len(nums)):
+        if nums[i] + nums[j] == target:
+            return [i, j]
+```
+
+For `n = 1,000` that is ~500,000 checks. We re-scan the past on every step — pure waste.
+
+## The turning point
+
+For `x`, we only care about one value: `target − x`.
+
+So the real question is: *can we remember the past and answer “have I seen this?” instantly?*
+
+That “memory of the past” is what a hash map gives us — but notice we *discovered* the need before naming the tool.
+
+## Watch it work
+
+Press **Play**. Watch the map fill as you walk left → right. Try `[3, 3]` last — it only works because we check *before* we store.
+
+<TwoSumVisualizer id="twosum-main" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        seen: dict[int, int] = {}  # number -> index
+        for i, num in enumerate(nums):
+            need = target - num
+            if need in seen:
+                return [seen[need], i]
+            seen[num] = i
+        raise ValueError("No solution")
+```
+
+Read it as the visual: compute `need`, ask “seen?”, else remember and move on. The code is the last step, not the first.
+
+One trap: check *before* you store. Otherwise `[3, 3]`, `target = 6` matches an element with itself.
+
+## Why it works
+
+Invariant: `seen` always holds exactly the numbers left of `i`. So when we ask “is `need` in `seen`?”, we ask precisely “did a valid partner appear earlier?” One pass is enough.
+
+```text
+n = 1,000 → brute force ~500,000 checks · this way ~1,000 lookups
+Time O(n), space O(n).
+```
+
+## 🧠 Remember
+
+> **Two Sum → “Need before keep.”** Check what you need before you keep what you have.
+
+🔁 **Try this:** what changes if the input is sorted? (Hint: you can do O(1) space with two pointers — the setup for 3Sum.)
+
+Related: [3Sum](/posts/leetcode/3sum) · [Contains Duplicate](/posts/leetcode/contains-duplicate) · [Longest Substring](/posts/leetcode/longest-substring-without-repeating-characters)

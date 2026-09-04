@@ -1,0 +1,376 @@
+---
+ // SlidingWindowVisualizer.astro
+ // Step-through player for LeetCode 3: sliding window over a string.
+ // No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
+interface Props {
+  id?: string;
+}
+const { id = "sliding-main" } = Astro.props;
+---
+
+<div class="swviz" data-swviz={id}>
+  <div class="swviz-card">
+    <div class="swviz-head">
+      <div>
+        <p class="swviz-kicker">Interactive visual · Sliding Window</p>
+        <h3 class="swviz-title">Can you keep the window duplicate-free?</h3>
+        <p class="swviz-sub">
+          Think of <strong>[left..right]</strong> as a window you drag right.
+          When the new char is already inside, you don’t restart —
+          you <em>slide left just past its last sighting</em>.
+        </p>
+      </div>
+      <div class="swviz-presets" role="group" aria-label="Choose example">
+        <button type="button" data-preset="0" class="is-active">abcabcbb</button>
+        <button type="button" data-preset="1">bbbbb</button>
+        <button type="button" data-preset="2">pwwkew</button>
+      </div>
+    </div>
+
+    <div class="swviz-stage">
+      <div class="swviz-row-label">
+        <span>string s</span>
+        <span class="swviz-best">best = <strong data-role="best">0</strong></span>
+      </div>
+      <div class="swviz-array" data-role="cells" aria-live="polite"></div>
+
+      <div class="swviz-mid">
+        <div class="swviz-panel" data-role="panel" aria-live="polite"></div>
+      </div>
+
+      <p class="swviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="swviz-controls">
+      <div class="swviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="swviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 1</span>
+          <input type="range" data-role="slider" min="0" max="0" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="swviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="swviz-codegrid">
+      <div class="swviz-code" aria-label="Algorithm code with current line highlighted">
+        <div data-code="0"><span class="ln">1</span><code>left = 0, best = 0, last = {}</code></div>
+        <div data-code="1"><span class="ln">2</span><code>for right, ch in enumerate(s):</code></div>
+        <div data-code="2"><span class="ln">3</span><code>  if ch in window: left = max(left, last[ch]+1)</code></div>
+        <div data-code="3"><span class="ln">4</span><code>  last[ch]=right; best=max(best, right-left+1)</code></div>
+      </div>
+      <div class="swviz-quiz">
+        <p class="swviz-quiz-title">Quick check — make it stick</p>
+        <p class="swviz-quiz-q">When we see a repeat, what moves?</p>
+        <div class="swviz-quiz-btns">
+          <button type="button" data-quiz="a">Right only</button>
+          <button type="button" data-quiz="b">Left jumps past previous occurrence</button>
+          <button type="button" data-quiz="c">Both reset to zero</button>
+        </div>
+        <p class="swviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="swviz-mnemonic">🧠 Memory hook: <strong>“Instead of starting over, slide.”</strong> Keep the good tail of the window, drop only what repeats.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .swviz { margin: 1.75rem 0; }
+  .swviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .swviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .swviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .swviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .swviz-sub strong, .swviz-sub em { color: var(--ink); }
+  .swviz-head { display: grid; gap: .9rem; margin-bottom: 1rem; }
+  @media (min-width: 720px) { .swviz-head { grid-template-columns: 1fr auto; align-items: start; } }
+  .swviz-presets { display: flex; flex-wrap: wrap; gap: .4rem; align-content: start; }
+  .swviz-presets button {
+    font-family: var(--font-mono); font-size: .78rem;
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: .35rem .7rem; color: var(--muted); background: transparent; cursor: pointer;
+  }
+  .swviz-presets button.is-active, .swviz-presets button:hover {
+    color: var(--accent-strong); border-color: var(--accent);
+  }
+  .swviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .swviz-best strong { color: var(--accent-strong); font-size: .95rem; }
+  .swviz-array { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .swviz-cell {
+    min-width: 2.9rem; text-align: center;
+    border: 1.5px solid var(--line); border-radius: .7rem;
+    padding: .5rem .6rem .4rem; background: var(--surface);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .swviz-cell .v { font-weight: 800; font-size: 1.05rem; display: block; font-family: var(--font-mono); }
+  .swviz-cell .i { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+  .swviz-cell.is-window { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 12%, var(--surface)); }
+  .swviz-cell.is-right { transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--accent); }
+  .swviz-cell.is-out { opacity: .55; }
+  .swviz-cell.is-dup { border-color: #ef4444; background: color-mix(in oklab, #ef4444 16%, var(--surface)); }
+  .swviz-cell.is-dup-prev { border-color: #ef4444; border-style: dashed; }
+  .swviz-mid { display: grid; gap: .9rem; margin-top: 1rem; }
+  .swviz-panel {
+    display: grid; gap: .5rem;
+    border: 1px solid var(--line); border-radius: .8rem; padding: .7rem .8rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  @media (min-width: 720px) { .swviz-panel { grid-template-columns: 1.2fr 1fr 1fr; align-items: start; } }
+  .swviz-stat { min-width: 0; }
+  .swviz-stat .k { font-family: var(--font-mono); font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); display: block; margin-bottom: .15rem; }
+  .swviz-stat .val { font-family: var(--font-mono); font-size: .88rem; word-break: break-all; }
+  .swviz-stat .val strong { color: var(--accent-strong); }
+  .swviz-stat .bad { color: #ef4444; font-weight: 700; }
+  .swviz-empty { font-size: .8rem; color: var(--muted); }
+  .swviz-caption {
+    margin: .9rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .swviz-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .swviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .swviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .swviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .swviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .swviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .swviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .swviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .swviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .swviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .swviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .swviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .swviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .swviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .swviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .swviz-code code { white-space: pre-wrap; }
+  .swviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .swviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .swviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .swviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .swviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .swviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .swviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .swviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .swviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .swviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) { .swviz-cell { transition: none; } }
+</style>
+
+<script>
+  function initSlidingViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+
+    const presets = ["abcabcbb", "bbbbb", "pwwkew"];
+    let presetIdx = 0;
+    let steps = [];
+    let idx = 0;
+    let timer = null;
+
+    const elCells = root.querySelector('[data-role="cells"]');
+    const elBest = root.querySelector('[data-role="best"]');
+    const elPanel = root.querySelector('[data-role="panel"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll('[data-code]')];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    function windowOf(s, left, right) {
+      if (right < left) return "";
+      return s.slice(left, right + 1);
+    }
+
+    function buildSteps(s) {
+      const out = [];
+      let left = 0;
+      let best = 0;
+      const last = {};
+      out.push({
+        left: 0, right: -1, best: 0, code: 0, dupIndex: -1,
+        caption: `Input s="${s}" · Current start · Decision init left=0, best=0 · State window="" · Set {} · best=0`,
+      });
+      for (let right = 0; right < s.length; right++) {
+        const ch = s[right];
+        const prev = ch in last ? last[ch] : -1;
+        const inWindow = prev >= left;
+        if (inWindow) {
+          const newLeft = prev + 1;
+          const w = windowOf(s, newLeft, right);
+          out.push({
+            left: newLeft, right, best, code: 2, dupIndex: prev,
+            caption: `Input s="${s}" · Current right=${right} ('${ch}' repeats ex-${prev}) · Decision shrink — left ${left}→${newLeft} · State window="${w}" · best=${best}`,
+          });
+          left = newLeft;
+        }
+        const w2 = windowOf(s, left, right);
+        const newBest = Math.max(best, right - left + 1);
+        last[ch] = right;
+        out.push({
+          left, right, best: newBest, code: 3, dupIndex: -1,
+          caption: inWindow
+            ? `Input s="${s}" · Current right=${right} ('${ch}') · Decision expand — record last['${ch}']=${right} · State window="${w2}" · best=${newBest}`
+            : `Input s="${s}" · Current right=${right} ('${ch}' new) · Decision expand — window grows · State window="${w2}" · best=${newBest}`,
+        });
+        best = newBest;
+      }
+      return out;
+    }
+
+    function esc(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function render() {
+      const s = presets[presetIdx];
+      const st = steps[idx];
+      elBest.textContent = String(st.best);
+
+      elCells.innerHTML = "";
+      if (s.length === 0) {
+        const e = document.createElement("span");
+        e.className = "swviz-empty";
+        e.textContent = "(empty string — nothing to slide over)";
+        elCells.appendChild(e);
+      } else {
+        [...s].forEach((ch, i) => {
+          const d = document.createElement("div");
+          const inWin = i >= st.left && i <= st.right;
+          let cls = "swviz-cell"
+            + (inWin ? " is-window" : " is-out")
+            + (i === st.right ? " is-right" : "")
+            + (i === st.right && st.dupIndex >= 0 ? " is-dup" : "")
+            + (i === st.dupIndex ? " is-dup-prev" : "");
+          d.className = cls;
+          d.innerHTML = `<span class="v">${esc(ch)}</span><span class="i">${i}</span>`;
+          elCells.appendChild(d);
+        });
+      }
+
+      const w = windowOf(s, st.left, st.right);
+      const setChars = [...new Set([...w])].join(", ");
+      const dupNote = st.dupIndex >= 0
+        ? `<div class="swviz-stat"><span class="k">Repeat</span><span class="val bad">'${esc(s[st.right] ?? "")}' dup of ${st.dupIndex}</span></div>`
+        : "";
+      elPanel.innerHTML =
+        `<div class="swviz-stat"><span class="k">Window [${st.left}..${st.right}]</span><span class="val">"${esc(w) || "—"}"</span></div>` +
+        `<div class="swviz-stat"><span class="k">Set</span><span class="val">{${esc(setChars) || "—"}}</span></div>` +
+        `<div class="swviz-stat"><span class="k">Left / Right / Best</span><span class="val"><strong>${st.left}</strong> / <strong>${st.right}</strong> / <strong>${st.best}</strong></span></div>` +
+        dupNote;
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${st.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === st.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    root.querySelectorAll("[data-preset]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-preset]").forEach((x) => x.classList.remove("is-active"));
+        b.classList.add("is-active");
+        presetIdx = Number(b.dataset.preset);
+        stop();
+        steps = buildSteps(presets[presetIdx]);
+        idx = 0;
+        render();
+      });
+    });
+
+    // Quiz
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (b.dataset.quiz === "b") {
+          b.classList.add("is-right");
+          feedback.textContent = "✓ Correct — left jumps past the previous occurrence. Right keeps marching.";
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = "✗ Not quite — we never restart. Left slides to last[ch]+1, right keeps going.";
+        }
+      });
+    });
+
+    // keyboard: ←/→ when focused inside viz
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    steps = buildSteps(presets[0]);
+    idx = 0;
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-swviz]").forEach(initSlidingViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

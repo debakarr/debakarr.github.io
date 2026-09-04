@@ -1,0 +1,74 @@
+---
+title: "[LeetCode] 283. Move Zeroes"
+date: "2019-07-25"
+description: "Move zeroes in one pass: scan everything, swap each non-zero into the packed region. Interactive visual + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Move Zeroes", "Two Pointers", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import TwoPointerVisualizer from '../../../components/visuals/TwoPointerVisualizer.astro';
+
+> 🧠 **Remember:** “Keep the good stuff packed on the left.”
+
+## The problem — 20 seconds
+
+`[0, 1, 0, 3, 12]` → `[1, 3, 12, 0, 0]`, in place, non-zero order preserved.
+
+[Original on LeetCode](https://leetcode.com/problems/move-zeroes/)
+
+You must do this without a copy, minimizing writes. So the real question is: *where does the next non-zero belong?*
+
+```text
+[0,1,0,3,12]  w=0: see 1 → swap → [1,0,0,3,12]
+              w=1: see 3 → swap → [1,3,0,0,12]
+              w=2: see 12 → swap → [1,3,12,0,0]  ✓
+```
+
+## Your first instinct
+
+Build a new array of non-zeroes, then pad with zeroes. Clean — and banned: it copies.
+
+Or two passes: overwrite non-zeroes forward, then fill the tail with zeroes. In place and correct, but every non-zero gets written twice plus the zero-fill pass.
+
+## The turning point
+
+One pass, two pointers: `scan` reads every slot while `write` marks where the next non-zero belongs. A swap puts the non-zero home *and* parks the zero behind — each element moves at most once, and order survives because `scan` only moves forward.
+
+## Watch it work
+
+Press **Play**. Watch the packed region grow left of `write`, and notice zeroes getting skipped with `write` frozen.
+
+<TwoPointerVisualizer id="zeroes-main" mode="zeroes" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def moveZeroes(self, nums: List[int]) -> None:
+        write = 0
+        for scan in range(len(nums)):
+            if nums[scan] != 0:
+                nums[write], nums[scan] = nums[scan], nums[write]
+                write += 1
+```
+
+Read it as the visual: non-zero seen → swap it into `write`, advance the border. (A fill variant — overwrite then zero the tail — is two lines longer and writes more; the swap above is the minimal-write form.)
+
+## Why it works
+
+Invariant: everything left of `write` is a processed non-zero, packed tight; everything at or right of `scan` is unseen. Zeros are never chased — they just end up wherever a swap leaves them, which is always at or behind `write`.
+
+```text
+Time O(n), space O(1) — and minimal writes: one swap per non-zero.
+```
+
+## 🧠 Remember
+
+> **Move Zeroes → “Keep the good stuff packed on the left.”** `write` is a border, not a counter: packed non-zeroes left, to-fix territory right.
+
+🔁 **Try this:** [Remove Element](https://leetcode.com/problems/remove-element)? (Hint: same border trick — `write` packs everything *not* equal to `val`.)
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [3Sum](/posts/leetcode/3sum) · [Sort Array By Parity](/posts/leetcode/sort-array-by-parity)

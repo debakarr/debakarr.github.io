@@ -1,0 +1,100 @@
+---
+title: "[LeetCode] 15. 3Sum"
+date: "2019-06-17"
+description: "3Sum in O(n²): sort, fix one element, converge two pointers — duplicates die via sorted skips. Interactive visual + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["3Sum", "Two Pointers", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import TwoPointerVisualizer from '../../../components/visuals/TwoPointerVisualizer.astro';
+
+> 🧠 **Remember:** “Fix one, converge two — skip repeats.”
+
+## The problem — 20 seconds
+
+`nums = [-1, 0, 1, 2, -1, -4]` → `[[-1, 0, 1], [-1, -1, 2]]`.
+
+Find all *unique* triplets that sum to zero. Same element never reused, duplicate triplets never repeated.
+
+[Original on LeetCode](https://leetcode.com/problems/3sum/)
+
+Two Sum asked *“have I seen my complement?”* 3Sum asks the same question with one element pinned down first:
+
+```text
+sort → [-4,-1,-1,0,1,2]
+fix -4, converge the rest → nothing fits
+fix -1, converge the rest → [-1,-1,2], [-1,0,1]
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Try every triple — `O(n³)` checks, dead on arrival for `n = 3,000`.
+
+Or hash it: for each `i`, run Two Sum on the rest in `O(n)`, giving `O(n²)` total. That works, but deduplication is a mess — you end up stuffing sorted tuples into a set and praying. The duplicates problem never really goes away; it just moves.
+
+## The turning point
+
+Sort the array. Then one triplet member at a time becomes *fixed*, and whatever remains is a Two Sum problem on a sorted slice — solvable with two pointers converging from both ends.
+
+Sorting buys two things at once: the pointers now have meaning (too small → grow from the left, too big → shrink from the right), and duplicates sit next to each other, so one `==` check skips them forever.
+
+## Watch it work
+
+Press **Play**. Watch `i` pin an element while `L`/`R` squeeze inward, and notice the duplicate `i` getting skipped outright.
+
+<TwoPointerVisualizer id="threesum-main" mode="threesum" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def threeSum(self, nums: List[int]) -> List[List[int]]:
+        nums.sort()
+        result: List[List[int]] = []
+        n = len(nums)
+        for i in range(n - 2):
+            if nums[i] > 0:
+                break
+            if i > 0 and nums[i] == nums[i - 1]:
+                continue
+            left, right = i + 1, n - 1
+            while left < right:
+                total = nums[i] + nums[left] + nums[right]
+                if total < 0:
+                    left += 1
+                elif total > 0:
+                    right -= 1
+                else:
+                    result.append([nums[i], nums[left], nums[right]])
+                    while left < right and nums[left] == nums[left + 1]:
+                        left += 1
+                    while left < right and nums[right] == nums[right - 1]:
+                        right -= 1
+                    left += 1
+                    right -= 1
+        return result
+```
+
+Read it as the visual: pin `i`, converge `left`/`right` on the sum, record hits and hop over repeats. The `nums[i] > 0` break is free — past that point three positives can never sum to zero.
+
+## Why it works
+
+Invariant: everything outside `left..right` is decided for this `i`, and every duplicate `i` is skipped before it starts. So each `i` contributes only *new* triplets, and the inner scan finishes exactly when the pointers cross.
+
+```text
+n = 1,000 → O(n²) moves, O(1) extra space (output aside)
+Time O(n²), space O(1) extra.
+```
+
+## 🧠 Remember
+
+> **3Sum → “Fix one, converge two — skip repeats.”** Sorting turns dedup from a data structure into a single comparison.
+
+🔁 **Try this:** what changes for [3Sum Closest](https://leetcode.com/problems/3sum-closest)? (Hint: track the best `total`, never skip on equality.) And for 4Sum — fix *two*, converge two?
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [Sort Array By Parity](/posts/leetcode/sort-array-by-parity)

@@ -1,0 +1,107 @@
+---
+title: "[LeetCode] 206. Reverse Linked List"
+date: "2019-07-24"
+description: "Reverse a linked list in place: save, flip, advance. Interactive walkthrough + typed Python, O(n) time, O(1) space."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Reverse Linked List", "Linked List", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import LinkedListVisualizer from '../../../components/visuals/LinkedListVisualizer.astro';
+
+> 🧠 **Remember:** “Save → Reverse → Advance.”
+
+## The problem — 20 seconds
+
+`1 → 2 → 3 → 4 → 5 → NULL` becomes `5 → 4 → 3 → 2 → 1 → NULL`.
+
+Return the new head — no new nodes, just arrow surgery.
+
+[Original on LeetCode](https://leetcode.com/problems/reverse-linked-list/)
+
+Every arrow ends up pointing backwards:
+
+```text
+1 → 2 → 3 → 4 → 5 → NULL
+1 ← 2   2 → 3 → 4 → 5 → NULL
+1 ← 2 ← 3 ← 4   4 → 5 → NULL
+5 → 4 → 3 → 2 → 1 → NULL  (done — read from the new head)
+```
+
+That trace is the whole algorithm — the trick is flipping one arrow without dropping the rest.
+
+## Your first instinct
+
+Copy the values out, backwards:
+
+```python
+vals = []
+curr = head
+while curr:
+    vals.append(curr.val)
+    curr = curr.next
+# ...rebuild nodes in reverse
+```
+
+It works, but costs O(n) extra space — and misses the point. The task is rewiring arrows, not rebuilding the list.
+
+## The turning point
+
+Flip each arrow to point at its predecessor. The catch: rewiring `curr.next` orphans the rest of the list — unless a third hand already holds it. So walk with three pointers: `prev` guards the reversed part, `curr` is the arrow being flipped, `nxt` grips the untouched rest. Save → flip → advance until `curr` falls off the end.
+
+## Watch it work
+
+Press **Play**: green arrows are done, the accent arrow is being cut, × marks the open gap. Then try `[1, 2]` — two nodes are enough to feel the trick.
+
+<LinkedListVisualizer id="llviz-main" />
+
+## What the code is really saying
+
+```python
+from typing import Optional
+
+class ListNode:
+    def __init__(self, val: int = 0, next: Optional["ListNode"] = None):
+        self.val = val
+        self.next = next
+
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev: Optional[ListNode] = None
+        curr: Optional[ListNode] = head
+        while curr:
+            nxt = curr.next  # save: keep a grip on the rest
+            curr.next = prev  # flip: rewire this arrow backwards
+            prev, curr = curr, nxt  # advance: slide both hands forward
+        return prev
+```
+
+Note `nxt`, not `next` — `next` is a Python builtin. Same idea, recursive and compact:
+
+```python
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        if not head or not head.next:
+            return head
+        new_head = self.reverseList(head.next)
+        head.next.next = head  # flip on the way back up
+        head.next = None
+        return new_head
+```
+
+## Why it works
+
+Invariant: left of `prev` is reversed, `curr` onward is untouched, `nxt` bridges the gap mid-flip. Each node is rewired once.
+
+```text
+n = 5 → 5 flips, 0 new nodes
+Time O(n), space O(1) iterative (O(n) stack if recursive).
+```
+
+## 🧠 Remember
+
+> **Reverse Linked List → “Save → Reverse → Advance.”** Save the rest, flip the arrow, slide forward.
+
+🔁 **Try this:** reverse only the first `k` nodes? (Or check a palindrome — reverse the second half and compare.)
+
+Related: [Delete Node in a Linked List](/posts/leetcode/delete-node-in-a-linked-list)
