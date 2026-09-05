@@ -1,0 +1,75 @@
+---
+title: "[LeetCode] 122. Best Time to Buy and Sell Stock II"
+date: "2019-09-04"
+description: "Stock II unlimited trades: collect every positive daily climb for max profit in O(n). Interactive chart + typed Python."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Stock Market", "Optimization", "Programming"]
+draft: false
+---
+
+import StockChartVisualizer from '../../../components/visuals/StockChartVisualizer.astro';
+
+> 🧠 **Remember:** “Collect every positive climb.”
+
+## The problem — 20 seconds
+
+`prices = [7, 1, 5, 3, 6, 4]` → `7`.
+
+Buy and sell as many times as you like (one share at a time, sell before you rebuy). Maximize total profit.
+
+[Original on LeetCode](https://leetcode.com/problems/best-time-to-buy-and-sell-stock-ii/)
+
+Forget timing the market. Skim every uphill day: `1 → 5` pockets `+4`, `3 → 6` pockets `+3`. Total: `7`. Downhill days cost nothing — you simply don't trade.
+
+```text
+7 ↘ 1 ↗ 5 ↘ 3 ↗ 6 ↘ 4
+      +4         +3        → profit 7
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Find valleys and peaks: lowest low, highest high after it, repeat. Fiddly state-machine bookkeeping — and "only the biggest jump" fails: buying at `1` and selling at `6` skips the enforced dip at `3`, the overlapping-transaction trap.
+
+## The turning point
+
+A valley-to-peak climb *is* the sum of its daily up-steps: `1 → 5` as `+4` equals four daily `+1`s. Grab each positive daily difference instead of hunting peaks — same number, three lines, no state machine.
+
+## Watch it work
+
+Press **Play**. Each segment lights up day by day: green with a `+profit` chip for climbs, grey "skip" for slides. The counter ticks `0 → 4 → 7`.
+
+<StockChartVisualizer id="stock-main" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        profit = 0
+        for i in range(len(prices) - 1):
+            if prices[i + 1] > prices[i]:
+                profit += prices[i + 1] - prices[i]
+        return profit
+```
+
+Read it as the visual: compare today with tomorrow, pocket positive differences, ignore the rest. `[1, 2, 3, 4, 5]` → `4`; `[7, 6, 4, 3, 1]` → `0` (never trade a falling market).
+
+## Why it works
+
+Invariant: after day `i`, `profit` is the best profit using only days up to `i`. Any optimal valley-to-peak trade decomposes into daily up-steps summing to the same amount — exactly what the loop collects — so skimming every climb matches the optimum.
+
+```text
+One pass, two variables: time O(n), space O(1).
+```
+
+## 🧠 Remember
+
+> **Stock II → “Collect every positive climb.”** Unlimited trades turn peak-picking into daily-skimming.
+
+🔁 **Try this:** what changes with only *one* allowed trade (Stock I)? (Hint: you need the lowest price *so far* — the past matters now.) That's the setup for [Best Time to Buy and Sell Stock](https://leetcode.com/problems/best-time-to-buy-and-sell-stock/).
+
+Related: [Maximum Subarray](/posts/leetcode/maximum-subarray) · [Product of Array Except Self](/posts/leetcode/product-of-array-except-self)

@@ -1,0 +1,68 @@
+---
+title: "[LeetCode] 13. Roman to Integer"
+date: "2019-08-28"
+description: "Roman to Integer via one rule: smaller-before-larger subtracts, else add. XIV walkthrough + typed Python."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Roman Numerals", "Conversion", "Programming"]
+draft: false
+---
+
+> 🧠 **Remember:** “Smaller before larger? Subtract — else add.”
+
+## The problem — 20 seconds
+
+`"III"` → `3`, `"IV"` → `4`, `"MCMXCIV"` → `1994`.
+
+Convert a Roman numeral to an integer (`I=1, V=5, X=10, L=50, C=100, D=500, M=1000`). Values add left → right — except smaller-before-larger subtracts. One rule: **smaller than the right neighbor → subtract; otherwise add.** Last symbol always added.
+
+[Original on LeetCode](https://leetcode.com/problems/roman-to-integer/)
+
+```text
+XIV: X ≥ I → +10 · I < V → −1 · V last → +5  = 14
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Memorize six subtractive pairs and pattern-match two characters at a time. It works — but six cases of bookkeeping for one comparison, each a chance to drop one.
+
+## The turning point
+
+The six pairs are one phenomenon: *smaller before larger means subtract*. Don't match pairs — compare each symbol with its right neighbor and the table dissolves into a single `<` check.
+
+Walk `"MCMXCIV"`:
+
+```text
+M ≥ C → +1000 · C < M → −100 · M ≥ X → +1000
+X < C → −10 · C ≥ I → +100 · I < V → −1 · V last → +5  = 1994  ✓
+```
+
+And `"LVIII"`: `+50 +5 +1 +1 +1 = 58`. ✓
+
+## What the code is really saying
+
+```python
+class Solution:
+    def romanToInt(self, s: str) -> int:
+        value = {"I": 1, "V": 5, "X": 10, "L": 50,
+                 "C": 100, "D": 500, "M": 1000}
+        total = 0
+        for i in range(len(s) - 1):
+            total += -value[s[i]] if value[s[i]] < value[s[i + 1]] else value[s[i]]
+        return total + value[s[-1]]
+```
+
+Sign each symbol by peeking right, add the last one unconditionally. One trap: the loop covers only `0 … n−2`, so the trailing `+ value[s[-1]]` is load-bearing, not cleanup.
+
+## Why it works
+
+Invariant: after position `i`, `total` holds the prefix's signed contribution. In valid input a smaller-before-larger pair always forms one unit, so the local `<` matches the global parse. One pass: time `O(n)`, space `O(1)`.
+
+## 🧠 Remember
+
+> **Roman → “Smaller before larger? Subtract — else add.”** Peek right, sign, move on; the last symbol is always added.
+
+🔁 **Try this:** invert it — integer → Roman (LeetCode 12). (Hint: greedy largest-first, subtractive pairs as denominations: `900 → "CM"`.)
+
+Related: [Excel Sheet Column Number](/posts/leetcode/excel-sheet-column-number) · [Longest Substring Without Repeating Characters](/posts/leetcode/longest-substring-without-repeating-characters)

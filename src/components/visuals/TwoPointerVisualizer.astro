@@ -1,12 +1,12 @@
 ---
 // TwoPointerVisualizer.astro
 // Shared step-through player for two-pointer classics.
-// mode="threesum" | "merge" | "zeroes" — each mode is a self-contained
+// mode="threesum" | "merge" | "zeroes" | "reverse" | "parity" | "shuffle" — each mode is a self-contained
 // stage + step-builder + code sync + quiz + mnemonic.
 // No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
 interface Props {
   id?: string;
-  mode: "threesum" | "merge" | "zeroes";
+  mode: "threesum" | "merge" | "zeroes" | "reverse" | "parity" | "shuffle";
 }
 const { id = "tpviz", mode = "threesum" } = Astro.props;
 
@@ -25,6 +25,21 @@ const META = {
     kicker: "Interactive visual · Packed Region",
     title: "Can you pack the non-zeroes left?",
     sub: "<strong>scan</strong> reads every slot, <strong>write</strong> marks where the next non-zero belongs. Everything left of <strong>write</strong> is packed and final.",
+  },
+  reverse: {
+    kicker: "Interactive visual · Converge & Swap",
+    title: "Can you reverse it without a copy?",
+    sub: "Two pointers start at <strong>opposite ends</strong> and swap their way inward. When they <strong>meet in the middle</strong>, the array is reversed.",
+  },
+  parity: {
+    kicker: "Interactive visual · Partition Patrol",
+    title: "Can you split evens from odds?",
+    sub: "<strong>L</strong> hunts an odd from the left, <strong>R</strong> hunts an even from the right. <strong>Swap the misfits</strong> and close in — evens end up left, odds right.",
+  },
+  shuffle: {
+    kicker: "Interactive visual · One Possible Run",
+    title: "Can you shuffle fairly?",
+    sub: "Fisher–Yates walks <strong>i from the end</strong> and swaps with a random <strong>j ≤ i</strong>. This trace fixes one seed (j = 3,1,0,1) — <strong>one possible run</strong>, every run equally likely.",
   },
 } as const;
 ---
@@ -99,6 +114,50 @@ const META = {
           <div class="tpviz-readout" data-role="statusbox" aria-live="polite"></div>
         </>
       )}
+      {mode === "reverse" && (
+        <>
+          <div class="tpviz-row-label">
+            <span>s = ['h','e','l','l','o']</span>
+            <span class="tpviz-target"><strong>L</strong> ↔ <strong>R</strong> converge</span>
+          </div>
+          <div class="tpviz-array" data-role="array" aria-live="polite"></div>
+          <div class="tpviz-legend" aria-hidden="true">
+            <span><i class="sw sw-lr"></i>L / R</span>
+            <span><i class="sw sw-i"></i>settled</span>
+            <span><i class="sw sw-out"></i>unvisited middle</span>
+          </div>
+          <div class="tpviz-readout" data-role="statusbox" aria-live="polite"></div>
+        </>
+      )}
+      {mode === "parity" && (
+        <>
+          <div class="tpviz-row-label">
+            <span>nums = [3,1,2,4]</span>
+            <span class="tpviz-target">evens <strong>left</strong> · odds <strong>right</strong></span>
+          </div>
+          <div class="tpviz-array" data-role="array" aria-live="polite"></div>
+          <div class="tpviz-legend" aria-hidden="true">
+            <span><i class="sw sw-lr"></i>L seeks odd · R seeks even</span>
+            <span><i class="sw sw-i"></i>placed ✓</span>
+          </div>
+          <div class="tpviz-readout" data-role="statusbox" aria-live="polite"></div>
+        </>
+      )}
+      {mode === "shuffle" && (
+        <>
+          <div class="tpviz-row-label">
+            <span>a = [1,2,3,4,5]</span>
+            <span class="tpviz-target">one possible run · <strong>j = 3,1,0,1</strong></span>
+          </div>
+          <div class="tpviz-array" data-role="array" aria-live="polite"></div>
+          <div class="tpviz-legend" aria-hidden="true">
+            <span><i class="sw sw-i"></i>i (slot to fill)</span>
+            <span><i class="sw sw-lr"></i>j (random partner ≤ i)</span>
+            <span><i class="sw sw-out"></i>locked ✓</span>
+          </div>
+          <div class="tpviz-readout" data-role="statusbox" aria-live="polite"></div>
+        </>
+      )}
       <p class="tpviz-caption" data-role="caption" aria-live="polite"></p>
     </div>
 
@@ -149,6 +208,27 @@ const META = {
           <div data-code="2"><span class="ln">3</span><code>if a[s]!=0: swap(w,s); w+=1</code></div>
         </div>
       )}
+      {mode === "reverse" && (
+        <div class="tpviz-code" aria-label="Algorithm code with current line highlighted">
+          <div data-code="0"><span class="ln">1</span><code>L, R = 0, n-1</code></div>
+          <div data-code="1"><span class="ln">2</span><code>while L &lt; R:</code></div>
+          <div data-code="2"><span class="ln">3</span><code>swap(L,R); L+=1; R-=1</code></div>
+        </div>
+      )}
+      {mode === "parity" && (
+        <div class="tpviz-code" aria-label="Algorithm code with current line highlighted">
+          <div data-code="0"><span class="ln">1</span><code>L, R = 0, n-1</code></div>
+          <div data-code="1"><span class="ln">2</span><code>skip evens at L, odds at R</code></div>
+          <div data-code="2"><span class="ln">3</span><code>if L&lt;R: swap; L+=1; R-=1</code></div>
+        </div>
+      )}
+      {mode === "shuffle" && (
+        <div class="tpviz-code" aria-label="Algorithm code with current line highlighted">
+          <div data-code="0"><span class="ln">1</span><code>for i=n-1 … 1:</code></div>
+          <div data-code="1"><span class="ln">2</span><code>j = randint(0,i)</code></div>
+          <div data-code="2"><span class="ln">3</span><code>swap(i,j)</code></div>
+        </div>
+      )}
       <div class="tpviz-quiz">
         <p class="tpviz-quiz-title">Quick check — make it stick</p>
         {mode === "threesum" && (
@@ -181,6 +261,36 @@ const META = {
             </div>
           </>
         )}
+        {mode === "reverse" && (
+          <>
+            <p class="tpviz-quiz-q">When does the loop stop?</p>
+            <div class="tpviz-quiz-btns">
+              <button type="button" data-quiz="a">When L meets or crosses R</button>
+              <button type="button" data-quiz="b">When you reach the end of the array</button>
+              <button type="button" data-quiz="c">After exactly n swaps</button>
+            </div>
+          </>
+        )}
+        {mode === "parity" && (
+          <>
+            <p class="tpviz-quiz-q">What does L walk past without stopping?</p>
+            <div class="tpviz-quiz-btns">
+              <button type="button" data-quiz="a">Odds</button>
+              <button type="button" data-quiz="b">Evens — already home</button>
+              <button type="button" data-quiz="c">Everything, it never skips</button>
+            </div>
+          </>
+        )}
+        {mode === "shuffle" && (
+          <>
+            <p class="tpviz-quiz-q">Why must j be ≤ i, not any index?</p>
+            <div class="tpviz-quiz-btns">
+              <button type="button" data-quiz="a">So every permutation is equally likely</button>
+              <button type="button" data-quiz="b">It runs faster</button>
+              <button type="button" data-quiz="c">To avoid ever swapping an element with itself</button>
+            </div>
+          </>
+        )}
         <p class="tpviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
         {mode === "threesum" && (
           <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Fix one, converge two — skip repeats.”</strong> Pin <em>i</em>, squeeze <em>L/R</em> inward, and let the sorted order kill duplicates.</p>
@@ -190,6 +300,15 @@ const META = {
         )}
         {mode === "zeroes" && (
           <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Keep the good stuff packed on the left.”</strong> <em>w</em> is the border: packed non-zeroes left, zeroes-to-fix right.</p>
+        )}
+        {mode === "reverse" && (
+          <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Walk toward each other.”</strong> Swap the ends, step inward, stop when the pointers meet.</p>
+        )}
+        {mode === "parity" && (
+          <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Evens left, odds right.”</strong> Each pointer skips what is already home and only the two misfits swap.</p>
+        )}
+        {mode === "shuffle" && (
+          <p class="tpviz-mnemonic">🧠 Memory hook: <strong>“Random partner behind you.”</strong> At slot <em>i</em> pick <em>j ≤ i</em> — never ahead, or the deal is rigged.</p>
         )}
       </div>
     </div>
@@ -342,6 +461,21 @@ const META = {
         ok: "✓ Correct — w is the border: packed non-zeroes left, to-fix territory right.",
         no: "✗ Not quite — everything left of w is already a processed non-zero, packed tight.",
       },
+      reverse: {
+        correct: "a",
+        ok: "✓ Correct — L < R is the whole loop. Met or crossed means every pair is swapped.",
+        no: "✗ Not quite — you stop when L meets R. n/2 swaps, not n, and never a full scan.",
+      },
+      parity: {
+        correct: "b",
+        ok: "✓ Correct — L skips evens (already home) and only stops on an odd misfit.",
+        no: "✗ Not quite — L walks past evens for free; it stops only on an odd that belongs right.",
+      },
+      shuffle: {
+        correct: "a",
+        ok: "✓ Correct — j ≤ i gives each of the n! orders equal probability. Any-index swaps bias the deal.",
+        no: "✗ Not quite — the ≤ i bound is what makes it uniform. Full-range picks over-sample some orders.",
+      },
     };
 
     function buildThree() {
@@ -408,7 +542,67 @@ const META = {
       ];
     }
 
-    const BUILDERS = { threesum: buildThree, merge: buildMerge, zeroes: buildZeroes };
+    function buildReverse() {
+      // s=['h','e','l','l','o'], L/R converge swapping. Done 'olleh'.
+      return [
+        { a: ["h", "e", "l", "l", "o"], L: 0, R: 4, code: 0, swapped: [],
+          caption: "Pointers: L=0(h) R=4(o) · Decision: ends set up · State: ['h','e','l','l','o']." },
+        { a: ["h", "e", "l", "l", "o"], L: 0, R: 4, code: 1, swapped: [],
+          caption: "Pointers: L=0(h) R=4(o) · Decision: L<R holds → swap ends · State: unchanged." },
+        { a: ["o", "e", "l", "l", "h"], L: 0, R: 4, code: 2, swapped: [0, 4],
+          caption: "Pointers: swap(0,4) → h↔o · Decision: L→1 R→3 · State: ['o','e','l','l','h']." },
+        { a: ["o", "e", "l", "l", "h"], L: 1, R: 3, code: 1, swapped: [],
+          caption: "Pointers: L=1(e) R=3(l) · Decision: L<R holds → swap · State: ['o','e','l','l','h']." },
+        { a: ["o", "l", "l", "e", "h"], L: 1, R: 3, code: 2, swapped: [1, 3],
+          caption: "Pointers: swap(1,3) → e↔l · Decision: L→2 R→2 · State: ['o','l','l','e','h']." },
+        { a: ["o", "l", "l", "e", "h"], L: 2, R: 2, code: 1, swapped: [], done: true,
+          caption: "Pointers: L=2 R=2, L>=R · Decision: stop, middle stays · State: done → 'olleh'." },
+      ];
+    }
+
+    function buildParity() {
+      // [3,1,2,4]: L seeks odd-from-left, R seeks even-from-right. Done evens-first.
+      return [
+        { a: [3, 1, 2, 4], L: 0, R: 3, code: 0, swapped: [],
+          caption: "Pointers: L=0 R=3 · Decision: ends set up · State: [3,1,2,4]." },
+        { a: [3, 1, 2, 4], L: 0, R: 3, code: 1, swapped: [],
+          caption: "Pointers: L=0(3, odd ✗) R=3(4, even ✗) · Decision: both are misfits → swap · State: unchanged." },
+        { a: [4, 1, 2, 3], L: 0, R: 3, code: 2, swapped: [0, 3],
+          caption: "Pointers: swap(0,3) → 3↔4 · Decision: L→1 R→2 · State: [4,1,2,3]." },
+        { a: [4, 1, 2, 3], L: 1, R: 2, code: 1, swapped: [],
+          caption: "Pointers: L=1(1, odd ✗) R=2(2, even ✗) · Decision: both misfits → swap · State: [4,1,2,3]." },
+        { a: [4, 2, 1, 3], L: 1, R: 2, code: 2, swapped: [1, 2],
+          caption: "Pointers: swap(1,2) → 1↔2 · Decision: L→2 R→1 · State: [4,2,1,3]." },
+        { a: [4, 2, 1, 3], L: 2, R: 1, code: 1, swapped: [], done: true,
+          caption: "Pointers: L=2 R=1, L>=R · Decision: stop · State: done → evens [4,2] left, odds [1,3] right." },
+      ];
+    }
+
+    function buildShuffle() {
+      // [1,2,3,4,5], Fisher-Yates i from end, fixed j=[3,1,0,1]: one possible run.
+      return [
+        { a: [1, 2, 3, 4, 5], i: -1, j: -1, code: 0, swapped: [],
+          caption: "Pointers: i=— · Decision: one possible run with j=3,1,0,1 · State: [1,2,3,4,5]." },
+        { a: [1, 2, 3, 4, 5], i: 4, j: 3, code: 1, swapped: [],
+          caption: "Pointers: i=4 j=3 (≤4 ✓) · Decision: pick made → swap(i,j) · State: unchanged." },
+        { a: [1, 2, 3, 5, 4], i: 4, j: 3, code: 2, swapped: [4, 3],
+          caption: "Pointers: swap(4,3) → 5↔4 · Decision: slot 4 locked · State: [1,2,3,5,4]." },
+        { a: [1, 2, 3, 5, 4], i: 3, j: 1, code: 1, swapped: [],
+          caption: "Pointers: i=3 j=1 (≤3 ✓) · Decision: pick made → swap · State: [1,2,3,5,4]." },
+        { a: [1, 5, 3, 2, 4], i: 3, j: 1, code: 2, swapped: [3, 1],
+          caption: "Pointers: swap(3,1) → 2↔5 · Decision: slot 3 locked · State: [1,5,3,2,4]." },
+        { a: [1, 5, 3, 2, 4], i: 2, j: 0, code: 1, swapped: [],
+          caption: "Pointers: i=2 j=0 (≤2 ✓) · Decision: pick made → swap · State: [1,5,3,2,4]." },
+        { a: [3, 5, 1, 2, 4], i: 2, j: 0, code: 2, swapped: [2, 0],
+          caption: "Pointers: swap(2,0) → 3↔1 · Decision: slot 2 locked · State: [3,5,1,2,4]." },
+        { a: [3, 5, 1, 2, 4], i: 1, j: 1, code: 1, swapped: [],
+          caption: "Pointers: i=1 j=1 (self-pick, ≤1 ✓) · Decision: swap is a no-op · State: unchanged." },
+        { a: [3, 5, 1, 2, 4], i: 1, j: 1, code: 2, swapped: [1, 1], done: true,
+          caption: "Pointers: i exhausted · Decision: stop · State: done → [3,5,1,2,4], one of 120 equally likely orders." },
+      ];
+    }
+
+    const BUILDERS = { threesum: buildThree, merge: buildMerge, zeroes: buildZeroes, reverse: buildReverse, parity: buildParity, shuffle: buildShuffle };
     let steps = BUILDERS[mode]();
     let idx = 0;
     let timer = null;
@@ -528,7 +722,93 @@ const META = {
       }
     }
 
-    const RENDERERS = { threesum: renderThree, merge: renderMerge, zeroes: renderZeroes };
+    function renderReverse(s) {
+      const elArray = root.querySelector('[data-role="array"]');
+      const elBox = root.querySelector('[data-role="statusbox"]');
+      elArray.innerHTML = "";
+      const n = s.a.length;
+      s.a.forEach((v, i) => {
+        let cls = "";
+        const badges = [];
+        if (i === s.L) { cls += " is-l"; badges.push("L"); }
+        if (i === s.R) { cls += " is-r"; badges.push("R"); }
+        if (s.swapped.includes(i)) cls += " is-swapped";
+        // settled: outside the current L..R window (already swapped into place)
+        if (s.done || i < s.L || i > s.R) {
+          if (!s.swapped.includes(i) && !(i === s.L && i === s.R)) cls += " is-packed";
+          else if (s.done) cls += " is-packed";
+        }
+        void n;
+        elArray.insertAdjacentHTML("beforeend", cell(v, i, cls, badges.join("·")));
+      });
+      if (s.done) {
+        elBox.innerHTML = `✅ Done → <strong>[${s.a.map((x) => `'${x}'`).join(", ")}]</strong> = “olleh”<br/><span class="hit">L met R — every pair swapped</span>`;
+      } else if (s.code === 0) {
+        elBox.innerHTML = `👀 <strong>L</strong> starts left, <strong>R</strong> starts right.<br/>Press <strong>Next</strong> or <strong>Play</strong> to converge.`;
+      } else if (s.code === 2) {
+        elBox.innerHTML = `swapped <strong>'${s.a[s.swapped[0]]}' ↔ '${s.a[s.swapped[1]]}'</strong> at ${s.swapped[0]}↔${s.swapped[1]}<br/><span class="hit">step inward: L→${s.L + 1}, R→${s.R - 1}</span>`;
+      } else {
+        elBox.innerHTML = `L=${s.L} ('<strong>${s.a[s.L]}</strong>') · R=${s.R} ('<strong>${s.a[s.R]}</strong>')<br/><span class="miss">L&lt;R → swap them</span>`;
+      }
+    }
+
+    function renderParity(s) {
+      const elArray = root.querySelector('[data-role="array"]');
+      const elBox = root.querySelector('[data-role="statusbox"]');
+      elArray.innerHTML = "";
+      s.a.forEach((v, i) => {
+        let cls = "";
+        const badges = [];
+        if (i === s.L) { cls += " is-l"; badges.push("L"); }
+        if (i === s.R) { cls += " is-r"; badges.push("R"); }
+        if (s.swapped.includes(i)) cls += " is-swapped";
+        const even = v % 2 === 0;
+        if (s.done) {
+          cls += even ? " is-packed" : " is-out";
+        }
+        elArray.insertAdjacentHTML("beforeend", cell(v, i, cls, badges.join("·")));
+      });
+      if (s.done) {
+        elBox.innerHTML = `✅ Done → <strong>[${s.a.join(", ")}]</strong><br/><span class="hit">evens left, odds right — any such split is accepted</span>`;
+      } else if (s.code === 0) {
+        elBox.innerHTML = `👀 <strong>L</strong> seeks an odd from the left, <strong>R</strong> seeks an even from the right.<br/>Press <strong>Next</strong> or <strong>Play</strong>.`;
+      } else if (s.code === 2) {
+        elBox.innerHTML = `swapped <strong>${s.a[s.swapped[0]]} ↔ ${s.a[s.swapped[1]]}</strong> (misfit pair)<br/><span class="hit">close in: L→${s.L + 1}, R→${s.R - 1}</span>`;
+      } else {
+        const lv = s.a[s.L];
+        const rv = s.a[s.R];
+        elBox.innerHTML = `L=${s.L} (<strong>${lv}</strong> ${lv % 2 ? "odd ✗" : "even ✓ skip"}) · R=${s.R} (<strong>${rv}</strong> ${rv % 2 === 0 ? "even ✗" : "odd ✓ skip"})<br/><span class="miss">both misfits → swap</span>`;
+      }
+    }
+
+    function renderShuffle(s) {
+      const elArray = root.querySelector('[data-role="array"]');
+      const elBox = root.querySelector('[data-role="statusbox"]');
+      elArray.innerHTML = "";
+      s.a.forEach((v, i) => {
+        let cls = "";
+        const badges = [];
+        if (i === s.i) { cls += " is-i"; badges.push("i"); }
+        if (i === s.j) { cls += " is-l"; badges.push("j"); }
+        if (s.swapped.includes(i)) cls += " is-swapped";
+        if (s.done || (s.i >= 0 && i > s.i)) cls += " is-found";
+        elArray.insertAdjacentHTML("beforeend", cell(v, i, cls, badges.join("·")));
+      });
+      if (s.done) {
+        elBox.innerHTML = `✅ One possible run → <strong>[${s.a.join(", ")}]</strong><br/><span class="hit">j was 3,1,0,1 — a real run picks fresh j's each time</span>`;
+      } else if (s.i < 0) {
+        elBox.innerHTML = `👀 Fisher–Yates fills from the <strong>end</strong>.<br/>This trace fixes <strong>j = 3,1,0,1</strong> so you can follow one fair run.`;
+      } else if (s.code === 2) {
+        const selfPick = s.swapped[0] === s.swapped[1];
+        elBox.innerHTML = selfPick
+          ? `i=${s.i} picked <strong>j=${s.j} (itself)</strong> → no-op, still fair<br/><span class="hit">slot ${s.i} locked</span>`
+          : `swapped <strong>i=${s.swapped[0]} ↔ j=${s.swapped[1]}</strong><br/><span class="hit">slot ${s.i} locked — never touched again</span>`;
+      } else {
+        elBox.innerHTML = `i=<strong>${s.i}</strong> · j=<strong>${s.j}</strong> (0 ≤ j ≤ i ✓)<br/><span class="miss">next: swap(i,j), lock slot i</span>`;
+      }
+    }
+
+    const RENDERERS = { threesum: renderThree, merge: renderMerge, zeroes: renderZeroes, reverse: renderReverse, parity: renderParity, shuffle: renderShuffle };
 
     function render() {
       const s = steps[idx];

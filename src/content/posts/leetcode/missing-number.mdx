@@ -1,0 +1,82 @@
+---
+title: "[LeetCode] 268. Missing Number"
+date: "2019-06-17"
+description: "Missing Number from 0..n: cancel everything present, the gap remains. Interactive slots visual + typed Python 3."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Missing Number", "Math", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import HashXorVisualizer from '../../../components/visuals/HashXorVisualizer.astro';
+
+> 🧠 **Remember:** “What's missing from 0..n?”
+
+## The problem — 20 seconds
+
+`nums = [3, 0, 1]` → `2`. The array holds `n` distinct numbers from `0..n` — exactly one slot is empty. Linear time, O(1) space.
+
+[Original on LeetCode](https://leetcode.com/problems/missing-number/)
+
+Compare *expected* (every slot `0..n`) against *actual* (what we parked). Cancel both with XOR — everything present vanishes in pairs, and the empty slot's number is left standing:
+
+```text
+miss = 3 ^ (0^3) ^ (1^0) ^ (2^1) = 2
+```
+
+That is the whole trick. Below: why it works and its arithmetic twin.
+
+## Your first instinct
+
+Sort and scan for the first index where `nums[i] != i`:
+
+```python
+nums_sorted = sorted(nums)
+for i, x in enumerate(nums_sorted):
+    if i != x:
+        return i
+return len(nums)
+```
+
+Correct but `O(n log n)` — and sorting to find one gap is overkill. A boolean-set version (`O(n)` space) is the other classic overspend: we do not need to *store* the range, only to *cancel* against it.
+
+## The turning point
+
+The expected set `0..n` is fully known without storing it. So pit it against reality: XOR every index *and* every value together. Each present number appears twice (once as an index, once as a value) and cancels; the missing one appears once. The seed `len(nums)` covers slot `n`, which no index reaches.
+
+## Watch it work
+
+Press **Play**. Slots `0..3` fill as numbers park; the running `res` folds indices and values together until only the empty slot survives.
+
+<HashXorVisualizer mode="missing" id="hx-missing" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+
+class Solution:
+    def missingNumber(self, nums: List[int]) -> int:
+        miss = len(nums)  # slot n: no index reaches it
+        for i, x in enumerate(nums):
+            miss ^= i ^ x  # cancel what is present
+        return miss
+```
+
+Prefer arithmetic? Same idea with a sum: `n * (n + 1) // 2 - sum(nums)`. XOR avoids overflow in fixed-width languages; the sum fits in one line of Python.
+
+## Why it works
+
+Invariant: after step `i`, `miss` equals `n ^ (0^..^i) ^ (seen values)`. Every parked value has met its index-twin and cancelled. At the end all `n` present numbers are gone — only the absent slot's number was never twinned, so it remains.
+
+```text
+Time O(n), space O(1). One int, zero sorting.
+```
+
+## 🧠 Remember
+
+> **Missing Number → “What's missing from 0..n?”** Cancel everything present; the gap remains.
+
+🔁 **Try this:** the array is *sorted* — can you find the gap in `O(log n)`? (Hint: binary-search the first index where `nums[i] != i`.)
+
+Related: [Single Number](/posts/leetcode/single-number) · [Contains Duplicate](/posts/leetcode/contains-duplicate) · [Majority Element](/posts/leetcode/majority-element)

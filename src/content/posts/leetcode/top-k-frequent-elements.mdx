@@ -1,0 +1,75 @@
+---
+title: "[LeetCode] 347. Top K Frequent Elements"
+date: "2019-08-02"
+description: "Top K Frequent in linear spirit: count, then collect the tallest. Interactive race-chart visual + typed Python 3."
+categories: ["Programming", "Algorithms", "Python"]
+tags: ["Top K", "Frequent Elements", "Algorithm", "Python", "Tutorial"]
+draft: false
+---
+
+import HashXorVisualizer from '../../../components/visuals/HashXorVisualizer.astro';
+
+> 🧠 **Remember:** “Count, then collect the tallest.”
+
+## The problem — 20 seconds
+
+`nums = [1, 1, 1, 2, 2, 3]`, `k = 2` → `[1, 2]`. Return the `k` most frequent elements — answer order does not matter, and `k` is always valid.
+
+[Original on LeetCode](https://leetcode.com/problems/top-k-frequent-elements/)
+
+Split the job in two. First count — every sighting grows a bar. Then rank — skim the `k` tallest. Two phases, two tools; the counting is forced, only the ranking is a choice.
+
+## Your first instinct
+
+Sort the unique values by frequency and slice:
+
+```python
+freq: dict[int, int] = {}
+for x in nums:
+    freq[x] = freq.get(x, 0) + 1
+ranked = sorted(freq, key=freq.get, reverse=True)
+return ranked[:k]
+```
+
+Perfectly clear — but the sort costs `O(u log u)` for `u` uniques, and the problem demands better than `O(n log n)`. The insight: we never needed a *total order*, only the top `k`. A heap (`nlargest`, `O(u log k)`) or bucket-by-count (`O(n)`) both exploit that.
+
+## The turning point
+
+Counting and selecting are separate jobs with separate budgets. Counting is unavoidably `O(n)` — every element must be seen once. Selection only needs the peaks, so pour counts into buckets indexed by frequency (max bucket `n`), then walk down from the top until `k` elements are collected. No comparisons between also-rans, ever.
+
+## Watch it work
+
+Press **Play**. Phase 1 grows the race-chart bars one sighting at a time; Phase 2 lights up the two tallest in green.
+
+<HashXorVisualizer mode="topk" id="hx-topk" />
+
+## What the code is really saying
+
+```python
+from collections import Counter
+from typing import List
+
+
+class Solution:
+    def topKFrequent(self, nums: List[int], k: int) -> List[int]:
+        freq = Counter(nums)  # Phase 1: grow the bars
+        return [x for x, _ in freq.most_common(k)]  # Phase 2: skim the tallest
+```
+
+`most_common(k)` is a heap `nlargest` inside — `O(u log k)`, interview-safe. For strict `O(n)`, bucket values by count and walk buckets down from `n` until `k` are gathered.
+
+## Why it works
+
+Invariant after Phase 1: `freq[x]` is the exact occurrence count of every value — the bar chart is truth. Selection then only compares *heights*, so the `k` collected are precisely the `k` most frequent. Counting touches each element once; ranking never looks at the input again.
+
+```text
+Time O(n + u log k) with a heap · O(n) with buckets, space O(n).
+```
+
+## 🧠 Remember
+
+> **Top K → “Count, then collect the tallest.”** Counting is forced; ranking is where you save.
+
+🔁 **Try this:** `k` equals the number of unique elements — what must the answer be, without running anything? (Hint: every bar gets crowned.)
+
+Related: [Majority Element](/posts/leetcode/majority-element) · [Contains Duplicate](/posts/leetcode/contains-duplicate) · [Single Number](/posts/leetcode/single-number)

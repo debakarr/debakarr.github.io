@@ -1,0 +1,92 @@
+---
+title: "[LeetCode] 46. Permutations"
+date: "2019-07-23"
+description: "Permutations via choose → explore → undo: a used-set stops repeats. Interactive choice-tree walkthrough + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Permutations", "Backtracking", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import BacktrackVisualizer from '../../../components/visuals/BacktrackVisualizer.astro';
+
+> 🧠 **Remember:** “Choose → explore → undo.”
+
+## The problem — 20 seconds
+
+`nums = [1,2,3]` → all 6 orderings: `[[1,2,3],[1,3,2],[2,1,3],[2,3,1],[3,1,2],[3,2,1]]` (any order accepted).
+
+All numbers distinct, use each exactly once per permutation.
+
+[Original on LeetCode](https://leetcode.com/problems/permutations/)
+
+```text
+choose 1 → choose 2 → choose 3 → [1,2,3] ✓
+                           undo 3, choose… nothing left → undo 2, choose 3 → [1,3,2] ✓
+```
+
+That loop — pick, recurse, unpick — *is* the algorithm. Everything below just names *why*.
+
+## Your first instinct
+
+Pass the leftovers down, like the old version of this post did:
+
+```python
+def helper(remaining, path, result):
+    if not remaining:
+        result.append(path)  # no return needed — loop over [] can't run, but say it anyway
+    for i in range(len(remaining)):
+        helper(remaining[:i] + remaining[i+1:], path + [remaining[i]], result)
+```
+
+It works, but every call copies two lists — O(n) garbage per frame — and the "what's used" information is implicit in what's missing. Worse: `result.append(path)` without copying is only safe because `path + [...]` builds fresh lists; mutate `path` in place and every entry aliases the same list.
+
+## The turning point
+
+Keep one `path` and one `used` set, shared across the walk: *choose* an unused number (append + mark), *explore* (recurse), *undo* (pop + unmark). The undo is the whole trick — without it, siblings can't reuse numbers the earlier branch consumed.
+
+## Watch it work
+
+Press **Play**. The state panel shows `path` and `used` at every node; leaves turn green as they're collected. Watch each `undo ×k` climb back up before the next sibling chooses.
+
+<BacktrackVisualizer mode="permute" id="permute-main" />
+
+## What the code is really saying
+
+```python
+class Solution:
+    def permute(self, nums: list[int]) -> list[list[int]]:
+        ans: list[list[int]] = []
+        path: list[int] = []
+        used: set[int] = set()
+        def dfs() -> None:
+            if len(path) == len(nums):
+                ans.append(path.copy())  # copy! path keeps mutating
+                return
+            for x in nums:
+                if x in used:
+                    continue
+                path.append(x); used.add(x)  # choose
+                dfs()                        # explore
+                path.pop(); used.remove(x)   # undo
+        dfs()
+        return ans
+```
+
+Read it as the visual: leaf check, choose loop, undo line — the same order you just watched. `path.copy()` at the leaf is load-bearing: without it every entry would mirror the final empty `path`.
+
+## Why it works
+
+Invariant: `used` always equals the set of `path`, and `path` holds exactly the choices from root to the current node. So a depth-`n` leaf is one valid permutation, every permutation sits at exactly one leaf, and the undo restores the invariant before each sibling runs.
+
+```text
+n = 3 → 3·2·1 = 6 leaves · n distinct items → n! permutations
+Time O(n·n!) copying leaves, stack O(n) plus the output itself.
+```
+
+## 🧠 Remember
+
+> **Permutations → “Choose → explore → undo.”** The undo line is what makes backtracking backtrack — skip it and siblings starve.
+
+🔁 **Try this:** what changes with duplicates (Permutations II)? (Hint: sort first, and skip a number whose twin is unused — same idea as Subsets II.)
+
+Related: [Subsets](/posts/leetcode/subsets) · [Generate Parentheses](/posts/leetcode/generate-parentheses)

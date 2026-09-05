@@ -1,0 +1,83 @@
+---
+title: "[LeetCode] 136. Single Number"
+date: "2019-07-23"
+description: "Single Number with XOR: pairs cancel, the loner survives. Interactive bit visual + typed Python 3 code."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Single Number", "LeetCode", "Bit Manipulation", "XOR", "Algorithm", "Python", "Problem Solving"]
+draft: false
+---
+
+import HashXorVisualizer from '../../../components/visuals/HashXorVisualizer.astro';
+
+> 🧠 **Remember:** “XOR makes duplicates disappear.”
+
+## The problem — 20 seconds
+
+`nums = [4, 1, 2, 1, 2]` → `4`. Every element appears twice except one loner — find it in linear time with O(1) extra space.
+
+[Original on LeetCode](https://leetcode.com/problems/single-number/)
+
+XOR folds the whole array into one number, because pairs annihilate:
+
+```text
+acc: 0 ^ 4 ^ 1 ^ 2 ^ 1 ^ 2 = 4   (pairs → 0, 0 ^ 4 = 4)
+```
+
+That one line *is* the algorithm. The rest explains why you are allowed to trust it.
+
+## Your first instinct
+
+Count everything with a dictionary, then return the key with count 1:
+
+```python
+freq: dict[int, int] = {}
+for x in nums:
+    freq[x] = freq.get(x, 0) + 1
+for x, c in freq.items():
+    if c == 1:
+        return x
+```
+
+Correct, `O(n)` time — but `O(n)` space for a question whose structure screams cancellation. The clever set-math variant (`2 * sum(set(nums)) - sum(nums)`) still builds a set. Both remember *too much*: we only need the survivor, not the census.
+
+## The turning point
+
+XOR has three gifts: `a ^ a = 0` (a pair vanishes), `a ^ 0 = a` (zero is invisible), and order does not matter. So fold the array like a sum — every pair collapses to 0, zeros vanish, and the loner is all that remains. No memory beyond one integer.
+
+## Watch it work
+
+Press **Play**. The accumulator shows decimal + binary at each step while paired cells get struck through — two `1`s meet, and both vanish from the running value.
+
+<HashXorVisualizer mode="single" id="hx-single" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+
+class Solution:
+    def singleNumber(self, nums: List[int]) -> int:
+        acc = 0
+        for x in nums:
+            acc ^= x  # pairs cancel: a ^ a = 0
+        return acc
+```
+
+Three lines, one integer of state. The visual's `acc` box is literally this variable — watch it and you are watching the program run.
+
+## Why it works
+
+Invariant: after processing a prefix, `acc` equals the XOR of all *unpaired* values so far. A first sighting arms a value; its twin disarms it (`a ^ a = 0`). Since every non-answer appears exactly twice, all pairs collapse and `acc` ends holding the loner.
+
+```text
+Time O(n), space O(1). No dict, no set — one int.
+```
+
+## 🧠 Remember
+
+> **Single Number → “XOR makes duplicates disappear.”** Fold everything; the loner survives.
+
+🔁 **Try this:** what if every element appears *three* times except one? XOR alone breaks — count bits per position mod 3 instead. Same spirit, wider tool.
+
+Related: [Contains Duplicate](/posts/leetcode/contains-duplicate) · [Missing Number](/posts/leetcode/missing-number) · [Two Sum](/posts/leetcode/two-sum)

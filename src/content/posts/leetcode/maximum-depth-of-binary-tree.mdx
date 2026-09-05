@@ -1,0 +1,86 @@
+---
+title: "[Leetcode] 104. Maximum Depth of Binary Tree"
+date: "2019-07-23"
+description: "Maximum depth via post-order bubbling: children answer first, parents take 1 + max. Interactive visual + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Maximum Depth of Binary Tree", "Tree", "Depth-First Search", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import TreeDepthVisualizer from '../../../components/visuals/TreeDepthVisualizer.astro';
+
+> 🧠 **Remember:** “Depth = 1 + taller child.”
+
+## The problem — 20 seconds
+
+`root = [3,9,20,null,null,15,7]` → `3`.
+
+Depth = number of nodes on the longest root-to-leaf path. A leaf (no children) has depth 1; the empty tree has depth 0.
+
+[Original on LeetCode](https://leetcode.com/problems/maximum-depth-of-binary-tree/)
+
+```text
+depth(4) = 1 → depth(2) = 2 → depth(3) = 1 → depth(1) = 3
+```
+
+Children answer before parents — that ordering *is* the algorithm. Everything below just names *why*.
+
+## Your first instinct
+
+Count levels with BFS — walk the tree floor by floor:
+
+```python
+queue, depth = [root], 0
+while queue:
+    depth += 1
+    queue = [c for n in queue for c in (n.left, n.right) if c]
+```
+
+It works (the old version of this post did exactly this). But it answers a harder question than asked — it visits every node level by level when all we need is *one number per subtree*, combined bottom-up.
+
+## The turning point
+
+A node's depth depends only on its children's depths: `1 + max(L, R)`. So don't track levels at all — ask each child for its answer and combine. The recursion *is* post-order: leaves answer first, answers bubble upward, the root finishes last.
+
+## Watch it work
+
+Press **Play**. Badges land 4 → 2 → 3 → 1, arrows show each answer travelling up, and the call stack grows and shrinks beside the tree. The dashed ∅ is the base case answering 0.
+
+<TreeDepthVisualizer id="treedepth-main" />
+
+## What the code is really saying
+
+```python
+from typing import Optional
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: Optional["TreeNode"] = None, right: Optional["TreeNode"] = None):
+        self.val, self.left, self.right = val, left, right
+
+class Solution:
+    def maxDepth(self, root: Optional[TreeNode]) -> int:
+        if not root:
+            return 0
+        left: int = self.maxDepth(root.left)
+        right: int = self.maxDepth(root.right)
+        return 1 + max(left, right)
+```
+
+Read it as the visual: base case, collect both answers, combine. The code is the last step, not the first.
+
+## Why it works
+
+Invariant: `maxDepth(node)` returns the node count on the longest downward path from `node`. Empty gives 0 (nothing to count), a leaf gives `1 + max(0, 0) = 1`, and every parent adds exactly one for itself — so each frame's answer is correct before its parent reads it.
+
+```text
+n nodes → each visited once
+Time O(n), stack O(h) where h = tree height.
+```
+
+## 🧠 Remember
+
+> **Max Depth → “Depth = 1 + taller child.”** Empty is 0, leaves answer first, the root finishes last.
+
+🔁 **Try this:** what changes for *minimum* depth? (Hint: a missing child isn't depth 0 there — a single-child node takes the *present* child's depth + 1.)
+
+Related: [Binary Tree Preorder Traversal](/posts/leetcode/binary-tree-preorder-traversal) · [Binary Tree Inorder Traversal](/posts/leetcode/binary-tree-inorder-traversal) · [Kth Smallest in a BST](/posts/leetcode/kth-smallest-element-in-a-bst)

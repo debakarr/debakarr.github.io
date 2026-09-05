@@ -1,0 +1,84 @@
+---
+title: "[LeetCode] 344. Reverse String"
+date: "2019-07-23"
+description: "Reverse a char array in place with two pointers converging from the ends. Interactive visual + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Reverse String", "Two Pointers", "String", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import TwoPointerVisualizer from '../../../components/visuals/TwoPointerVisualizer.astro';
+
+> 🧠 **Remember:** “Walk toward each other.”
+
+## The problem — 20 seconds
+
+`s = ["h", "e", "l", "l", "o"]` → `["o", "l", "l", "e", "h"]`, in place, `O(1)` extra memory.
+
+Reverse the array — no copy, no return value, just mutate `s`. An odd-length middle element stays put.
+
+[Original on LeetCode](https://leetcode.com/problems/reverse-string/)
+
+The ends trade places until nothing is left to trade:
+
+```text
+L=0(h) ↔ R=4(o) → swap → [o,e,l,l,h]
+L=1(e) ↔ R=3(l) → swap → [o,l,l,e,h]
+L==R==2 → stop (middle stays)
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Slice a reversed copy back in:
+
+```python
+s[:] = s[::-1]
+```
+
+It passes, but it builds a full-size copy first — `O(n)` extra memory against an `O(1)` requirement. The recursive version has the same flaw wearing a costume: each frame holds two indices, so `n / 2` frames cost `O(n)` stack.
+
+## The turning point
+
+Position `i` and position `n − 1 − i` are mirror images — swapping one pair never disturbs another. So put a finger on each end and walk them toward each other, swapping as you go. Each step settles two cells permanently, and the meeting point tells you when you are done.
+
+## Watch it work
+
+Press **Play**. Watch `L`/`R` swap the ends inward, and notice the middle `l` never moves — it is already its own mirror.
+
+<TwoPointerVisualizer id="reverse-main" mode="reverse" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+
+class Solution:
+    def reverseString(self, s: List[str]) -> None:
+        left, right = 0, len(s) - 1
+        while left < right:
+            s[left], s[right] = s[right], s[left]
+            left += 1
+            right -= 1
+```
+
+Read it as the visual: guard `left < right`, swap the pair, step inward. Use `<`, not `<=` — the extra self-swap is harmless but pointless, and the strict guard is what stops exactly at the middle.
+
+## Why it works
+
+Invariant: everything outside `left..right` is reversed and final; everything inside is untouched. Each iteration shrinks the window by two, so the loop ends after `n // 2` swaps with the pointers met or crossed.
+
+```text
+n = 5 → 2 swaps, 0 new arrays
+Time O(n), space O(1).
+```
+
+## 🧠 Remember
+
+> **Reverse String → “Walk toward each other.”** Mirror pairs swap independently, so converge and stop at the middle.
+
+🔁 **Try this:** reverse only the vowels, leaving consonants fixed? (Hint: same walk, but advance past non-vowels without swapping.)
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [3Sum](/posts/leetcode/3sum) · [Sort Array By Parity](/posts/leetcode/sort-array-by-parity)

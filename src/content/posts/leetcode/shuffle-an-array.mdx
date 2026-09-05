@@ -1,0 +1,93 @@
+---
+title: "[LeetCode] 384. Shuffle an Array"
+date: "2019-09-06"
+description: "Uniform shuffling with Fisher-Yates plus O(1) reset via a cloned original. Interactive visual + typed Python."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Shuffle", "Arrays", "Randomization", "Programming"]
+draft: false
+---
+
+import TwoPointerVisualizer from '../../../components/visuals/TwoPointerVisualizer.astro';
+
+> 🧠 **Remember:** “Random partner behind you.”
+
+## The problem — 20 seconds
+
+`Solution([1, 2, 3])` → `shuffle()` deals a uniform permutation, `reset()` restores `[1, 2, 3]`.
+
+All `n!` orders equally likely — and reset must always bring back the original.
+
+[Original on LeetCode](https://leetcode.com/problems/shuffle-an-array/)
+
+Fill the array from the back, rolling a shrinking die:
+
+```text
+[1,2,3,4,5]  i=4 pick j≤4 → swap → slot 4 locked
+             i=3 pick j≤3 → swap → slot 3 locked
+             i=2,1 … each slot locked once  ✓
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Sweep forward, swapping each slot with *any* index:
+
+```python
+for i in range(len(a)):
+    j = random.randrange(0, len(a))  # ✗ full range every time
+    a[i], a[j] = a[j], a[i]
+```
+
+It looks random but deals rigged hands: `nⁿ` swap paths collapse onto `n!` orders, and `nⁿ` is not divisible by `n!` — some orders get extra paths. It usually mutates the stored original too, silently breaking `reset()`.
+
+## The turning point
+
+Lock one slot per step. At slot `i`, pick `j` uniformly from `0..i` — the unlocked region including `i` — and swap. Slot `i` is now fixed and never touched again, so every ordering has exactly one path with probability `1/n!`.
+
+## Watch it work
+
+Press **Play**. This trace fixes `j = 3,1,0,1` — **one possible run**, not *the* run. Watch each `i` lock behind it, including the self-pick at `i = 1`, which is legal and required for fairness.
+
+<TwoPointerVisualizer id="shuffle-main" mode="shuffle" />
+
+## What the code is really saying
+
+```python
+import random
+from typing import List
+
+
+class Solution:
+    def __init__(self, nums: List[int]):
+        self.original = nums[:]  # clone: never alias the caller's list
+
+    def reset(self) -> List[int]:
+        return self.original[:]
+
+    def shuffle(self) -> List[int]:
+        a = self.original[:]
+        for i in range(len(a) - 1, 0, -1):
+            j = random.randint(0, i)  # ≤ i: shrinking die, not full range
+            a[i], a[j] = a[j], a[i]
+        return a
+```
+
+Read it as the visual: copy, then `i` from the end with `j ≤ i`. Every `[:]` matters — without the clone, `reset()` would hand back the already-shuffled list.
+
+## Why it works
+
+Invariant: slots right of `i` are locked; slots `0..i` hold the rest in random order. Picking `j ≤ i` fills slot `i` uniformly from the remainder, so induction gives `1/n!` per permutation.
+
+```text
+n = 5 → 120 orders, each prob 1/120
+Time O(n) per shuffle, space O(n) for the copy.
+```
+
+## 🧠 Remember
+
+> **Shuffle → “Random partner behind you.”** Never pick ahead of `i` — locked slots stay locked, or the deal is rigged.
+
+🔁 **Try this:** what breaks if `j` ranges over `0..i − 1` only? (Hint: slot `i` could never keep its card — whole families of orders vanish.)
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [Sort Array By Parity](/posts/leetcode/sort-array-by-parity)

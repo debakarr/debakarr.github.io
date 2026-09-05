@@ -1,0 +1,92 @@
+---
+title: "[LeetCode] 238. Product of Array Except Self"
+date: "2019-07-24"
+description: "Product of Array Except Self without division: left × right prefix-suffix products in O(n). Interactive visual + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Product of Array Except Self", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import PrefixSuffixVisualizer from '../../../components/visuals/PrefixSuffixVisualizer.astro';
+
+> 🧠 **Remember:** “Everyone except me = left × right.”
+
+## The problem — 20 seconds
+
+`nums = [1, 2, 3, 4]` → `[24, 12, 8, 6]`.
+
+For each index, return the product of *everything except that element*. No division, `O(n)` time — and as a follow-up, `O(1)` extra space.
+
+[Original on LeetCode](https://leetcode.com/problems/product-of-array-except-self/)
+
+```text
+a    = [1,  2,  3, 4]
+LEFT = [1,  1,  2, 6]    ← product of everything before i
+RIGHT= [24, 12, 4, 1]    ← product of everything after i
+ans  = [24, 12, 8, 6]    ← LEFT[i] × RIGHT[i]
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Divide the total product by each element:
+
+```python
+total = 1
+for x in nums:
+    total *= x
+return [total // x for x in nums]
+```
+
+Two problems. First, the problem bans division outright. Second, a single zero nukes the scheme: `total` becomes `0`, yet the true answer for `[0, 1, 2]` is `[2, 0, 0]`. Division can't tell *which* positions deserve the non-zero value.
+
+## The turning point
+
+Stop thinking about what to *remove* — think about what *remains*: a left part and a right part, each a running product built in one sweep.
+
+Walk left → right accumulating `L`. Walk right → left accumulating `R`. Multiply pointwise. Two linear passes, zero division, zeroes handled for free.
+
+## Watch it work
+
+Press **Play**: `LEFT` fills left → right, `RIGHT` fills right → left, then each `L[i] × R[i]` lands. The last step covers the zero case and the `O(1)` fold.
+
+<PrefixSuffixVisualizer id="prefixsuffix-main" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+class Solution:
+    def productExceptSelf(self, nums: List[int]) -> List[int]:
+        n = len(nums)
+        ans: List[int] = [1] * n
+        for i in range(1, n):          # LEFT sweep, stored in ans
+            ans[i] = ans[i - 1] * nums[i - 1]
+        right = 1                      # RIGHT sweep folded into one variable
+        for i in range(n - 1, -1, -1):
+            ans[i] *= right
+            right *= nums[i]
+        return ans
+```
+
+Read it as the visual: the first loop paints `LEFT` into `ans`, the second multiplies in `RIGHT` on the fly — no second array, just the running `right`.
+
+One trap: seed with `1`, not `0`. The empty product — nothing left of index 0 — is the multiplicative identity. Seed with `0` and every answer collapses.
+
+## Why it works
+
+Invariant: after the forward pass, `ans[i]` holds everything strictly before `i`; the backward pass multiplies in everything strictly after. Each slot ends as left × right — everything except itself, by definition.
+
+```text
+Two linear sweeps, one output array + one variable: time O(n), space O(1) extra.
+```
+
+## 🧠 Remember
+
+> **Product Except Self → “Everyone except me = left × right.”** When division is banned, split the world at `i` and accumulate from both sides.
+
+🔁 **Try this:** what changes with *two* zeroes in the input? (Hint: every answer is zero — can you see why?) Then try [Maximum Product Subarray](https://leetcode.com/problems/maximum-product-subarray/) — same prefix instinct, sign flips included.
+
+Related: [Best Time to Buy and Sell Stock II](/posts/leetcode/best-time-to-buy-and-sell-stock-ii) · [Maximum Subarray](/posts/leetcode/maximum-subarray) · [Contains Duplicate](/posts/leetcode/contains-duplicate)

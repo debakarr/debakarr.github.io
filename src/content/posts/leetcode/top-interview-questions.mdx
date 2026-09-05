@@ -1,0 +1,73 @@
+---
+title: "Top Programming Questions [Updated]"
+date: "2019-09-04"
+description: "Top interview questions grouped by pattern family — arrays, trees, backtracking, DP — so you study shapes, not problems."
+categories: ["Algorithms", "Programming", "LeetCode", "Interview Preparation"]
+tags: ["Top Interview Questions", "LeetCode", "Algorithm", "Python", "Problem Solving", "Interview Preparation"]
+draft: false
+---
+
+> 🧠 **Remember:** “Study families, not problems.”
+
+## How to use this index
+
+Don't grind randomly. Pick a family, learn its 2–3 core moves, then let variants come to you. Start with the [Warm Up](/posts/leetcode/coding-interview-warmup-1) if any family feels foreign.
+
+## Arrays & hashing
+
+The highest-yield family. Core moves: complement lookup, running accumulators, sort-then-scan.
+
+- [Two Sum](/posts/leetcode/two-sum) — complement hashing, one pass
+- [Contains Duplicate](/posts/leetcode/contains-duplicate) — seen-set membership
+- [3Sum](/posts/leetcode/3sum) — sort, fix one, converge two
+- [Product of Array Except Self](/posts/leetcode/product-of-array-except-self) — left × right accumulators, no division
+- [Best Time to Buy and Sell Stock II](/posts/leetcode/best-time-to-buy-and-sell-stock-ii) — skim every positive climb
+- [Maximum Subarray](/posts/leetcode/maximum-subarray) — extend or restart running sum
+- [Merge Sorted Array](/posts/leetcode/merge-sorted-array) — fill from the back
+- [Move Zeroes](/posts/leetcode/move-zeroes) — stable partition, two pointers
+- [Majority Element](/posts/leetcode/majority-element) — Boyer-Moore voting
+- [Missing Number](/posts/leetcode/missing-number) — XOR or Gauss sum
+- [Single Number](/posts/leetcode/single-number) — XOR cancels pairs
+- [Sort Array By Parity](/posts/leetcode/sort-array-by-parity) — two-pointer partition
+- [Top K Frequent Elements](/posts/leetcode/top-k-frequent-elements) — bucket by count
+
+## Strings & numbers
+
+Parsing shapes: fold left → right, peek at the neighbor.
+
+- [Reverse String](/posts/leetcode/reverse-string) — converging pointers, in place
+- [Longest Substring Without Repeating Characters](/posts/leetcode/longest-substring-without-repeating-characters) — sliding window + last-seen map
+- [Roman to Integer](/posts/leetcode/roman-to-integer) — smaller-before-larger subtracts
+- [Excel Sheet Column Number](/posts/leetcode/excel-sheet-column-number) — base-26 with no zero
+
+## Trees
+
+Traversal + recursion depth. Core moves: inorder structure, level tracking, divide and conquer.
+
+- [Maximum Depth of Binary Tree](/posts/leetcode/maximum-depth-of-binary-tree) — 1 + max of children
+- [Binary Tree Inorder Traversal](/posts/leetcode/binary-tree-inorder-traversal) — left, node, right
+- [Binary Tree Preorder Traversal](/posts/leetcode/binary-tree-preorder-traversal) — node first, stack or recursion
+- [Binary Tree Postorder Traversal](/posts/leetcode/binary-tree-postorder-traversal) — children before node
+- [Convert Sorted Array to Binary Search Tree](/posts/leetcode/convert-sorted-array-to-binary-search-tree) — mid-root recursion
+- [Kth Smallest Element in a BST](/posts/leetcode/kth-smallest-element-in-a-bst) — inorder is sorted
+
+## Backtracking
+
+Choose, explore, unchoose. Core move: one shared path, add on entry, remove on exit.
+
+- [Permutations](/posts/leetcode/permutations) — swap-and-recurse over positions
+- [Subsets](/posts/leetcode/subsets) — take-or-skip each element
+- [Generate Parentheses](/posts/leetcode/generate-parentheses) — open-if-room, close-if-safe
+
+## Linked lists
+
+Pointer surgery. Core moves: prev/curr rewiring, fast-slow spacing.
+
+- [Reverse Linked List](/posts/leetcode/reverse-linked-list) — flip links walking forward
+- [Delete Node in a Linked List](/posts/leetcode/delete-node-in-a-linked-list) — copy next over self
+
+## 🧠 Remember
+
+> **Prep → “One family per session.”** Depth in a family transfers; breadth across random problems doesn't.
+
+🔁 **Stuck?** Drop back to the [Warm Up](/posts/leetcode/coding-interview-warmup-1), then re-enter through [Two Sum](/posts/leetcode/two-sum) — the root of the hashing family.

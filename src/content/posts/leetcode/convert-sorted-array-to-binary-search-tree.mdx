@@ -1,0 +1,87 @@
+---
+title: "[LeetCode] 108. Convert Sorted Array to Binary Search Tree"
+date: "2019-09-06"
+description: "Sorted array to height-balanced BST: crown the middle, recurse on each half. Interactive visual + typed Python."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Binary Search Tree", "Conversion", "Programming"]
+draft: false
+---
+
+import SortedArrayBSTVisualizer from '../../../components/visuals/SortedArrayBSTVisualizer.astro';
+
+> 🧠 **Remember:** “Middle becomes root.”
+
+## The problem — 20 seconds
+
+`nums = [-10,-3,0,5,9]` → a height-balanced BST, e.g. `[0,-3,9,-10,null,5]`.
+
+Balanced means every node's two subtrees differ in height by at most 1. Any balanced shape is accepted.
+
+[Original on LeetCode](https://leetcode.com/problems/convert-sorted-array-to-binary-search-tree/)
+
+```text
+mid = (0+4)//2 = 2 → 0 is root · [−10,−3] left · [5,9] right · recurse
+```
+
+That split *is* the algorithm. Everything below just names *why*.
+
+## Your first instinct
+
+Insert left to right — `0` first, then hang the rest off it:
+
+```text
+-10 → root · -3 → right · 0 → right · 5 → right · 9 → right   (a chain!)
+```
+
+A chain is a valid BST but height 5, not balanced. The old version of this post crowned middles correctly but sliced the array on every call (`nums[:mid]` — O(n) copies per level). Same idea, wasteful packaging.
+
+## The turning point
+
+The middle element has equally many neighbours on each side — it is the only choice that keeps both halves even. Crown it, then solve each half the same way. Pass `lo`/`hi` indices instead of slicing and the copies vanish.
+
+## Watch it work
+
+Press **Play**. The highlighted cell is each range's middle; the tree grows one crowned middle at a time — `0`, then `−10`, `−3`, `5`, `9`.
+
+<SortedArrayBSTVisualizer id="sortedbst-main" />
+
+## What the code is really saying
+
+```python
+from typing import Optional
+
+class TreeNode:
+    def __init__(self, val: int = 0, left: Optional["TreeNode"] = None, right: Optional["TreeNode"] = None):
+        self.val, self.left, self.right = val, left, right
+
+class Solution:
+    def sortedArrayToBST(self, nums: list[int]) -> Optional[TreeNode]:
+        def build(lo: int, hi: int) -> Optional[TreeNode]:
+            if lo > hi:
+                return None
+            mid = (lo + hi) // 2
+            root = TreeNode(nums[mid])
+            root.left = build(lo, mid - 1)
+            root.right = build(mid + 1, hi)
+            return root
+        return build(0, len(nums) - 1)
+```
+
+Read it as the visual: crown the middle, build left, build right — the same order you just watched. The code is the last step, not the first.
+
+## Why it works
+
+Invariant: `build(lo, hi)` returns a height-balanced BST containing exactly `nums[lo..hi]`, with inorder traversal equal to that slice. The middle splits the slice into halves differing by at most one element, so heights differ by at most one at every node — and inorder of the whole tree reads back the sorted array.
+
+```text
+n elements → each placed once, no slicing
+Time O(n), stack O(log n) from the halving.
+```
+
+## 🧠 Remember
+
+> **Sorted → BST → “Middle becomes root.”** Halve the range, crown the middle, recurse — balance comes free.
+
+🔁 **Try this:** what changes for a *sorted linked list*? (Hint: no indexing — find each middle with slow/fast pointers, or convert via inorder simulation in O(n).)
+
+Related: [Maximum Depth of Binary Tree](/posts/leetcode/maximum-depth-of-binary-tree) · [Kth Smallest in a BST](/posts/leetcode/kth-smallest-element-in-a-bst) · [Subsets](/posts/leetcode/subsets)

@@ -1,0 +1,90 @@
+---
+title: "[LeetCode] 905. Sort Array By Parity"
+date: "2019-06-17"
+description: "Partition evens left and odds right with two pointers hunting misfits. Interactive visual + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Sort Array by Parity", "Two Pointers", "Array", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import TwoPointerVisualizer from '../../../components/visuals/TwoPointerVisualizer.astro';
+
+> 🧠 **Remember:** “Evens left, odds right.”
+
+## The problem — 20 seconds
+
+`[3, 1, 2, 4]` → `[4, 2, 1, 3]` (any evens-first order counts).
+
+Return the array with every even before every odd. Within-group order does not matter — `[2, 4, 3, 1]` and `[4, 2, 1, 3]` both pass.
+
+[Original on LeetCode](https://leetcode.com/problems/sort-array-by-parity/)
+
+Each pointer hunts what does *not* belong on its side:
+
+```text
+L=0(3 odd ✗) R=3(4 even ✗) → swap → [4,1,2,3]
+L=1(1 odd ✗) R=2(2 even ✗) → swap → [4,2,1,3]
+L=2 R=1 → crossed → stop, evens [4,2] left
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Filter twice and concatenate:
+
+```python
+return [x for x in nums if x % 2 == 0] + [x for x in nums if x % 2 == 1]
+```
+
+Correct order, wrong budget — two passes plus a full-size new list. A single-scan `write`-index partitioner fixes the space but hides the problem's symmetry.
+
+## The turning point
+
+Evens belong left, odds belong right — so each side knows its misfit. `L` walks past evens until it sticks on an odd; `R` walks past odds until it sticks on an even. Both stuck? They are each other's fix: swap and close in.
+
+## Watch it work
+
+Press **Play**. Each pointer skips what is already home — `L` glides over evens, `R` over odds — and only stuck misfits ever swap.
+
+<TwoPointerVisualizer id="parity-main" mode="parity" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+
+class Solution:
+    def sortArrayByParity(self, nums: List[int]) -> List[int]:
+        left, right = 0, len(nums) - 1
+        while left < right:
+            while left < right and nums[left] % 2 == 0:
+                left += 1
+            while left < right and nums[right] % 2 == 1:
+                right -= 1
+            if left < right:
+                nums[left], nums[right] = nums[right], nums[left]
+                left += 1
+                right -= 1
+        return nums
+```
+
+Read it as the visual: skip-home loops, then one misfit swap. The inner `left < right` guards keep the pointers from crossing mid-skip on inputs like `[]` or `[0]`.
+
+## Why it works
+
+Invariant: left of `L` is even, right of `R` is odd, the middle is undecided. Skips shrink the middle for free; swaps fix two cells. Pointers only move inward, so the regions end adjacent.
+
+```text
+n = 4 → 2 swaps, in place
+Time O(n), space O(1).
+```
+
+## 🧠 Remember
+
+> **Sort Array By Parity → “Evens left, odds right.”** Skip what is home; swap only the two misfits.
+
+🔁 **Try this:** [Move Zeroes](/posts/leetcode/move-zeroes)? (Hint: same border instinct, but only one side has a rule — non-zeroes pack left.)
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [3Sum](/posts/leetcode/3sum) · [Move Zeroes](/posts/leetcode/move-zeroes)

@@ -1,0 +1,82 @@
+---
+title: "[LeetCode] 22. Generate Parentheses"
+date: "2019-07-23"
+description: "Generate Parentheses via two pruning rules: open < n, close < open. Interactive pruned-tree walkthrough + typed Python."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Generate Parentheses", "Backtracking", "String", "LeetCode", "Algorithm"]
+draft: false
+---
+
+import BacktrackVisualizer from '../../../components/visuals/BacktrackVisualizer.astro';
+
+> 🧠 **Remember:** “Never close more than you open.”
+
+## The problem — 20 seconds
+
+`n = 3` → `["((()))","(()())","(())()","()(())","()()()"]` (any order accepted).
+
+Well-formed means every `)` matches an earlier unmatched `(`.
+
+[Original on LeetCode](https://leetcode.com/problems/generate-parentheses/)
+
+```text
+"((()))" ✓ · "(()))(" ✗ — the 4th char closes what was never opened
+```
+
+The fix isn't filtering bad strings out — it's never growing them. That pruning *is* the algorithm. Everything below just names *why*.
+
+## Your first instinct
+
+Generate all `2^(2n)` bracket strings, keep the balanced ones. For `n = 3` that's 64 candidates for 5 answers; for `n = 10` it's a million candidates for 16,796 answers. The old version of this post had the right recursion but muddled the trace (it walked an `n = 2` tree while claiming `n = 3` results, and its `left > right` guard hid *which* rule fires when).
+
+## The turning point
+
+Two rules decide everything, and both are checks on counts — not on the string:
+
+- add `(` only while `open < n` — brackets left to spend;
+- add `)` only while `close < open` — never close more than you opened.
+
+The second rule prunes invalid branches the moment they appear: a `)` with `close == open` can never recover, so that whole subtree never exists.
+
+## Watch it work
+
+Press **Play**. Green leaves are the 5 valid strings; red ✗ stubs are branches rejected on the spot — `")"` at the root, `"())"`, `"(()))"`, `"()())"`. Watch the open/close counters at every step.
+
+<BacktrackVisualizer mode="paren" id="paren-main" />
+
+## What the code is really saying
+
+```python
+class Solution:
+    def generateParenthesis(self, n: int) -> list[str]:
+        ans: list[str] = []
+        def dfs(open: int, close: int, path: str) -> None:
+            if open == close == n:
+                ans.append(path)  # valid leaf
+                return
+            if open < n:
+                dfs(open + 1, close, path + "(")
+            if close < open:  # the pruning rule — invalid branches die here
+                dfs(open, close + 1, path + ")")
+        dfs(0, 0, "")
+        return ans
+```
+
+Read it as the visual: leaf check, open-branch, guarded close-branch — the same order you just watched. Note the guard order matters: `close < open` (not `close < n`) is what keeps every prefix valid.
+
+## Why it works
+
+Invariant: `close <= open <= n` holds at every call, so every prefix is completable to something valid. A leaf (`open == close == n`) is therefore valid by construction, every valid string is reachable by following its own characters, and nothing invalid is ever built — pruning replaces filtering.
+
+```text
+n = 3 → 5 valid (Catalan C₃) · 4 branches pruned on sight
+Time O(4ⁿ/√n) — proportional to valid strings, not all 2²ⁿ candidates.
+```
+
+## 🧠 Remember
+
+> **Parentheses → “Never close more than you open.”** `open < n` spends, `close < open` guards — the guard is the prune.
+
+🔁 **Try this:** what changes for multiple bracket types (`()[]{}`)? (Hint: the counter becomes a stack — validity needs *which* is open, not just how many.)
+
+Related: [Permutations](/posts/leetcode/permutations) · [Subsets](/posts/leetcode/subsets)

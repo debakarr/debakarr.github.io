@@ -1,0 +1,317 @@
+---
+// PrefixSuffixVisualizer.astro
+// Step-through player for Product of Array Except Self: left×right metaphor.
+// No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
+interface Props {
+  id?: string;
+}
+const { id = "prefixsuffix-main" } = Astro.props;
+---
+
+<div class="psviz" data-psviz={id}>
+  <div class="psviz-card">
+    <div class="psviz-head">
+      <div>
+        <p class="psviz-kicker">Interactive visual · Left × Right</p>
+        <h3 class="psviz-title">Everyone except me = left × right</h3>
+        <p class="psviz-sub">
+          For each position, everything else splits into two groups: what's
+          <strong>left</strong> of me and what's <strong>right</strong> of me.
+          Build a running product from each side, then multiply the two.
+          Press <strong>Play</strong> and watch <code>[1, 2, 3, 4]</code> become
+          <code>[24, 12, 8, 6]</code>.
+        </p>
+      </div>
+    </div>
+
+    <div class="psviz-stage">
+      <p class="psviz-row-label"><span>nums <code>a</code></span></p>
+      <div class="psviz-array" data-role="array" aria-live="polite"></div>
+
+      <p class="psviz-row-label"><span>LEFT products <code>L</code> — product of everything before i</span></p>
+      <div class="psviz-array" data-role="left" aria-live="polite"></div>
+
+      <p class="psviz-row-label"><span>RIGHT products <code>R</code> — product of everything after i</span></p>
+      <div class="psviz-array" data-role="right" aria-live="polite"></div>
+
+      <p class="psviz-row-label"><span>answer <code>ans[i] = L[i] × R[i]</code></span></p>
+      <div class="psviz-array" data-role="ans" aria-live="polite"></div>
+
+      <p class="psviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="psviz-controls">
+      <div class="psviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="psviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 1</span>
+          <input type="range" data-role="slider" min="0" max="0" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="psviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="psviz-codegrid">
+      <div class="psviz-code" aria-label="Algorithm code with current line highlighted">
+        <div data-code="0"><span class="ln">1</span><code>L[0] = 1; for i in 1..n-1: L[i] = L[i-1] * a[i-1]</code></div>
+        <div data-code="1"><span class="ln">2</span><code>R[n-1] = 1; for i in n-2..0: R[i] = R[i+1] * a[i+1]</code></div>
+        <div data-code="2"><span class="ln">3</span><code>ans[i] = L[i] * R[i]  # O(1) variant: fold R into ans</code></div>
+      </div>
+      <div class="psviz-quiz">
+        <p class="psviz-quiz-title">Quick check — make it stick</p>
+        <p class="psviz-quiz-q">Why no division?</p>
+        <div class="psviz-quiz-btns">
+          <button type="button" data-quiz="a">Division is slower</button>
+          <button type="button" data-quiz="b">Zeroes break it</button>
+        </div>
+        <p class="psviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="psviz-mnemonic">🧠 Memory hook: <strong>“Everyone except me = left × right.”</strong> The answer at each spot is just the product of everything before it times everything after it.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .psviz { margin: 1.75rem 0; }
+  .psviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .psviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .psviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .psviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .psviz-sub strong { color: var(--ink); }
+  .psviz-sub code { font-family: var(--font-mono); font-size: .82em; color: var(--ink); }
+  .psviz-head { display: grid; gap: .9rem; margin-bottom: 1rem; }
+  .psviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: 1rem 0 .5rem;
+  }
+  .psviz-row-label code { color: var(--accent-strong); }
+  .psviz-array { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .psviz-cell {
+    min-width: 3.2rem; text-align: center;
+    border: 1.5px solid var(--line); border-radius: .7rem;
+    padding: .5rem .6rem .4rem; background: var(--surface);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .psviz-cell .v { font-weight: 800; font-size: 1.05rem; display: block; }
+  .psviz-cell .i { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+  .psviz-cell.is-current { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--accent); }
+  .psviz-cell.is-done { border-color: #22c55e; background: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .psviz-cell.is-hidden { opacity: .35; }
+  .psviz-cell.is-hidden .v { visibility: hidden; }
+  .psviz-caption {
+    margin: .9rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .psviz-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .psviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .psviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .psviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .psviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .psviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .psviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .psviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .psviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .psviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .psviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .psviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .psviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .psviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .psviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .psviz-code code { white-space: pre-wrap; }
+  .psviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .psviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .psviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .psviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .psviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .psviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .psviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .psviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .psviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .psviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) { .psviz-cell { transition: none; } }
+</style>
+
+<script>
+  function initPrefixSuffixViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+
+    const a = [1, 2, 3, 4];
+    const L = [1, 1, 2, 6];
+    const R = [24, 12, 4, 1];
+    const ans = [24, 12, 8, 6];
+
+    // Steps: build L left→right, then R right→left, then combine, then zero note.
+    const steps = [
+      { code: 0, cur: "none", curIdx: -1, caption: "Start: nothing computed yet. a = [1, 2, 3, 4]. First we sweep left → right building L." },
+      { code: 0, cur: "left", curIdx: 0, caption: "L[0] = 1 — nothing sits left of index 0, so the empty product is 1." },
+      { code: 0, cur: "left", curIdx: 1, caption: "L[1] = L[0] × a[0] = 1 × 1 = 1. Everything before index 1 multiplies to 1." },
+      { code: 0, cur: "left", curIdx: 2, caption: "L[2] = L[1] × a[1] = 1 × 2 = 2. Accumulating as we walk right." },
+      { code: 0, cur: "left", curIdx: 3, caption: "L[3] = L[2] × a[2] = 2 × 3 = 6. LEFT row complete: [1, 1, 2, 6]." },
+      { code: 1, cur: "right", curIdx: 3, caption: "R[3] = 1 — nothing sits right of the last index. Now sweep right → left." },
+      { code: 1, cur: "right", curIdx: 2, caption: "R[2] = R[3] × a[3] = 1 × 4 = 4." },
+      { code: 1, cur: "right", curIdx: 1, caption: "R[1] = R[2] × a[2] = 4 × 3 = 12." },
+      { code: 1, cur: "right", curIdx: 0, caption: "R[0] = R[1] × a[1] = 12 × 2 = 24. RIGHT row complete: [24, 12, 4, 1]." },
+      { code: 2, cur: "ans", curIdx: 0, caption: "ans[0] = L[0] × R[0] = 1 × 24 = 24. Everything except a[0]. ✓" },
+      { code: 2, cur: "ans", curIdx: 1, caption: "ans[1] = L[1] × R[1] = 1 × 12 = 12 ✓" },
+      { code: 2, cur: "ans", curIdx: 2, caption: "ans[2] = L[2] × R[2] = 2 × 4 = 8 ✓" },
+      { code: 2, cur: "ans", curIdx: 3, caption: "ans[3] = L[3] × R[3] = 6 × 1 = 6 ✓ — answer [24, 12, 8, 6]." },
+      { code: 2, cur: "none", curIdx: -1, caption: "Zero-handling note: with a zero in the input (e.g. [0, 1, 2] → [2, 0, 0]) division would crash or lie — but left × right just works, because a zero only poisons the products on its own side. O(1) follow-up: fold R into ans with one running variable instead of a second array." },
+    ];
+    // Reveal counts per step: how many L / R / ans cells are visible.
+    const reveal = [
+      { l: 0, r: 0, n: 0 }, { l: 1, r: 0, n: 0 }, { l: 2, r: 0, n: 0 },
+      { l: 3, r: 0, n: 0 }, { l: 4, r: 0, n: 0 }, { l: 4, r: 1, n: 0 },
+      { l: 4, r: 2, n: 0 }, { l: 4, r: 3, n: 0 }, { l: 4, r: 4, n: 0 },
+      { l: 4, r: 4, n: 1 }, { l: 4, r: 4, n: 2 }, { l: 4, r: 4, n: 3 },
+      { l: 4, r: 4, n: 4 }, { l: 4, r: 4, n: 4 },
+    ];
+
+    let idx = 0;
+    let timer = null;
+
+    const elArray = root.querySelector('[data-role="array"]');
+    const elLeft = root.querySelector('[data-role="left"]');
+    const elRight = root.querySelector('[data-role="right"]');
+    const elAns = root.querySelector('[data-role="ans"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll('[data-code]')];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    function cell(val, i, visible, state) {
+      const d = document.createElement("div");
+      d.className = "psviz-cell" + (visible ? "" : " is-hidden") + (state ? " " + state : "");
+      d.innerHTML = `<span class="v">${val}</span><span class="i">idx ${i}</span>`;
+      return d;
+    }
+
+    function render() {
+      const s = steps[idx];
+      const rv = reveal[idx];
+
+      elArray.innerHTML = "";
+      a.forEach((v, i) => {
+        elArray.appendChild(cell(v, i, true, s.curIdx === i && s.cur !== "none" ? "is-current" : ""));
+      });
+
+      elLeft.innerHTML = "";
+      L.forEach((v, i) => {
+        const done = i < rv.l;
+        elLeft.appendChild(cell(v, i, done, s.cur === "left" && s.curIdx === i ? "is-current" : (done ? "is-done" : "")));
+      });
+
+      elRight.innerHTML = "";
+      R.forEach((v, i) => {
+        const filled = i >= 4 - rv.r;
+        elRight.appendChild(cell(v, i, filled, s.cur === "right" && s.curIdx === i ? "is-current" : (filled && !(s.cur === "right" && s.curIdx === i) ? "is-done" : "")));
+      });
+
+      elAns.innerHTML = "";
+      ans.forEach((v, i) => {
+        const done = i < rv.n;
+        elAns.appendChild(cell(v, i, done, s.cur === "ans" && s.curIdx === i ? "is-current" : (done ? "is-done" : "")));
+      });
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    // Quiz
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (b.dataset.quiz === "b") {
+          b.classList.add("is-right");
+          feedback.textContent = "✓ Correct — a single zero makes the total product 0, so division either crashes or can't tell which positions should be non-zero.";
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = "✗ Speed isn't the issue — think about what happens to a/b when b is 0.";
+        }
+      });
+    });
+
+    // keyboard: ←/→ when focused inside viz
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-psviz]").forEach(initPrefixSuffixViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

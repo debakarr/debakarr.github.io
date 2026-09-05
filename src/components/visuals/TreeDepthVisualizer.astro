@@ -1,0 +1,402 @@
+---
+// TreeDepthVisualizer.astro
+// Step-through player for LeetCode 104 Maximum Depth of Binary Tree.
+// Fixed tree: 1 root; 2,3 children; 4 under 2. Post-order depth bubbling,
+// return-journey arrows, depth badges, call-stack panel. No dependencies,
+// vanilla JS, dark-mode aware, keyboard accessible, multi-instance safe.
+interface Props {
+  id?: string;
+}
+const { id = "treedepth-main" } = Astro.props;
+---
+
+<div class="tdviz" data-tdviz={id} tabindex="0">
+  <div class="tdviz-card">
+    <div class="tdviz-head">
+      <div>
+        <p class="tdviz-kicker">Interactive visual · Post-order bubbling</p>
+        <h3 class="tdviz-title">Depths bubble up — leaves answer first</h3>
+        <p class="tdviz-sub">
+          Nobody knows their depth until their children report back.
+          Watch <strong>4 answer 1</strong>, then <strong>2 combine</strong>,
+          then <strong>3 answer 1</strong>, and finally <strong>1 take the max</strong>.
+          Arrows show each answer travelling upward.
+        </p>
+      </div>
+      <div class="tdviz-legend" aria-label="Legend">
+        <span><i class="dot dot-cur"></i>computing</span>
+        <span><i class="dot dot-done"></i>depth known</span>
+        <span><i class="dot dot-todo"></i>waiting</span>
+      </div>
+    </div>
+
+    <div class="tdviz-stage">
+      <svg class="tdviz-tree" viewBox="0 0 400 250" role="img" aria-label="Binary tree with values 1, 2, 3, 4">
+        <defs>
+          <marker id="tdviz-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M 0 1 L 9 5 L 0 9 z" class="tdviz-arrowhead"></path>
+          </marker>
+        </defs>
+        <line class="tdviz-edge" data-edge="1-2" x1="200" y1="36" x2="110" y2="116" />
+        <line class="tdviz-edge" data-edge="1-3" x1="200" y1="36" x2="290" y2="116" />
+        <line class="tdviz-edge" data-edge="2-4" x1="110" y1="116" x2="65" y2="200" />
+        <line class="tdviz-edge tdviz-edge-ghost" x1="110" y1="116" x2="155" y2="200" stroke-dasharray="4 4" />
+        <g class="tdviz-node" data-node="1">
+          <circle class="ring" cx="200" cy="36" r="20" />
+          <text class="val" x="200" y="36">1</text>
+          <g class="badge"><circle class="dot" cx="220" cy="18" r="10" /><text class="num" x="220" y="18" data-badge></text></g>
+        </g>
+        <g class="tdviz-node" data-node="2">
+          <circle class="ring" cx="110" cy="116" r="20" />
+          <text class="val" x="110" y="116">2</text>
+          <g class="badge"><circle class="dot" cx="130" cy="98" r="10" /><text class="num" x="130" y="98" data-badge></text></g>
+        </g>
+        <g class="tdviz-node" data-node="3">
+          <circle class="ring" cx="290" cy="116" r="20" />
+          <text class="val" x="290" y="116">3</text>
+          <g class="badge"><circle class="dot" cx="310" cy="98" r="10" /><text class="num" x="310" y="98" data-badge></text></g>
+        </g>
+        <g class="tdviz-node" data-node="4">
+          <circle class="ring" cx="65" cy="200" r="20" />
+          <text class="val" x="65" y="200">4</text>
+          <g class="badge"><circle class="dot" cx="85" cy="182" r="10" /><text class="num" x="85" y="182" data-badge></text></g>
+        </g>
+        <g class="tdviz-ghost">
+          <circle class="gring" cx="155" cy="200" r="12" />
+          <text class="gval" x="155" y="200">∅</text>
+        </g>
+      </svg>
+
+      <div class="tdviz-mid">
+        <div class="tdviz-stack-wrap">
+          <p class="tdviz-row-label"><span>call stack</span><span data-role="stack-size"></span></p>
+          <div class="tdviz-stack" data-role="stack" aria-live="polite"></div>
+        </div>
+        <div class="tdviz-depths-wrap">
+          <p class="tdviz-row-label"><span>depths known</span><span data-role="depths-count"></span></p>
+          <div class="tdviz-depths" data-role="depths" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <p class="tdviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="tdviz-controls">
+      <div class="tdviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="tdviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 6</span>
+          <input type="range" data-role="slider" min="0" max="5" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="tdviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="tdviz-codegrid">
+      <div class="tdviz-code" aria-label="Algorithm code with current line highlighted">
+        <div data-code="0"><span class="ln">1</span><code>if not node: return 0</code></div>
+        <div data-code="1"><span class="ln">2</span><code>L = depth(node.left); R = depth(node.right)</code></div>
+        <div data-code="2"><span class="ln">3</span><code>return 1 + max(L, R)</code></div>
+      </div>
+      <div class="tdviz-quiz">
+        <p class="tdviz-quiz-title">Quick check — make it stick</p>
+        <p class="tdviz-quiz-q">What is the depth of the empty tree?</p>
+        <div class="tdviz-quiz-btns">
+          <button type="button" data-quiz="a">0</button>
+          <button type="button" data-quiz="b">1</button>
+          <button type="button" data-quiz="c">−1</button>
+        </div>
+        <p class="tdviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="tdviz-mnemonic">🧠 Memory hook: <strong>“Depth = 1 + taller child.”</strong> Empty is 0, a leaf is 1, everyone else adds one to their tallest answer.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .tdviz { margin: 1.75rem 0; }
+  .tdviz:focus { outline: none; }
+  .tdviz:focus-visible { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 1rem; }
+  .tdviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .tdviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .tdviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .tdviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .tdviz-sub strong, .tdviz-sub em { color: var(--ink); }
+  .tdviz-head { display: grid; gap: .9rem; margin-bottom: 1rem; }
+  @media (min-width: 720px) { .tdviz-head { grid-template-columns: 1fr auto; align-items: start; } }
+  .tdviz-legend { display: flex; flex-wrap: wrap; gap: .6rem; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); align-content: start; }
+  .tdviz-legend .dot { display: inline-block; width: .65rem; height: .65rem; border-radius: 999px; margin-right: .3rem; vertical-align: baseline; }
+  .dot-cur { background: var(--accent); }
+  .dot-done { background: #22c55e; }
+  .dot-todo { border: 1.5px solid var(--line); }
+  .tdviz-stage { display: grid; gap: .8rem; }
+  .tdviz-tree { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: .8rem; padding: .4rem; }
+  .tdviz-edge { stroke: var(--line); stroke-width: 2; }
+  .tdviz-edge-ghost { stroke-width: 1.5; }
+  .tdviz-edge.is-back { stroke: var(--accent); stroke-width: 2.5; marker-end: url(#tdviz-arrow); }
+  .tdviz-arrowhead { fill: var(--accent); }
+  .tdviz-node .ring { fill: var(--surface-raised); stroke: var(--line); stroke-width: 1.5; transition: stroke .2s, fill .2s; }
+  .tdviz-node .val { fill: var(--ink); font-weight: 800; font-size: 15px; text-anchor: middle; dominant-baseline: central; }
+  .tdviz-node.is-current .ring { stroke: var(--accent); stroke-width: 3; }
+  .tdviz-node.is-done .ring { stroke: #22c55e; fill: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .tdviz-node .badge { visibility: hidden; }
+  .tdviz-node.is-done .badge { visibility: visible; }
+  .tdviz-node .badge .dot { fill: #22c55e; }
+  .tdviz-node .badge .num { fill: #fff; font-size: 10px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
+  .tdviz-ghost .gring { fill: transparent; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 3 3; }
+  .tdviz-ghost .gval { fill: var(--muted); font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+  .tdviz-mid { display: grid; gap: .9rem; }
+  @media (min-width: 720px) { .tdviz-mid { grid-template-columns: 1fr 1fr; } }
+  .tdviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .tdviz-stack, .tdviz-depths {
+    display: flex; flex-wrap: wrap; gap: .4rem; align-items: center;
+    font-family: var(--font-mono); font-size: .78rem;
+    border: 1px solid var(--line); border-radius: .8rem; padding: .6rem .7rem;
+    background: var(--surface); min-height: 3rem;
+  }
+  .tdviz-frame {
+    border: 1px solid var(--accent); border-radius: .55rem; padding: .25rem .55rem;
+    background: color-mix(in oklab, var(--accent) 12%, var(--surface)); font-weight: 700;
+  }
+  .tdviz-frame.is-top { border-width: 2px; }
+  .tdviz-chip {
+    border: 1px solid #22c55e; border-radius: .55rem; padding: .25rem .55rem;
+    background: color-mix(in oklab, #22c55e 14%, var(--surface)); font-weight: 700;
+  }
+  .tdviz-empty { font-size: .8rem; color: var(--muted); font-family: var(--font-mono); }
+  .tdviz-caption {
+    margin: .1rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .tdviz-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .tdviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .tdviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .tdviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .tdviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .tdviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .tdviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .tdviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .tdviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .tdviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .tdviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .tdviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .tdviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .tdviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .tdviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .tdviz-code code { white-space: pre-wrap; }
+  .tdviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .tdviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .tdviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .tdviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .tdviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .tdviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .tdviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .tdviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .tdviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .tdviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) {
+    .tdviz-node .ring { transition: none; }
+  }
+</style>
+
+<script>
+  function initTreeDepthViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+
+    // Post-order: children answer before parents. depths grow one node at a time.
+    const steps = [
+      {
+        node: 1, code: -1, depths: {}, backs: [], stack: ["depth(1)"],
+        caption: "Start — depth(1) can't answer yet. It must ask its children first. Press Next or Play.",
+      },
+      {
+        node: 4, code: 2, depths: { 4: 1 }, backs: [], stack: ["depth(1)", "depth(2)", "depth(4)"],
+        caption: "depth(4) = 1 — leaf: both children are empty (0 and 0), so 1 + max(0, 0) = 1.",
+      },
+      {
+        node: 2, code: 2, depths: { 4: 1, 2: 2 }, backs: ["2-4"], stack: ["depth(1)", "depth(2)"],
+        caption: "Answer travels 4 → 2. depth(2) = 1 + max(1, 0) = 2 — the ∅ right child answers 0.",
+      },
+      {
+        node: 3, code: 2, depths: { 4: 1, 2: 2, 3: 1 }, backs: [], stack: ["depth(1)", "depth(3)"],
+        caption: "Right side reports: depth(3) = 1 — leaf, same math as 4. depth(2)'s frame is already closed.",
+      },
+      {
+        node: 1, code: 1, depths: { 4: 1, 2: 2, 3: 1 }, backs: ["1-2", "1-3"], stack: ["depth(1)"],
+        caption: "Answers travel 2 → 1 and 3 → 1. Now L = 2, R = 1 — both children have reported.",
+      },
+      {
+        node: null, code: 2, depths: { 4: 1, 2: 2, 3: 1, 1: 3 }, backs: ["1-2", "1-3"], stack: [],
+        caption: "Done — depth(1) = 1 + max(2, 1) = 3. Longest root-to-leaf path has 3 nodes.",
+      },
+    ];
+
+    let idx = 0;
+    let timer = null;
+
+    const nodeEls = {};
+    root.querySelectorAll("[data-node]").forEach((g) => { nodeEls[g.dataset.node] = g; });
+    const edgeEls = {};
+    root.querySelectorAll("[data-edge]").forEach((l) => { edgeEls[l.dataset.edge] = l; });
+    const elStack = root.querySelector('[data-role="stack"]');
+    const elStackSize = root.querySelector('[data-role="stack-size"]');
+    const elDepths = root.querySelector('[data-role="depths"]');
+    const elDepthsCount = root.querySelector('[data-role="depths-count"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll("[data-code]")];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    function render() {
+      const s = steps[idx];
+
+      Object.entries(nodeEls).forEach(([val, g]) => {
+        const v = Number(val);
+        g.classList.toggle("is-current", s.node === v);
+        g.classList.toggle("is-done", v in s.depths);
+        const badge = g.querySelector("[data-badge]");
+        if (badge) badge.textContent = (v in s.depths) ? String(s.depths[v]) : "";
+      });
+      Object.entries(edgeEls).forEach(([key, l]) => {
+        l.classList.toggle("is-back", s.backs.includes(key));
+      });
+
+      elStack.innerHTML = "";
+      if (s.stack.length === 0) {
+        const e = document.createElement("span");
+        e.className = "tdviz-empty";
+        e.textContent = "(empty — all frames returned)";
+        elStack.appendChild(e);
+      } else {
+        s.stack.forEach((f, i) => {
+          const d = document.createElement("span");
+          d.className = "tdviz-frame" + (i === s.stack.length - 1 ? " is-top" : "");
+          d.textContent = f;
+          elStack.appendChild(d);
+        });
+      }
+      elStackSize.textContent = s.stack.length ? `${s.stack.length} frame${s.stack.length > 1 ? "s" : ""}` : "";
+
+      elDepths.innerHTML = "";
+      const keys = Object.keys(s.depths);
+      if (keys.length === 0) {
+        const e = document.createElement("span");
+        e.className = "tdviz-empty";
+        e.textContent = "(nothing answered yet)";
+        elDepths.appendChild(e);
+      } else {
+        [4, 2, 3, 1].forEach((v) => {
+          if (v in s.depths) {
+            const c = document.createElement("span");
+            c.className = "tdviz-chip";
+            c.textContent = `depth(${v})=${s.depths[v]}`;
+            elDepths.appendChild(c);
+          }
+        });
+      }
+      elDepthsCount.textContent = keys.length ? `${keys.length} / 4 known` : "";
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (b.dataset.quiz === "a") {
+          b.classList.add("is-right");
+          feedback.textContent = "✓ Correct — empty tree is depth 0; that base case stops the recursion.";
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = "✗ Not quite — `if not node: return 0`. A leaf then becomes 1 + max(0, 0) = 1.";
+        }
+      });
+    });
+
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-tdviz]").forEach(initTreeDepthViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

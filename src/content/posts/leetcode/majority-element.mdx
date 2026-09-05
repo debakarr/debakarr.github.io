@@ -1,0 +1,84 @@
+---
+title: "[LeetCode] 169. Majority Element"
+date: "2019-08-27"
+description: "Majority Element with Boyer-Moore voting: cancel out, survivor wins. Interactive duel visual + typed Python 3."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Majority Element", "Moore's Voting Algorithm", "Programming"]
+draft: false
+---
+
+import HashXorVisualizer from '../../../components/visuals/HashXorVisualizer.astro';
+
+> 🧠 **Remember:** “Cancel out, survivor wins.”
+
+## The problem — 20 seconds
+
+`nums = [2, 2, 1, 1, 1, 2, 2]` → `2`. One element appears more than `⌊n/2⌋` times — and it is guaranteed to exist. Find it in `O(n)` time, `O(1)` space.
+
+[Original on LeetCode](https://leetcode.com/problems/majority-element/)
+
+Stage duels: equal values gang up, different values knock each other out. The majority outnumbers *everything else combined*, so it cannot be fully cancelled:
+
+## Your first instinct
+
+Count with a dictionary and return whatever passes `n/2`:
+
+```python
+freq: dict[int, int] = {}
+for x in nums:
+    freq[x] = freq.get(x, 0) + 1
+    if freq[x] > len(nums) // 2:
+        return x
+raise ValueError("No majority")
+```
+
+Correct, `O(n)` time — but `O(n)` space tracking runners-up nobody asked about. Sorting and taking the middle (`nums.sort()[n // 2]`) is `O(n log n)` and mutates the input. Both overpay because they ignore the guarantee: a majority *must* survive total cancellation.
+
+## The turning point
+
+Pair each non-majority vote against a majority vote and discard both — the majority still has votes left, since there are more of it than of everything else. Boyer-Moore simulates exactly this with one champion and a shield-count: matches add shields, mismatches spend them, zero shields crowns whoever arrives next.
+
+## Watch it work
+
+Press **Play**. The champion card and its shields update every step — watch `1` steal the crown mid-array, then lose it back to `2` in the final duels.
+
+<HashXorVisualizer mode="majority" id="hx-majority" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+
+class Solution:
+    def majorityElement(self, nums: List[int]) -> int:
+        cand: int | None = None
+        count = 0
+        for x in nums:
+            if count == 0:
+                cand, count = x, 1  # new champion
+            elif x == cand:
+                count += 1  # defended
+            else:
+                count -= 1  # duel — both fall
+        assert cand is not None
+        return cand  # + verify pass if not guaranteed
+```
+
+No majority guaranteed? Add a second pass counting `cand` and check `> n/2` — never trust a survivor without an election audit.
+
+## Why it works
+
+Invariant: discarded pairs always contain two *different* values, so discarding them preserves the majority of the remainder. The champion is simply the only candidate that can survive this process end-to-end — and with the problem's guarantee, survival equals victory.
+
+```text
+Time O(n), space O(1). One candidate, one counter.
+```
+
+## 🧠 Remember
+
+> **Majority Element → “Cancel out, survivor wins.”** Same defends, different duels.
+
+🔁 **Try this:** find all elements appearing more than `⌊n/3⌋` times. (Hint: two champions, two shield-counts — at most two such elements exist.)
+
+Related: [Top K Frequent Elements](/posts/leetcode/top-k-frequent-elements) · [Contains Duplicate](/posts/leetcode/contains-duplicate) · [Missing Number](/posts/leetcode/missing-number)

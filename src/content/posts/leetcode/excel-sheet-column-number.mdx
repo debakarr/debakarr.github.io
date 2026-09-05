@@ -1,0 +1,64 @@
+---
+title: "[LeetCode] 171. Excel Sheet Column Number"
+date: "2019-09-05"
+description: "Excel titles are base-26 with no zero: fold left to right, n = n × 26 + digit. Trace + typed Python."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Excel", "Column Number", "Programming"]
+draft: false
+---
+
+> 🧠 **Remember:** “Base-26 with no zero — A is 1, not 0.”
+
+## The problem — 20 seconds
+
+`"A"` → `1`, `"AB"` → `28`, `"ZY"` → `701`.
+
+Convert an Excel column title to its number — base-26 with digits `1–26` instead of `0–25`. That one shift is the entire problem.
+
+[Original on LeetCode](https://leetcode.com/problems/excel-sheet-column-number/)
+
+```text
+"AA" → 1 × 26 + 1 = 27
+"ZY" → 26 × 26 + 25 = 701
+```
+
+That's the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Add `26 ** i × value` per position from the right via a lookup dict. Correct — but powers, `reversed()`, and a dict are ceremony.
+
+## The turning point
+
+Read left → right and fold: `n = n × 26 + digit`. Each letter shifts everything so far one place left and appends its value — Horner's rule, the decimal-parsing trick. `ord(ch) − ord('A') + 1` is the digit; no dict needed.
+
+Trace `"ZY"`:
+
+```text
+n = 0 → 'Z' → 0 × 26 + 26 = 26 → 'Y' → 26 × 26 + 25 = 701  ✓
+```
+
+## What the code is really saying
+
+```python
+class Solution:
+    def titleToNumber(self, s: str) -> int:
+        n = 0
+        for ch in s:
+            n = n * 26 + (ord(ch) - ord("A") + 1)
+        return n
+```
+
+Shift-and-add, one character at a time. One trap: treating `A` as `0` makes `"AA"` give `0` — the `+ 1` *is* the "no zero digit" insight.
+
+## Why it works
+
+Invariant: after `k` characters, `n` equals that prefix's value. Appending a letter shifts it one column left and adds the digit — positional notation. One pass, one accumulator: time `O(n)`, space `O(1)`.
+
+## 🧠 Remember
+
+> **Excel Column → “Base-26 with no zero.”** Fold left to right: `n = n × 26 + digit`, digits starting at 1.
+
+🔁 **Try this:** invert it — number → title (LeetCode 168). (Hint: subtract 1 *before* each `divmod`, or `26` gives `AZ` instead of `Z`.)
+
+Related: [Roman to Integer](/posts/leetcode/roman-to-integer) · [Reverse String](/posts/leetcode/reverse-string)

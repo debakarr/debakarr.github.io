@@ -1,0 +1,86 @@
+---
+title: "[LeetCode] 237. Delete Node in a Linked List"
+date: "2019-07-25"
+description: "Delete a linked-list node with no head access by copying the next value over it. Typed Python + O(1) proof."
+categories: ["Programming", "Algorithms", "LeetCode"]
+tags: ["Delete Node in a Linked List", "Linked List", "LeetCode", "Algorithm"]
+draft: false
+---
+
+> 🧠 **Remember:** “Copy the next, skip the next.”
+
+## The problem — 20 seconds
+
+List `4 → 5 → 1 → 9`, handed *only* node `5` — no head. Result: `4 → 1 → 9`.
+
+No access to the predecessor means the target cannot be unlinked. Delete it anyway, in `O(1)`.
+
+[Original on LeetCode](https://leetcode.com/problems/delete-node-in-a-linked-list/)
+
+Since the node cannot be unlinked, turn it *into* its successor, then drop the successor:
+
+```text
+4 → 5 → 1 → 9   (node = 5, no head access)
+4 → 1 → 1 → 9   (copy next value over: node.val = 1)
+4 → 1 → 9       (bypass next: node.next = next.next)
+```
+
+That is the whole algorithm. Everything below just makes it obvious *why*.
+
+## Your first instinct
+
+Walk from the head to find the predecessor:
+
+```python
+curr = head
+while curr.next is not node:
+    curr = curr.next
+curr.next = node.next
+```
+
+ Textbook deletion — impossible here, because there is no `head`. The signature is just `deleteNode(node)`. Any fix starting “find the previous node” has left the problem.
+
+## The turning point
+
+Nobody observes nodes, only values in order. If node `5` carries `1` and points where `1` pointed, the list *reads* `4 → 1 → 9` — value `5` is gone though its box was reused. Deletion becomes disguise plus bypass, one step from the given node.
+
+## Watch it work
+
+No player here — the three lines above are the whole trace: overwrite the value, unlink the duplicate. Contrast [Reverse Linked List](/posts/leetcode/reverse-linked-list): full-head arrow surgery versus one skipped link with no head.
+
+## What the code is really saying
+
+```python
+from typing import Optional
+
+
+class ListNode:
+    def __init__(self, val: int = 0, next: Optional["ListNode"] = None):
+        self.val = val
+        self.next = next
+
+
+class Solution:
+    def deleteNode(self, node: ListNode) -> None:
+        node.val = node.next.val  # type: ignore[union-attr]
+        node.next = node.next.next  # type: ignore[union-attr]
+```
+
+Read it as the visual: copy, then skip. No return, no head, no traversal — the caller's reference now holds the successor's payload and link.
+
+## Why it works
+
+Invariant: after line one the target duplicates its successor; after line two the successor is unreachable — observable values go `4 → 5 → 1 → 9` to `4 → 1 → 9`. The tail is excluded because with `node.next is None` there is nothing to copy and no link to bypass; real deletion needs the unreachable predecessor.
+
+```text
+2 field writes, 0 traversal steps
+Time O(1), space O(1).
+```
+
+## 🧠 Remember
+
+> **Delete Node → “Copy the next, skip the next.”** No head? Become your successor, then cut it out.
+
+🔁 **Try this:** free the bypassed node explicitly in a manual-memory language? (Hint: Python's GC handles it; in C++ you would `delete` the skipped node after rewiring.)
+
+Related: [Reverse Linked List](/posts/leetcode/reverse-linked-list) · [Two Sum](/posts/leetcode/two-sum)

@@ -1,0 +1,349 @@
+---
+// SortedArrayBSTVisualizer.astro
+// Step-through player for LeetCode 108 Convert Sorted Array to BST.
+// Array [-10,-3,0,5,9]; middle-becomes-root recursion; tree SVG grows per
+// step; mid-picker highlight on the array. No dependencies, vanilla JS,
+// dark-mode aware, keyboard accessible, multi-instance safe.
+interface Props {
+  id?: string;
+}
+const { id = "sortedbst-main" } = Astro.props;
+---
+
+<div class="saviz" data-saviz={id} tabindex="0">
+  <div class="saviz-card">
+    <div class="saviz-head">
+      <div>
+        <p class="saviz-kicker">Interactive visual · Middle becomes root</p>
+        <h3 class="saviz-title">Sorted in, balanced out — pick the middle</h3>
+        <p class="saviz-sub">
+          The middle element has equally many neighbours on each side, so it
+          makes the perfect root. Everything left goes left, everything right
+          goes right — <strong>then recurse on each half</strong>.
+        </p>
+      </div>
+      <div class="saviz-legend" aria-label="Legend">
+        <span><i class="dot dot-cur"></i>mid picked</span>
+        <span><i class="dot dot-done"></i>placed</span>
+        <span><i class="dot dot-todo"></i>pending</span>
+      </div>
+    </div>
+
+    <div class="saviz-stage">
+      <p class="saviz-row-label"><span>nums (sorted)</span><span data-role="range-label"></span></p>
+      <div class="saviz-array" data-role="array" aria-live="polite"></div>
+
+      <svg class="saviz-tree" viewBox="0 0 400 250" role="img" aria-label="Partially built balanced BST">
+        <line class="saviz-edge" data-edge="0--10" x1="200" y1="36" x2="110" y2="116" />
+        <line class="saviz-edge" data-edge="0-5" x1="200" y1="36" x2="290" y2="116" />
+        <line class="saviz-edge" data-edge="-10--3" x1="110" y1="116" x2="155" y2="200" />
+        <line class="saviz-edge" data-edge="5-9" x1="290" y1="116" x2="335" y2="200" />
+        <g class="saviz-node" data-node="0">
+          <circle class="ring" cx="200" cy="36" r="20" />
+          <text class="val" x="200" y="36">0</text>
+        </g>
+        <g class="saviz-node" data-node="-10">
+          <circle class="ring" cx="110" cy="116" r="20" />
+          <text class="val" x="110" y="116">−10</text>
+        </g>
+        <g class="saviz-node" data-node="5">
+          <circle class="ring" cx="290" cy="116" r="20" />
+          <text class="val" x="290" y="116">5</text>
+        </g>
+        <g class="saviz-node" data-node="-3">
+          <circle class="ring" cx="155" cy="200" r="20" />
+          <text class="val" x="155" y="200">−3</text>
+        </g>
+        <g class="saviz-node" data-node="9">
+          <circle class="ring" cx="335" cy="200" r="20" />
+          <text class="val" x="335" y="200">9</text>
+        </g>
+      </svg>
+
+      <p class="saviz-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="saviz-controls">
+      <div class="saviz-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="saviz-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 6</span>
+          <input type="range" data-role="slider" min="0" max="5" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="saviz-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="saviz-codegrid">
+      <div class="saviz-code" aria-label="Algorithm code with current line highlighted">
+        <div data-code="0"><span class="ln">1</span><code>mid = (lo + hi) // 2; root = nums[mid]</code></div>
+        <div data-code="1"><span class="ln">2</span><code>root.left = build(lo, mid - 1)</code></div>
+        <div data-code="2"><span class="ln">3</span><code>root.right = build(mid + 1, hi)</code></div>
+      </div>
+      <div class="saviz-quiz">
+        <p class="saviz-quiz-title">Quick check — make it stick</p>
+        <p class="saviz-quiz-q">Why pick the middle element?</p>
+        <div class="saviz-quiz-btns">
+          <button type="button" data-quiz="a">Any index gives a balanced tree</button>
+          <button type="button" data-quiz="b">The middle keeps the height balanced</button>
+        </div>
+        <p class="saviz-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="saviz-mnemonic">🧠 Memory hook: <strong>“Middle becomes root.”</strong> Halve the array, crown the middle, recurse — balance comes free.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .saviz { margin: 1.75rem 0; }
+  .saviz:focus { outline: none; }
+  .saviz:focus-visible { outline: 2px dashed var(--accent); outline-offset: 4px; border-radius: 1rem; }
+  .saviz-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .saviz-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .saviz-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .saviz-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .saviz-sub strong, .saviz-sub em { color: var(--ink); }
+  .saviz-head { display: grid; gap: .9rem; margin-bottom: 1rem; }
+  @media (min-width: 720px) { .saviz-head { grid-template-columns: 1fr auto; align-items: start; } }
+  .saviz-legend { display: flex; flex-wrap: wrap; gap: .6rem; font-family: var(--font-mono); font-size: .72rem; color: var(--muted); align-content: start; }
+  .saviz-legend .dot { display: inline-block; width: .65rem; height: .65rem; border-radius: 999px; margin-right: .3rem; vertical-align: baseline; }
+  .dot-cur { background: var(--accent); }
+  .dot-done { background: #22c55e; }
+  .dot-todo { border: 1.5px solid var(--line); }
+  .saviz-stage { display: grid; gap: .8rem; }
+  .saviz-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .saviz-array { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .saviz-cell {
+    min-width: 3rem; text-align: center;
+    border: 1.5px solid var(--line); border-radius: .7rem;
+    padding: .5rem .6rem .4rem; background: var(--surface);
+    transition: transform .2s, border-color .2s, background .2s;
+  }
+  .saviz-cell .v { font-weight: 800; font-size: 1rem; display: block; }
+  .saviz-cell .i { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+  .saviz-cell.is-range { border-color: var(--accent); }
+  .saviz-cell.is-mid { border-color: var(--accent); border-width: 2.5px; transform: translateY(-2px); background: color-mix(in oklab, var(--accent) 14%, var(--surface)); }
+  .saviz-cell.is-placed { border-color: #22c55e; }
+  .saviz-cell.is-out { opacity: .45; }
+  .saviz-tree { width: 100%; height: auto; display: block; background: var(--surface); border: 1px solid var(--line); border-radius: .8rem; padding: .4rem; }
+  .saviz-edge { stroke: var(--line); stroke-width: 2; visibility: hidden; }
+  .saviz-edge.is-on { visibility: visible; stroke: #22c55e; }
+  .saviz-node { visibility: hidden; }
+  .saviz-node.is-on { visibility: visible; }
+  .saviz-node .ring { fill: color-mix(in oklab, #22c55e 14%, var(--surface)); stroke: #22c55e; stroke-width: 2; }
+  .saviz-node.is-current .ring { stroke: var(--accent); stroke-width: 3; fill: color-mix(in oklab, var(--accent) 18%, var(--surface-raised)); }
+  .saviz-node .val { fill: var(--ink); font-weight: 800; font-size: 14px; text-anchor: middle; dominant-baseline: central; }
+  .saviz-caption {
+    margin: .1rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .saviz-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .saviz-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .saviz-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .saviz-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .saviz-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .saviz-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .saviz-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .saviz-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .saviz-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .saviz-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .saviz-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .saviz-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .saviz-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .saviz-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .saviz-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .saviz-code code { white-space: pre-wrap; }
+  .saviz-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .saviz-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .saviz-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .saviz-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .saviz-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .saviz-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .saviz-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .saviz-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .saviz-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .saviz-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) {
+    .saviz-cell { transition: none; }
+  }
+</style>
+
+<script>
+  function initSortedBstViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+
+    const NUMS = [-10, -3, 0, 5, 9];
+    // mid=(lo+hi)//2 trace: build(0,4)→2, build(0,1)→0, build(1,1)→1, build(3,4)→3, build(4,4)→4
+    const steps = [
+      {
+        mid: -1, lo: 0, hi: 4, code: -1, placed: [], edges: [],
+        caption: "Start — build(lo=0, hi=4) owns the whole array. Press Next or Play: each step crowns one middle.",
+      },
+      {
+        mid: 2, lo: 0, hi: 4, code: 0, placed: ["0"], edges: [],
+        caption: "mid = (0+4)//2 = 2 → root = 0. Left half [−10,−3] and right half [5,9] split evenly — balance starts here.",
+      },
+      {
+        mid: 0, lo: 0, hi: 1, code: 1, placed: ["0", "-10"], edges: ["0--10"],
+        caption: "root.left = build(0, 1): mid = (0+1)//2 = 0 → −10 becomes the left child of 0.",
+      },
+      {
+        mid: 1, lo: 1, hi: 1, code: 1, placed: ["0", "-10", "-3"], edges: ["0--10", "-10--3"],
+        caption: "build(1, 1): mid = 1 → −3 becomes the right child of −10. Left subtree done — inorder here reads −10, −3.",
+      },
+      {
+        mid: 3, lo: 3, hi: 4, code: 2, placed: ["0", "-10", "-3", "5"], edges: ["0--10", "-10--3", "0-5"],
+        caption: "root.right = build(3, 4): mid = (3+4)//2 = 3 → 5 becomes the right child of 0.",
+      },
+      {
+        mid: 4, lo: 4, hi: 4, code: 2, placed: ["0", "-10", "-3", "5", "9"], edges: ["0--10", "-10--3", "0-5", "5-9"],
+        caption: "build(4, 4): mid = 4 → 9 becomes the right child of 5. Done — inorder gives back [−10,−3,0,5,9], heights differ by ≤ 1.",
+      },
+    ];
+
+    let idx = 0;
+    let timer = null;
+
+    const elArray = root.querySelector('[data-role="array"]');
+    const elRange = root.querySelector('[data-role="range-label"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll("[data-code]")];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+    const nodeEls = {};
+    root.querySelectorAll("[data-node]").forEach((g) => { nodeEls[g.dataset.node] = g; });
+    const edgeEls = {};
+    root.querySelectorAll("[data-edge]").forEach((l) => { edgeEls[l.dataset.edge] = l; });
+
+    function render() {
+      const s = steps[idx];
+
+      elArray.innerHTML = "";
+      NUMS.forEach((n, i) => {
+        const d = document.createElement("div");
+        const inRange = i >= s.lo && i <= s.hi;
+        const isMid = i === s.mid;
+        const placed = s.placed.includes(String(n));
+        d.className = "saviz-cell"
+          + (isMid ? " is-mid" : "")
+          + (!isMid && inRange ? " is-range" : "")
+          + (!isMid && placed ? " is-placed" : "")
+          + (!inRange && !placed ? " is-out" : "");
+        d.innerHTML = `<span class="v">${n}</span><span class="i">idx ${i}</span>`;
+        elArray.appendChild(d);
+      });
+      elRange.textContent = `build(${s.lo}, ${s.hi})` + (s.mid >= 0 ? ` · mid=${s.mid} → ${NUMS[s.mid]}` : "");
+
+      Object.entries(nodeEls).forEach(([key, g]) => {
+        const on = s.placed.includes(key);
+        g.classList.toggle("is-on", on);
+        g.classList.toggle("is-current", on && String(NUMS[s.mid]) === key);
+      });
+      Object.entries(edgeEls).forEach(([key, l]) => {
+        l.classList.toggle("is-on", s.edges.includes(key));
+      });
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (b.dataset.quiz === "b") {
+          b.classList.add("is-right");
+          feedback.textContent = "✓ Correct — the middle splits the range evenly, so every subtree stays balanced.";
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = "✗ Not quite — picking index 0 every time builds a chain of height n. The middle keeps both sides even.";
+        }
+      });
+    });
+
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-saviz]").forEach(initSortedBstViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

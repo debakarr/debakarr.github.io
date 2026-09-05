@@ -1,0 +1,742 @@
+---
+// HashXorVisualizer.astro
+// Shared step-through player for hash/XOR patterns: duplicate, single,
+// missing, majority, topk. One component, `mode` prop selects the stage.
+// No dependencies, vanilla JS, dark-mode aware, keyboard accessible.
+interface Props {
+  mode: "duplicate" | "single" | "missing" | "majority" | "topk";
+  id?: string;
+}
+const { mode, id = `hx-${mode}` } = Astro.props;
+
+const META = {
+  duplicate: {
+    kicker: "Interactive visual · Seen Set",
+    title: "Have you seen this number before?",
+    sub: `Think of <em>seen</em> as a <strong>bouncer's guest list</strong>: each number walks up and the bouncer asks <em>“Have I seen you?”</em> The first repeat gets flagged.`,
+    code: [
+      "seen = set()  # the guest list",
+      "for x in nums:",
+      "  if x in seen: return True  # repeat!",
+      "  seen.add(x)  # remember it",
+    ],
+    quizQ: "What do we ask about each x?",
+    quizOpts: ["Is x bigger than all seen?", "Is x already in seen?", "Is x the last element?"],
+    mnemonic: "“Have I seen you?” Ask before you remember.",
+  },
+  single: {
+    kicker: "Interactive visual · XOR Canceller",
+    title: "Watch pairs cancel out of existence",
+    sub: `Think of XOR as a <strong>toggle switch</strong>: the first sighting flips it on, the second flips it back off. Only the loner stays lit. Struck-through cells are cancelled pairs.`,
+    code: [
+      "acc = 0  # nothing seen yet",
+      "for x in nums:",
+      "  acc ^= x  # pairs cancel: a ^ a = 0",
+      "return acc  # only the loner remains",
+    ],
+    quizQ: "Why does a pair disappear?",
+    quizOpts: ["Because a + a = 0", "Because a ^ a = 0", "Because a ^ a = a"],
+    mnemonic: "“XOR makes duplicates disappear.” Fold everything; the loner survives.",
+  },
+  missing: {
+    kicker: "Interactive visual · Gap Hunt",
+    title: "Which slot from 0..n is empty?",
+    sub: `Line up slots <strong>0…n</strong> and park each number in its slot. XOR every index with every value — parked pairs cancel, and the <em>empty slot's number</em> is all that remains.`,
+    code: [
+      "miss = len(nums)  # n: indices only cover 0..n-1",
+      "for i, x in enumerate(nums):",
+      "  miss ^= i ^ x  # cancel what is present",
+      "return miss  # the empty slot",
+    ],
+    quizQ: "Why does miss start at n?",
+    quizOpts: ["Indices only cover 0..n−1", "n is always the answer", "To avoid XOR with zero"],
+    mnemonic: "“What's missing from 0..n?” Cancel everything present; the gap remains.",
+  },
+  majority: {
+    kicker: "Interactive visual · Survivor Vote",
+    title: "Cancel out — the majority survives",
+    sub: `Imagine a <strong>tug-of-war where different values knock each other out</strong>: a match defends the champion (+1 shield), a mismatch is a duel (−1 shield each). The majority outnumbers the rest combined, so it survives.`,
+    code: [
+      "cand, count = None, 0",
+      "for x in nums:",
+      "  if count == 0: cand, count = x, 1  # new champion",
+      "  elif x == cand: count += 1  # defended",
+      "  else: count -= 1  # duel — both fall (verify, return cand)",
+    ],
+    quizQ: "Why is the majority guaranteed to survive?",
+    quizOpts: [
+      "It outnumbers all other values combined",
+      "It always appears first",
+      "The count can never drop to zero",
+    ],
+    mnemonic: "“Cancel out, survivor wins.” Same defends, different duels.",
+  },
+  topk: {
+    kicker: "Interactive visual · Frequency Race",
+    title: "Count everything, crown the tallest",
+    sub: `Think of <strong>bars growing like a live race chart</strong>: every sighting adds one block. When counting ends, skim the <em>k tallest bars</em> — those are your answer.`,
+    code: [
+      "freq: dict[int, int] = {}  # value -> height",
+      "for x in nums: freq[x] = freq.get(x, 0) + 1  # grow bars",
+      "top = sorted(freq, key=freq.get, reverse=True)[:k]",
+      "return top  # the k tallest",
+    ],
+    quizQ: "What decides the winners?",
+    quizOpts: ["Who was seen first", "The highest counts", "The largest values"],
+    mnemonic: "“Count, then collect the tallest.” Counting and ranking are separate jobs.",
+  },
+} as const;
+const meta = META[mode];
+---
+
+<div class="hxv" data-hxv={id} data-mode={mode} tabindex="0">
+  <div class="hxv-card">
+    <div class="hxv-head">
+      <div>
+        <p class="hxv-kicker">{meta.kicker}</p>
+        <h3 class="hxv-title">{meta.title}</h3>
+        <p class="hxv-sub" set:html={meta.sub} />
+      </div>
+    </div>
+
+    <div class="hxv-stage">
+      <p class="hxv-row-label"><span data-role="array-label">nums</span><span data-role="extra-label"></span></p>
+      <div class="hxv-array" data-role="array" aria-live="polite"></div>
+
+      <div class="hxv-mid">
+        <div class="hxv-status" data-role="status" aria-live="polite"></div>
+        <div class="hxv-aux-wrap">
+          <p class="hxv-row-label"><span data-role="aux-label"></span><span data-role="aux-size"></span></p>
+          <div class="hxv-aux" data-role="aux"></div>
+        </div>
+      </div>
+
+      <p class="hxv-caption" data-role="caption" aria-live="polite"></p>
+    </div>
+
+    <div class="hxv-controls">
+      <div class="hxv-btns">
+        <button type="button" data-action="prev" aria-label="Previous step">← Prev</button>
+        <button type="button" data-action="play" aria-label="Play or pause">▶ Play</button>
+        <button type="button" data-action="next" aria-label="Next step">Next →</button>
+        <button type="button" data-action="reset" aria-label="Reset">Reset</button>
+      </div>
+      <div class="hxv-slider-row">
+        <label>
+          Step <span data-role="step-label">1 / 1</span>
+          <input type="range" data-role="slider" min="0" max="0" value="0" step="1" aria-label="Scrub through steps" />
+        </label>
+        <label class="hxv-speed">
+          Speed
+          <select data-role="speed" aria-label="Playback speed">
+            <option value="1400">Slow</option>
+            <option value="900" selected>Normal</option>
+            <option value="450">Fast</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="hxv-codegrid">
+      <div class="hxv-code" aria-label="Algorithm code with current line highlighted">
+        {meta.code.map((line, i) => (
+          <div data-code={i}><span class="ln">{i + 1}</span><code>{line}</code></div>
+        ))}
+      </div>
+      <div class="hxv-quiz">
+        <p class="hxv-quiz-title">Quick check — make it stick</p>
+        <p class="hxv-quiz-q">{meta.quizQ}</p>
+        <div class="hxv-quiz-btns">
+          {meta.quizOpts.map((o, i) => (
+            <button type="button" data-quiz={i}>{o}</button>
+          ))}
+        </div>
+        <p class="hxv-quiz-feedback" data-role="quiz-feedback" aria-live="polite"></p>
+        <p class="hxv-mnemonic">🧠 Memory hook: <strong>{meta.mnemonic}</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hxv { margin: 1.75rem 0; }
+  .hxv:focus { outline: none; }
+  .hxv:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 1rem; }
+  .hxv-card {
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--surface-raised);
+    padding: 1.1rem 1.1rem 1.25rem;
+    box-shadow: 0 8px 30px -18px rgba(0,0,0,.45);
+  }
+  .hxv-kicker {
+    font-family: var(--font-mono);
+    font-size: .72rem; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 .35rem;
+  }
+  .hxv-title { font-size: 1.05rem; font-weight: 700; margin: 0 0 .4rem; line-height: 1.35; }
+  .hxv-sub { font-size: .9rem; color: var(--muted); line-height: 1.6; margin: 0; max-width: 62ch; }
+  .hxv-sub strong, .hxv-sub em { color: var(--ink); }
+  .hxv-head { margin-bottom: 1rem; }
+  .hxv-row-label {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--font-mono); font-size: .75rem; color: var(--muted);
+    margin: .2rem 0 .5rem;
+  }
+  .hxv-array { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .hxv-cell {
+    min-width: 3.2rem; text-align: center;
+    border: 1.5px solid var(--line); border-radius: .7rem;
+    padding: .5rem .6rem .4rem; background: var(--surface);
+    transition: transform .2s, border-color .2s, background .2s, opacity .2s;
+  }
+  .hxv-cell .v { font-weight: 800; font-size: 1.05rem; display: block; }
+  .hxv-cell .i { font-family: var(--font-mono); font-size: .68rem; color: var(--muted); }
+  .hxv-cell.is-current { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--accent); }
+  .hxv-cell.is-hit { border-color: #22c55e; background: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .hxv-cell.is-dim { opacity: .55; }
+  .hxv-cell.is-paired { opacity: .55; }
+  .hxv-cell.is-paired .v { text-decoration: line-through; text-decoration-thickness: 2px; }
+  .hxv-cell.is-lone { border-color: #22c55e; background: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .hxv-cell.is-backing { border-color: var(--accent); }
+  .hxv-cell.is-top { border-color: #22c55e; background: color-mix(in oklab, #22c55e 14%, var(--surface)); }
+  .hxv-mid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 720px) { .hxv-mid { grid-template-columns: 1fr 1fr; } }
+  .hxv-status {
+    border: 1px dashed var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    font-size: .88rem; line-height: 1.55; background: color-mix(in oklab, var(--accent) 7%, transparent);
+    min-height: 5.2rem;
+  }
+  .hxv-status strong { color: var(--accent-strong); }
+  .hxv-status .hit { color: #16a34a; font-weight: 700; }
+  .hxv-status .miss { color: var(--muted); font-weight: 600; }
+  .hxv-status .bin { font-family: var(--font-mono); font-size: .78rem; color: var(--muted); }
+  .hxv-status .big { font-size: 1.3rem; font-weight: 800; color: var(--accent-strong); }
+  .hxv-aux {
+    min-height: 3.2rem;
+    border: 1px solid var(--line); border-radius: .8rem; padding: .6rem;
+    background: var(--surface);
+    display: flex; flex-wrap: wrap; gap: .4rem; align-content: flex-start;
+  }
+  .hxv-aux.is-bars { flex-direction: column; align-items: stretch; }
+  .hxv-chip {
+    font-family: var(--font-mono); font-size: .75rem;
+    border: 1px solid var(--line); border-radius: .55rem; padding: .3rem .5rem;
+    background: var(--surface-raised);
+  }
+  .hxv-chip b { color: var(--accent-strong); }
+  .hxv-chip.is-current { border-color: var(--accent); }
+  .hxv-chip.is-missing { border-color: #22c55e; color: #16a34a; font-weight: 700; }
+  .hxv-empty { font-size: .8rem; color: var(--muted); }
+  .hxv-bar-row { display: grid; grid-template-columns: 2.2rem 1fr 2.4rem; gap: .5rem; align-items: center; font-family: var(--font-mono); font-size: .75rem; }
+  .hxv-bar-row.is-top .hxv-bar-key { color: #16a34a; font-weight: 800; }
+  .hxv-bar-track { height: .7rem; border-radius: 999px; background: color-mix(in oklab, var(--ink) 10%, transparent); overflow: hidden; }
+  .hxv-bar-fill { height: 100%; border-radius: 999px; background: var(--accent); transition: width .25s; }
+  .hxv-bar-row.is-top .hxv-bar-fill { background: #22c55e; }
+  .hxv-bar-count { text-align: right; color: var(--muted); }
+  .hxv-cand { display: flex; align-items: baseline; gap: .6rem; font-size: .85rem; width: 100%; }
+  .hxv-cand .big { font-size: 1.6rem; font-weight: 800; color: var(--accent-strong); }
+  .hxv-shields { font-family: var(--font-mono); font-size: .8rem; color: var(--muted); }
+  .hxv-caption {
+    margin: .9rem 0 0; font-size: .9rem; line-height: 1.6;
+    border-left: 3px solid var(--accent); padding-left: .7rem;
+  }
+  .hxv-controls { margin-top: 1rem; border-top: 1px solid var(--line); padding-top: .9rem; display: grid; gap: .7rem; }
+  .hxv-btns { display: flex; flex-wrap: wrap; gap: .45rem; }
+  .hxv-btns button {
+    border: 1px solid var(--line); border-radius: .6rem; padding: .45rem .8rem;
+    font-size: .83rem; font-weight: 600; cursor: pointer;
+    background: var(--surface); color: var(--ink);
+  }
+  .hxv-btns button:hover { border-color: var(--accent); color: var(--accent-strong); }
+  .hxv-btns [data-action="play"] { background: var(--accent); border-color: var(--accent); color: white; min-width: 6.5rem; }
+  .hxv-slider-row { display: grid; gap: .6rem; font-size: .8rem; color: var(--muted); }
+  @media (min-width: 720px) { .hxv-slider-row { grid-template-columns: 1fr auto; align-items: center; } }
+  .hxv-slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .hxv-speed select {
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: .5rem; padding: .3rem .5rem; font-size: .8rem;
+  }
+  .hxv-codegrid { display: grid; gap: .9rem; margin-top: 1rem; }
+  @media (min-width: 860px) { .hxv-codegrid { grid-template-columns: 1.1fr .9fr; } }
+  .hxv-code {
+    font-family: var(--font-mono); font-size: .78rem; line-height: 1.6;
+    border: 1px solid var(--line); border-radius: .8rem; overflow: hidden; background: #0d1117;
+  }
+  .hxv-code div { display: flex; gap: .7rem; padding: .4rem .8rem; color: #c9d1d9; opacity: .55; }
+  .hxv-code div.is-on { opacity: 1; background: rgba(99,102,241,.22); border-left: 3px solid #818cf8; }
+  .hxv-code .ln { color: #6e7681; min-width: 1rem; text-align: right; user-select: none; }
+  .hxv-code code { white-space: pre-wrap; }
+  .hxv-quiz {
+    border: 1px solid var(--line); border-radius: .8rem; padding: .8rem .9rem;
+    background: var(--surface); font-size: .85rem; line-height: 1.55;
+  }
+  .hxv-quiz-title { font-family: var(--font-mono); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 .4rem; }
+  .hxv-quiz-q { font-weight: 650; margin: 0 0 .5rem; }
+  .hxv-quiz-btns { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .hxv-quiz-btns button {
+    font-size: .78rem; border: 1px solid var(--line); border-radius: 999px;
+    padding: .3rem .65rem; background: var(--surface-raised); cursor: pointer; color: var(--ink);
+  }
+  .hxv-quiz-btns button.is-right { border-color: #22c55e; color: #16a34a; }
+  .hxv-quiz-btns button.is-wrong { border-color: #ef4444; color: #ef4444; }
+  .hxv-quiz-feedback { min-height: 1.4em; margin: .5rem 0 0; font-size: .82rem; }
+  .hxv-mnemonic { margin: .6rem 0 0; font-size: .83rem; color: var(--muted); }
+  .hxv-mnemonic strong { color: var(--ink); }
+  @media (prefers-reduced-motion: reduce) {
+    .hxv-cell, .hxv-bar-fill { transition: none; }
+  }
+</style>
+
+<script>
+  function initHashXorViz(root) {
+    if (root.dataset.init) return;
+    root.dataset.init = "1";
+    const mode = root.dataset.mode;
+
+    const DATA = {
+      duplicate: { nums: [1, 2, 3, 1] },
+      single: { nums: [4, 1, 2, 1, 2] },
+      missing: { nums: [3, 0, 1] },
+      majority: { nums: [2, 2, 1, 1, 1, 2, 2] },
+      topk: { nums: [1, 1, 1, 2, 2, 3], k: 2 },
+    }[mode];
+    if (!DATA) return;
+
+    const QUIZ = {
+      duplicate: { ok: 1, good: "✓ Correct — one membership test per element, O(1).", bad: "✗ Not quite — each step asks “is x already in seen?”" },
+      single: { ok: 1, good: "✓ Correct — a ^ a = 0, so every pair vanishes.", bad: "✗ Not quite — pairs vanish because a ^ a = 0." },
+      missing: { ok: 0, good: "✓ Correct — loop indices only cover 0..n−1, so we seed with n.", bad: "✗ Not quite — loop indices only cover 0..n−1, so we seed with n." },
+      majority: { ok: 0, good: "✓ Correct — the majority outnumbers everything else combined.", bad: "✗ Not quite — only a true majority is guaranteed to survive full cancellation." },
+      topk: { ok: 1, good: "✓ Correct — the tallest bars (highest counts) win.", bad: "✗ Not quite — winners are picked by count, not value or arrival order." },
+    }[mode];
+
+    const AUX_LABEL = {
+      duplicate: "guest list (seen set)",
+      single: "xor accumulator",
+      missing: "slots 0..n",
+      majority: "champion + shields",
+      topk: "frequencies (k = 2)",
+    }[mode];
+
+    const EXTRA_LABEL = {
+      duplicate: "",
+      single: "acc shown in status",
+      missing: "n = 3",
+      majority: "need > n/2 = 3",
+      topk: "k = 2",
+    }[mode];
+
+    function bin(n) { return "0b" + (n >>> 0).toString(2); }
+
+    function buildSteps() {
+      const nums = DATA.nums;
+      if (mode === "duplicate") {
+        const out = [];
+        const seen = [];
+        out.push({
+          code: 0, i: -1, t: "start", x: null, seen: [], first: -1,
+          caption: "Empty guest list. We walk left → right, asking “seen it?” once per number.",
+        });
+        for (let i = 0; i < nums.length; i++) {
+          const x = nums[i];
+          const first = seen.indexOf(x);
+          const hit = first !== -1;
+          out.push({
+            code: 2, i, t: hit ? "hit" : "miss", x, seen: [...seen], first,
+            caption: hit
+              ? `i=${i}, x=${x}. ${x} IS on the list (first at idx ${first}) → return True. Caught a repeat!`
+              : `i=${i}, x=${x}. ${x} is NOT on the list → write it down, keep walking.`,
+          });
+          if (hit) break;
+          seen.push(x);
+          out.push({
+            code: 3, i, t: "store", x, seen: [...seen], first: -1,
+            caption: `Remembered ${x}. List now holds [${seen.join(", ")}]. Next number…`,
+          });
+        }
+        return out;
+      }
+      if (mode === "single") {
+        const out = [];
+        const lastIdx = new Map();
+        const paired = new Set();
+        let acc = 0;
+        out.push({
+          code: 0, i: -1, t: "start", x: null, acc: 0, prev: null, paired: [],
+          caption: "acc starts at 0 — the “nothing seen yet” value. XOR folds each number in.",
+        });
+        for (let i = 0; i < nums.length; i++) {
+          const x = nums[i];
+          const prev = acc;
+          acc ^= x;
+          let note;
+          if (lastIdx.has(x) && !paired.has(lastIdx.get(x))) {
+            const j = lastIdx.get(x);
+            paired.add(j); paired.add(i);
+            note = `second ${x} — pair (idx ${j}, idx ${i}) cancels out.`;
+          } else {
+            lastIdx.set(x, i);
+            note = `first ${x} — still unpaired, stays lit.`;
+          }
+          out.push({
+            code: 2, i, t: "xor", x, acc, prev, paired: [...paired],
+            caption: `i=${i}, x=${x} (${bin(x)}). acc ${prev} ^ ${x} = ${acc} (${bin(acc)}). ${note}`,
+          });
+        }
+        out.push({
+          code: 3, i: nums.length - 1, t: "done", x: null, acc, prev: null, paired: [...paired],
+          caption: `Every pair cancelled to 0 — the survivor is ${acc}. return acc.`,
+        });
+        return out;
+      }
+      if (mode === "missing") {
+        const out = [];
+        const n = nums.length;
+        let miss = n;
+        nums.forEach((x, i) => { miss ^= i ^ x; });
+        let res = n;
+        const seenVals = [];
+        out.push({
+          code: 0, i: -1, t: "start", x: null, res, prev: null, seenVals: [], missing: -1,
+          caption: `Range is 0..${n} but indices only cover 0..${n - 1} — so res starts at ${n}. All slots empty.`,
+        });
+        nums.forEach((x, i) => {
+          const prev = res;
+          res ^= i ^ x;
+          seenVals.push(x);
+          const last = i === nums.length - 1;
+          out.push({
+            code: last ? 3 : 2, i, t: last ? "done" : "xor", x, res, prev,
+            seenVals: [...seenVals], missing: last ? miss : -1,
+            caption: last
+              ? `i=${i}, x=${x}. res ${prev} ^ ${i} ^ ${x} = ${res}. Slot ${miss} never got parked → return ${miss}.`
+              : `i=${i}, x=${x}. res ${prev} ^ ${i} ^ ${x} = ${res}. Park ${x} in slot ${x}.`,
+          });
+        });
+        return out;
+      }
+      if (mode === "majority") {
+        const out = [];
+        let cand = null;
+        let count = 0;
+        out.push({
+          code: 0, i: -1, t: "start", x: null, cand, count, action: "No champion yet. count = 0.",
+          caption: "No champion, count 0. Walk left → right: a match defends, a mismatch duels.",
+        });
+        nums.forEach((x, i) => {
+          let action;
+          let code;
+          if (count === 0) {
+            cand = x; count = 1; code = 2;
+            action = `count was 0 → ${x} crowned champion (count 1).`;
+          } else if (x === cand) {
+            count++; code = 3;
+            action = `${x} == champion ${cand} → defended (count ${count}).`;
+          } else {
+            const old = cand; count--; code = 4;
+            action = `${x} ≠ champion ${old} → duel! Both lose a shield (count ${count}).`;
+          }
+          out.push({
+            code, i, t: "step", x, cand, count, action,
+            caption: `i=${i}, x=${x}. ${action}`,
+          });
+        });
+        out.push({
+          code: 4, i: nums.length - 1, t: "done", x: null, cand, count,
+          action: `Survivor: ${cand}. Verify pass confirms ${cand} appears > n/2 times.`,
+          caption: `Survivor is ${cand} — a verify pass (count occurrences) confirms it holds the majority. return cand.`,
+        });
+        return out;
+      }
+      // topk
+      const out = [];
+      const k = DATA.k;
+      const freq = new Map();
+      const snap = () => Object.fromEntries(freq);
+      out.push({
+        code: 0, i: -1, t: "start", phase: "count", x: null, freq: {}, top: [],
+        caption: `k=${k}. Phase 1 — COUNT: every sighting grows a bar. Phase 2 will crown the tallest.`,
+      });
+      nums.forEach((x, i) => {
+        freq.set(x, (freq.get(x) || 0) + 1);
+        const parts = [...freq.entries()].map(([a, b]) => `${a}:${b}`).join(", ");
+        out.push({
+          code: 1, i, t: "count", phase: "count", x, freq: snap(), top: [],
+          caption: `i=${i}, x=${x} → bar height ${freq.get(x)}. freq {${parts}}.`,
+        });
+      });
+      const ranked = [...freq.entries()].sort((a, b) => b[1] - a[1]);
+      const top = ranked.slice(0, k).map(([a]) => a);
+      const order = ranked.map(([a, b]) => `${a}(${b})`).join(" > ");
+      out.push({
+        code: 2, i: nums.length - 1, t: "rank", phase: "rank", x: null, freq: snap(), top,
+        caption: `Phase 2 — RANK by height: ${order}. Take the top ${k} → [${top.join(", ")}].`,
+      });
+      out.push({
+        code: 3, i: nums.length - 1, t: "done", phase: "rank", x: null, freq: snap(), top,
+        caption: `Crowned: [${top.join(", ")}]. return top. (Counter.most_common(${k}) does exactly this.)`,
+      });
+      return out;
+    }
+
+    let steps = buildSteps();
+    let idx = 0;
+    let timer = null;
+
+    const elArray = root.querySelector('[data-role="array"]');
+    const elStatus = root.querySelector('[data-role="status"]');
+    const elAux = root.querySelector('[data-role="aux"]');
+    const elAuxLabel = root.querySelector('[data-role="aux-label"]');
+    const elAuxSize = root.querySelector('[data-role="aux-size"]');
+    const elCaption = root.querySelector('[data-role="caption"]');
+    const elSlider = root.querySelector('[data-role="slider"]');
+    const elStepLabel = root.querySelector('[data-role="step-label"]');
+    const elSpeed = root.querySelector('[data-role="speed"]');
+    const elExtra = root.querySelector('[data-role="extra-label"]');
+    const btnPlay = root.querySelector('[data-action="play"]');
+    const codeRows = [...root.querySelectorAll("[data-code]")];
+    const feedback = root.querySelector('[data-role="quiz-feedback"]');
+
+    elAuxLabel.textContent = AUX_LABEL;
+    elExtra.textContent = EXTRA_LABEL;
+
+    function drawArray(nums, clsFn) {
+      elArray.innerHTML = "";
+      nums.forEach((v, i) => {
+        const d = document.createElement("div");
+        d.className = "hxv-cell" + (clsFn ? " " + (clsFn(v, i) || "") : "");
+        const vv = document.createElement("span");
+        vv.className = "v";
+        vv.textContent = String(v);
+        const ii = document.createElement("span");
+        ii.className = "i";
+        ii.textContent = "idx " + i;
+        d.appendChild(vv);
+        d.appendChild(ii);
+        elArray.appendChild(d);
+      });
+    }
+
+    function emptyAux(msg) {
+      elAux.classList.remove("is-bars");
+      elAux.innerHTML = "";
+      const e = document.createElement("span");
+      e.className = "hxv-empty";
+      e.textContent = msg;
+      elAux.appendChild(e);
+    }
+
+    function chips(items, cur) {
+      elAux.classList.remove("is-bars");
+      elAux.innerHTML = "";
+      if (!items.length) { emptyAux("(empty — nothing recorded yet)"); return; }
+      items.forEach((c) => {
+        const s = document.createElement("span");
+        s.className = "hxv-chip" + (c === cur ? " is-current" : "");
+        s.textContent = String(c);
+        elAux.appendChild(s);
+      });
+    }
+
+    function render() {
+      const s = steps[idx];
+      const nums = DATA.nums;
+
+      if (mode === "duplicate") {
+        drawArray(nums, (v, i) => {
+          if (s.t === "hit" && (i === s.i || i === s.first)) return "is-hit";
+          if (s.i >= 0 && i === s.i) return "is-current";
+          if (s.i >= 0 && i < s.i) return "is-dim";
+          return "";
+        });
+        if (s.t === "start") {
+          elStatus.innerHTML = "👀 One walk, left → right. Press <strong>Next</strong> or <strong>Play</strong>.";
+        } else if (s.t === "hit") {
+          elStatus.innerHTML = `x=<strong>${s.x}</strong> — on the list? <span class="hit">✓ YES → return True</span>`;
+        } else if (s.t === "miss") {
+          elStatus.innerHTML = `x=<strong>${s.x}</strong> — on the list? <span class="miss">✗ no → write it down</span>`;
+        } else {
+          elStatus.innerHTML = `Filed <strong>${s.x}</strong>. The list grows…`;
+        }
+        chips(s.seen, s.t === "store" ? s.x : null);
+        elAuxSize.textContent = s.seen.length ? `${s.seen.length} remembered` : "";
+      }
+
+      if (mode === "single") {
+        drawArray(nums, (v, i) => {
+          const cls = [];
+          if (s.paired.includes(i)) cls.push("is-paired");
+          if (s.t !== "done" && i === s.i) cls.push("is-current");
+          if (s.t === "done" && v === s.acc && !s.paired.includes(i)) cls.push("is-lone");
+          return cls.join(" ");
+        });
+        elAux.classList.remove("is-bars");
+        if (s.t === "start") {
+          elStatus.innerHTML = "👀 <strong>acc = 0</strong>. Press <strong>Play</strong> — watch pairs annihilate.";
+        } else if (s.t === "xor") {
+          elStatus.innerHTML = `<strong>${s.prev} ^ ${s.x} = ${s.acc}</strong> <span class="bin">(${bin(s.acc)})</span>`;
+        } else {
+          elStatus.innerHTML = `Only <strong>${s.acc}</strong> remains → <strong>return ${s.acc}</strong>.`;
+        }
+        elAux.innerHTML = "";
+        const wrap = document.createElement("div");
+        wrap.className = "hxv-cand";
+        wrap.innerHTML = `<span class="big">acc ${s.acc}</span><span class="bin" style="font-family:var(--font-mono);font-size:.78rem;color:var(--muted)">${bin(s.acc)}</span><span class="hxv-shields">${s.paired.length / 2} pair(s) cancelled</span>`;
+        elAux.appendChild(wrap);
+        elAuxSize.textContent = "";
+      }
+
+      if (mode === "missing") {
+        const n = nums.length;
+        drawArray(nums, (v, i) => {
+          if (s.i >= 0 && i === s.i) return "is-current";
+          if (s.i >= 0 && i < s.i) return "is-dim";
+          return "";
+        });
+        if (s.t === "start") {
+          elStatus.innerHTML = `👀 <strong>res = ${n}</strong>. Every slot 0..${n} must cancel — except one.`;
+        } else if (s.t === "xor") {
+          elStatus.innerHTML = `<strong>${s.prev} ^ ${s.i} ^ ${s.x} = ${s.res}</strong> <span class="bin">(${bin(s.res)})</span>`;
+        } else {
+          elStatus.innerHTML = `<strong>res = ${s.res}</strong> → slot <strong>${s.missing}</strong> stayed empty. <span class="hit">return ${s.missing}</span>`;
+        }
+        elAux.classList.remove("is-bars");
+        elAux.innerHTML = "";
+        for (let v = 0; v <= n; v++) {
+          const c = document.createElement("span");
+          c.className = "hxv-chip"
+            + (s.seenVals.includes(v) ? " is-current" : "")
+            + (s.missing === v ? " is-missing" : "");
+          c.textContent = s.missing === v ? `${v} ✗ empty` : (s.seenVals.includes(v) ? `${v} ✓` : `${v} ·`);
+          elAux.appendChild(c);
+        }
+        elAuxSize.textContent = `${s.seenVals.length}/${n + 1} slots parked`;
+      }
+
+      if (mode === "majority") {
+        drawArray(nums, (v, i) => {
+          const cls = [];
+          if (s.i >= 0 && i === s.i) cls.push("is-current");
+          else if (s.cand !== null && v === s.cand && i <= s.i) cls.push("is-backing");
+          else if (s.i >= 0 && i < s.i) cls.push("is-dim");
+          return cls.join(" ");
+        });
+        if (s.t === "start") {
+          elStatus.innerHTML = "👀 No champion. Press <strong>Play</strong> — duels begin.";
+        } else {
+          elStatus.innerHTML = `${s.action} <br/>champion <strong>${s.cand}</strong> · shields <strong>${s.count}</strong>`;
+        }
+        elAux.classList.remove("is-bars");
+        elAux.innerHTML = "";
+        const wrap = document.createElement("div");
+        wrap.className = "hxv-cand";
+        const pct = Math.max(0, Math.round((s.count / nums.length) * 100));
+        wrap.innerHTML = `<span class="big">${s.cand === null ? "—" : s.cand}</span><span class="hxv-shields">🛡 × ${s.count} (${pct}%)</span>`;
+        elAux.appendChild(wrap);
+        elAuxSize.textContent = s.cand === null ? "" : `cand ${s.cand}`;
+      }
+
+      if (mode === "topk") {
+        drawArray(nums, (v, i) => {
+          const cls = [];
+          if ((s.t === "rank" || s.t === "done") && s.top.includes(v)) cls.push("is-top");
+          else if (s.phase === "count" && s.i >= 0 && i === s.i) cls.push("is-current");
+          else if (s.phase === "count" && s.i >= 0 && i < s.i) cls.push("is-dim");
+          return cls.join(" ");
+        });
+        if (s.t === "start") {
+          elStatus.innerHTML = `👀 k = <strong>${DATA.k}</strong>. Press <strong>Play</strong> — Phase 1 counts, Phase 2 crowns.`;
+        } else if (s.t === "count") {
+          elStatus.innerHTML = `x=<strong>${s.x}</strong> → bar height <strong>${s.freq[s.x]}</strong>.`;
+        } else {
+          elStatus.innerHTML = `Tallest bars: <strong>[${s.top.join(", ")}]</strong> → <strong>return [${s.top.join(", ")}]</strong>.`;
+        }
+        elAux.classList.add("is-bars");
+        elAux.innerHTML = "";
+        const entries = Object.entries(s.freq).sort((a, b) => Number(a[0]) - Number(b[0]));
+        const max = Math.max(1, ...entries.map(([, c]) => Number(c)));
+        if (!entries.length) { emptyAux("(no counts yet — press Play)"); }
+        entries.forEach(([val, c]) => {
+          const row = document.createElement("div");
+          const isTop = (s.t === "rank" || s.t === "done") && s.top.includes(Number(val));
+          row.className = "hxv-bar-row" + (isTop ? " is-top" : "");
+          const key = document.createElement("span");
+          key.className = "hxv-bar-key";
+          key.textContent = (isTop ? "★ " : "") + val;
+          const track = document.createElement("div");
+          track.className = "hxv-bar-track";
+          const fill = document.createElement("div");
+          fill.className = "hxv-bar-fill";
+          fill.style.width = `${Math.round((Number(c) / max) * 100)}%`;
+          track.appendChild(fill);
+          const cnt = document.createElement("span");
+          cnt.className = "hxv-bar-count";
+          cnt.textContent = String(c);
+          row.appendChild(key); row.appendChild(track); row.appendChild(cnt);
+          elAux.appendChild(row);
+        });
+        elAuxSize.textContent = s.phase === "rank" ? `top ${DATA.k}: [${s.top.join(", ")}]` : "counting…";
+      }
+
+      elCaption.textContent = `Step ${idx + 1}/${steps.length} — ${s.caption}`;
+      elSlider.max = String(steps.length - 1);
+      elSlider.value = String(idx);
+      elStepLabel.textContent = `${idx + 1} / ${steps.length}`;
+      codeRows.forEach((r) => r.classList.toggle("is-on", Number(r.dataset.code) === s.code));
+    }
+
+    function stop() {
+      if (timer) clearInterval(timer);
+      timer = null;
+      btnPlay.textContent = "▶ Play";
+    }
+    function play() {
+      if (timer) { stop(); return; }
+      if (idx >= steps.length - 1) idx = 0;
+      btnPlay.textContent = "⏸ Pause";
+      const speed = Number(elSpeed.value) || 900;
+      timer = setInterval(() => {
+        if (idx >= steps.length - 1) { stop(); return; }
+        idx++; render();
+      }, speed);
+    }
+
+    root.querySelector('[data-action="prev"]')?.addEventListener("click", () => { stop(); idx = Math.max(0, idx - 1); render(); });
+    root.querySelector('[data-action="next"]')?.addEventListener("click", () => { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); });
+    root.querySelector('[data-action="reset"]')?.addEventListener("click", () => { stop(); idx = 0; render(); });
+    btnPlay?.addEventListener("click", play);
+    elSlider?.addEventListener("input", (e) => { stop(); idx = Number(e.target.value); render(); });
+    elSpeed?.addEventListener("change", () => { if (timer) { stop(); play(); } });
+
+    // Quiz
+    root.querySelectorAll("[data-quiz]").forEach((b) => {
+      b.addEventListener("click", () => {
+        root.querySelectorAll("[data-quiz]").forEach((x) => x.classList.remove("is-right", "is-wrong"));
+        if (Number(b.dataset.quiz) === QUIZ.ok) {
+          b.classList.add("is-right");
+          feedback.textContent = QUIZ.good;
+        } else {
+          b.classList.add("is-wrong");
+          feedback.textContent = QUIZ.bad;
+        }
+      });
+    });
+
+    // keyboard: ←/→ when focused inside viz
+    root.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") { stop(); idx = Math.min(steps.length - 1, idx + 1); render(); }
+      if (e.key === "ArrowLeft") { stop(); idx = Math.max(0, idx - 1); render(); }
+    });
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) stop();
+    render();
+  }
+
+  function initAll() {
+    document.querySelectorAll("[data-hxv]").forEach(initHashXorViz);
+  }
+  initAll();
+  document.addEventListener("astro:page-load", initAll);
+</script>

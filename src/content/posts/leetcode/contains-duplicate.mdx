@@ -1,0 +1,90 @@
+---
+title: "[LeetCode] 217. Contains Duplicate"
+date: "2019-09-04"
+description: "Contains Duplicate in one pass: have I seen you? Interactive seen-set visual + typed Python 3 code."
+categories: ["Algorithms", "Programming", "LeetCode"]
+tags: ["Algorithms", "Duplicates", "Arrays", "Programming"]
+draft: false
+---
+
+import HashXorVisualizer from '../../../components/visuals/HashXorVisualizer.astro';
+
+> 🧠 **Remember:** “Have I seen you?”
+
+## The problem — 20 seconds
+
+`nums = [1, 2, 3, 1]` → `True`. `nums = [1, 2, 3, 4]` → `False`.
+
+Return whether *any* value appears at least twice. No indices, no counts — just a yes/no question about the past.
+
+[Original on LeetCode](https://leetcode.com/problems/contains-duplicate/)
+
+One walk, one question per number: **have I seen you before?**
+
+```text
+1 → seen? ❌ → remember 1
+2 → seen? ❌ → remember 1, 2
+3 → seen? ❌ → remember 1, 2, 3
+1 → seen? ✅ → True
+```
+
+That trace *is* the algorithm. Everything below just explains why it beats the alternatives.
+
+## Your first instinct
+
+Check every pair:
+
+```python
+for i in range(len(nums)):
+    for j in range(i + 1, len(nums)):
+        if nums[i] == nums[j]:
+            return True
+return False
+```
+
+For `n = 10,000` that is ~50 million comparisons — we re-scan history on every step. Sorting first (`O(n log n)`, then compare neighbours) is better, but it mutates the input and still rediscovers what we could simply have remembered.
+
+## The turning point
+
+Each step asks exactly one question: *did this value appear before?* A hash set answers membership in O(1). So turn the past into a guest list and make the present ask the bouncer. Discovery before tooling: the set is just the fastest possible memory.
+
+## Watch it work
+
+Press **Play**. Watch the guest list grow one chip per step — then the second `1` walks up and gets flagged instantly.
+
+<HashXorVisualizer mode="duplicate" id="hx-duplicate" />
+
+## What the code is really saying
+
+```python
+from typing import List
+
+
+class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        seen: set[int] = set()
+        for x in nums:
+            if x in seen:
+                return True
+            seen.add(x)
+        return False
+```
+
+Read it as the visual: ask *before* you remember. That check-then-add order is the whole trick — same DNA as [Two Sum](/posts/leetcode/two-sum), where we check the need before keeping the number.
+
+## Why it works
+
+Invariant: `seen` holds exactly the elements left of the current one. So `x in seen` means precisely “`x` appeared earlier.” The first repeat returns immediately; surviving the loop means all-distinct.
+
+```text
+n = 100,000 → brute force ~5B checks · this way ~100,000 lookups
+Time O(n), space O(n).
+```
+
+## 🧠 Remember
+
+> **Contains Duplicate → “Have I seen you?”** One set, one question, one pass.
+
+🔁 **Try this:** banned from extra space? Sort a copy and compare neighbours — `O(n log n)` time, `O(1)` extra. When is that trade worth it? (Hint: gigantic input, tiny memory.)
+
+Related: [Two Sum](/posts/leetcode/two-sum) · [Single Number](/posts/leetcode/single-number) · [Top K Frequent Elements](/posts/leetcode/top-k-frequent-elements)

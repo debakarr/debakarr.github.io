@@ -1,0 +1,50 @@
+---
+title: "Coding Interview: Warm Up"
+date: "2019-05-13"
+description: "Three warmup patterns before your interview: hashing, two pointers, and frequency maps — with guided walkthroughs."
+categories: ["Algorithms", "Programming", "Interview Preparation"]
+tags: ["Coding Interview", "Warmup", "Algorithms", "Programming"]
+draft: false
+---
+
+> 🧠 **Remember:** “Warm up the pattern, not the problem.”
+
+## Why warm up?
+
+Interviews rarely reward memorizing solutions — they reward *recognizing shapes*. These three problems each install one shape you'll reuse everywhere: ask about the past (hashing), squeeze from both ends (two pointers), count what you've seen (frequency maps). Fifteen minutes here pays off in every round that follows.
+
+## The warmup set
+
+**1. Need it? Seen it? → [Two Sum](/posts/leetcode/two-sum)**
+
+`[2, 7, 11, 15]`, target `9` → `[0, 1]`. For each number, compute what you *need* (`target − x`) and ask whether you've *seen* it. The hash map is just memory of the past with `O(1)` recall.
+
+*Pattern installed:* **complement hashing** — trade space for instant lookups. You'll meet it again in 3Sum, Subarray Sum Equals K, and half of all array problems.
+
+**2. Meet in the middle → [Reverse String](/posts/leetcode/reverse-string)**
+
+Reverse `["h","e","l","l","o"]` in place. Two pointers start at opposite ends, swap, and walk toward each other until they cross. No extra array, `O(1)` space.
+
+*Pattern installed:* **converging two pointers** — when the input has order (or can be sorted into it), rarity: decisions at both ends beat rescanning the middle. Leads straight to 3Sum and palindrome checks.
+
+**3. Have I been here? → [Contains Duplicate](/posts/leetcode/contains-duplicate)**
+
+`[1, 2, 3, 1]` → `true`. One set, one pass: if the element is already in the set you've seen it before; otherwise file it away. The simplest hash-set problem there is — Two Sum's younger sibling.
+
+*Pattern installed:* **seen-set membership** — the cheapest question a hash table answers. Grows into frequency counting (Valid Anagram), dedup, and sliding-window bookkeeping.
+
+## How to use this page
+
+Do them in order, without a timer: Two Sum (10 min) → Reverse String (5 min) → Contains Duplicate (5 min). For each, say the memory hook out loud before coding — if you can't state the trick in one sentence, you don't own it yet.
+
+| Problem | Shape | Hook |
+|---|---|---|
+| [Two Sum](/posts/leetcode/two-sum) | Complement hashing | “Need before keep.” |
+| [Reverse String](/posts/leetcode/reverse-string) | Converging pointers | “Swap inward till they meet.” |
+| [Contains Duplicate](/posts/leetcode/contains-duplicate) | Seen-set | “Been here before?” |
+
+## 🧠 Remember
+
+> **Warmup → “Pattern, not problem.”** Three shapes — hashing, pointers, counting — carry the first half of every interview.
+
+🔁 **Next:** graduate to the full [Top Interview Questions](/posts/leetcode/top-interview-questions) index, grouped by family — or go deeper on [3Sum](/posts/leetcode/3sum), where hashing meets two pointers.
