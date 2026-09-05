@@ -1,0 +1,20 @@
+---
+title: "Day 15: Jenkins - Pipelines and best practices"
+date: "2023-05-03"
+description: "Declarative Jenkins pipelines and the key best practices: shared libraries, durability, and keeping pipelines maintainable."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Jenkins"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Best Practices"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={15} />
+
+Prefer **declarative pipelines** stored as a `Jenkinsfile` in the repo: they are versioned, reviewable, and reproducible, unlike UI-only job config. Keep stages small and named (checkout → build → test → deliver → deploy), fail fast on test errors, and never bake credentials into pipeline code — use the credentials store.
+
+Good resources on pipeline best practices:
+
+- [New Best Practices for Jenkins Pipeline Global Shared Libraries](https://github.com/aimtheory/jenkins-pipeline-best-practices)
+- [Pipeline Best Practices](https://www.jenkins.io/doc/book/pipeline/pipeline-best-practices/)
+- [Top 10 Best Practices for Jenkins Pipeline Plugin](https://www.cloudbees.com/blog/top-10-best-practices-jenkins-pipeline-plugin)

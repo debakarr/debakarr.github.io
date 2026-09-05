@@ -1,7 +1,7 @@
 ---
 title: "[Training] DBMS with Oracle Day 4"
 date: "2017-07-24"
-description: "If you are reading this then I want to notify you that this is the 3rd part of the series of blog post I am writing up about basically DBMS with Oracle. If you haven’t yet read my previous post then feel free to go to this link for part 1 and this link for part 2. Now today we are going to look at something called PL/SQL and also we will do some exercise to get a grip of PL/SQL."
+description: "Day 4 of an Oracle DBMS training: PL/SQL blocks, variables, control flow, sequences, and views, built on a sample sales schema."
 categories: ["Database Management", "Programming"]
 tags: ["Oracle", "DBMS", "Database", "SQL", "Tutorial", "Day 4"]
 draft: false
@@ -17,7 +17,7 @@ Now today we are going to look at something called **PL/SQL** and also we will d
 
 **So first what is PL/SQL?**
 
-**PL/SQL** stands for **`Procedural Language-Standard Query Language`**. It is also a case-insensitive programming language. In SQL we are able to execute one statement at a time whereas in PL/SQL we can combine many SQL statements and execute all of them at once.
+**PL/SQL** stands for **`Procedural Language-Structured Query Language**`. It is also a case-insensitive programming language. In SQL we can execute one statement at a time, whereas in PL/SQL we can combine many SQL statements and execute them all at once.
 
 PL/SQL follows a predefined syntax
 
@@ -29,13 +29,13 @@ I made it in a rush, so it might not be as good as it should have been.
 
 ### **Relational Schema**
 
-Trust me it’s totally correct diagram as because I didn’t messed up anything and let SQL Developer handle it all.
+Trust me, it’s a correct diagram because I didn’t mess anything up and let SQL Developer handle it all.
 
 ![](http://i.imgur.com/3TUZhoJ.png)
 
 **What we are going to do?**
 
-Taking this **`schema`** as a base we are going to create few **`tables`**. I will just put up all the code to create the tables.
+Taking this **`schema`** as a base, we are going to create a few **`tables`**. I will just put up all the code to create the tables.
 
 ### BATCH
 
@@ -109,7 +109,7 @@ CREATE TABLE CUSTOMER
 );
 ```
 
-### EMPOYEE
+### EMPLOYEE
 
 ```
 CREATE TABLE EMPLOYEE 
@@ -375,7 +375,7 @@ REFERENCES PRODUCT
 );
 ```
 
-If you have done Java before then you might know that everything is encapsulated inside so called **`class`**. In PL/SQL encapsulated inside so called **`blocks`**. Now there are two types of **`blocks`**. One is called anonymous block while the other is called **`named block`**. As the name suggests the anonymous block does not have any name and thus can’t be used later on( can’t be saved inside a database). While the named block can be referred later on ( as we move on we will come across something like **`procedure`**, **`function`** and **`package`**.
+If you have done Java before, then you might know that everything is encapsulated inside a so-called **`class`**. In PL/SQL, code is encapsulated inside so-called **`blocks`**. There are two types of **`blocks`**: one is called an anonymous block, while the other is called a **`named block`**. As the name suggests, the anonymous block does not have a name and thus can’t be reused later (it can’t be saved inside the database), while the named block can be referred to later (as we move on, we will come across things like **`procedures`**, **`functions`**, and **`packages`**).
 
 Let’s start with an anonymous block.
 
@@ -397,16 +397,18 @@ DECLARE
  END;
 ```
 
-Here \*\* `Declare` \*\* is used to declare variables. Here’s one example:
+Here **`DECLARE`** is used to declare variables. Here’s an example:
 
 ```
-DECLARE
+ DECLARE
 
-  V_NAME VARCHAR2(30);
+   V_NAME VARCHAR2(30);
 
-  V_PHONE NUMBER(10);
+   V_ID NUMBER(6);
 
-  V_CONSTANT	CONSTANT NUMBER:=0;
+   V_PHONE NUMBER(10);
+
+   V_CONSTANT	CONSTANT NUMBER:=0;
 ```
 
 **NOTE:** Here we use `:=` to assign a value to a variable. In most of the languages, we use `=` only.
@@ -416,36 +418,36 @@ Execution Section starts with **`BEGIN`**
 ```
  BEGIN
 
-  SELECT E_Name, E_ID, E_Phone INTO V_Name, V_ID, V_Phone
+  SELECT E_NAME, E_ID, E_PHONE INTO V_NAME, V_ID, V_PHONE
 
-  FROM EMPLOYEE WHERE E_ID =100;
+  FROM EMPLOYEE WHERE E_ID = 100;
 
-  DBMS_OUTPUT.PUT_LINE(‘Employee Name ’||V_Name||’ ‘||V_ID ||' '||V_Phone);
+  DBMS_OUTPUT.PUT_LINE('Employee Name '||V_NAME||' '||V_ID ||' '||V_PHONE);
 
  END;
 ```
 
 **NOTE:** To assign the variables value from the table we can use **`INTO`**.
 
-In the end we can also put Exceptional Handling block. Here’s an example:
+In the end we can also add an exception-handling block. Here’s an example:
 
 ```
 EXCEPTION 
 
   WHEN NO_DATA_FOUND THEN
 
-  DBMS_OUTPUT.PUT_LINE (‘No Employee Found with ’||V_ID);
+  DBMS_OUTPUT.PUT_LINE ('No Employee Found with '||V_ID);
 ```
 
-**NOTE:** Exception Block is optional. You can also leave it. In that case, system will throw an Exception (Which is obviously not user-friendly)
+**NOTE:** The Exception block is optional — you can leave it out. In that case, the system will raise an exception itself (which is obviously not user-friendly).
 
-Whenever you want to display data to the user using values from the database, you have to use one statement in particular.
+Whenever you want to display data to the user using values from the database, you first have to run one statement in particular.
 
 **`SET SERVEROUTPUT ON`**
 
-This takes us to a very interesting topic which is totally out of scope in regard to this blog post. Therefore if you really want to know about it contact your DBMS Professor or message me on Twitter or Facebook.
+This takes us to a very interesting topic which is totally out of scope for this blog post. So if you really want to know about it, ask your DBMS professor or message me on Twitter or Facebook.
 
-Whenever you want to store a value in a variable you first need to provide it a data type.It is best practice to make sure that you have provided the correct data type to correct variable. Let me give you an example.
+Whenever you want to store a value in a variable, you first need to give it a data type. It is best practice to make sure that you have given the correct data type to each variable. Let me give you an example.
 
 ```
 DECLARE
@@ -454,14 +456,14 @@ DECLARE
 
 BEGIN
 
- SELECT E_NAME INTO V_Name WHERE E_ID =1005;
+ SELECT E_NAME INTO V_Name FROM EMPLOYEE WHERE E_ID = 1005;
 
 
 
 END;
 ```
 
-In this code, E\_NAME has 30 bytes (VARCHAR2 (30)) but V\_Name can only store 15 bytes. Thus we will not get the desired value. For this thing only we use **`Anchored Datatype (% Type)`**.
+In this code, E_NAME is 30 bytes (VARCHAR2(30)) but V_Name can only store 15 bytes. So we will not get the desired value. This is exactly what the **`anchored datatype (%TYPE)`** is for.
 
 Here’s the syntax:
 
@@ -478,7 +480,7 @@ DECLARE
 
 BEGIN
 
- SELECT E_NAME INTO V_Name WHERE E_ID =1005;
+ SELECT E_NAME INTO V_Name FROM EMPLOYEE WHERE E_ID = 1005;
 
 END;
 ```
@@ -579,7 +581,7 @@ BEGIN
 END;
 ```
 
-Here’s other example in which you can know the day of the week in which you were born.
+Here’s another example, in which you can find the day of the week on which you were born.
 
 ```
 SET SERVEROUTPUT ON;
@@ -629,7 +631,7 @@ BEGIN
 END;
 ```
 
-Now sometimes we want to Auto increment few values which are generally primary key. In Oracle, we don’t have **`AUTO_INCREMENT`**. In place of that, we can use **`SEQUENCE`**. Here’s the syntax for the sequence:
+Now sometimes we want to auto-increment a few values which are generally primary keys. In Oracle, we don’t have **`AUTO_INCREMENT`**. Instead, we can use a **`SEQUENCE`**. Here’s the syntax for a sequence:
 
 ```
 CREATE SEQUENCE sequence_name MINVALUE value 
@@ -643,7 +645,7 @@ INCREMENT BY value
 CACHE value;
 ```
 
-In case you didn’t provide **`MAXVALUE`** it will by default set it to 999999999999999999999999999.
+In case you don’t provide **`MAXVALUE`**, it defaults to 999999999999999999999999999.
 
 Here’s an example to create a sequence for P\_ID.
 
@@ -659,9 +661,9 @@ INCREMENT BY 1;
 INSERT INTO PRODUCT (P_ID, P_NAME, P_PRICE, B_ID, P_QTY) VALUES (P_SEQUENCE.NEXTVAL, 'FORMAL PANTS', 2000, 1009, 20);
 ```
 
-Also, we can make temporary tables called **`VIEW`**. To hold data temporary. Generally, view is used to combine data from two or more table and to do a query on the resultant table to get the desired output.
+Also, we can make temporary tables called **`VIEWs`** to hold data temporarily. Generally, a view is used to combine data from two or more tables and run a query on the resultant table to get the desired output.
 
-**Let’s Create a view for finding the average sale between two dates given by the user.**
+**Let’s create a view for finding the average sale between two dates given by the user.**
 
 Here’s the code:
 
@@ -703,8 +705,8 @@ BEGIN
 END;
 ```
 
-As a excersice you can try to do this:
+As an exercise, you can try this:
 
-**Take input from the user to take as many supplier detail as he wants.**
+**Take input from the user to accept as many supplier details as they want.**
 
-I guess this is too much to take in, in one go. So I will stop it here. In next post we will take about **`Cursor, Procedure, Function and Trigger`**. And that will be the last blog post of **\[Training\] DBMS with Oracle**.
+I guess this is too much to take in in one go. So I will stop here. In the next post we will talk about **`cursors, procedures, functions, and triggers`**. And that will be the last blog post of **\[Training\] DBMS with Oracle**.

@@ -1,7 +1,7 @@
 ---
 title: "How to build a reddit to twitter bot"
 date: "2017-06-19"
-description: "First of all what will be this bot doing actually? Ans. This bot will be tweeting any new post on a particular subreddit to your twitter bot account. In my case it will be tweeting any new tweets from /r/anime Can I have a look on the finished product? Ans. Here you go So what do I actually need to create the bot? Ans. Some Basic Programming knowlegde and how to run terminal."
+description: "Build a Node.js bot that watches a subreddit for new posts and tweets them automatically, using the Twit and reddit-snooper packages."
 categories: ["Social Media", "Programming", "Web Development", "Automation"]
 tags: ["Reddit", "Twitter", "Bot", "Automation", "API", "Node.js", "JavaScript", "Tutorial", "How-to"]
 draft: false
@@ -9,9 +9,9 @@ draft: false
 
 **First of all what will be this bot doing actually?**
 
-**Ans.** *This bot will be tweeting any new post on a particular subreddit to your twitter bot account. In my case it will be tweeting any new tweets from **/r/anime***
+**Ans.** *This bot will tweet any new post from a particular subreddit to your Twitter bot account. In my case it will be tweeting any new posts from **/r/anime**.*
 
-**Can I have a look on the finished product?**
+**Can I have a look at the finished product?**
 
 **Ans.** *[Here you go](https://twitter.com/ranimesubreddit)*
 
@@ -19,35 +19,35 @@ draft: false
 
 **Ans.**
 
--   Some Basic Programming knowlegde and how to run terminal.
--   You will need to install few software.
+-   Some basic programming knowledge and how to run a terminal.
+-   You will need to install a few pieces of software.
 -   Get the gist of the code to modify it and make your own bot.
 
-So lets begin.
+So let’s begin.
 
 ## **Installing node js**
 
--   First of all go to this [link](https://nodejs.org/en/) and download node js, click the installer depending on your OS.
--   Now run the setup and install it. make sure you did check include PATH.
--   Next open up your terminal and type this code:
+-   First of all go to this [link](https://nodejs.org/en/) and download Node.js, clicking the installer for your OS.
+-   Now run the setup and install it. Make sure you check the option to include it in PATH.
+-   Next open up your terminal and type this:
 
 ```
 $ node
 ```
 
--   If your ‘$’ symbol change into ‘>’ symbol then you did everything correct upto this point.
+-   If your ‘$’ prompt changes into a ‘>’ prompt then you did everything correctly up to this point.
 
 ## **Creating node package**
 
-Now it time to start code.
+Now it’s time to start coding.
 
-First of all go to the folder where you want to make your bot(create your node package). Then click:
+First of all go to the folder where you want to make your bot (create your node package). Then run:
 
 ```bash
 $ npm init
 ```
 
-Now it will ask you for few information. Here’s an example:
+Now it will ask you for a few pieces of information. Here’s an example:
 
 ```
 name: twitter bot
@@ -65,19 +65,19 @@ This will create a json file named package.json. You can edit it as you like in 
 
 \[NOTE: **What is json?** **Ans.** *JSON, or JavaScript Object Notation, is a minimal, readable format for structuring data. It is used primarily to transmit data between a server and web application, as an alternative to XML.*\]
 
-## **Installing dependecy packages**
+## **Installing dependency packages**
 
-Now its time to install few Node Package Manager. You can head up to [npmjs.com](https://www.npmjs.com/) to look up for package you need.
+Now it’s time to install a few Node packages. You can head over to [npmjs.com](https://www.npmjs.com/) to look up the packages you need.
 
-\[NOTE: **What is npm?** **Ans.** *npm makes it easy for JavaScript developers to share and reuse code, and it makes it easy to update the code that you’re sharing. To be honest they are premade packages which let you use different APIs.*\]
+\[NOTE: **What is npm?** **Ans.** *npm makes it easy for JavaScript developers to share and reuse code, and it makes it easy to update the code that you’re sharing. To be honest these are premade packages which let you use different APIs.*\]
 
-Pakages we need:
+Packages we need:
 
 -   [twit](https://www.npmjs.com/package/twit) \[To talk with twitter.\]
 -   [reddit-snooper](https://www.npmjs.com/package/reddit-snooper) \[To talk to reddit.\]
 -   [goo.gl](https://www.npmjs.com/package/goo.gl) \[To create short link.\]
 
-To install pakage use this code:
+To install a package use this code:
 
 ```bash
 $ npm install twit --save
@@ -85,13 +85,13 @@ $ npm install reddit-snooper --save
 $ npm install goo.gl --save
 ```
 
-It might give you some warning. That’s only because you didn’t fill the package.json files. You dont need to worry about that :).
+It might give you some warnings. That’s only because you didn’t fill in the package.json fields. You don’t need to worry about that :).
 
-**I would Highly recommend you to go through the documentation for each node package to get a basic knowlegde on how to use the packages.**
+**I would highly recommend you go through the documentation for each node package to get a basic knowledge of how to use the packages.**
 
 ## **Creating bot file**
 
-Now create a file name bot.js and copy up all this code. For simplicity I have provided few comments to make you understand what are the snippets doing.
+Now create a file named bot.js and copy all this code into it. For simplicity I have added a few comments so you can understand what the snippets are doing.
 
 ```javascript
 //Bot start message
@@ -180,12 +180,12 @@ function tweet_mytext(tweet_text){
 			status: tweet_text
 	}
 
-	console.log('\n' + tweet)
+	console.log('\n' + tweet.status)
 	T.post('statuses/update', tweet, tweeted);
 
 	function tweeted(err, data, response) {
 			if (err) {
-				console.log("Didn't tweeted :(.");
+				console.log("Didn't tweet :(.");
 			} else {
 				console.log("It worked! Tweeted!!");
 			}
@@ -195,15 +195,15 @@ function tweet_mytext(tweet_text){
 
 ## **How to get credential needed for setting up bot**
 
-So there are sevral question you will ask:
+So there are several questions you will ask:
 
 **How to obtain consumer\_key, consumer\_secret, and other twitter credentials.**
 
 **Ans.**
 
--   For this go to [apps.twitter.com](https://apps.twitter.com/). Make sure you are sign in to your twitter bot account. Twitter will not let you create an app until you verified your account.
--   You can use your real phone number or Twilio or any clound communication base SMS service to complete verifying your account.
--   Now click on **Create New App**. Fill up Name, Description and website.Tick **Yes, I have read and agree to the Twitter Developer Agreement**.
+-   For this go to [apps.twitter.com](https://apps.twitter.com/). Make sure you are signed in to your Twitter bot account. Twitter will not let you create an app until you have verified your account.
+-   You can use your real phone number or Twilio or any cloud-communication-based SMS service to finish verifying your account.
+-   Now click on **Create New App**. Fill in the name, description, and website. Tick **Yes, I have read and agree to the Twitter Developer Agreement**.
 -   Go to Keys and Access Tokens and you will find your consumer\_key and consumer\_secret there. To generate access\_token and access\_token\_secret click on **create my access token** under Token Actions.
 
 **How to obtain api\_secret, app\_id, and other reddit credentials.**   **Ans.** *Steps you need to follow are in the node package description:*
@@ -221,9 +221,9 @@ So there are sevral question you will ask:
 
 -   Visit [https://console.developers.google.com/cloud-resource-manager](https://console.developers.google.com/cloud-resource-manager) and create a new project
 -   Search and turn on URL Shortener API
--   Go to Credential on left hand side click on create credential and API key. That’s is your Api key.
+-   Go to Credentials on the left-hand side, click on create credentials and then API key. That is your API key.
 
-Pasting all this credentials in bot.js will let you use the bot.
+Pasting all these credentials into bot.js will let you use the bot.
 
 Now head to the terminal and type:
 
@@ -233,8 +233,8 @@ $ node bot.js
 
 ## **Conclusion**
 
-Congratualation you just made a bot which let you fecth any new post from a particular subreddit and tweet it using you twitter bot account.
+Congratulation, you just made a bot which lets you fetch any new post from a particular subreddit and tweet it using your Twitter bot account.
 
-**NOTE: Please Follow twitter, google and reddit rules to ensure not getting ban. This post is only meant for educational purpose. I will not be take any blame if you get offended in any way.**
+**NOTE: Please follow Twitter, Google, and Reddit rules to avoid getting banned. This post is only meant for educational purposes. I will not take any blame if you get into trouble in any way.**
 
-Next Tutorial wil be how to host htis bot in Heroku. So that you can let it run even after you turned off your computer. Untill then Stay well and Thank you for reading.
+Next tutorial will be how to host this bot on Heroku, so that you can let it run even after you turn off your computer. Until then stay well and thank you for reading.

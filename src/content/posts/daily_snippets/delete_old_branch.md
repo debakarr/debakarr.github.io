@@ -1,7 +1,7 @@
 ---
 title: "Delete stale git branches"
 date: "2024-02-03"
-description: "Deleting stale git branches Working on monolithic projects with a large team of developers often leads to an accumulation of stale git branches. These branches may be left behind due to unresolved merge conflicts, abandoned tasks, or even employee turnover. Over time, this can result in repositories with thousands of inactive branches, potentially affecting your CI/CD process and increasing the time taken for git clone operations. To address this, we can implement a process to identify and delete stale branches that have been inactive for a certain period, say 120 days."
+description: "Find and delete remote Git branches inactive for 120+ days with Bash and PowerShell snippets, plus tips to speed up CI clones."
 categories: ["Git", "Script", "Utility"]
 tags: ["Git", "Stale Branch", "Delete"]
 draft: false
@@ -42,7 +42,7 @@ After notifying the developers, you can proceed to delete the stale branches usi
 **Bash:**
 
 ```bash
-git for-each-ref --sort=committerdate refs/ --format='%(committerdate:raw) %(refname:short) %(authorname) %(committerdate)' | awk "\$1 < $(date -d "-120 day" "+%s") {print(\$3)}" | grep origin | sed 's/origin\///g' | xargs -I {} git push origin --delete {}
+git for-each-ref --sort=committerdate refs/ --format='%(committerdate:raw) %(refname:short) %(authorname) %(committerdate)' | awk "\$1 < $(date -d "-120 days" "+%s") {print(\$3)}" | grep origin | sed 's/origin\///g' | xargs -I {} git push origin --delete {}
 ```
 
 **PowerShell:**
@@ -65,9 +65,9 @@ git for-each-ref --sort=committerdate refs/ --format='%(committerdate:raw) %(ref
 
 Here’s a brief explanation of what’s happening in these commands:
 
-1.  `git for-each-ref --sort=committerdate refs/ --format='%(committerdate:raw) %(refname:short) %(authorname) %(committerdate)'`: This command lists all references in the Git repository, sorted by the date of the last commit. The output includes the raw committer date, the short reference name, the author name, and the formatted committer date.
+1.  `git for-each-ref --sort=committerdate refs/ --format='%(committerdate:raw) %(refname:short) %(authorname) %(committerdate)'`: This command lists all references in the Git repository, sorted by committer date. The output includes the raw committer date, the short reference name, the author name, and the formatted committer date.
     
-2.  `awk "\$1 < $(date -d "-120 day" "+%s") {print(\$3)}"`: This command filters the output of the previous command, printing the third field (the short reference name) of lines where the first field (the raw committer date) is less than the current date minus 120 days.
+2.  `awk "\$1 < $(date -d "-120 days" "+%s") {print(\$3)}"`: This command filters the output of the previous command, printing the third field (the short reference name) of lines where the first field (the raw committer date) is older than 120 days.
     
 3.  `grep origin`: This command filters the output of the previous command, keeping only lines that contain the string “origin”, which typically indicates remote branches.
     
@@ -76,7 +76,7 @@ Here’s a brief explanation of what’s happening in these commands:
 5.  `xargs -I {} git push origin --delete {}`: This command executes a `git push` command for each line of the output of the previous command. It passes the branch names to the `git push origin --delete` command, which deletes the corresponding remote branches.
     
 
-By following these steps, you can effectively manage your git branches, ensuring that your repository remains clean and efficient. This not only improves the performance of your CI/CD process but also enhances the onboarding experience for new developers.
+By following these steps, you can effectively manage your Git branches, keeping your repository clean and efficient. This not only improves the performance of your CI/CD process but also enhances the onboarding experience for new developers.
 
 ## Side Note: Optimizing Git Operations in CI/CD
 

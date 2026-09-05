@@ -1,13 +1,13 @@
 ---
 title: "Building a Restful API using JAX-RS"
 date: "2017-09-27"
-description: "1. What are the tools needed? 2. Basic setup 3. Setting up Tomcat Server and Postman 4. Structure 5. Book Model 6. Book Database 7. Book Services 8. Book Resource 9. GET 10. PUSH 11. PUT 12. DELETE 13. Query -Get Book(s) by title -Get Book(s) by subject ID Another thing we are going to use is called Postman. Postman is an HTTP Request composer. It helps you test your API in a very efficient way."
+description: "Build a Book-catalog REST API with JAX-RS (Jersey) on Tomcat and test it with Postman, from project setup to GET, POST, PUT, and DELETE."
 categories: ["Programming", "Web Development", "API"]
 tags: ["RESTful", "API", "JAX-RS", "Java", "Tutorial", "Web Development"]
 draft: false
 ---
 
-![](https://upload.wikimedia.org/wikipedia/en/thumb/8/85/GlassFish_logo.svg/1200px-GlassFish_logo.svg.png)
+![](https://upload.wikimedia.org/wikipedia/en/8/85/GlassFish_logo.svg)
 
 [1\. What are the tools needed?](#tools)
 
@@ -27,7 +27,7 @@ draft: false
 
 [9\. GET](#get)
 
-[10\. PUSH](#push)
+[10\. POST](#post)
 
 [11\. PUT](#put)
 
@@ -58,13 +58,13 @@ Fill in the following data
 </dependency>
 ```
 
-Now next you need to type your project detail. Mine is:
+Now you need to enter your project details. Mine are:
 
 Group Id: org.debakar.bakadigest Artifact Id: bookDatabase
 
 This will create a package **org.debakar.bakadigest.bookDatabase** where your resource files are stored.
 
-The very first thing you need to do is open up your project and double-click pom.xml. Now head to pom.xml tab and uncomment moxy dependency. This will let you produce JSON data. This is the same place where you can add jersey dependency after creating a Maven Project using maven archetype.
+The very first thing you need to do is open up your project and double-click pom.xml. Now switch to the pom.xml tab and uncomment the moxy dependency. This will let you produce JSON data. This is the same place where you can add the jersey dependency after creating a Maven Project using the maven archetype.
 
 ```
 <dependency>
@@ -73,24 +73,24 @@ The very first thing you need to do is open up your project and double-click pom
 </dependency>
 ```
 
-And for Postman does need any particular step to install. You just need to install it basically as you install other application or add the chrome app available if you are using chrome.
+Postman doesn’t need any particular steps to install. You just install it like any other application, or add the Chrome app if you are using Chrome.
 
 Here’s the project structure:
 
-![](https://goo.gl/4kznJW)
+*[Screenshot of the Eclipse project structure — original image link is dead]*
 
-![](https://goo.gl/wvK8HF)
+*[Screenshot of the Book model class — original image link is dead]*
 
-![](https://goo.gl/Y4ZoiS)
+*[Screenshot of the Book database class — original image link is dead]*
 
-**NOTE**: This is not a great way when you do it for business purpose.
+**NOTE**: This is not a great way to do it for business purposes.
 
-![](https://goo.gl/huAXcn)
+*[Screenshot of the Book service class — original image link is dead]*
 
-![](https://goo.gl/2YvoRN)
+*[Screenshot of the Book resource class — original image link is dead]*
 
-![](https://goo.gl/WjpKkS)
+*[Screenshot of testing GET in Postman — original image link is dead]*
 
-![](https://goo.gl/Yzgmj6)
+*[Screenshot of testing POST in Postman — original image link is dead]*
 
-![](https://goo.gl/4gs3d1)
+*[Screenshot of testing PUT, DELETE, and query endpoints in Postman — original image link is dead]*

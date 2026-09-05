@@ -1,0 +1,169 @@
+---
+title: "Day 7: Basic Git commands (`git init`, `git add`, `git commit`, `git status`)"
+date: "2023-04-22"
+description: "Hands-on notes on the four foundational Git commands: init, add, commit, and status, with useful flags for each."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Git"]
+tags: ["DevOps", "Git", "GitHub", "Tutorial", "How-to"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={7} />
+
+Today I practised the four foundational Git commands: `init`, `add`, `commit`, and `status`. These are the commands I reach for first in any repository.
+
+## `git init`
+
+`init` initializes a new Git repository. Run it in the current working directory to start tracking changes there — it creates a `.git` folder, after which other Git commands work.
+
+To initialize a repository in a different directory, pass its path:
+
+```console
+git init path/to/repository-working-directory
+```
+
+> **INFO — git init --bare**
+>
+> Source code hosting sites like [GitHub](https://github.com) use bare repositories, initialized with `git init --bare`. To know more, check this [SO post](https://stackoverflow.com/questions/7861184/what-is-the-difference-between-git-init-and-git-init-bare).
+
+> **INFO — git init --separate-git-dir**
+>
+> By default, the `.git` folder lives inside the working directory it tracks, but you can store it elsewhere with `--separate-git-dir`, e.g. `git init --separate-git-dir=/path/to/repos`.
+
+> **INFO — git init --initial-branch**
+>
+> You can set the initial branch with `--initial-branch`, e.g. `git init --initial-branch=my-initial-branch`.
+
+> **INFO — git init --template and --shared**
+>
+> `--template` copies default files and directories from a template folder, and `--shared` specifies repository permissions.
+
+## `git add`
+
+`add` stages changes in the working directory for the next commit. Syntax: `git add [file or folder]`
+
+To add all files in the current working directory:
+
+```console
+git add .
+```
+
+> **INFO — git add -i**
+>
+> Interactive mode (`git add -i`) presents a menu of options:
+>
+> - `status`: show the current status of your working directory.
+> - `update`: add modified files to the staging area.
+> - `revert`: unstage files from the staging area.
+> - `add untracked`: add untracked files to the staging area.
+> - `patch`: interactively choose hunks of patch between the index and the work tree and add them to the index.
+
+> **INFO — git add -p**
+>
+> If a file has multiple changes and you want to stage only some of them, use `git add -p <path/to/file>` to selectively stage changes within the file.
+
+> **TIP — git add :/**
+>
+> If you are in a subdirectory and want to add all changed files in the repository, use `git add :/`.
+
+## `git commit`
+
+`commit` saves staged changes to the local repository. Syntax: `git commit -m "Commit message"`
+
+> **TIP — git commit -am**
+>
+> Most of the time you will see `git add .` followed by `git commit -m "commit message"`. There is a shorthand for staging tracked files and committing in one step: `git commit -am "commit message"`.
+
+> **TIP — git commit --allow-empty**
+>
+> Sometimes a pull request pipeline fails and there is no UI option to re-trigger it (in GitHub Actions, Jenkins, or similar tools). You can push an empty commit to re-trigger it: `git commit --allow-empty -m "Empty commit to retrigger PR pipeline"`. This can also mark phases of a project, e.g. `git commit --allow-empty -m "Empty commit to mark the end of phase 1"`.
+>
+> Note that this creates clutter and should only be used if you really need it.
+
+> **TIP — git commit --amend**
+>
+> If you mistyped a commit message, or committed but forgot to include some changes, use `git commit --amend` to fold the fix into the last commit instead of creating a new one, e.g. `git commit --amend -m "New commit message"`.
+
+## `git status`
+
+`git status` displays the current state of a Git repository: which branch you are on, which files are modified, which are staged, and which are untracked.
+
+Here are some scenarios you might see.
+
+### Scenario 1: No changes
+
+```console
+$ git status
+On branch master
+nothing to commit, working tree clean
+```
+
+### Scenario 2: Untracked files
+
+```console
+$ git status
+On branch master
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        file.txt
+
+nothing added to commit but untracked files present (use "git add" to track)
+```
+
+### Scenario 3: Changes to be committed
+
+```console
+$ git status
+On branch master
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+
+        modified:   file.txt
+```
+
+### Scenario 4: Changes not staged for commit
+
+```console
+$ git status
+On branch master
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+
+        modified:   file.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+```
+
+### Scenario 5: Branch ahead of remote
+
+```console
+$ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+nothing to commit, working tree clean
+```
+
+> **TIP — git status --short**
+>
+> `git status --short` displays a compact version of `git status`.
+
+> **TIP — git status --ignore-submodules**
+>
+> If you have submodules and don't want status output for them, use `git status --ignore-submodules`.
+
+## Wrapping up
+
+Here is a sequence diagram to wrap it all up:
+
+1. `git init` initializes the workspace as a Git repository.
+2. Files are created or modified in the workspace.
+3. `git status` shows untracked or modified files in the workspace.
+4. `git add <file>` stages changes for a file, adding it to the index.
+5. `git status` shows staged changes in the workspace.
+6. `git commit -m "Message"` commits the staged changes to the local repository.
+7. `git status` shows a clean working tree — nothing left to commit.

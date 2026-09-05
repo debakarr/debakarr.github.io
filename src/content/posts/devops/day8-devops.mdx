@@ -1,0 +1,53 @@
+---
+title: "Day 8: Branching and merging in Git"
+date: "2023-04-25"
+description: "How to create feature branches, merge them back into main, and clean up afterwards."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Git"]
+tags: ["DevOps", "Git", "GitHub", "Tutorial", "How-to", "Branching", "Merging"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={8} />
+
+Branching and merging let developers work on multiple features or bug fixes simultaneously without disturbing the main codebase. Git tracks each branch's changes, so collaboration stays organized.
+
+Resources I referred to:
+
+- [Git - Basic Branching and Merging](https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging)
+- [Git Merge | Atlassian Git Tutorial](https://www.atlassian.com/git/tutorials/using-branches/git-merge)
+
+Git branches are ideal when working on new features or bug fixes that are not yet ready for the main codebase. To create a new branch:
+
+```console
+git checkout -b new-feature
+```
+
+This creates a branch named `new-feature` where you can make changes freely. You can create as many branches as your project needs.
+
+Once the changes are ready, merge them back into the main branch:
+
+```console
+# Add all your changes
+git add .
+
+# Commit all of your changes
+git commit -m "Commit message"
+
+# Checkout the branch where you want to merge the changes
+git checkout main
+
+# Merge the changes from the feature branch
+git merge new-feature
+```
+
+If there are merge conflicts, Git will prompt you to resolve them.
+
+After merging, delete the feature branch:
+
+```console
+git branch -d new-feature
+```
+
+Your changes are now part of the `main` branch, and the temporary branch is gone.

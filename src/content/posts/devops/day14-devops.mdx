@@ -1,0 +1,18 @@
+---
+title: "Day 14: Jenkins - Integrating with Git"
+date: "2023-05-02"
+description: "How to connect Jenkins to Git: the Git plugin, credentials, webhooks, and Jenkinsfiles, plus shared libraries for repeated pipelines."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Jenkins"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Git", "GitHub", "Jenkins Pipeline", "Jenkins Credential", "Multibranch Pipeline", "Shared Libraries"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={14} />
+
+Again, [CloudBeesTV](https://www.youtube.com/@CloudBeesTV) has solid walkthroughs I followed for this topic.
+
+To integrate Jenkins with Git: install the **Git plugin**, add your repository URL to the job, store access under **Credentials** (SSH key or personal access token — never hardcode secrets in job config), and add a **webhook** on the Git host so pushes trigger builds. For multibranch projects, Jenkins discovers branches via a `Jenkinsfile` in each branch and builds them automatically.
+
+One thing worth knowing early: when you manage multiple projects of the same type (say, several Python services), each repo ends up with a nearly identical `Jenkinsfile` differing only in small parameters. That is what **Jenkins Shared Libraries** solve — extract the common pipeline logic into a versioned library and keep each project's `Jenkinsfile` to just its parameters.

@@ -1,0 +1,54 @@
+---
+title: "Day 20: Puppet and Chef - Overview and comparison"
+date: "2023-05-08"
+description: "How Puppet and Chef compare as configuration management tools: languages, architectures, and when to pick which."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Chef", "Puppet", "Comparision"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={20} />
+
+Tools like **Puppet** and **Chef** matter most once infrastructure grows past what hand-run scripts can manage. This post overviews both and compares them.
+
+---
+
+## Puppet
+
+**Puppet** is an open-source configuration management tool for automating software and system configuration. It uses a **declarative language** (Puppet DSL) where you describe the desired system state rather than writing step-by-step scripts.
+
+Key features:
+
+- **Idempotency:** Puppet converges on the desired state even after unexpected drift or errors.
+- **Agent-based architecture:** an **agent** on each node talks to a central **Puppet server** for configuration updates.
+- **Resource abstraction:** files, services, and packages are managed as **resource types** through the DSL.
+
+---
+
+## Chef
+
+**Chef** is another popular open-source configuration management tool. It uses a **Ruby-based DSL**, which reads more like scripts defining the desired state.
+
+Key features:
+
+- **Flexibility:** define and share custom **cookbooks** and **recipes**.
+- **Test-driven development:** supports testing workflows via **Test Kitchen** and related tools.
+- **Container support:** solid handling of **containers** and **microservices**, suiting modern environments.
+
+---
+
+## Comparison
+
+Both tools share the same goal but differ in approach:
+
+- Puppet uses a **declarative Puppet DSL**; Chef uses a **Ruby-based DSL**.
+- Puppet has traditionally stronger **Windows and cloud-platform** support; Chef leans stronger on **containers and microservices**.
+- Puppet has a larger, more established **community**; Chef offers a more **flexible, customizable** architecture.
+
+Either can automate infrastructure well — pick based on your team's language comfort and platform needs.
+
+---
+
+There is a solid comparative overview of the major configuration management tools on YouTube — [Simplilearn](https://www.youtube.com/@SimplilearnOfficial) also covers each tool in more depth.

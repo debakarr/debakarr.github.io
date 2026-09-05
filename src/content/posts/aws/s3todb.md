@@ -1,13 +1,13 @@
 ---
 title: "Serverless Workflow to Process Files Uploaded to Amazon S3"
 date: "2023-05-13"
-description: "This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB. Source code for diagram from diagrams import Cluster, Diagram from diagrams.aws.compute import Lambda from diagrams.aws.database import Dynamodb from diagrams.aws.integration import SQS from diagrams.aws.storage import S3 with Diagram(\"Serverless Workflow\", graph_attr={\"margin\": \"-1\"}, show=False): with Cluster(\"Amazon S3\"): s3_bucket = S3(\"JSONFilesBucket\") with Cluster(\"AWS SQS\"): dlq = SQS(\"DeadLetterQueue\") json_processing_queue = SQS(\"JSONProcessingQueue\") json_processing_queue - dlq with Cluster(\"AWS Lambda\"): lambda_function = Lambda(\"ProcessJSONFiles\") with Cluster(\"Amazon DynamoDB\"): dynamodb_table = Dynamodb(\"JSONItemTable\") s3_bucket >> json_processing_queue >> lambda_function >> dynamodb_table Thing it covers:"
+description: "A step-by-step lab walkthrough of a serverless pipeline on AWS: JSON files uploaded to S3 flow through an SQS queue and a Lambda function into DynamoDB."
 categories: ["DevOps", "AWS", "S3", "SQS", "Serverless", "Lambda"]
 tags: ["DevOps", "AWS", "S3", "SQS", "Serverless", "Lambda"]
 draft: false
 ---
 
-This is going to be a walkthrough of one of the LAB I did in Udemy to build Serverless Workflow in AWS. The task of the LAB was to take any JSON file uploaded in S3 bucket and store the data from that in DynamoDB.
+This is going to be a walkthrough of one of the labs I did on Udemy to build a Serverless Workflow in AWS. The task of the lab was to take any JSON file uploaded to an S3 bucket and store the data from it in DynamoDB.
 
 ![](/posts/aws/s3todb/serverless_workflow.png)
 
@@ -38,12 +38,12 @@ This is going to be a walkthrough of one of the LAB I did in Udemy to build Serv
 >     s3_bucket >> json_processing_queue >> lambda_function >> dynamodb_table
 > ```
 
-Thing it covers:
+What it covers:
 
 -   Efficiently process AWS S3 events using AWS SQS Message Queues.
--   Trigger AWS Lambda Function to process the message in SQS queue.
--   We can process the file in AWS Lambda Function if required.
--   Store the data to AWS DynamoDB. This is written throught the AWS Lambda Funtion.
+-   Trigger an AWS Lambda Function to process the messages in the SQS queue.
+-   We can process the file in the AWS Lambda Function if required.
+-   Store the data in AWS DynamoDB. This is written through the AWS Lambda Function.
 -   IAM Role can be used to manage access.
 
 ## Creating S3 bucket for storing files
@@ -104,11 +104,11 @@ Thing it covers:
 
 ### Create role for Lambda Function
 
-Before creating Lambda Function we can set role and limit access to what this lambda funtion can do. Basically we want this Lambda Function to:
+Before creating the Lambda Function we can set up a role and limit access to what this Lambda function can do. Basically we want this Lambda Function to:
 
--   Have read access to S3 bucket -> This is possible via **AmazonS3ReadOnlyAccess**
--   Receive message form SQS -> This is possible via **AWSLambdaSQSQueueExecutionRole**
--   Have write access to Dynamo DB -> **AmazonDynamoDBFullAccess**
+-   Have read access to the S3 bucket -> This is possible via **AmazonS3ReadOnlyAccess**
+-   Receive messages from SQS -> This is possible via **AWSLambdaSQSQueueExecutionRole**
+-   Have write access to DynamoDB -> **AmazonDynamoDBFullAccess**
 -   Have write access to CloudWatch in case we want to debug -> **AWSLambdaBasicExecutionRole**
 
 To create this role
@@ -174,7 +174,7 @@ To create this role
 
 ![](/posts/aws/s3todb/create-lambda/click-create-function.jpg)
 
--   Click “Author from scrach”
+-   Click “Author from scratch”
 
 ![](/posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg)
 
@@ -284,7 +284,7 @@ def lambda_handler(event, context):
 
 ## Application integration
 
-Here we would like to a queue which will take the input from S3 bucket and pass it to our Lambda function.
+Here we would like to create a queue which will take the input from the S3 bucket and pass it to our Lambda function.
 
 To have high resilience we will also have a **dead-letter queue** which will be containing all the json which are not processed properly. We will have a retention of 14 days for those json items.
 
@@ -420,7 +420,7 @@ To have high resilience we will also have a **dead-letter queue** which will be 
 
 ![](/posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg)
 
--   Give the event notification a name. I have give name as “sqs-event-notification”. Also I have given access to All object creation. So anytime a new object is pushed to S3, it will trigger a event to the SQS.
+-   Give the event notification a name. I have given it the name “sqs-event-notification”. Also I have given access to all object creation events. So anytime a new object is pushed to S3, it will trigger an event to the SQS queue.
 
 ![](/posts/aws/s3todb/s3-event-notification/event-notification-config.jpg)
 
@@ -458,7 +458,7 @@ To have high resilience we will also have a **dead-letter queue** which will be 
 
 ![](/posts/aws/s3todb/upload-to-s3/click-add-files.jpg)
 
--   Click “Upload” and select the file. For demostration purpose try to upload a valid JSON file
+-   Click “Upload” and select the file. For demonstration purposes, try to upload a valid JSON file
 
 ![](/posts/aws/s3todb/upload-to-s3/upload.jpg)
 
@@ -490,4 +490,13 @@ To have high resilience we will also have a **dead-letter queue** which will be 
 
 ![](/posts/aws/s3todb/upload-to-s3/verify-data.jpg)
 
-That covers the whole process of deploying a simple serverless application using AWS lambda.
+That covers the whole process of deploying a simple serverless application using AWS Lambda.
+
+## Production notes
+
+The walkthrough above keeps the code simple for learning. For a production version, consider the following:
+
+-   The handler only reads `Records[0]`, so the rest of an SQS batch is silently ignored — loop over all of `event['Records']` instead.
+-   `str(random.random() * 10**16)` can collide and is not idempotent across SQS redeliveries — prefer `uuid.uuid4()` or a deterministic key derived from the payload.
+-   The role grants `AmazonDynamoDBFullAccess`; scope it down to least privilege (e.g. only `PutItem` on `JSONItemTable`).
+-   S3 object keys arrive URL-encoded in event notifications — decode them (e.g. with `urllib.parse.unquote_plus`) before calling `get_object`, and add error handling around the S3/DynamoDB calls.

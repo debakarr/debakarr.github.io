@@ -1,0 +1,28 @@
+---
+title: "Day 21: Introduction to Infrastructure as Code (IaC)"
+date: "2023-05-09"
+description: "What Infrastructure as Code means, why it beats manual provisioning, and the key ideas — declarative vs. imperative definitions, version control, and testing — behind doing it well."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "IaC"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "IaC", "Terraform"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={21} />
+
+**Infrastructure as Code (IaC)** means managing and provisioning infrastructure with code instead of manual processes. It lets developers and system administrators automate deployment and management of infrastructure, reducing the chance of human error and increasing efficiency. Here are the key points from my notes:
+
+🔧 **Tools and languages**: IaC can be implemented with tools such as Terraform, Ansible, Puppet, Chef, and CloudFormation, using languages like HCL, YAML, and JSON. These tools provide a way to define, provision, and manage infrastructure as code.
+
+🧩 **Declarative vs. imperative**: declarative IaC defines the desired end state and lets the tool work out the implementation details, while imperative IaC spells out the exact steps and commands needed to create the infrastructure.
+
+📦 **What it manages**: servers, databases, load balancers, networks, and more. With IaC these components are easy to replicate and scale up or down as the organization's needs change.
+
+🚀 **Benefits**: faster and more reliable deployments, greater consistency across environments, simpler management and troubleshooting, and lower costs compared with manual processes.
+
+🔑 **Key concepts**: version control tracks changes to infrastructure code over time, testing validates changes before deployment, and CI/CD automates the test-and-deploy cycle so changes ship faster with less effort.
+
+🤝 **Collaboration**: a shared codebase gives developers and system administrators the same picture of the infrastructure, so they can define and change it together.
+
+🌟 **Conclusion**: IaC is a powerful way to manage infrastructure with less risk — less error, more consistency, and faster deployments.

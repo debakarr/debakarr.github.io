@@ -1,0 +1,139 @@
+---
+title: "Day 28: Docker - Building and managing images"
+date: "2023-05-16"
+description: "Building a Docker image from a FastAPI Dockerfile and managing images with tag, pull, push, and rmi."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Containerization", "Docker"]
+tags: ["DevOps", "CI/CD", "Containerization", "Docker"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={28} />
+
+### Building a Docker image
+
+A Docker image is a lightweight, standalone, executable software package with everything needed to run a piece of software: code, runtime, system tools, libraries, and dependencies. Images are built from the instructions in a `Dockerfile`. Here is one for a FastAPI app:
+
+```dockerfile
+# Base image: the official Python 3.9-slim image is our starting point.
+FROM python:3.9-slim
+
+# Set the working directory inside the container; later commands run here.
+WORKDIR /app
+
+# Copy in requirements first so dependency installation can be cached.
+COPY requirements.txt .
+
+# Install the Python dependencies.
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the application code into the container.
+COPY . .
+
+# Expose port 7400 for the FastAPI application.
+EXPOSE 7400
+
+# Default command: serve the app in main.py with uvicorn on 0.0.0.0:7400.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7400"]
+```
+
+With this `Dockerfile` in your project directory, build the image:
+
+```console
+docker build -t my-fastapi-app .
+```
+
+Then run a container from it:
+
+```console
+docker run -p 7400:7400 my-fastapi-app
+```
+
+This binds port 7400 of the container to port 7400 of the host, so the app is reachable at `http://localhost:7400`.
+
+### Managing Docker images
+
+Essential commands for image management:
+
+1. `docker tag` — adds a new tag (a human-readable label) to an existing image.
+2. `docker images` — lists local images with their ID, repository, tag, size, and creation date.
+3. `docker push` — uploads a local image to a remote registry so others can use it.
+4. `docker pull` — downloads an image from a registry like Docker Hub to your machine.
+5. `docker rmi` — removes a local image by ID or repository name, cleaning up unused ones.
+
+#### Example
+
+```console
+# Tag the FastAPI image as "latest"
+$ docker tag my-fastapi-app my-fastapi-app:latest
+
+# List local images with repository, tag, ID, creation date, and size
+$ docker images
+REPOSITORY            TAG         IMAGE ID       CREATED       SIZE
+myjenkins-blueocean   2.387.3-1   3eb5689ff763   6 days ago    790MB
+my-fastapi-app        latest      67cdycd99743   2 hours ago   150MB
+docker                dind        85cdec499643   8 days ago    323MB
+postgres              latest      f14b0d96cff9   2 weeks ago   379MB
+vault                 latest      1fa9c3f0708d   4 weeks ago   186MB
+
+# Fetch the latest nginx image from Docker Hub
+$ docker pull nginx:latest
+latest: Pulling from library/nginx
+f03b40093957: Pull complete
+eed12bbd6494: Pull complete
+fa7eb8c8eee8: Pull complete
+7ff3b2b12318: Pull complete
+0f67c7de5f2c: Pull complete
+831f51541d38: Pull complete
+Digest: sha256:af296b188c7b7df99ba960ca614439c99cb7cf252ed7bbc23e90cfda59092305
+Status: Downloaded newer image for nginx:latest
+docker.io/library/nginx:latest
+
+# Push a local image to a remote registry
+$ docker push debakarr/myjenkins-blueocean:latest
+The push refers to repository [docker.io/debakarr/myjenkins-blueocean]
+ebe100ea75f2: Pushed
+aa20ea415e9b: Pushed
+dd7368f0b1ad: Pushed
+6a2689aa4ed2: Pushed
+9dfe2887b847: Pushed
+ddabbb0c670a: Mounted from jenkins/jenkins
+e2cf45412e4b: Mounted from jenkins/jenkins
+12e639a5a7ea: Mounted from jenkins/jenkins
+ba66619e71de: Mounted from jenkins/jenkins
+d90c97aff719: Mounted from jenkins/jenkins
+67ac8a362561: Mounted from jenkins/jenkins
+6a45b66c291b: Mounted from jenkins/jenkins
+56b018284c58: Mounted from jenkins/jenkins
+7b8f9d0c670c: Mounted from jenkins/jenkins
+3811da883895: Mounted from jenkins/jenkins
+7de19ea2fded: Mounted from jenkins/jenkins
+3fb287e008f8: Mounted from jenkins/jenkins
+ae56c0c5405b: Mounted from jenkins/jenkins
+latest: digest: sha256:97ce065841e7e33ac746396a46c4ef5865a772c2bd5b5651aa96b83951148f00 size: 4092
+
+# Remove a local image
+$ docker rmi nginx
+Untagged: nginx:latest
+Untagged: nginx@sha256:af296b188c7b7df99ba960ca614439c99cb7cf252ed7bbc23e90cfda59092305
+Deleted: sha256:f9c14fe76d502861ba0939bc3189e642c02e257f06f4c0214b1f8ca329326cda
+Deleted: sha256:419f8948c50c723f2a5ac74428af3d804b5d0079d6df8f7f827663cf10cbc366
+Deleted: sha256:1030aac4f1a8096ed58d3d4a2df55dd1b1b27d919ad156d97ad1f68081d0051a
+Deleted: sha256:7d90b49d96c3036539ef144ecc27c01de03902d8ea166a0f7f827663cf10cbc366
+Deleted: sha256:551acb210764654af31b6cd51adaa74edc9a202587c3395fe0e9f95a2e097f8b
+Deleted: sha256:3c530958db4c75c6fb409f339367aaf9a1e163c84718c035d4b09bebc83f43e7
+Deleted: sha256:8cbe4b54fa88d8fc0198ea0cc3a5432aea41573e6a0ee26eca8c79f9fbfa40e3
+```
+
+Reference:
+
+- [Image-building best practices](https://docs.docker.com/get-started/09_image_best/)
+- [Layer Caching](https://docs.docker.com/build/cache/)
+- [Image Layering](https://docs.docker.com/storage/storagedriver/)
+- [Multi-stage builds](https://docs.docker.com/build/building/multi-stage/)
+- [docker tag](https://docs.docker.com/engine/reference/commandline/tag/)
+- [docker images](https://docs.docker.com/engine/reference/commandline/images/)
+- [docker push](https://docs.docker.com/engine/reference/commandline/push/)
+- [docker pull](https://docs.docker.com/engine/reference/commandline/pull/)
+- [docker rmi](https://docs.docker.com/engine/reference/commandline/rmi/)

@@ -1,7 +1,7 @@
 ---
 title: "TensorFlow Basic"
 date: "2018-01-26"
-description: "TensorFlow Basic I made this post for revision purpose. This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great)."
+description: "A beginner-friendly revision notebook for TensorFlow 1.x: constants, sessions, operations, placeholders, and basic matrix math."
 categories: ["Programming", "Machine Learning", "Python"]
 tags: ["TensorFlow", "Basics", "Machine Learning", "Python", "Tutorial"]
 draft: false
@@ -11,11 +11,13 @@ draft: false
 
 # TensorFlow Basic
 
-*I made this post for revision purpose.* This post contains most of the tensorflow basics and how does they work in a sense. Most of the code is beginner friendly. There is no need for pre-requisite programming knowledge of tensorflow in any sense to go through this notebook, but you should have a basic understanding of Python and how array works in general (also if you have a knowledge of AI, that would be great).
+*I made this post for revision purposes.* This post contains most of the TensorFlow basics and how they work. Most of the code is beginner friendly. There is no need for prerequisite programming knowledge of TensorFlow to go through this notebook, but you should have a basic understanding of Python and how arrays work in general (and if you know a bit of AI, that would be great).
 
-The unit of data in TensorFlow s called a **tensor**. A tensor is basically speaking is a multidimensional arrays (though it is not the case, but still if you look from the perspective of beginner it looks like a multidimensional array). Each tensor have something called **rank** and it is its number of dimensions (Example for this is given in next part).
+*Note: this post uses the TensorFlow 1.x API (`tf.Session`, `tf.placeholder`), which was current when it was written in 2018.*
 
-So first of all at the very beginning we need to import tensorflow to work with the Classes, methods and symbols associated with it. For this below is the code(which is typical code to import a library in Python).
+The unit of data in TensorFlow is called a **tensor**. A tensor is, basically speaking, a multidimensional array (though it is not exactly that, but from a beginner's perspective it looks like one). Each tensor has something called **rank**, which is its number of dimensions (an example of this is given in the next section).
+
+So first of all, at the very beginning we need to import TensorFlow to work with the classes, methods, and symbols associated with it. Below is the code (the typical way to import a library in Python).
 
 ```python
 import tensorflow as tf
@@ -25,7 +27,7 @@ Now we can use all TensorFlow’s classes, methods, and symbols
 
 ### Constants
 
-Let’s create a very basic constant. For this TensorFlow used what it calls is a **tensor object**.
+Let’s create a very basic constant. For this, TensorFlow uses what it calls a **tensor object**.
 
 ```python
 tf.constant('Hello World')
@@ -41,7 +43,7 @@ This is a fundamental String constant. We can also save this as a variable.
 hello = tf.constant('Hello World')
 ```
 
-Let’s see it’s type:
+Let’s see its type:
 
 ```python
 type(hello)
@@ -61,7 +63,7 @@ a = tf.constant(2)
 # we can explicitly pass in the data type of the constant
 x = tf.constant(3.5, dtype=tf.float32)
 
-# or we can also tf.float32 implicitly
+# or TensorFlow can infer tf.float32 implicitly
 y = tf.constant(5.0)
 ```
 
@@ -101,17 +103,17 @@ print(a, x, y)
 Tensor("Const_2:0", shape=(), dtype=int32) Tensor("Const_3:0", shape=(), dtype=float32) Tensor("Const_4:0", shape=(), dtype=float32)
 ```
 
-What just happened? Notice this print does not prints:
+What just happened? Notice this print does not print:
 
 ```python
 2 3.5 5.0
 ```
 
-The thing is that each of the object(sometime called nodes) will be printed if evaluated inside a so-called **session**. A session is something that encapsulate the state and control the TensorFlow runtime. In other word (a bit technical) a session encapsulate the environment in which operation objects are executed. Tensor objects are evaluated in those operation objects.
+The thing is that each of the objects (sometimes called nodes) will only be evaluated inside a so-called **session**. A session is something that encapsulates the state and controls the TensorFlow runtime. In other words (a bit technical), a session encapsulates the environment in which operation objects are executed. Tensor objects are evaluated inside those operation objects.
 
 ### Session
 
-To create a session, we need to use a class Session. We can do this in this way.
+To create a session, we use the Session class. We can do it this way.
 
 ```python
 sess = tf.Session()
@@ -139,7 +141,7 @@ print(sess.run([a, x, y]))
 [2, 3.5, 5.0]
 ```
 
-If we check the type of tensor object inside sess.run() we can find that it’s now being evaluated as numpy array.
+If we check the type of a tensor object returned by sess.run() we can see that it’s now evaluated as a numpy array.
 
 ```python
 type(sess.run(a))
@@ -167,7 +169,7 @@ sess.run(hello)
 b'Hello World'
 ```
 
-In the above output ‘b’ represents that the string is bytestring. We can check this:
+In the above output, ‘b’ indicates that the string is a bytestring. We can check this:
 
 ```python
 type(sess.run(hello))
@@ -187,7 +189,7 @@ print(sess.run(hello))
 b'Hello World'
 ```
 
-which is not the desired output. We are getting ‘b’ in front of the string(this is because it’s type is byte not str). To get the actual string you can use *decode()* method like this:
+which is not the desired output. We are getting ‘b’ in front of the string (this is because its type is bytes, not str). To get the actual string you can use the *decode()* method like this:
 
 ```python
 print(sess.run(hello).decode())
@@ -227,7 +229,7 @@ Division: 0.8
 
 ### Placeholder
 
-It’s not like we are always going to work with constant. TensorFlow has another type of object called **placeholder** which can accept a value, and after that, we can do an operation on that value. To create placeholder we will use *tf.placeholder()*. Inside parenthesis, you can put the datatype(or object type for tensor) you want the placeholder to hold.
+It’s not like we are always going to work with constants. TensorFlow has another type of object called a **placeholder** which can accept a value, after which we can perform an operation on that value. To create a placeholder we use *tf.placeholder()*. Inside the parentheses, you can put the datatype (the tensor’s object type) you want the placeholder to hold.
 
 ```python
 x = tf.placeholder(tf.int32)
@@ -252,7 +254,7 @@ y
 <tf.Tensor 'Placeholder_1:0' shape=<unknown> dtype=int32>
 ```
 
-We can see that these are the placeholder and the initial shape is unknow as it does not hold anything initially.
+We can see that these are placeholders and the initial shape is unknown, as they don’t hold anything yet.
 
 ```python
 type(x)
@@ -270,7 +272,7 @@ type(y)
 tensorflow.python.framework.ops.Tensor
 ```
 
-We can also define operation using tensorflow. Below we have 4 operation tensorflow provides such as tf.add, tf.subtract, tf.divide, tf.multiply. Other then these we have a bunch of other operation (which obviously includes matrix operation) inside TensorFlow.
+We can also define operations using TensorFlow. Below we have 4 operations TensorFlow provides: tf.add, tf.subtract, tf.divide, tf.multiply. Other than these we have a bunch of other operations (which obviously include matrix operations) inside TensorFlow.
 
 If you have worked with *lambda* before then, this might seem a bit similar to you where we are defining two parameters first and then the operation to be performed on them.
 
@@ -281,7 +283,7 @@ mul = tf.multiply(x, y)
 div = tf.divide(x, y)
 ```
 
-To evaluate these operations inside run we can use something called a feed\_dict argument. Basically the syntax is that the run method will accept an operation followed by the feed dictionary which tell on what value we have to do the operations. Below we have 4 dictionary containing different values for x and y (key-value pair format).
+To evaluate these operations inside run we can use something called a feed_dict argument. Basically, the run method accepts an operation followed by a feed dictionary, which tells it on what values to perform the operations. Below we have 4 dictionaries containing different values for x and y (key-value pair format).
 
 ```python
 d1 = {x:5, y:6}
@@ -309,14 +311,14 @@ Multiplication: 14
 Division: 1.8
 ```
 
-Before ending this let’s look at how we are going to do operation on matrix in a very basic level. First we will have to import numpy to create array. Then we will do operation on that array.
+Before ending this let’s look at how we are going to do operations on matrices at a very basic level. First we will have to import numpy to create arrays. Then we will perform an operation on those arrays.
 
 ```python
 import numpy as np
 ```
 
 ```python
-# Two array, one of dimension 2 by 3 and other of diension 3 by 2
+# Two arrays, one of dimension 2 by 3 and the other of dimension 3 by 2
 a = np.array([[6.0, 6.0, 6.0], [2.0, 2.0, 2.0]])
 b = np.array([[5.0, 10.0], [5.0, 10.0], [5.0, 10.0]])
 ```
@@ -359,13 +361,13 @@ with tf.Session() as sess:
  [  30.   60.]]
 ```
 
-If you want to explore more, you could (if you are using iPython or an IDE) type ’tf.mat’ followed by *tab* to explore other operation available for the matrix.
+If you want to explore more, you could (if you are using iPython or an IDE) type ’tf.mat’ followed by *tab* to explore the other operations available for matrices.
 
-Before ending there is one fascinating thing which you might need in future.
+Before ending, there is one fascinating thing which you might need in the future.
 
-For those working with neural network this feature of numpy is quite handy. When we are working with bias. Think of CNN where we have weights (W) and image matrix (X). We have a equation which looks something like this **y = X.W + b**. Here both result of X.W and b have different shape. Then also we can add them using something called broadcasting.
+For those working with neural networks, this feature of numpy is quite handy when working with biases. Think of a CNN where we have weights (W) and an image matrix (X). We have an equation which looks something like this: **y = X.W + b**. Here the result of X.W and b have different shapes. Even so, we can add them using something called broadcasting.
 
-Let’s look few examples
+Let’s look at a few examples
 
 ```python
 p = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -381,7 +383,7 @@ array([[  5.,  10.,  15.],
        [ 20.,  25.,  30.]])
 ```
 
-Above 5.0 is multiplied with every line. This feature is quite handy when dealing with situations where the dimensions of parameters to performed operations on do not matches.
+Above, 5.0 is multiplied with every element. This feature is quite handy when dealing with situations where the dimensions of the parameters to perform operations on do not match.
 
 Using the same feature in TensorFlow:
 
@@ -409,13 +411,13 @@ These are some of the fundamental concepts of TensorFlow which one should know b
 
 -   We imported TensorFlow as tf.
     
--   You can create constants with TensorFow just by passing in tf.constant and whatever object want to convert to a tensor so that TensorFlow can work with it.
+-   You can create constants with TensorFlow just by passing to tf.constant whatever object you want to convert to a tensor so that TensorFlow can work with it.
     
--   You can run a session intensively for a specific session just by creating session using tf.Session(). Save it as a variable. And then you can run constant or operations on those constants. We look at some operations, very basic ones such as just adding two numbers together.
+-   You can run operations interactively in a session just by creating one with tf.Session(). Save it to a variable, and then you can run constants or operations on those constants. We looked at some very basic operations, such as just adding two numbers together.
     
--   Then we looked at placeholders which allowed us to actually create operations or functions that will take in feed dictionaries in which we can put in placeholder objects and later provide the actual constants that we want to work with. So you can think about it as almost a finding your own function except in this case we are using built-in functions.
+-   Then we looked at placeholders, which let us create operations or functions that take feed dictionaries in which we put placeholder objects and later provide the actual constants we want to work with. So you can think of it as almost defining your own function, except in this case we are using built-in functions.
     
--   And then we kind of combined those two ideas to created some matrices using numpy and define them as Tensor objects. We called a built-in function matmul() and pass two matrix constants. This time there is no feed dictionary as we are using constants.
+-   And then we combined those two ideas to create some matrices using numpy and defined them as Tensor objects. We called the built-in function matmul() and passed two matrix constants. This time there is no feed dictionary, as we are using constants.
     
 
 *Thanks for reading*

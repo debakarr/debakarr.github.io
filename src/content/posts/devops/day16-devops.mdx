@@ -1,0 +1,80 @@
+---
+title: "Day 16: Introduction to configuration management"
+date: "2023-05-04"
+description: "What configuration management is, why it matters, and how Ansible, Puppet, and Chef compare — with an Apache example in each."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Jenkins"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Best Practices"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={16} />
+
+Now it's time for configuration management.
+
+## What is configuration management?
+
+Configuration management is the practice of systematically defining, organizing, and maintaining the configuration of systems, servers, and applications. The goal: machines set up the same way across environments, reproducibly rather than by hand. Configuration management tools automate deployment and system setup, reducing human error and keeping environments consistent and reliable.
+
+## Why it matters
+
+- **Consistency:** identically configured systems mean fewer surprises, less downtime.
+- **Efficiency:** automation removes repetitive manual work so the team can focus elsewhere.
+- **Scalability:** new machines inherit the same configuration instead of being hand-built.
+- **Compliance:** managed, auditable configuration helps meet security and regulatory requirements.
+
+## Tooling
+
+A quick look at the popular options, each installing and starting an Apache server:
+
+### Ansible
+
+An open-source, agentless automation tool. Tasks are defined in human-readable YAML, and no software needs to be pre-installed on managed hosts.
+
+```yaml
+---
+- name: Install and configure Apache
+  hosts: webservers
+  become: true
+  tasks:
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Start and enable Apache
+      service:
+        name: apache2
+        state: started
+        enabled: true
+```
+
+### Puppet
+
+An open-source tool using a declarative language to describe the desired system state. It follows an agent–master architecture: agents on managed nodes pull configuration from a central Puppet server.
+
+```puppet
+package { 'apache2':
+  ensure => installed,
+}
+
+service { 'apache2':
+  ensure => running,
+  enable => true,
+}
+```
+
+### Chef
+
+An open-source tool using a Ruby-based DSL to define the desired state. It follows a client–server architecture, with a central Chef server distributing cookbooks to managed nodes.
+
+```ruby
+package 'apache2' do
+  action :install
+end
+
+service 'apache2' do
+  action [:enable, :start]
+end
+```

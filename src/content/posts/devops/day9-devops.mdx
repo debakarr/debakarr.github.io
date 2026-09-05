@@ -1,0 +1,63 @@
+---
+title: "Day 9: Remote repositories and collaboration with Git"
+date: "2023-04-26"
+description: "Using remote repositories to collaborate: adding remotes, pushing, cloning, pulling, and opening pull requests."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Git"]
+tags: ["DevOps", "Git", "GitHub", "Tutorial", "How-to", "Remote Repository"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={9} />
+
+Collaboration is a key part of software development, and remote repositories let developers work on the same project from anywhere. A remote is a version of the codebase hosted on a server, so everyone stays in sync with the most up-to-date code.
+
+Resources I referred to:
+
+- [About remote repositories - GitHub Docs](https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories)
+- [Git remote : How to Collaborate - The Data Frog](https://thedatafrog.com/en/articles/git-remote-collaborate/)
+
+## Setting up a remote repository
+
+To set up a remote repository, use a service like GitHub or GitLab — the exact steps vary by platform. Once the remote exists, link it to your local repository:
+
+```console
+git remote add origin <remote repository URL>
+```
+
+The URL can use SSH or HTTPS format. Note that SSH may need some extra configuration first.
+
+## Pushing changes to the remote repository
+
+Once linked, push changes with `git push`:
+
+```console
+git push -u origin main
+```
+
+Here `origin` is the default name for the remote (you can choose another), `-u` tells Git to remember the upstream branch, and `main` is the branch being pushed.
+
+## Cloning a remote repository
+
+Most of the time you will start from a project that already lives in a remote repository. To get a local copy:
+
+```console
+git clone <remote repository URL>
+```
+
+## Fetching and merging changes from the remote repository
+
+Over time, other developers update the `main` branch on the remote. To bring those changes into your local branch:
+
+```console
+git pull origin main
+```
+
+This fetches the changes from the remote and merges them into your local branch.
+
+## Pull requests and merge requests
+
+A pull request (GitHub) or merge request (GitLab) proposes merging your branch into the main branch of the remote repository, so collaborators can review the changes first. To create one, go to the remote repository's web interface and follow the prompts.
+
+There is a nice interactive Git cheat sheet worth bookmarking: [Git Cheatsheet by ndpsoftware](http://www.ndpsoftware.com/git-cheatsheet.html#loc=index;).

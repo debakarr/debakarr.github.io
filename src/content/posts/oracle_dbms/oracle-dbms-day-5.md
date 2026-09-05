@@ -1,7 +1,7 @@
 ---
 title: "[Training] DBMS with Oracle Day 5"
 date: "2017-07-27"
-description: "This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at PL/SQL Cursor, Procedure, Function, and Trigger. This will complete the very basics of PL/SQL. So what is cursor? Cursor is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use SELECT or any DML (INSERT, DELETE, UPDATE or MERGE) then cursor holds the rows (one or more) returned by a SQL statement."
+description: "Day 5 of an Oracle DBMS training: PL/SQL cursors, procedures, functions, and triggers."
 categories: ["Database Management", "Programming"]
 tags: ["Oracle", "DBMS", "Database", "SQL", "Tutorial", "Day 5"]
 draft: false
@@ -9,11 +9,11 @@ draft: false
 
 ![](http://i.imgur.com/7l7BvWT.png)
 
-This time I am a bit late. Actually, my college started so it took me some time to write-up my next blog post. Anyways, today we are going to have a look at **PL/SQL** **`Cursor, Procedure, Function, and Trigger`**. This will complete the very basics of PL/SQL.
+This time I am a bit late. My college started, actually, so it took me some time to write up my next blog post. Anyways, today we are going to look at **PL/SQL** **`cursors, procedures, functions, and triggers`**. This will complete the very basics of PL/SQL.
 
-**So what is cursor?**
+**So what is a cursor?**
 
-**`Cursor`** is a pointer to a memory area called context area(Actually it is a pointer to a row). Whenever you use **`SELECT`** or any **`DML`** (**`INSERT, DELETE, UPDATE or MERGE`**) then cursor holds the rows (one or more) returned by a SQL statement.
+A **`cursor`** is a pointer to a memory area called the context area (actually, it is a pointer to a row). Whenever you use **`SELECT`** or any **`DML`** (**`INSERT, DELETE, UPDATE or MERGE`**), the cursor holds the rows (one or more) returned by the SQL statement.
 
 There are two types of cursors:
 
@@ -42,9 +42,9 @@ DBMS_OUTPUT.PUT_LINE(SQL%ROWCOUNT);
 END;
 ```
 
-Here the output will be number of rows affected by the **`UPDATE`** (DML) statement.
+Here the output will be the number of rows affected by the **`UPDATE`** (DML) statement.
 
-**Explicit cursors**: Explicit cursors, unlike implicit cursor, are user defined cursors. The user has to create these cursors for any statement which basically returns one or more row of data. Here the user has full control of the cursor. It is worth noting that an explicit cursor has to be named in the declaration section of the PL/SQL block.
+**Explicit cursors**: unlike implicit cursors, explicit cursors are user-defined. The user creates these cursors for any statement that returns one or more rows of data. Here the user has full control over the cursor. Note that an explicit cursor must be named in the declaration section of the PL/SQL block.
 
 Here’s an example:
 
@@ -78,13 +78,13 @@ BEGIN
 END;
 ```
 
-So now you know what is a cursor and how to use implicit and explicit cursor. I would recommend you to look to the over the internet for more information on cursor.
+So now you know what a cursor is and how to use implicit and explicit cursors. I would recommend looking over the material available on the internet for more information on cursors.
 
-**Now lets talk about procedure and function**
+**Now let’s talk about procedures and functions**
 
-Just like other languages here in **PL/SQL** too a **`function`** is a set of statements which finally return something to the caller. Similarly a **`procedure`** too is a set of statement but it does not return anything. These two can save us time as we don’t have to rewrite the same long code again and again.
+Just like in other languages, here in **PL/SQL** a **`function`** is a set of statements which finally returns something to the caller. Similarly, a **`procedure`** is a set of statements, but it does not return anything. These two save us time, as we don’t have to rewrite the same long code again and again.
 
-Let me provide you the syntax for both first.
+First, here is the syntax for both.
 
 ```
 --Syntax for function
@@ -134,7 +134,7 @@ BEGIN
 END [procedure_name];
 ```
 
-Here’s an example of update product quantity in **`product`** tableeverytime someone purchased something i.e. data/row is added to the **`sales`** table:
+Here’s an example that updates the product quantity in the **`product`** table every time someone makes a purchase, i.e. whenever a row is added to the **`sales`** table:
 
 ```
 create or replace PROCEDURE PROD_PRODUCTS
@@ -160,7 +160,7 @@ END;
 EXEC PROD_PRODUCTS ( 10001, 2, 10000001, 100001, TO_DATE('18-JUL-2017', 'DD-MON-YYYY'))
 ```
 
-Similarly we can have a function to return number of bills count in a particular day from **`sales`** table.
+Similarly, we can have a function that returns the number of bills in the **`sales`** table for a particular day.
 
 ```
 create FUNCTION FUNC_BILLS
@@ -200,11 +200,11 @@ DBMS_OUTPUT.PUT_LINE(V_NUM);
 END;
 ```
 
-So now we know about cursor, procedure, and function. So that left us with our last topic, trigger.
+So now we know about cursors, procedures, and functions. That leaves us with our last topic: triggers.
 
-**What are trigger?**'
+**What are triggers?**
 
-Triggers are named PL/SQL blocks which automatically execute or fire whenever some event occur. In sence of PL/SQL lets say we want to call a function whenever a data is insert in sales table then we can use trigger for that. I basically use trigger to share the YouTube video I like to Facebook which save me time to click on share button and do the next necessary steps.
+Triggers are named PL/SQL blocks which automatically execute (fire) whenever some event occurs. In terms of PL/SQL, let’s say we want to call a function whenever a row is inserted into the SALES table — we can use a trigger for that. (I use a similar trigger to share the YouTube videos I like to Facebook, which saves me the time of clicking the share button and doing the next necessary steps.)
 
 The basic syntax for a trigger is:
 
@@ -236,7 +236,7 @@ exception-handling statements
 END;
 ```
 
-Here’s an example of a trigger which notifies you whenever you insert any new row to product table.
+Here’s an example of a trigger which notifies you whenever you insert a new row into the PRODUCT table.
 
 ```
  CREATE OR REPLACE TRIGGER TRIG_PRODUCT
@@ -256,6 +256,6 @@ DBMS_OUTPUT.PUT_LINE('You Just Inserted a new row in Product ');
 END;
 ```
 
-There are many ways to use trigger. This is just a very basic example I have provided. Trigger can also be use to assign ID to a primary key which works as an AUTO\_INCREMENT alternative for mySQL (We have to use sequence as well as trigger to do so). Basically I have just given you a gist of what we can do with PL/SQL and there is far more thing to learn.
+There are many ways to use triggers. This is just a very basic example. Triggers can also be used to assign IDs to primary keys, which works as an AUTO_INCREMENT alternative for MySQL (we have to use a sequence as well as a trigger to do so). I have basically just given you a gist of what we can do with PL/SQL — there is far more to learn.
 
-So this is the end of my blog post on DBMS with Oracle. Our training is about 5 days and to be honest we really learned a lot from this training. Oracle has a vast amount query that is still unknown to me. Though it is very important to know the basics of Oracle database as it is used by many Big companies out there as their DBMS. So this is all for today. I will keep on bringing blog like this, to tell you all the basic in shortest way possible. Thank you for reading and see you next time.
+So this is the end of my blog post on DBMS with Oracle. Our training lasted about 5 days and, to be honest, we learned a lot from it. Oracle has a vast number of queries still unknown to me, though knowing the basics of the Oracle database is very important, as it is used by many big companies as their DBMS. That’s all for today. I will keep bringing blogs like this to explain the basics in the shortest way possible. Thank you for reading, and see you next time.

@@ -1,0 +1,21 @@
+---
+title: "Day 13: Jenkins - Creating and managing jobs"
+date: "2023-05-01"
+description: "How Jenkins jobs work: freestyle vs. pipeline jobs, and the basic workflow for creating and managing them."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Jenkins"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Freestyle Job", "Pipeline Job", "Jenkins Build", "Jenkins Job"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={13} />
+
+Again, [CloudBeesTV](https://www.youtube.com/@CloudBeesTV) has solid walkthroughs I followed for this topic.
+
+The basic workflow: **New Item → pick a job type → configure source, triggers, and build steps → Save → Build Now**, then manage history, parameters, and build status from the job page.
+
+- **Freestyle job:** the classic point-and-click job. Good for simple builds: check out code, run shell steps, archive artifacts.
+- **Pipeline job:** build logic lives in a `Jenkinsfile` (declarative or scripted). Versioned with your code, supports stages, parallel steps, and approvals — the right default once a job grows beyond a few steps.
+
+Use freestyle while learning the UI, then move real projects to pipelines so the build definition is reviewable and reproducible.

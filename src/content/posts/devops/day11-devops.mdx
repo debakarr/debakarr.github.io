@@ -1,0 +1,162 @@
+---
+title: "Day 11: Introduction to CI/CD"
+date: "2023-04-28"
+description: "What CI and CD actually mean, why they matter, and minimal pipeline examples for Jenkins, GitHub Actions, CircleCI, and Travis CI."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Jenkins"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "CircleCI", "GitHub Actions", "Travis CI"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={11} />
+
+CI/CD is about streamlining software delivery: integrate often, test automatically, and ship in small, safe steps.
+
+This builds on the overview in the [Day 1 post](/posts/devops/day1-devops).
+
+## CI vs CD
+
+- **Continuous Integration (CI):** merge code changes from multiple developers into a shared repository (e.g., Git) as frequently as possible. Automated builds and tests run on each integration to catch errors and conflicts early.
+- **Continuous Deployment (CD):** automatically deploy tested, verified code to production so new features and bug fixes reach users quickly and reliably.
+
+## Benefits of CI/CD
+
+- **Faster feedback:** automated builds and tests flag broken changes within minutes.
+- **Improved collaboration:** frequent integration keeps divergences small and conflicts rare.
+- **Higher code quality:** regression suites run on every change instead of before a big release.
+- **Faster delivery:** automation removes manual handoffs between build, test, and deploy.
+
+## CI/CD tool options
+
+### [Jenkins](https://www.jenkins.io/)
+
+```groovy
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/username/repo.git'
+            }
+        }
+        stage('Build') {
+            steps {
+                sh 'pip install poetry'
+                sh 'poetry install'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'poetry run pytest'
+            }
+        }
+        stage('Deliver') {
+            steps {
+                echo 'Codebase approved, deliver to production environment'
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploy changes to production'
+                // Add your deployment steps here
+            }
+        }
+    }
+}
+```
+
+### [GitHub Actions](https://github.com/features/actions)
+
+```yaml
+name: CI/CD
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build
+        run: |
+          pip install poetry
+          poetry install
+      - name: Test
+        run: |
+          poetry run pytest
+      - name: Deliver
+        run: |
+          echo 'Codebase approved, deliver to production environment'
+      - name: Deploy
+        run: |
+          echo 'Deploy changes to production'
+          # Add your deployment steps here
+```
+
+### [CircleCI](https://circleci.com/)
+
+> **TIP — Visual Config Editor**
+>
+> CircleCI has a [Visual Config Editor](https://circleci-public.github.io/visual-config-editor/) for visualizing pipelines.
+
+```yaml
+version: 2.1
+jobs:
+  build:
+    docker:
+      - image: cimg/python:3.11
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: |
+            pip install poetry
+            poetry install
+      - run:
+          name: Test
+          command: |
+            poetry run pytest
+      - run:
+          name: Deliver
+          command: |
+            echo 'Codebase approved, deliver to production environment'
+      - run:
+          name: Deploy
+          command: |
+            echo 'Deploy changes to production'
+            # Add your deployment steps here
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build
+```
+
+### [Travis CI](https://www.travis-ci.com/)
+
+```yaml
+language: python
+python:
+  - "3.11"
+install:
+  - pip install poetry
+  - poetry install
+script:
+  - poetry run pytest
+after_success:
+  - echo 'Codebase approved, deliver to production environment'
+  - echo 'Deploy changes to production'
+  # Add your deployment steps here
+```
+
+---
+
+Further reading:
+
+- [An Introduction to CI/CD Best Practices](https://www.digitalocean.com/community/tutorials/an-introduction-to-ci-cd-best-practices)
+- [CI/CD concepts](https://docs.gitlab.com/ee/ci/introduction/)
+- [A beginner's guide to CI/CD and automation on GitHub](https://github.blog/2022-06-03-a-beginners-guide-to-ci-cd-and-automation-on-github/)

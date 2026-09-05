@@ -1,7 +1,7 @@
 ---
 title: "[OOP (CS 594D)] Assignment 1"
 date: "2017-08-06"
-description: "Assignment 1 Write a Java program to print “Hello World”. Source code: public class HelloWorldnormal { public static void main(String[] args) { System.out.println(\"Hello World\"); } } Output: $ javac HelloWorldnormal.java $ java HelloWorldnormal Hello World Write a Java program to.pront “Hello World”, where ‘World’ will be taken from command line argument. Source code: public class HelloWorldCLA { public static void main(String[] args) { System.out.println(\"Hello \" + args[0]); } } Output:"
+description: "Solutions to a first-year OOP assignment in Java: Hello World, command-line arguments, swapping numbers, patterns, and a grading program."
 categories: ["Programming", "Java"]
 tags: ["Java", "Assignment", "Programming", "Tutorial"]
 draft: false
@@ -33,7 +33,7 @@ $ java HelloWorldnormal
 Hello World
 ```
 
--   **Write a Java program to.pront “Hello World”, where ‘World’ will be taken from command line argument.**
+-   **Write a Java program to print “Hello World”, where ‘World’ will be taken from a command-line argument.**
 
 *Source code:*
 
@@ -55,6 +55,8 @@ $ java HelloWorldCLA World
 Hello World
 ```
 
+-   **Write a Java program to print the sum of two numbers taken from command-line arguments.**
+
 *Source code:*
 
 ```
@@ -74,6 +76,8 @@ $ javac SumOf2NumbersCLA.java
 $ java SumOf2NumbersCLA 7 8
 Sum of 7 and 8 is 15
 ```
+
+-   **Write a Java program to greet each name passed as a command-line argument, prefixing it with its index, like this:**
 
 ```
 0 HELLO NAME1
@@ -104,6 +108,8 @@ $ java Greeting Debakar Baka Dr_NULL
 1 HELLO Baka
 2 HELLO Dr_NULL
 ```
+
+-   **Write a Java program to swap two numbers entered by the user.**
 
 *Source code:*
 
@@ -141,6 +147,8 @@ Before Swap: a = 67, b = 54
 
 After Swap: a = 54, b = 67
 ```
+
+-   **Write a Java program to print the following number pattern for a given number of lines:**
 
 ```
 1 2 3 4 5
@@ -189,6 +197,8 @@ Enter number of line for the pattern: 5
 4 5
 5
 ```
+
+-   **Write a Java program that prints a remark for a student's marks using the following grading scale:**
 
 ```
 if marks <= 40 - Fail

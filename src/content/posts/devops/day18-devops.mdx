@@ -1,0 +1,125 @@
+---
+title: "Day 18: Ansible - Ad-hoc commands and playbooks"
+date: "2023-05-06"
+description: "When to reach for Ansible ad-hoc commands vs. playbooks, with working examples including an Apache setup playbook."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Ansible"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Ansible", "Playbook", "Ad-hoc command"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={18} />
+
+Ansible simplifies routine IT work. This post covers its two execution styles: **ad-hoc commands** for quick one-off tasks on remote hosts, and **playbooks** for reusable, more complex automation.
+
+## Setup
+
+My lab: one Ubuntu Ansible controller and three Debian managed hosts.
+
+![](https://i.imgur.com/SPBcnvv.png)
+
+## Ansible ad-hoc commands
+
+Ad-hoc commands run directly from the command line — ideal for quick checks like service status or uptime, with no playbook file needed.
+
+Here are some examples against the `linux-host` inventory group:
+
+#### Check if Linux hosts are reachable
+
+```console
+ansible linux-host -m ping
+```
+
+![](https://i.imgur.com/m0Nndbs.png)
+
+---
+
+#### Check uptime of all Linux hosts
+
+```console
+ansible linux-host -m command -a "uptime"
+```
+
+![](https://i.imgur.com/LIdBX0u.png)
+
+---
+
+#### Use the `ansible.builtin.shell` module
+
+```console
+ansible linux-host -m ansible.builtin.shell -a 'echo $TERM'
+```
+
+![](https://i.imgur.com/vvGEDlR.png)
+
+---
+
+#### Use the `ansible.builtin.copy` module
+
+```console
+ansible linux-host -m ansible.builtin.copy -a "src=/etc/hosts dest=/tmp/hosts"
+```
+
+![](https://i.imgur.com/udlo1Tl.png)
+
+---
+
+Ad-hoc commands suit simple, one-off tasks only — anything complex belongs in a playbook.
+
+## Ansible playbooks
+
+Playbooks are the core of Ansible automation. Written in YAML, they define an ordered set of tasks for remote hosts, and can be shared, reused, and versioned.
+
+Here is a playbook that installs and configures Apache on all Debian hosts in the `linux-host` group:
+
+```yaml
+---
+- name: Install and configure Apache on Debian hosts
+  hosts: linux-host
+  become: true
+
+  tasks:
+    - name: Update package index
+      apt:
+        update_cache: true
+
+    - name: Install Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Start and enable Apache service
+      service:
+        name: apache2
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
+```
+
+![](https://i.imgur.com/N9kF0E7.png)
+
+It updates the package index, installs Apache via the `apt` module, then starts and enables the service, with a handler ready to restart Apache when notified of config changes.
+
+To run it, save the file as `apache_setup.yml` and execute:
+
+```console
+ansible-playbook apache_setup.yml
+```
+
+## Conclusion
+
+Ad-hoc commands cover quick one-off tasks; playbooks handle everything repeatable and complex. Together they simplify most day-to-day automation and keep the workflow consistent.
+
+---
+
+Further reading:
+
+- [Introduction to ad hoc commands](https://docs.ansible.com/ansible/latest/command_guide/intro_adhoc.html)
+- [CI/CD concepts](https://www.middlewareinventory.com/blog/ansible-ad-hoc-commands/)
+- [How to install software packages with an Ansible playbook](https://www.redhat.com/sysadmin/software-packages-ansible)

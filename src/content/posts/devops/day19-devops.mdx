@@ -1,0 +1,65 @@
+---
+title: "Day 19: Ansible - Roles and best practices"
+date: "2023-05-07"
+description: "How Ansible roles organize and reuse automation code, how to share them via Galaxy, and where to read up on best practices."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Ansible", "Best Pactice"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Ansible", "Ansible-Galaxy", "Ansible Roles", "Best Pactice"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={19} />
+
+In this post: Ansible roles, why they help, how to use them in playbooks, and best practices for structuring Ansible projects.
+
+### Ansible roles: basics and creating
+
+Roles give tasks, variables, handlers, metadata, templates, and files a standard directory structure. That makes automation reusable across projects instead of copy-pasted between playbooks, which keeps things maintainable.
+
+A minimal example (see the official Ansible docs for the full layout):
+
+```yaml
+---
+- hosts: webservers
+  roles:
+    - common
+    - webservers
+```
+
+Here the `common` and `webservers` roles are applied to the `webservers` host group.
+
+---
+
+### Sharing roles with Ansible Galaxy
+
+[Ansible Galaxy](https://galaxy.ansible.com/) is the public repository for community roles. Search for a role matching your use case instead of writing everything from scratch.
+
+For example, to install a PostgreSQL server role:
+
+```console
+ansible-galaxy install geerlingguy.postgresql
+```
+
+Then use it in a playbook:
+
+```yaml
+---
+- hosts: linux-host
+  become: true
+  roles:
+    - role: geerlingguy.postgresql
+      vars:
+        postgresql_users:
+          - name: debakarr
+```
+
+![](https://i.imgur.com/JoaGuno.png)
+
+---
+
+For best practices, these are worth reading:
+
+- [Ansible Best Practices](https://github.com/jkupferer/ansible-best-practices)
+- [Ansible Best practices](https://github.com/DemisR/ansible_best_practices_slides/)
+- [Ansible Best Practices to Follow \[Tips & Tricks\]](https://spacelift.io/blog/ansible-best-practices)

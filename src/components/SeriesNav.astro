@@ -1,0 +1,167 @@
+---
+// SeriesNav.astro — shared navigation for the DevOps learning series.
+// Only lists days that actually exist (1–29). Usage in a day post:
+//   import SeriesNav from '../../../components/SeriesNav.astro';
+//   <SeriesNav current={1} />
+interface Props {
+  current: number;
+}
+
+const { current } = Astro.props;
+
+const parts: { name: string; days: { n: number; title: string }[] }[] = [
+  {
+    name: 'Part 1 · Introduction to DevOps',
+    days: [
+      { n: 1, title: 'Understanding DevOps, its principles, and benefits' },
+      { n: 2, title: 'Exploring the DevOps lifecycle and its stages' },
+      { n: 3, title: 'Introduction to CI and CD' },
+      { n: 4, title: 'Common DevOps tools and technologies' },
+      { n: 5, title: 'DevOps culture and best practices' },
+    ],
+  },
+  {
+    name: 'Part 2 · Version Control with Git',
+    days: [
+      { n: 6, title: 'Introduction to Git' },
+      { n: 7, title: 'Basic Git commands' },
+      { n: 8, title: 'Branching and merging in Git' },
+      { n: 9, title: 'Remote repositories and collaboration' },
+      { n: 10, title: 'Git workflows and best practices' },
+    ],
+  },
+  {
+    name: 'Part 3 · CI/CD with Jenkins',
+    days: [
+      { n: 11, title: 'Introduction to CI/CD' },
+      { n: 12, title: 'Jenkins: installation and configuration' },
+      { n: 13, title: 'Jenkins: creating and managing jobs' },
+      { n: 14, title: 'Jenkins: integrating with Git' },
+      { n: 15, title: 'Jenkins: pipelines and best practices' },
+    ],
+  },
+  {
+    name: 'Part 4 · Configuration Management',
+    days: [
+      { n: 16, title: 'Introduction to configuration management' },
+      { n: 17, title: 'Ansible: installation and configuration' },
+      { n: 18, title: 'Ansible: ad-hoc commands and playbooks' },
+      { n: 19, title: 'Ansible: roles and best practices' },
+      { n: 20, title: 'Puppet and Chef: overview and comparison' },
+    ],
+  },
+  {
+    name: 'Part 5 · Infrastructure as Code',
+    days: [
+      { n: 21, title: 'Introduction to Infrastructure as Code' },
+      { n: 22, title: 'Terraform: installation and configuration' },
+      { n: 23, title: 'Terraform: writing and applying configuration' },
+      { n: 24, title: 'Terraform: modules and best practices' },
+      { n: 25, title: 'CloudFormation: overview and comparison' },
+    ],
+  },
+  {
+    name: 'Part 6 · Containerization with Docker',
+    days: [
+      { n: 26, title: 'Introduction to containerization' },
+      { n: 27, title: 'Docker: installation and configuration' },
+      { n: 28, title: 'Docker: building and managing images' },
+      { n: 29, title: 'Docker: running and managing containers' },
+    ],
+  },
+];
+
+const prev = current > 1 ? current - 1 : null;
+const next = current < 29 ? current + 1 : null;
+---
+
+<nav class="seriesnav" aria-label="DevOps series navigation">
+  <details>
+    <summary>
+      <span>📚 DevOps learning series — Day {current} of 29</span>
+      <span class="seriesnav-chev" aria-hidden="true">▾</span>
+    </summary>
+    <div class="seriesnav-body">
+      {
+        parts.map((part) => (
+          <div class="seriesnav-part">
+            <p class="seriesnav-partname">{part.name}</p>
+            <ol>
+              {part.days.map((d) => (
+                <li>
+                  {d.n === current ? (
+                    <span class="seriesnav-current" aria-current="page">
+                      Day {d.n}: {d.title}
+                    </span>
+                  ) : (
+                    <a href={`/posts/devops/day${d.n}-devops`}>Day {d.n}: {d.title}</a>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        ))
+      }
+    </div>
+  </details>
+  <div class="seriesnav-prevnext">
+    {prev ? (
+      <a href={`/posts/devops/day${prev}-devops`}>← Day {prev}</a>
+    ) : (
+      <span />
+    )}
+    {next && <a href={`/posts/devops/day${next}-devops`}>Day {next} →</a>}
+  </div>
+</nav>
+
+<style>
+  .seriesnav {
+    margin: 0 0 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 0.8rem;
+    background: var(--surface-raised);
+    font-size: 0.85rem;
+  }
+  .seriesnav details { padding: 0.7rem 0.9rem 0; }
+  .seriesnav summary {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 650;
+    padding-bottom: 0.7rem;
+    list-style: none;
+  }
+  .seriesnav summary::-webkit-details-marker { display: none; }
+  .seriesnav-chev { color: var(--muted); font-size: 0.75rem; }
+  .seriesnav-body {
+    display: grid;
+    gap: 0.9rem;
+    padding-bottom: 0.9rem;
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+  @media (min-width: 720px) { .seriesnav-body { grid-template-columns: 1fr 1fr; } }
+  .seriesnav-partname {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--muted);
+    margin: 0 0 0.3rem;
+  }
+  .seriesnav ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.15rem; }
+  .seriesnav ol a { color: var(--muted); text-decoration: none; }
+  .seriesnav ol a:hover { color: var(--accent-strong); text-decoration: underline; }
+  .seriesnav-current { color: var(--accent-strong); font-weight: 650; }
+  .seriesnav-prevnext {
+    display: flex;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    padding: 0.6rem 0.9rem;
+    font-weight: 600;
+  }
+  .seriesnav-prevnext a { color: var(--accent-strong); text-decoration: none; }
+  .seriesnav-prevnext a:hover { text-decoration: underline; }
+</style>

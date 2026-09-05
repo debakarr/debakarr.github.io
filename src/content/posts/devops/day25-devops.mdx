@@ -1,0 +1,27 @@
+---
+title: "Day 25: CloudFormation (AWS) - Overview and comparison"
+date: "2023-05-13"
+description: "AWS CloudFormation compared with Terraform, plus a look at other IaC alternatives like Pulumi, ARM templates, and Google Cloud Deployment Manager."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "IaC", "Terraform", "Pulumi"]
+tags: ["DevOps", "CI/CD", "IaC", "Terraform", "Alternatives"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={25} />
+
+After four days on Terraform, today I compared it with AWS CloudFormation and surveyed the other IaC options. The short version from my reading: CloudFormation is AWS-only and uses YAML/JSON templates, while Terraform is cloud-agnostic with HCL — worth knowing both, since the trade-off comes up in interviews and on real teams.
+
+Some articles which shed light on **CloudFormation vs Terraform**:
+
+- [Terraform vs. AWS CloudFormation : The Ultimate Comparison](https://spacelift.io/blog/terraform-vs-cloudformation)
+- [Terraform vs. AWS CloudFormation : The Ultimate Comparison](https://www.cncf.io/blog/2021/04/06/cloudformation-vs-terraform-which-is-better/)
+
+---
+
+Other Terraform alternatives worth knowing:
+
+- **[Pulumi](https://www.pulumi.com/)** is another alternative to Terraform.
+- **[Azure Resource Manager](https://learn.microsoft.com/en-us/azure/azure-resource-manager/management/overview)** specializes in Azure solutions.
+- **[Google Cloud Deployment Manager](https://cloud.google.com/deployment-manager/docs)** specializes in GCP solutions.

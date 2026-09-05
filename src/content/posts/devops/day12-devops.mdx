@@ -1,0 +1,28 @@
+---
+title: "Day 12: Jenkins - Installation and configuration"
+date: "2023-04-29"
+description: "How to install Jenkins on Ubuntu, Windows, and macOS, and where to go for first-time setup."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Jenkins"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={12} />
+
+The best reference for installing and configuring Jenkins is the [official guide](https://www.jenkins.io/doc/book/installing/). For walkthroughs, my go-to is the [CloudBees Jenkins YouTube channel](https://www.youtube.com/@CloudBeesTV), including its [install playlist](https://www.youtube.com/@CloudBeesTV/search?query=How%20to%20Install%20Jenkins).
+
+Quick pointers per OS:
+
+### How to install Jenkins on Ubuntu
+
+Install a Java 17+ runtime, then add the official Jenkins apt repository and install the `jenkins` package. The official guide covers the exact `curl` keyring and `apt` steps — follow it rather than copying random `apt-get install jenkins` snippets, since Jenkins is not in the default Ubuntu repositories.
+
+### How to install Jenkins on Windows
+
+Use the Windows MSI installer from the Jenkins download page, which sets Jenkins up as a service. Alternatively, run the standalone `jenkins.war` with `java -jar jenkins.war` if you just want a local trial instance.
+
+### How to install Jenkins on Mac
+
+The simplest path is `brew install jenkins-lts` and then `brew services start jenkins-lts`. You need a compatible Java version installed first (check the official guide for the current LTS requirement).

@@ -1,0 +1,85 @@
+---
+title: "Day 17: Ansible - Installation and configuration"
+date: "2023-05-05"
+description: "How to install Ansible on Debian- and RHEL-based systems, verify it, and point it at your first inventory."
+categories: ["DevOps", "Software Development", "Automation", "Infrastructure", "Ansible"]
+tags: ["DevOps", "CI/CD", "Jenkins", "Tutorial", "Ansible"]
+draft: false
+---
+
+import SeriesNav from '../../../components/SeriesNav.astro';
+
+<SeriesNav current={17} />
+
+The Ansible control node runs on Linux (or macOS/WSL). Managed Windows hosts are supported — they just go in the inventory; only the controller needs a Unix-like system.
+
+### Update the system
+
+Debian-based (Ubuntu, Debian):
+
+```console
+sudo apt-get update
+sudo apt-get upgrade
+```
+
+RHEL-based (CentOS, RHEL, Fedora):
+
+```console
+sudo dnf update
+```
+
+(`yum` still works as a compatibility symlink on older releases.)
+
+### Install Python
+
+Debian-based:
+
+```console
+sudo apt-get install -y python3
+```
+
+RHEL-based:
+
+```console
+sudo dnf install -y python3
+```
+
+### Install Ansible
+
+Debian-based:
+
+```console
+sudo apt-get install -y ansible
+```
+
+RHEL-based (requires EPEL on RHEL/CentOS):
+
+```console
+sudo dnf install -y epel-release
+sudo dnf install -y ansible
+```
+
+### Verify the install
+
+```console
+ansible --version
+```
+
+### Configure Ansible
+
+Ansible reads `/etc/ansible/ansible.cfg` for defaults. Create an inventory file at `/etc/ansible/hosts`, for example:
+
+```ini
+[webservers]
+192.168.1.10
+192.168.1.11
+```
+
+Then point Ansible at it in `/etc/ansible/ansible.cfg`:
+
+```ini
+[defaults]
+inventory = /etc/ansible/hosts
+```
+
+Ansible is now installed and ready to use.
