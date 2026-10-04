@@ -1,0 +1,53 @@
+// Hand-drawn 24px line icons. Stroke uses currentColor so CSS can tint them.
+
+const s = (body: string) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+
+export const ICON = {
+  food: s('<path d="M12 21V8"/><path d="M12 8c-3-1-4-4-4-6 3 0 4 2 4 4"/><path d="M12 12c-3-1-5-3-5-6 3 0 5 2 5 4"/><path d="M12 12c3-1 5-3 5-6-3 0-5 2-5 4"/><path d="M12 16c-3-1-5-3-5-6 3 0 5 2 5 4"/><path d="M12 16c3-1 5-3 5-6-3 0-5 2-5 4"/>'),
+  prod: s('<path d="M14 4l6 6-3 3-6-6z"/><path d="M11 7L3 15l3 3 8-8"/><path d="M5 20h6"/>'),
+  sci: s('<path d="M9 3h6"/><path d="M10 3v6L5 18a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7.5 14h9"/>'),
+  gold: s('<circle cx="12" cy="12" r="8"/><path d="M12 8v8"/><path d="M14.5 9.5c-.5-1-1.5-1.5-2.5-1.5-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2c-1 0-2-.5-2.5-1.5"/>'),
+  cult: s('<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>'),
+  mood: s('<circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.2 1.8 3.5 1.8s2.5-.6 3.5-1.8"/><path d="M9 9.5h.01"/><path d="M15 9.5h.01"/>'),
+  sad: s('<circle cx="12" cy="12" r="9"/><path d="M8.5 16c1-1.2 2.2-1.8 3.5-1.8s2.5.6 3.5 1.8"/><path d="M9 9.5h.01"/><path d="M15 9.5h.01"/>'),
+  pop: s('<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14c2.8 0 5 2.2 5 5"/>'),
+  shield: s('<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/>'),
+  sword: s('<path d="M14.5 4H20v5.5L9 20.5 3.5 15z"/><path d="M6 13l5 5"/><path d="M3 21l3-3"/>'),
+  scroll: s('<path d="M6 4h11a2 2 0 0 1 2 2v12"/><path d="M6 4a2 2 0 0 0-2 2v1h3"/><path d="M7 6v12a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2v-1H10"/><path d="M10 9h6M10 12h6"/>'),
+  flask: s('<path d="M9 3h6"/><path d="M10 3v6L5 18a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>'),
+  crown: s('<path d="M3 8l4 4 5-7 5 7 4-4-2 11H5z"/>'),
+  handshake: s('<path d="M3 12l4-4 4 2 3-3 7 5"/><path d="M7 8l5 6 2 2"/><path d="M11 10l4 5"/><path d="M3 12l5 5"/>'),
+  menu: s('<path d="M4 7h16M4 12h16M4 17h16"/>'),
+  close: s('<path d="M6 6l12 12M18 6L6 18"/>'),
+  bell: s('<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>'),
+  sound: s('<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/>'),
+  mute: s('<path d="M4 10v4h4l5 4V6L8 10z"/><path d="M16 9l5 6M21 9l-5 6"/>'),
+  hourglass: s('<path d="M7 3h10M7 21h10"/><path d="M8 3c0 5 8 5 8 9s-8 4-8 9"/><path d="M16 3c0 5-8 5-8 9s8 4 8 9"/>'),
+  next: s('<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>'),
+  tent: s('<path d="M2.5 20L12 4l9.5 16z"/><path d="M9 20l3-6 3 6"/><path d="M12 4l2-2"/>'),
+  eye: s('<path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12z"/><circle cx="12" cy="12" r="2.5"/>'),
+  moon: s('<path d="M20 14a8 8 0 1 1-10-10 6.5 6.5 0 0 0 10 10z"/>'),
+  skip: s('<path d="M6 5l8 7-8 7z"/><path d="M18 5v14"/>'),
+  up: s('<path d="M12 19V5"/><path d="M5 12l7-7 7 7"/>'),
+  trash: s('<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/>'),
+  fire: s('<path d="M12 3c1 4 6 5 6 11a6 6 0 0 1-12 0c0-3 2-4 2-7 2 1 3 3 3 5 1-2 1-6 1-9z"/>'),
+  globe: s('<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z"/>'),
+  star: s('<path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/>'),
+  temple: s('<path d="M3 9l9-5 9 5"/><path d="M5 9v9M9 9v9M15 9v9M19 9v9"/><path d="M3 20h18"/>'),
+  back: s('<path d="M19 12H5"/><path d="M11 6l-6 6 6 6"/>'),
+  dice: s('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01"/>'),
+  copy: s('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'),
+  download: s('<path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/>'),
+  upload: s('<path d="M12 20V9"/><path d="M7 14l5-5 5 5"/><path d="M5 4h14"/>'),
+  save: s('<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><path d="M8 20v-6h8v6"/>'),
+  play: s('<path d="M7 4l13 8-13 8z"/>'),
+  ruin: s('<path d="M4 20h16"/><path d="M6 20V9M10 20v-7M14 20V8M18 20v-5"/><path d="M5 9h2M13 8h2"/>'),
+  info: s('<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/>'),
+  wave: s('<path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/><path d="M2 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/>'),
+  sprout: s('<path d="M12 20v-8"/><path d="M12 12c0-4-3-6-7-6 0 4 3 6 7 6z"/><path d="M12 14c0-3 2-5 6-5 0 3-2 5-6 5z"/>'),
+  target: s('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>'),
+  coins: s('<ellipse cx="9" cy="7" rx="5" ry="2.5"/><path d="M4 7v4c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V7"/><path d="M10 15.5c.9 1.2 2.8 2 5 2 2.8 0 5-1.1 5-2.5v-4c0-1.4-2.2-2.5-5-2.5"/>'),
+};
+
+export type IconName = keyof typeof ICON;

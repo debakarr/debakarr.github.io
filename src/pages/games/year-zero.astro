@@ -1,0 +1,39 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+
+const title = 'Year Zero — a civilization game';
+const description =
+  'A browser strategy game where every civilization writes its own history. Procedural worlds, emergent leaders, diplomacy that remembers, and ruins of forgotten peoples.';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class="yz-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0c1016" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body data-pagefind-ignore="all">
+    <div id="yz-root">
+      <noscript>
+        <p style="color:#ece5d3;font-family:Georgia,serif;padding:2rem">Year Zero needs JavaScript to run.</p>
+      </noscript>
+    </div>
+    <script>
+      import '../../games/year-zero/main';
+    </script>
+  </body>
+</html>
