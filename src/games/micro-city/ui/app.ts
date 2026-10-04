@@ -76,7 +76,8 @@ export class App implements Host {
   private keyHandler = (e: KeyboardEvent) => this.onKey(e);
   private hideHandler = () => this.saveSync();
   overlay: Overlay | null = null;
-  autoplay = 0;
+  /** Automatic mode: the bot mayor builds every month. */
+  auto = false;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -101,6 +102,7 @@ export class App implements Host {
     this.panel = null;
     this.overlay = null;
     this.speed = 1;
+    this.auto = false;
     this.buildDom();
     this.renderer = new Renderer(this.canvas, city);
     this.renderer.resize();
@@ -161,6 +163,7 @@ export class App implements Host {
         demand,
       ),
       h('div', { class: 'mc-speed' }, speedBtn(0, 'u-pause', 'Pause'), speedBtn(1, 'u-play', 'Normal speed'), speedBtn(2, 'u-fast', 'Fast'), speedBtn(3, 'u-fast', 'Fastest')),
+      h('button', { class: 'mc-autobtn', 'data-k': 'auto', title: 'Automatic mode: let the auto-mayor build', 'aria-pressed': 'false', onclick: () => this.setAuto(!this.auto) }, 'AUTO'),
       h('nav', { class: 'mc-panelnav' },
         panelBtn('report'), panelBtn('budget'), panelBtn('stats'),
         h('span', { class: 'mc-more' }, panelBtn('districts'), panelBtn('history'), panelBtn('news'), c.s.settings.challenge ? panelBtn('challenge') : null),
@@ -232,6 +235,10 @@ export class App implements Host {
       bar.style.opacity = d >= 0 ? '1' : '0.35';
     }
     for (const b of this.els.top.querySelectorAll<HTMLElement>('[data-speed]')) b.classList.toggle('on', +b.dataset.speed! === this.speed);
+    const auto = this.k('auto');
+    auto.classList.toggle('on', this.auto);
+    auto.setAttribute('aria-pressed', String(this.auto));
+    auto.title = this.auto ? 'Automatic mode is on: tap to take over' : 'Automatic mode: let the auto-mayor build';
   }
 
   // --- Tools ----------------------------------------------------------------------------
@@ -443,9 +450,9 @@ export class App implements Host {
         this.acc += dt;
         if (this.acc >= SPEED_MS[this.speed]) {
           this.acc = 0;
-          if (this.autoplay > 0) {
+          if (this.auto) {
             botTurn(c);
-            this.autoplay--;
+            refreshQuick(c);
           }
           this.phases = stepPhases(c);
           this.phases.next();
@@ -766,17 +773,21 @@ export class App implements Host {
     showMenu(this, 'help');
   }
 
+  /** Automatic mode: the bot mayor lays roads, zones land and builds services each month. */
+  setAuto(on: boolean): void {
+    this.auto = on;
+    if (on && this.speed === 0) this.setSpeed(1);
+    this.els.game.classList.toggle('auto', on);
+    this.refreshHud();
+    if (on) toast(this, 'info', 'Automatic mode', 'The auto-mayor is running the city. Tap AUTO again to take over.');
+  }
+
   /** Testing aid: let the bot mayor run the city for some months, quickly. */
-  debugAutoplay(months: number, fast = true): void {
-    if (fast) {
-      for (let k = 0; k < months; k++) {
-        botTurn(this.city);
-        stepMonth(this.city);
-      }
-      this.onMonth();
-    } else {
-      this.autoplay = months;
-      this.setSpeed(3);
+  debugAutoplay(months: number): void {
+    for (let k = 0; k < months; k++) {
+      botTurn(this.city);
+      stepMonth(this.city);
     }
+    this.onMonth();
   }
 }

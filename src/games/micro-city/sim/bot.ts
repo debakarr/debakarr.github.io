@@ -49,7 +49,8 @@ function line(c: City, path: number[], type: Road): void {
     run = [];
   };
   for (const i of path) {
-    if (t.bld[i] >= 0 || t.ter[i] === Ter.Rock) flush();
+    // Never pave over buildings, rock or lots that have already grown.
+    if (t.bld[i] >= 0 || t.ter[i] === Ter.Rock || t.level[i] > 0) flush();
     else run.push(i);
   }
   flush();

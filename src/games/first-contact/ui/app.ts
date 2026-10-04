@@ -1,6 +1,7 @@
 import { h } from '../../shared/dom';
 import { SaveStore } from '../../shared/savefile';
 import { icons, type IconKey } from '../art';
+import { autoStep } from '../sim/auto';
 import { Game, SAVE_VERSION, type State } from '../sim/game';
 import { DAYS, randomSeed } from '../sim/world';
 import { alienText, gi } from './glyph';
@@ -32,6 +33,9 @@ export class App {
   private saveTimer = 0;
   /** The day the report was last forced open. */
   private prompted = -1;
+  /** Automatic mode: the auto-linguist plays. */
+  auto = false;
+  private autoTimer = 0;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -47,6 +51,8 @@ export class App {
   // --- Title ---------------------------------------------------------------------------
 
   title(): void {
+    this.auto = false;
+    clearTimeout(this.autoTimer);
     this.saveNow();
     this.root.textContent = '';
     const auto = store.list().find((m) => m.key === 'auto');
@@ -97,6 +103,8 @@ export class App {
   // --- Game shell ------------------------------------------------------------------------
 
   start(game: Game): void {
+    this.auto = false;
+    clearTimeout(this.autoTimer);
     this.game = game;
     this.screen = 'observatory';
     this.evidenceId = null;
@@ -109,6 +117,7 @@ export class App {
       h('header', { class: 'fc-top' },
         h('button', { class: 'fc-brand', onclick: () => this.menu() }, h('b', null, 'FIRST CONTACT'), h('span', { 'data-k': 'day' })),
         h('div', { class: 'fc-topbtns' },
+          h('button', { class: 'fc-autobtn', 'data-k': 'auto', 'aria-pressed': 'false', title: 'Automatic mode: let the auto-linguist play', onclick: () => this.setAuto(!this.auto) }, 'AUTO'),
           h('button', { class: 'fc-btn ghost', 'data-k': 'report', 'aria-label': 'Write your report', onclick: () => this.report() }, gi('u-report'), h('span', { class: 'lbl' }, 'Report')),
           h('button', { class: 'fc-btn primary', 'data-k': 'next', onclick: () => this.nextDay() }, gi('u-next'), h('span', { class: 'lbl', 'data-k': 'nextlabel' }, 'Next day')),
           h('button', { class: 'fc-iconbtn', 'aria-label': 'Menu', onclick: () => this.menu() }, gi('n-menu')),
@@ -162,12 +171,17 @@ export class App {
     rep.hidden = !g.canReport || !!g.s.ended;
     rep.classList.toggle('pulse', g.mustReport);
     for (const b of this.shell.querySelectorAll<HTMLElement>('[data-nav]')) b.classList.toggle('on', b.dataset.nav === this.screen);
+    const auto = q('auto');
+    auto.classList.toggle('on', this.auto);
+    auto.hidden = !!g.s.ended;
+    auto.setAttribute('aria-pressed', String(this.auto));
+    auto.title = this.auto ? 'Automatic mode is on: tap to take over' : 'Automatic mode: let the auto-linguist play';
     const unread = g.unread().filter((e) => e.tokens.length || e.kind === 'signal').length;
     const badge = this.shell.querySelector('[data-badge="translate"]') as HTMLElement;
     badge.textContent = unread ? String(unread) : '';
     const obs = this.shell.querySelector('[data-badge="observatory"]') as HTMLElement;
     obs.textContent = dec || g.s.contradictions.some((c) => c.open) ? '!' : '';
-    if (g.mustReport && !g.s.ended && this.prompted !== g.s.day && !document.querySelector('.fc-modal')) {
+    if (!this.auto && g.mustReport && !g.s.ended && this.prompted !== g.s.day && !document.querySelector('.fc-modal')) {
       this.prompted = g.s.day;
       setTimeout(() => this.report(), 300);
     }
@@ -189,6 +203,46 @@ export class App {
     const el = h('div', { class: 'fc-dayflash', 'aria-live': 'polite' }, h('b', null, `Day ${day}`), h('span', null, n ? `${n} new item${n > 1 ? 's' : ''}` : 'Quiet skies'));
     this.root.append(el);
     setTimeout(() => el.remove(), 1600);
+  }
+
+  /** Automatic mode: the auto-linguist studies, advises, talks and reports by itself. */
+  setAuto(on: boolean): void {
+    this.auto = on;
+    clearTimeout(this.autoTimer);
+    this.render();
+    if (on) {
+      this.toast('Automatic mode: the auto-linguist is working. Tap AUTO to take over.');
+      this.autoTimer = window.setTimeout(() => this.autoTick(), 900);
+    }
+  }
+
+  private autoTick(): void {
+    clearTimeout(this.autoTimer);
+    const g = this.game;
+    if (!this.auto || !g || !this.shell?.isConnected) return;
+    // Wait while the player is reading something.
+    if (this.root.querySelector('.fc-modal')) {
+      this.autoTimer = window.setTimeout(() => this.autoTick(), 1000);
+      return;
+    }
+    const r = autoStep(g);
+    if (r.action === 'advanced') {
+      this.screen = 'observatory';
+      this.render();
+      this.main.scrollTop = 0;
+      this.dayFlash(g.s.day, g.evidence.filter((e) => e.day === g.s.day).length);
+    } else {
+      if (r.action === 'sent') this.screen = 'message';
+      this.render();
+    }
+    if (r.notes.length) this.toast(`Auto-linguist: ${r.notes[r.notes.length - 1]}`);
+    if (r.action === 'reported' || r.action === 'done') {
+      this.auto = false;
+      this.render();
+      this.main.scrollTop = 0;
+      return;
+    }
+    this.autoTimer = window.setTimeout(() => this.autoTick(), r.action === 'advanced' ? 2600 : 1600);
   }
 
   send(): void {

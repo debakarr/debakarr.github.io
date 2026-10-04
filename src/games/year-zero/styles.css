@@ -581,6 +581,37 @@ html.yz-page body {
   touch-action: none;
 }
 
+.yz-autobtn {
+  height: 30px;
+  padding: 0 10px;
+  margin: 0 4px;
+  border: 1px solid var(--yz-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--yz-muted);
+  font-family: var(--yz-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+.yz-autobtn:hover {
+  color: var(--yz-ink);
+  border-color: var(--yz-accent);
+}
+.yz-autobtn.on {
+  background: var(--yz-accent);
+  border-color: var(--yz-accent-2);
+  color: #1b1408;
+  animation: yz-autopulse 2s ease-in-out infinite;
+}
+@keyframes yz-autopulse {
+  50% {
+    box-shadow: 0 0 0 5px rgba(217, 164, 65, 0.22);
+  }
+}
+.yz-auto-on .yz-endturn {
+  display: none;
+}
 .yz-endturn-wrap {
   position: absolute;
   right: 10px;

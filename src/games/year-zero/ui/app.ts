@@ -69,6 +69,9 @@ export class App implements PanelHost {
   private pending = -1;
   private showBuild = false;
   private busy = false;
+  /** Automatic mode: the AI governs the player and ends turns by itself. */
+  auto = false;
+  private autoTimer = 0;
   private queued: Notice[] = [];
   private unread = 0;
   private unsub: (() => void) | null = null;
@@ -150,6 +153,7 @@ export class App implements PanelHost {
   }
 
   toTitle(): void {
+    this.setAuto(false);
     closeModal();
     showTitle(this.menuHost(), this.titleRoot);
   }
@@ -160,6 +164,7 @@ export class App implements PanelHost {
   }
 
   attach(g: Game): void {
+    this.setAuto(false);
     this.unsub?.();
     this.g = g;
     this.hasGame = true;
@@ -594,7 +599,7 @@ export class App implements PanelHost {
 
   // --- Turn ------------------------------------------------------------------------------
 
-  async endTurn(): Promise<void> {
+  async endTurn(auto = false): Promise<void> {
     if (!this.hasGame || this.busy) return;
     const g = this.g;
     closeModal();
@@ -612,14 +617,17 @@ export class App implements PanelHost {
     r.overlay.reach = null;
     r.overlay.attack = null;
     try {
-      const res = await endTurn(g, { onStage: (label) => (this.turnpill.textContent = label) });
+      const res = await endTurn(g, { autoPlayer: auto, onStage: (label) => (this.turnpill.textContent = label) });
       this.busy = false;
       this.turnpill.classList.remove('on');
       this.flushQueued();
       r.invalidate();
       this.mini?.rebuild();
       void this.autosave();
-      for (const id of res.legacies) this.showLegacy(id);
+      for (const id of res.legacies) {
+        if (auto) this.toast({ id: 0, turn: g.turn, text: `A legacy: ${LEGACIES.find((l) => l.id === id)?.name ?? id}.`, tile: -1, tone: 'history' });
+        else this.showLegacy(id);
+      }
     } catch (err) {
       console.error(err);
       this.busy = false;
@@ -630,7 +638,11 @@ export class App implements PanelHost {
     if (g.turn === 25) this.tip('history');
     if (!g.player.alive && !this.gameOverShown) {
       this.gameOverShown = true;
+      this.setAuto(false);
       this.showGameOver();
+    } else if (auto) {
+      if (this.sel.unitId >= 0 && !g.unit(this.sel.unitId)) this.sel.unitId = -1;
+      this.refresh();
     } else {
       if (this.sel.unitId >= 0 && !g.unit(this.sel.unitId)) this.sel.unitId = -1;
       if (!this.selectNextUnit(true)) this.refresh();
@@ -638,6 +650,32 @@ export class App implements PanelHost {
       // A discovery was made: ask what to study next (after any decisions).
       if (researching && !g.player.research && availableTechs(g.player).length && !modalOpen()) this.open('tech');
     }
+  }
+
+  /** Turn automatic mode on or off. While on, the AI plays a year every couple of seconds. */
+  setAuto(on: boolean): void {
+    if (this.auto === on) return;
+    this.auto = on;
+    clearTimeout(this.autoTimer);
+    this.root.classList.toggle('yz-auto-on', on);
+    if (this.hasGame) this.renderTop();
+    if (on) {
+      this.toast({ id: 0, turn: this.g.turn, text: 'Automatic mode: the AI now governs your people. Tap AUTO again to take over.', tile: -1, tone: 'info' });
+      this.autoStep();
+    }
+  }
+
+  private autoStep(): void {
+    clearTimeout(this.autoTimer);
+    if (!this.auto || !this.hasGame) return;
+    // Wait while a turn runs or the player is reading something.
+    if (this.busy || modalOpen()) {
+      this.autoTimer = window.setTimeout(() => this.autoStep(), 500);
+      return;
+    }
+    void this.endTurn(true).then(() => {
+      if (this.auto) this.autoTimer = window.setTimeout(() => this.autoStep(), 1600);
+    });
   }
 
   /** Testing aid (exposed with ?debug): let the AI govern the player for n years. */
@@ -780,6 +818,12 @@ export class App implements PanelHost {
         h('button', { class: 'yz-iconbtn', title: 'Reports', onclick: () => this.openLog() }, svg(ICON.bell), this.unread ? h('span', { class: 'yz-badge' }, String(Math.min(99, this.unread))) : null),
         h('button', { class: 'yz-iconbtn', title: this.settings.sound ? 'Mute' : 'Unmute', onclick: () => { this.settings.sound = !this.settings.sound; this.menuHost().saveSettings(); } }, svg(this.settings.sound ? ICON.sound : ICON.mute)),
         h('button', { class: 'yz-iconbtn', title: 'Menu', onclick: () => showMenu(this.menuHost()) }, svg(ICON.menu))),
+      h('button', {
+        class: `yz-autobtn${this.auto ? ' on' : ''}`,
+        title: this.auto ? 'Automatic mode is on: tap to take over' : 'Automatic mode: let the AI play',
+        'aria-pressed': String(this.auto),
+        onclick: () => this.setAuto(!this.auto),
+      }, 'AUTO'),
     );
   }
 

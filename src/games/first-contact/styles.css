@@ -288,6 +288,31 @@ button.fc-g:hover {
   }
 }
 
+.fc-autobtn {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--fc-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--fc-muted);
+  font-family: var(--fc-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.fc-autobtn:hover {
+  color: var(--fc-ink);
+  border-color: var(--fc-accent);
+}
+
+.fc-autobtn.on {
+  background: var(--fc-accent);
+  border-color: var(--fc-accent);
+  color: #04121c;
+  animation: fc-pulse 2s ease-in-out infinite;
+}
+
 .fc-iconbtn {
   display: inline-flex;
   align-items: center;

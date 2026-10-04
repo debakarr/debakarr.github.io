@@ -353,6 +353,36 @@ html.mc-page body {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
+.mc-autobtn {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--mc-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--mc-muted);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.mc-autobtn:hover {
+  color: var(--mc-accent);
+  border-color: var(--mc-accent);
+}
+
+.mc-autobtn.on {
+  background: var(--mc-accent);
+  border-color: var(--mc-accent);
+  color: #fff;
+  animation: mc-autopulse 2s ease-in-out infinite;
+}
+
+@keyframes mc-autopulse {
+  50% {
+    box-shadow: 0 0 0 5px rgba(47, 125, 225, 0.2);
+  }
+}
+
 .mc-panelnav {
   display: flex;
   align-items: center;
@@ -990,7 +1020,7 @@ html.mc-page body {
   cursor: default;
 }
 
-.mc-chart {
+.mc .chart {
   width: 100%;
   height: auto;
   display: block;
@@ -1449,10 +1479,10 @@ html.mc-page body {
     padding: calc(6px + env(safe-area-inset-top)) calc(8px + env(safe-area-inset-right)) 6px calc(12px + env(safe-area-inset-left));
     border-radius: 0 0 var(--mc-radius) var(--mc-radius);
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
     grid-template-areas:
-      'brand speed nav'
-      'stats stats stats';
+      'brand auto speed nav'
+      'stats stats stats stats';
     row-gap: 4px;
     column-gap: 6px;
   }
@@ -1467,6 +1497,12 @@ html.mc-page body {
 
   .mc-speed {
     grid-area: speed;
+  }
+
+  .mc-autobtn {
+    grid-area: auto;
+    height: 30px;
+    padding: 0 8px;
   }
 
   .mc-panelnav {
