@@ -41,6 +41,8 @@ Every game has an **AUTO** toggle that hands control to an AI you can watch, and
 | First Contact | An auto-linguist reads evidence, advises the Council, talks to the aliens and writes the report, with its own mistakes | `sim/auto.ts` |
 | Primordial | A director plays god (seeding, meteors, climate, mutation storms) and keeps the camera on interesting creatures | `sim/director.ts` |
 | Slingshot | An autopilot simulates hundreds of launches and flies the best | `sim/autopilot.ts` |
+| Wildborn | An AI trainer explores, observes, befriends or battles, trains, feeds toward an evolution branch and breeds | `sim/auto.ts` |
+| Tiny Universe | A director sets the pace (slow for young civilizations, fast for empty eons), flies the camera to life and civilizations, and plays god now and then (mostly kindly) | `sim/director.ts` |
 
 ## Shared code
 
@@ -122,3 +124,53 @@ A gravity puzzle: launch probes through generated star systems.
 
 Testing aid: `/games/slingshot/?debug` exposes `window.sl`.
 
+## Wildborn
+
+A creature game where a creature's life shapes its evolution: where it lives, what it eats, who it fights and what it loves decide which branch it takes.
+
+| Folder | Contents |
+| --- | --- |
+| `data/species.ts` | Affinities and the `STRONG` table, 22 abilities, 20 species (5 families × base + 3 evolutions) with stats, likes, art parameters and evolution branch drivers, 6 biomes with wild tables and exposures, items and foods |
+| `sim/game.ts` | DOM-free state and simulation: world clock and weather, exploration, wild encounters, Companion Link capture, raising (train/play/rest/feed), life-driven evolution, breeding with mixed genomes and rare variants, quests, achievements and saves |
+| `sim/battle.ts` | Turn-based 1v1 battles with switching: three abilities per creature, affinity strength, biome boost and weather modifiers, status effects, and a wild AI that heals, uses status, or flees when scared |
+| `sim/auto.ts` | The automatic trainer: one visible action per tick — explore, observe, befriend, battle, train, feed toward a chosen branch, breed |
+| `render/creature.ts` | Procedural SVG creature art built from layers per family (body, head, ears, tail, pattern, eyes, feature), coloured by species hue plus per-individual variation and crystal/golden/void variants |
+| `render/map.ts` | The illustrated node map (village + 6 regions) with a day/night sky and weather |
+| `ui/` | `app.ts` (screens, encounters, battles, overlays, automatic mode) and `screens.ts` (bars, rows, cards) |
+
+Key ideas:
+
+- **Evolution is earned, not bought.** Every creature accumulates exposure counters (thermal, aquatic, mineral, organic, night, storm, wins, losses, explore, play, ruins) from the places it goes and the things it does. From level 8, `sim/game.ts#evaluateEvolution` scores the three branches of its family from those counters plus personality; the best branch past a threshold evolves it. Branches stay "???" in the Field Guide until discovered.
+- **Capture is a bond.** Companion Link has no capture items: its chance comes from trust, HP, fear, stress and personality, so you befriend by observing, feeding and playing.
+- **Lineages.** Two creatures of one family with a high bond lay an egg whose genome mixes the parents' (plus a chance of a rare variant). The lineage view shows ancestors and descendants, and notes the generation the creature carries a trait from.
+- **Deterministic world.** A seed reproduces the same regions and species tables; saves are JSON (gzip in `localStorage` via `SaveStore`) and exportable.
+
+Testing aids: `/games/wildborn/?debug` exposes `window.wb`; `wb.debugAutoplay(300)` lets the automatic trainer play 300 steps.
+
+## Tiny Universe
+
+A universe you can play with: a galaxy forms from hot gas, stars live and die, life climbs toward minds, and civilizations rise, meet and fall. The player creates (matter, life, knowledge, protection), destroys (asteroids, supernovae) or just watches.
+
+| Folder | Contents |
+| --- | --- |
+| `sim/params.ts` | The four creation dials, challenge universes (Empty, Chaos, Life everywhere, Intelligence, Great Filter, Ancient, Contact), daily goals and the daily seed |
+| `sim/stars.ts` | Initial mass function, luminosity, lifetime (∝ M^-2.5), phases (protostar → main sequence → giant → white dwarf / neutron star / black hole), colours |
+| `sim/planets.ts` | Systems generated from a star's mass and metals (no rocky worlds without heavy elements), temperature with greenhouse, habitability, planet kinds |
+| `sim/life.ts` | A biosphere as a tree of lineages: branching, extinction, oxygen from photosynthesis, stage climbs (microbes → complex → land → tool users → intelligence), mass extinctions |
+| `sim/civ.ts` | Civilizations: personality, their own order of late technologies, era durations, collapse risk at each era (the Great Filter), dark ages, quiet civilizations, chronicle texts |
+| `sim/universe.ts` | The `Universe`: a 96×96 gas and metals grid, star formation and recycling, supernovae that enrich the gas and sterilize neighbours, gamma-ray bursts, life and civilization steps, colonies, first contact, the Silence, interventions, discoveries, achievements, history, save state |
+| `sim/discoveries.ts` | The Observatory catalog (47 discoveries with rarity and hints), achievements and the cosmic eras |
+| `sim/director.ts` | The automatic mode |
+| `render/renderer.ts` | Galaxy view (gas glow, stars by temperature, life rings, civilization networks, effects) and star-system view (orbits, habitable zone, planets, stations, Dyson swarms) |
+| `render/planet.ts` | Pixel-drawn planet portraits (continents, oceans, ice, forests, clouds, gas bands, city lights), cached |
+| `ui/` | `app.ts` (loop, input, title and creation screens, discovery cards, auto, saves) and `panels.ts` (inspect, observatory, life & civilizations, history, profile) |
+
+Key ideas:
+
+- **Statistical, not N-body.** Up to 2,400 star slots (long-dead remnants with no story are recycled), about 5,000–8,000 planets generated from the seed per star, life checked only on candidate worlds. Time is in millions of years; `advance()` runs 2 Myr steps, and civilizations advance in 20,000-year chunks so colonies, contact and the Silence keep up even at a billion years per second.
+- **Heavy elements matter.** The first stars have no metals, so no rocky planets. Supernovae return gas enriched with metals to the grid, which diffuses, so later stars get rocky worlds: the death of a star makes life possible.
+- **The Great Filter.** Each era ends with a collapse roll shaped by personality (military, cooperation, ecology); late collapses are often fatal. Civilizations that wrap their star in a Dyson swarm face the Silence: they vanish without ruins. Studying ruins (clues) after seeing a silence reveals the Great Filter, after which Protect can save a civilization from it for good. Some interstellar civilizations choose to stay quiet: they never build a swarm and last hundreds of millions of years, which is what makes contact possible.
+- **Interrupts.** First-time discoveries big enough for a card can pause the universe, and a new civilization drops time to a thousand years per second (both are settings). `Universe.stopOn` makes `advance()` stop at those events so nothing races past.
+- **Saves** store the gas grid, the star columns as typed arrays and per-planet state (life, civilizations, ruins, logs); planets themselves are regenerated from the seed.
+
+Testing aids: `/games/tiny-universe/?debug` exposes `window.tu`; `tu.debugRun(500)` runs 500 million years. Headless balance runs and a Playwright smoke test live outside the repo in `/home/debroy/tiny-universe-tests/` (`tu-balance.ts`, `tu-smoke.mjs`, `tu-play.mjs`, `tsconfig.json`).

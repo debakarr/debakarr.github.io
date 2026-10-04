@@ -13,18 +13,20 @@ Live at https://debakarr.github.io/games (deployed from `main` by `.github/workf
 | First Contact | `src/games/first-contact` | `first-contact-game.md` | Alien-language deduction game (MVP of the doc). |
 | Primordial | `src/games/primordial` | none (agent's own idea) | Evolution sandbox with a "director". |
 | Slingshot | `src/games/slingshot` | none (agent's own idea) | Gravity-assist puzzle with an autopilot. |
+| Wildborn | `src/games/wildborn` | `wildlife-game.md` | Creature game where life shapes evolution (v0.1 + breeding/lineage). |
+| Tiny Universe | `src/games/tiny-universe` | `tiny-universe-game.md` | Galaxy → stars → planets → life → civilizations sandbox, with the Great Filter mystery. |
+
+Wildborn and Tiny Universe were built after the last deploy; check `git status` / `git log` to see whether they have been committed and pushed yet.
 
 Every game has an **AUTO** button (automatic mode: an AI plays and the player can take over any time). This is a standing requirement: **every new game must ship with automatic mode too.**
 
 The design docs live at the repo root and are **not committed** (the owner keeps them local): `civ-game.md`, `city-skyline-game.md`, `first-contact-game.md`, `wildlife-game.md`, `tiny-universe-game.md`. If you are working somewhere without them, use the summaries below.
 
-## What to build next
+## The two games from the docs
 
-The owner asked for two more games from their docs. Neither is started beyond the data file noted below.
+### Wildborn (`wildlife-game.md`), built
 
-### 1. Wildborn (`wildlife-game.md`), in progress
-
-Creature collecting where **a creature's life shapes its evolution** ("Do not build a Pokémon clone"). Target the doc's v0.1 MVP plus breeding and lineage from v0.2, because the doc's "killer moment" is the family tree:
+Creature collecting where **a creature's life shapes its evolution** ("Do not build a Pokémon clone"). Built the doc's v0.1 MVP plus breeding and lineage from v0.2, because the doc's "killer moment" is the family tree. Everything below is implemented:
 
 - **World**: seeded; 6 regions on an illustrated node map (village hub + Greenwood, Windmeadow, Mistfen wetlands, Crystal Hollow caves, Ember Flats, Old Ruins). Day/night (each action advances a few hours) and daily weather (sun, rain, storm, fog) that change encounters and battles.
 - **Creatures**: 5 families × (1 base + 3 evolutions) = 20 species, with affinities instead of types, roles, personalities (curiosity, aggression, loyalty, playfulness, fear, intelligence), bond/trust/stress, and a per-creature life history.
@@ -35,21 +37,24 @@ Creature collecting where **a creature's life shapes its evolution** ("Do not bu
 - **Field Guide**: 20 entries moving from unknown → seen → observed → captured, revealing info gradually. Light research quests from a village researcher ("observe three aquatic creatures"). Achievements (First Friend, Naturalist, Evolutionary Divergence, Ancestor, Explorer).
 - **Auto mode**: an AI trainer that explores, befriends or battles, captures new species, trains, feeds toward a chosen branch and breeds, one action every second or so with a visible log.
 - **Art**: original procedural SVG creatures built from layers per family (body, head, ears/horns, tail, pattern, eyes, feature such as flame tail, crystals, wings), colored by species hue plus individual variation. No copyrighted sprites. game-icons.net for UI icons (credit them).
-- **Done so far**: `src/games/wildborn/data/species.ts`, with affinities and the strength table, 22 abilities, 20 species with stats, abilities, likes, look and the three branches with their drivers, 6 biomes with wild tables, resources and exposures, and items/foods. Nothing imports it yet.
-- **Suggested layout**: `data/species.ts` (done), `sim/game.ts` (state, seed world, explore, encounters, capture, raising, evolution, breeding, quests, achievements, save), `sim/battle.ts`, `sim/auto.ts`, `render/creature.ts` (SVG creature art), `render/map.ts`, `ui/app.ts` + `ui/screens.ts`, `styles.css`, `main.ts`, `art/icons.manifest.json`.
+- **What exists now**: `data/species.ts` (was already done), `sim/game.ts` (state, clock/weather, explore, encounters, Companion Link capture, raising, `evaluateEvolution`, breeding, quests, achievements, saves), `sim/battle.ts`, `sim/auto.ts`, `render/creature.ts` (layered procedural SVG), `render/map.ts`, `ui/app.ts` + `ui/screens.ts`, `styles.css`, `main.ts`, `art/icons.manifest.json` + generated `art/icons.ts`, the page `src/pages/games/wildborn.astro`, the `wildborn` entry in `src/data/games.ts` with the `wilds` banner in `src/pages/games/index.astro`, and a README section.
+- **Verified this session**: strict `tsc` over `src/games/**/*.ts` is clean; headless Node tests all pass (capture, life-driven evolution, breeding/lineage, battle resolution, determinism, save round-trip, a 1200-step autopilot run that captures ~28 creatures, battles, breeds and evolves); `astro build` succeeds; a Playwright smoke run passes at desktop, 320px phone portrait and phone landscape (title → new world → explore → encounter → observe/play/Link → creature tabs → field guide → menu/credits → AUTO). Test scripts are kept outside the repo at `/home/debroy/wildborn-tests/` (`wb-test.ts` headless sim tests, `wb-smoke.mjs` browser smoke, `wb-tsconfig.json` type-check config).
+- **Deliberately out of scope** (doc v0.3+): ecosystem/populations/migration/extinction, alpha and boss creatures, towns/NPCs/story, tournaments, audio.
+- **Worth polishing later**: the auto trainer loses some early battles (it takes proud creatures on sight); battle feedback is log-based (no animation); rarity tiers from the doc are not surfaced in the UI.
 
-### 2. Tiny Universe (`tiny-universe-game.md`), not started
+### Tiny Universe (`tiny-universe-game.md`), built
 
-"A universe you can play with", not an idle clicker. Target the doc's v0.1 MVP plus v0.2 (life) and a light v0.3 (intelligence/civilization):
+"A universe you can play with", not an idle clicker. Built the doc's v0.1 MVP, v0.2 (life) and a light v0.3 (civilizations), plus pieces of v0.5/v0.6 that give the game a goal (contact, megastructures, ruins, the Great Filter mystery). See the Tiny Universe section of `src/games/README.md` for the architecture.
 
-- **Creation**: choose matter density, gravity, expansion and chaos (effects only partly explained), then a Big Bang.
-- **Galaxy level**: a 2D disc with a gas density grid. Stars form where gas is dense, with masses from an initial mass function. Lifetimes scale roughly with M^-2.5: main sequence → giant → white dwarf, or for massive stars supernova → neutron star / black hole. Supernovas enrich nearby gas with heavy elements, so later stars get rocky planets.
-- **Systems and planets**: generated per star (count and type from metallicity); temperature from luminosity and distance, plus water, atmosphere and a habitability score ("Goldilocks").
-- **Life**: abiogenesis probability from habitability × time; stages microbial → complex → land → tool-users → intelligence; extinctions from nearby supernovas, gamma-ray bursts and impacts; a per-planet life tree.
-- **Civilizations (light)**: tech eras (stone → agriculture → industry → computing → nuclear → spaceflight → interstellar) with personality (science, military, cooperation). Collapse risks at each era (the Great Filter); spaceflight colonizes nearby habitable worlds; contact between civilizations.
-- **Player**: zoom galaxy → system → planet; inspect; time speeds from about 1M to 1B years per second, auto-slowing at first-time events ("Intelligent life detected"). Interventions: seed life, meteor, warm a world, give knowledge, trigger a supernova, tracked as a creator/observer/destroyer profile. A discovery checklist (the "cosmic Pokédex") and a cosmic history timeline ("You created N civilizations; only M reached the stars").
-- **Auto mode**: a director that manages time speed, flies the camera to new life and civilizations, and occasionally intervenes.
-- **Performance**: stay statistical. About 2,000 stars and 16k planets at most, life checked only on habitable worlds, and every simulation step independent of rendering.
+- **Creation**: four dials (matter, gravity, expansion, distribution) whose effects are only hinted at, eight challenge universes, a seed, then a Big Bang that cools into a gas disc.
+- **Galaxy**: 96×96 gas and metals grid, star formation (Kennicutt-like), initial mass function, lifetimes ∝ M^-2.5, giants, white dwarfs, supernovae (metals + sterilization), neutron stars, black holes, gamma-ray bursts. Up to 2,400 star slots with recycling.
+- **Planets**: generated per star from its mass and metals (the first stars get no rocky worlds), temperature, water, air, magnetic field, habitability.
+- **Life**: lineage trees, oxygenation, stages up to intelligence, extinctions; extremophiles, second genesis, survivors.
+- **Civilizations**: personalities, their own late-tech order, collapse at era ends, dark ages and renaissances, colonies, quiet civilizations, first contact (peace, war, union), Dyson swarms, galactic civilizations, The Watcher (they notice your interventions), the Silence and the Great Filter reveal.
+- **Player**: galaxy → system → planet; time from 1,000 to 1 billion years per second; discovery cards that pause, time slowing for new civilizations; interventions (matter, seed life, warm/cool, share knowledge, protect, asteroid, supernova, study ruins) tracked in a creator/observer/destroyer profile; Observatory (47 discoveries), cosmic history, achievements, daily universe with a goal.
+- **Auto mode**: `sim/director.ts`.
+- **Verified**: strict `tsc`; headless balance runs across all presets (intelligence typically arrives at 4–7 billion years in a Standard universe, about 15–30 civilizations per universe, a few reach interstellar, contact in some universes and most Contact ones); Playwright runs at desktop, 390px and 320px portrait and phone landscape with no console errors; a 60-second real-time play test (13 cards, first life at 18 s, intelligence at 49 s); save → reload → continue; the Ancient fast-forward (≈2.6 s).
+- **Worth doing later**: audio (doc §58); a richer endgame choice after the Great Filter reveal (doc §37's "become the threat"); multiple galaxies (doc §38) are out of scope; frame rate at 1B yr/s is ~40 fps in headless software rendering, fine on real hardware but the gas blur and star loop are the hot spots.
 
 For each new game also: add a page in `src/pages/games/<slug>.astro`, an entry in `src/data/games.ts` with a new banner type drawn in `src/pages/games/index.astro`, credits on the title screen and in a Credits dialog, and a section in `src/games/README.md`.
 
@@ -58,19 +63,21 @@ For each new game also: add a page in `src/pages/games/<slug>.astro`, an entry i
 - **Stack**: Astro 5 static site. Each game is vanilla TypeScript in `src/games/<slug>/`, loaded by a standalone page (not `BaseLayout`) with `data-pagefind-ignore="all"` on `<body>`. Links into games use `data-astro-reload`.
 - **Shared code** (`src/games/shared/`): `rng.ts` (seeded `Rng`, `hashString`), `noise.ts`, `dom.ts` (`h()`, `store`/`persist`, `download`, `pickFile`, `compact`), `savefile.ts` (`SaveStore`, typed arrays as base64, gzip), `chart.ts`, `gameicons.ts` (`iconSet()`; add new authors to `ICON_AUTHORS`).
 - **Icons**: clone https://github.com/game-icons/icons, write `art/icons.manifest.json`, then run `node scripts/game-icons.mjs <repo> <manifest> <out.ts>`. Avoid the `badges/` folder.
-- **Pattern used everywhere**: a DOM-free simulation (testable in Node) + a canvas renderer + a vanilla UI. Each game has a title screen; the page has a `?debug` flag that exposes the app on `window` (`yz`, `mc`, `fc`, `pr`, `sl`).
+- **Pattern used everywhere**: a DOM-free simulation (testable in Node) + a canvas renderer + a vanilla UI. Each game has a title screen; the page has a `?debug` flag that exposes the app on `window` (`yz`, `mc`, `fc`, `pr`, `sl`, `wb`, `tu`).
 - **Layouts**: every game supports desktop, phone portrait (≤ 820px: bottom bars, bottom sheets) and phone landscape (`(max-height: 520px) and (orientation: landscape)`: left rail, right drawer). Use `touch-action: manipulation` on the root, `:where(.x) button { font: inherit }` (so component font sizes win), `[hidden] { display: none !important }`, and test at 320px.
 
 ## Testing workflow that worked
 
 - **Type-check**: a scratch `tsconfig.json` with `strict`, `noUnusedLocals`, `isolatedModules` and `include: [".../src/games/**/*.ts"]`, run with `node_modules/.bin/tsc -p <that file>`.
 - **Headless simulation tests**: bundle a small script with `node_modules/.bin/esbuild x.ts --bundle --platform=node --format=esm` and run it with Node (balance runs, autopilot solvability, etc.).
-- **Browser tests**: `npx astro build`, then `npx astro preview --port 4321 --host 127.0.0.1`, then Playwright. Playwright-core is available at `/home/debroy/beyond-compare-clone/node_modules/playwright-core/index.mjs`. Touch drags need CDP `Input.dispatchTouchEvent`.
-- **Known environment trap**: `/tmp` is a 3.9 GB tmpfs that other projects fill up. When it is nearly full, headless Chromium pages crash ("Page crashed") at random. Check `df -h /tmp` before blaming code, and clear your own scratch files.
+- **Browser tests**: `npx astro build`, then `npx astro preview --port <port> --host 127.0.0.1`, then Playwright. Playwright-core is available at `/home/debroy/beyond-compare-clone/node_modules/playwright-core/index.mjs`. Touch drags need CDP `Input.dispatchTouchEvent`.
+- **Known environment trap**: `/tmp` is a 3.9 GB tmpfs that other projects fill up. When it is nearly full, headless Chromium pages crash ("Page crashed") at random. Check `df -h /tmp` before blaming code, and clear your own scratch files. When it is tight, run Chromium with `TMPDIR` pointing at a directory on disk (this session used `/home/debroy/.cache/wb-tmp`).
+- **Ready-made scripts**: `/home/debroy/tiny-universe-tests/` holds Tiny Universe's (`tsconfig.json`, `tu-balance.ts` headless runs per preset, `tu-smoke.mjs` layouts, `tu-play.mjs` real-time pacing and saves; pass the preview port as the first argument). `/home/debroy/wildborn-tests/` holds Wildborn's tests — `wb-tsconfig.json` (type-check), `wb-test.ts` (headless sim; bundle with esbuild and run with Node), `wb-smoke.mjs` (Playwright smoke; edit the `BASE` port to match your preview server). They live outside the repo on purpose. The game-icons repo is cloned at `/home/debroy/game-icons` (not `/tmp`, which fills up).
 - **Learned the hard way**:
   - A tap right after a fast touch drag can lose its `click`, so confirm buttons act on `pointerup`.
   - Many full-screen animated overlays or SVG `drop-shadow` filters on lots of elements crashed headless Chromium.
   - Reuse canvases instead of creating one per render.
+  - A single non-wrapping flex row in a header can make the page's min-content width exceed 320px; mobile browsers then zoom out the layout viewport, and Playwright's clicks silently fail the "receives events" check forever. Test `window.innerWidth === viewport.width`, not just `scrollWidth`.
 
 ## Owner preferences
 

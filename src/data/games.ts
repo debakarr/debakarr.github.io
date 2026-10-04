@@ -11,7 +11,7 @@ export interface GameEntry {
   /** Accent color used on the card. */
   accent: string;
   /** Which generated banner the card shows. */
-  banner: 'hexmap' | 'skyline' | 'glyphs' | 'sea' | 'orbits';
+  banner: 'hexmap' | 'skyline' | 'glyphs' | 'sea' | 'orbits' | 'wilds' | 'cosmos';
   /** Third-party art credits shown on the card. */
   credits?: { label: string; href: string; license: string }[];
 }
@@ -83,6 +83,32 @@ export const games: GameEntry[] = [
     tags: ['Puzzle', 'Physics', 'Space', 'Procedural'],
     accent: '#ffc46b',
     banner: 'orbits',
+    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
+  },
+  {
+    slug: 'wildborn',
+    title: 'Wildborn',
+    tagline: 'Every creature has a history.',
+    description:
+      'Explore an unknown world and befriend its creatures. Their evolution is shaped by the life they live — where you take them, what they eat, who they fight and what they love — so no two collections are alike. Battle, breed generations and open the lineage tree.',
+    href: '/games/wildborn',
+    status: 'playable',
+    tags: ['Creatures', 'Evolution', 'RPG', 'Breeding'],
+    accent: '#7fe0a8',
+    banner: 'wilds',
+    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
+  },
+  {
+    slug: 'tiny-universe',
+    title: 'Tiny Universe',
+    tagline: 'A universe you can play with.',
+    description:
+      'Start with nothing and watch a galaxy form. Massive stars explode and seed the gas with the elements rocky worlds are made of; life begins, climbs toward minds, and civilizations rise, meet and fall. Seed life, strike worlds, protect a people, or just watch, and find out why the sky is so quiet.',
+    href: '/games/tiny-universe',
+    status: 'playable',
+    tags: ['Sandbox', 'Simulation', 'Space', 'Procedural'],
+    accent: '#a9b8ff',
+    banner: 'cosmos',
     credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
   },
 ];

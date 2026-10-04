@@ -104,10 +104,53 @@ function orbits() {
   return { W, H, cx, cy, rings, planets, stars };
 }
 
+/** A dusk forest with fireflies and foxlike silhouettes for Wildborn. */
+function wilds() {
+  let seed = 23;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const W = 480;
+  const H = 150;
+  const trees = Array.from({ length: 22 }, (_, k) => ({
+    x: (k + rnd() * 0.8) * (W / 22),
+    h: 28 + rnd() * 34,
+    w: 10 + rnd() * 10,
+  }));
+  const fireflies = Array.from({ length: 26 }, () => ({ x: rnd() * W, y: 18 + rnd() * (H - 40), r: 1 + rnd() * 1.8 }));
+  const creatures = [
+    { x: 118, y: 118, s: 1.15, hue: 168 },
+    { x: 322, y: 126, s: 0.9, hue: 38 },
+  ];
+  return { W, H, trees, fireflies, creatures };
+}
+
+/** A spiral galaxy with a bright core and a lit world for Tiny Universe. */
+function cosmos() {
+  let seed = 41;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const W = 480;
+  const H = 150;
+  const cx = 250;
+  const cy = 78;
+  const dots: { x: number; y: number; r: number; c: string; o: number }[] = [];
+  for (let k = 0; k < 420; k++) {
+    const arm = k % 2;
+    const t = rnd() * 3.2;
+    const spread = (rnd() - 0.5) * (0.35 + t * 0.12);
+    const a = t * 1.9 + arm * Math.PI + spread;
+    const r = 6 + t * 46 + rnd() * 6;
+    const hot = rnd() < 0.18;
+    dots.push({ x: cx + Math.cos(a) * r * 1.5, y: cy + Math.sin(a) * r * 0.62, r: hot ? 1.1 : 0.6 + rnd() * 0.5, c: hot ? '#c8d4ff' : rnd() < 0.3 ? '#ffd9a8' : '#e9ecff', o: 0.35 + rnd() * 0.6 });
+  }
+  const field = Array.from({ length: 60 }, (_, k) => ({ x: (k * 7919) % W, y: (k * 104729) % H, o: 0.2 + ((k * 31) % 7) / 14 }));
+  return { W, H, cx, cy, dots, field };
+}
+
 const city = skyline();
 const field = glyphField();
 const ocean = sea();
 const system = orbits();
+const forest = wilds();
+const galaxy = cosmos();
 ---
 
 <BaseLayout title="Games — Debakar Roy" description="Small games that run in your browser." wide>
@@ -214,6 +257,80 @@ const system = orbits();
                   <path d={`M${system.planets[1].x.toFixed(1)} ${system.planets[1].y.toFixed(1)} C 150 20, 60 60, 140 120 S 330 150, ${system.planets[3].x.toFixed(1)} ${system.planets[3].y.toFixed(1)}`} fill="none" stroke="#ffc46b" stroke-width="1.2" stroke-dasharray="3 3" opacity="0.85" />
                   {system.planets.map((p) => (
                     <circle cx={p.x.toFixed(1)} cy={p.y.toFixed(1)} r={p.r} fill={p.color} />
+                  ))}
+                </svg>
+              )}
+              {game.banner === 'cosmos' && (
+                <svg
+                  viewBox={`0 0 ${galaxy.W} ${galaxy.H}`}
+                  class="block h-44 w-full transition-transform duration-500 group-hover:scale-[1.03] sm:h-56"
+                  preserveAspectRatio="xMidYMid slice"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <radialGradient id="tu-core">
+                      <stop offset="0" stop-color="#fff6e0" />
+                      <stop offset="0.3" stop-color="#ffd9a8" stop-opacity="0.8" />
+                      <stop offset="1" stop-color="#a9b8ff" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="tu-haze">
+                      <stop offset="0" stop-color="#6f7fe0" stop-opacity="0.35" />
+                      <stop offset="1" stop-color="#6f7fe0" stop-opacity="0" />
+                    </radialGradient>
+                    <radialGradient id="tu-world" cx="0.35" cy="0.35">
+                      <stop offset="0" stop-color="#9fe0c0" />
+                      <stop offset="0.6" stop-color="#3f8a8c" />
+                      <stop offset="1" stop-color="#14324a" />
+                    </radialGradient>
+                  </defs>
+                  <rect width={galaxy.W} height={galaxy.H} fill="#02030a" />
+                  {galaxy.field.map((s) => (
+                    <circle cx={s.x} cy={s.y} r="0.6" fill="#dfe6ff" opacity={s.o} />
+                  ))}
+                  <ellipse cx={galaxy.cx} cy={galaxy.cy} rx="230" ry="80" fill="url(#tu-haze)" />
+                  {galaxy.dots.map((d) => (
+                    <circle cx={d.x.toFixed(1)} cy={d.y.toFixed(1)} r={d.r.toFixed(2)} fill={d.c} opacity={d.o.toFixed(2)} />
+                  ))}
+                  <ellipse cx={galaxy.cx} cy={galaxy.cy} rx="34" ry="16" fill="url(#tu-core)" />
+                  <circle cx="412" cy="92" r="15" fill="url(#tu-world)" />
+                  <circle cx="412" cy="92" r="17" fill="none" stroke="#9fe0c0" stroke-opacity="0.35" />
+                </svg>
+              )}
+              {game.banner === 'wilds' && (
+                <svg
+                  viewBox={`0 0 ${forest.W} ${forest.H}`}
+                  class="block h-44 w-full transition-transform duration-500 group-hover:scale-[1.03] sm:h-56"
+                  preserveAspectRatio="xMidYMid slice"
+                  aria-hidden="true"
+                >
+                  <defs>
+                    <linearGradient id="wb-dusk" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#152b3f" />
+                      <stop offset="55%" stop-color="#27554a" />
+                      <stop offset="100%" stop-color="#3c7355" />
+                    </linearGradient>
+                  </defs>
+                  <rect width={forest.W} height={forest.H} fill="url(#wb-dusk)" />
+                  <circle cx="392" cy="34" r="17" fill="#f6efc8" opacity="0.92" />
+                  <circle cx="402" cy="28" r="14" fill="#152b3f" />
+                  <path d={`M0 ${forest.H} L0 108 Q120 92 240 106 Q360 120 480 100 L480 ${forest.H} Z`} fill="#1d3b2e" />
+                  {forest.trees.map((t) => (
+                    <path d={`M${t.x.toFixed(1)} ${forest.H} L${(t.x - t.w / 2).toFixed(1)} ${(forest.H - t.h).toFixed(1)} L${(t.x + t.w / 2).toFixed(1)} ${(forest.H - t.h).toFixed(1)} Z`} fill="#12291f" />
+                  ))}
+                  {forest.fireflies.map((f) => (
+                    <g>
+                      <circle cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r={(f.r * 3).toFixed(1)} fill="#c9f7a8" opacity="0.18" />
+                      <circle cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r={f.r.toFixed(1)} fill="#e7ffb8" opacity="0.9" />
+                    </g>
+                  ))}
+                  {forest.creatures.map((c) => (
+                    <g transform={`translate(${c.x} ${c.y}) scale(${c.s})`}>
+                      <path d="M-26 12 Q-26 -6 0 -6 Q26 -6 26 12 Q26 26 0 26 Q-26 26 -26 12 Z" fill={`hsl(${c.hue},22%,12%)`} />
+                      <path d="M-16 -4 L-22 -22 L-6 -12 Z M16 -4 L22 -22 L6 -12 Z" fill={`hsl(${c.hue},22%,12%)`} />
+                      <circle cx="-8" cy="4" r="2.6" fill={`hsl(${c.hue},80%,72%)`} />
+                      <circle cx="8" cy="4" r="2.6" fill={`hsl(${c.hue},80%,72%)`} />
+                      <path d="M22 18 Q44 12 42 -6 Q34 6 26 8 Z" fill={`hsl(${c.hue},22%,12%)`} />
+                    </g>
                   ))}
                 </svg>
               )}
