@@ -1,0 +1,15 @@
+{
+  "u-wait": "lorc/hourglass",
+  "u-restart": "delapouite/anticlockwise-rotation",
+  "u-fast": "delapouite/fast-forward-button",
+  "u-play": "guard13007/play-button",
+  "u-levels": "lorc/ringed-planet",
+  "u-menu": "delapouite/hamburger-menu",
+  "u-close": "sbed/cancel",
+  "u-star": "delapouite/round-star",
+  "u-fuel": "delapouite/fuel-tank",
+  "u-rocket": "lorc/rocket",
+  "u-auto": "delapouite/ship-wheel",
+  "u-beacon": "lorc/radar-sweep",
+  "u-next": "delapouite/fast-forward-button"
+}
