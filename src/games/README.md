@@ -30,9 +30,21 @@ Key ideas:
 
 Testing aids: open `/games/year-zero/?debug` to expose `window.yz`; `await yz.debugAutoplay(200)` lets the AI govern the player for 200 years.
 
+## Automatic mode
+
+Every game has an **AUTO** toggle that hands control to an AI you can watch, and take back at any time:
+
+| Game | Who plays | Where |
+| --- | --- | --- |
+| Year Zero | The civilization AI governs your people and ends a year every couple of seconds | `ui/app.ts#setAuto` (uses `endTurn(..., { autoPlayer: true })`) |
+| Micro City | A bot mayor lays out streets, zones by demand and builds utilities and services | `sim/bot.ts` |
+| First Contact | An auto-linguist reads evidence, advises the Council, talks to the aliens and writes the report, with its own mistakes | `sim/auto.ts` |
+| Primordial | A director plays god (seeding, meteors, climate, mutation storms) and keeps the camera on interesting creatures | `sim/director.ts` |
+| Slingshot | An autopilot simulates hundreds of launches and flies the best | `sim/autopilot.ts` |
+
 ## Shared code
 
-`src/games/shared/` holds what every game uses: the seeded `Rng` and `Noise2D`, a tiny DOM toolkit (`h()`, downloads, file picking), `SaveStore` (gzip-compressed save slots in `localStorage`, typed arrays as base64) and `gameicons.ts` (Path2D/SVG helpers and credits for game-icons.net silhouettes).
+`src/games/shared/` holds what every game uses: the seeded `Rng` and `Noise2D`, a tiny DOM toolkit (`h()`, downloads, file picking), `SaveStore` (gzip-compressed save slots in `localStorage`, typed arrays as base64), `chart.ts` (small canvas line charts) and `gameicons.ts` (Path2D/SVG helpers and credits for game-icons.net silhouettes).
 
 ## Art and credits
 
@@ -83,4 +95,30 @@ Key ideas:
 - **One seed, one contact.** The same seed reproduces the same glyphs, grammar, number base, history and truth; the save stores only the player's state.
 
 Testing aids: `/games/first-contact/?debug` exposes `window.fc` (the app; `fc.game` is the game).
+
+## Primordial
+
+An evolution sandbox: creatures with genomes forage, hunt, flock and breed in a sea, and natural selection does the rest.
+
+| Folder | Contents |
+| --- | --- |
+| `sim/genes.ts` | The 12-gene genome, mutation, species distance and Latin-ish names |
+| `sim/world.ts` | The sea: creatures in typed arrays (structure of arrays) with a spatial hash, plants and carrion on a grid, temperature from north (cold) to south (hot), speciation, powers, milestones |
+| `sim/director.ts` | The automatic god: interventions and camera subjects |
+| `render/`, `ui/` | Canvas renderer (plant field image, organisms drawn from their genes) and the app (tools, species, tree of life, chronicle, stats) |
+
+Key ideas: a fixed 1/30 s step, as many per frame as fit in 12 ms. Carrion makes scavenging pay, which gives grazers a gradual path to becoming hunters. Species split when a lineage, not one odd mutant, drifts far from its centroid. Testing aid: `/games/primordial/?debug` exposes `window.pr`; `pr.debugRun(300)` runs 300 sim seconds.
+
+## Slingshot
+
+A gravity puzzle: launch probes through generated star systems.
+
+| Folder | Contents |
+| --- | --- |
+| `sim/physics.ts` | Bodies on analytic circular orbits, the probe integrated at 1/240 s, capture and collision rules, `predict()` for the aiming preview |
+| `sim/autopilot.ts` | Coarse sweep over wait time, angle and power, then local refinement |
+| `sim/levels.ts` | Procedural systems (twin suns, moons, belts, black holes). Each is solved before it is played; beacons are placed along that solution so three stars are always possible, and the solution is kept for the autopilot |
+| `render/`, `ui/` | Canvas renderer and the app (aiming, flight, results, level select, progress) |
+
+Testing aid: `/games/slingshot/?debug` exposes `window.sl`.
 

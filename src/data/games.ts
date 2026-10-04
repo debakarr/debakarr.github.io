@@ -11,7 +11,7 @@ export interface GameEntry {
   /** Accent color used on the card. */
   accent: string;
   /** Which generated banner the card shows. */
-  banner: 'hexmap' | 'skyline' | 'glyphs';
+  banner: 'hexmap' | 'skyline' | 'glyphs' | 'sea' | 'orbits';
   /** Third-party art credits shown on the card. */
   credits?: { label: string; href: string; license: string }[];
 }
@@ -57,6 +57,32 @@ export const games: GameEntry[] = [
     tags: ['Puzzle', 'Language', 'Mystery', 'Single player'],
     accent: '#6fd3ff',
     banner: 'glyphs',
+    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
+  },
+  {
+    slug: 'primordial',
+    title: 'Primordial',
+    tagline: 'Seed a sea. Evolution does the rest.',
+    description:
+      'Creatures with real genomes graze, hunt, flock and breed, and natural selection takes it from there: species split and die out, scavengers become hunters, giants appear. Play god with meteors, ice ages and mutation storms, follow a single creature, read the tree of life, or let the director run it.',
+    href: '/games/primordial',
+    status: 'playable',
+    tags: ['Simulation', 'Evolution', 'Sandbox', 'Watchable'],
+    accent: '#5fe0c8',
+    banner: 'sea',
+    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
+  },
+  {
+    slug: 'slingshot',
+    title: 'Slingshot',
+    tagline: 'Bend your path around the planets.',
+    description:
+      'Fling probes through living star systems with twin suns, moons, asteroid belts and black holes. Pull back, watch the predicted path, let go, and use gravity assists to reach the target. Every level is generated, and solved by the autopilot before you see it.',
+    href: '/games/slingshot',
+    status: 'playable',
+    tags: ['Puzzle', 'Physics', 'Space', 'Procedural'],
+    accent: '#ffc46b',
+    banner: 'orbits',
     credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
   },
 ];
