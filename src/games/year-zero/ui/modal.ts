@@ -1,7 +1,7 @@
 import type { Game } from '../sim/game';
 import { viewDecision, resolveDecision } from '../sim/events';
 import type { Decision } from '../sim/state';
-import { clear, h, svg } from './dom';
+import { clear, gi, h, svg } from './dom';
 import { ICON, type IconName } from './icons';
 
 export interface ModalHandle {
@@ -14,6 +14,8 @@ export interface ModalHandle {
 export interface ModalOptions {
   title: string;
   icon?: IconName;
+  /** A game-icons.net key, used instead of `icon` for in-world screens. */
+  gicon?: string;
   tabs?: string[];
   tab?: string;
   narrow?: boolean;
@@ -46,7 +48,7 @@ export function openModal(root: HTMLElement, opts: ModalOptions): ModalHandle {
   const dismissable = opts.dismissable !== false;
   const modal = h('div', { class: `yz-modal${opts.narrow ? ' narrow' : ''}`, role: 'dialog', 'aria-modal': 'true', 'aria-label': opts.title },
     h('div', { class: 'yz-modal-head' },
-      opts.icon ? svg(ICON[opts.icon]) : null,
+      opts.gicon ? gi(opts.gicon) : opts.icon ? svg(ICON[opts.icon]) : null,
       h('h2', { class: 'yz-h' }, opts.title),
       dismissable ? h('button', { class: 'yz-iconbtn', 'aria-label': 'Close', onclick: () => closeModal() }, svg(ICON.close)) : null),
     tabsEl,
@@ -86,13 +88,11 @@ export function openModal(root: HTMLElement, opts: ModalOptions): ModalHandle {
   return handle;
 }
 
-const TONE_ICON: Record<string, IconName> = {
-  disaster: 'fire',
-  crisis: 'crown',
-  discovery: 'ruin',
-  diplomacy: 'handshake',
-  war: 'sword',
-  wonder: 'star',
+const EVENT_ICON: Record<string, string> = {
+  drought: 'e-drought', plague: 'e-plague', refugees: 'e-refugees', revolution: 'e-revolution', crash: 'e-crash',
+  movement: 'e-movement', breakthrough: 'e-breakthrough', crisis: 'e-crisis', ruin: 'e-ruin', conquest: 'e-conquest',
+  ally_call: 'e-ally', diplo_offer: 'e-offer', purpose: 'e-purpose', ai_question: 'e-ai', synthetic_rights: 'e-synthetic',
+  inequality: 'e-inequality', identity_crisis: 'e-identity', eco_crisis: 'e-climate',
 };
 
 /** Show a pending decision; resolves when the player chooses. */
@@ -105,7 +105,7 @@ export function showDecision(root: HTMLElement, g: Game, d: Decision, onDone: ()
   closeModal();
   const isRecord = d.event === 'ruin';
   const modal = h('div', { class: 'yz-modal yz-event', role: 'dialog', 'aria-modal': 'true', 'aria-label': view.title },
-    h('div', { class: `yz-event-art ${view.tone}` }, svg(ICON[TONE_ICON[view.tone] ?? 'info'])),
+    h('div', { class: `yz-event-art ${view.tone}` }, gi(EVENT_ICON[d.event] ?? 'n-history')),
     h('div', { class: 'yz-modal-body' },
       h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, `Year ${g.s.turn}`),
       h('h2', { class: 'yz-h', style: { fontSize: '24px', marginBottom: '10px' } }, view.title),

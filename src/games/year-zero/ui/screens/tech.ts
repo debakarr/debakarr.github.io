@@ -8,7 +8,7 @@ import { openModal } from '../modal';
 export function openTech(root: HTMLElement, g: Game, onChange: () => void): void {
   openModal(root, {
     title: 'Knowledge',
-    icon: 'flask',
+    gicon: 'n-tech',
     render: (body, _t, handle) => {
       const civ = g.player;
       const sci = civTotals(g, civ).sci;

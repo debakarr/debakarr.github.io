@@ -1,11 +1,12 @@
 import { CORNERS } from '../../core/hex';
-import { randomSeedString } from '../../core/rng';
+import { randomSeedString } from '../../../shared/rng';
 import { F, T, TERRAIN_COLOR } from '../../data/terrain';
 import type { Game } from '../../sim/game';
 import { DEFAULT_SETTINGS } from '../../sim/newgame';
 import { deleteSave, deserialize, exportFileName, listSaves, loadFromStorage, saveToStorage, serialize, type SaveMeta } from '../../sim/save';
 import type { MapSize, MapType, Pace, Settings, WorldMap } from '../../sim/state';
 import { generateWorld, gridFor, parseWorldCode, worldCode } from '../../sim/worldgen';
+import { iconCredits } from '../../art';
 import { clear, download, h, pickFile, svg } from '../dom';
 import { ICON } from '../icons';
 import { closeModal, openModal } from '../modal';
@@ -22,8 +23,8 @@ export interface MenuHost {
 }
 
 /** Draw a whole world as tiny hexes — for previews and the title backdrop. */
-export function renderWorldPreview(canvas: HTMLCanvasElement, map: WorldMap, cssWidth: number, cssHeight: number): void {
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+export function renderWorldPreview(canvas: HTMLCanvasElement, map: WorldMap, cssWidth: number, cssHeight: number, maxDpr = 2): void {
+  const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
   canvas.width = Math.round(cssWidth * dpr);
   canvas.height = Math.round(cssHeight * dpr);
   const ctx = canvas.getContext('2d')!;
@@ -97,13 +98,17 @@ export function showTitle(host: MenuHost, container: HTMLElement): void {
       h('button', { class: 'yz-btn', onclick: () => importSave(host) }, svg(ICON.upload), 'Import a save file'),
       h('button', { class: 'yz-btn', onclick: () => showHelp(host.root) }, svg(ICON.info), 'How to play')),
     h('p', { class: 'yz-muted', style: { fontSize: '12px', margin: '18px 0 0' } },
-      h('a', { href: '/games', style: { color: 'inherit' } }, '← Back to games'), ' · Runs entirely in your browser.'));
+      h('a', { href: '/games', style: { color: 'inherit' } }, '← Back to games'), ' · ',
+      h('button', { class: 'yz-linkbtn', onclick: () => showCredits(host.root) }, 'Credits')),
+    h('p', { class: 'yz-muted', style: { fontSize: '11px', margin: '6px 0 0' } },
+      'Map art by Kenney (CC0) · Icons from game-icons.net (CC BY 3.0)'));
   const screen = h('div', { class: 'yz-title' }, bg, card);
   container.append(screen);
   requestAnimationFrame(() => {
     const rect = screen.getBoundingClientRect();
     const w = generateWorld({ ...DEFAULT_SETTINGS, seed: randomSeedString(), size: 'small', mapType: 'continents' });
-    renderWorldPreview(bg, w.map, rect.width, rect.height);
+    // The backdrop is dimmed and softened: 1x resolution is plenty and saves memory.
+    renderWorldPreview(bg, w.map, rect.width, rect.height, 1);
   });
 }
 
@@ -261,9 +266,36 @@ export function showMenu(host: MenuHost): void {
         h('div', { class: 'yz-actions' }, toggle('sound', 'Sound'), toggle('animations', 'Animations'), toggle('tips', 'Tips'))));
       body.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-actions' },
         h('button', { class: 'yz-btn', onclick: () => showHelp(host.root) }, svg(ICON.info), 'How to play'),
+        h('button', { class: 'yz-btn', onclick: () => showCredits(host.root) }, svg(ICON.star), 'Credits'),
         h('button', { class: 'yz-btn', onclick: () => showNewGame(host) }, svg(ICON.globe), 'New game'),
         h('button', { class: 'yz-btn', onclick: () => { closeModal(); host.toTitle(); } }, 'Title screen'),
         h('a', { class: 'yz-btn', href: '/games' }, svg(ICON.back), 'Leave to games'))));
+    },
+  });
+}
+
+export function showCredits(root: HTMLElement): void {
+  openModal(root, {
+    title: 'Credits',
+    icon: 'star',
+    narrow: true,
+    render: (body) => {
+      const link = (href: string, text: string) => h('a', { href, target: '_blank', rel: 'noopener noreferrer', class: 'yz-link' }, text);
+      const section = (title: string, ...children: (Node | string)[]) =>
+        h('div', { class: 'yz-section', style: { marginTop: '0', paddingTop: '0', borderTop: 'none', marginBottom: '16px' } },
+          h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, title), ...children);
+      body.append(
+        section('Game', h('p', { style: { margin: 0 } }, 'Year Zero — designed and built by Debakar Roy. Worlds, names, histories and sounds are generated procedurally in your browser.')),
+        section('Map art',
+          h('p', { style: { margin: '0 0 6px' } }, 'Terrain tiles, cities, trees, rocks and improvements from ', link('https://kenney.nl/assets/hexagon-pack', 'Hexagon Pack'), ' by ', link('https://kenney.nl', 'Kenney'), '.'),
+          h('p', { class: 'yz-sub', style: { margin: 0 } }, 'License: ', link('https://creativecommons.org/publicdomain/zero/1.0/', 'Creative Commons Zero (CC0)'), '. Thank you, Kenney!')),
+        section('Icons',
+          h('p', { style: { margin: '0 0 6px' } }, 'Unit, resource, building and event icons from ', link('https://game-icons.net', 'game-icons.net'), ', licensed ', link('https://creativecommons.org/licenses/by/3.0/', 'CC BY 3.0'), '. Icons made by:'),
+          ...iconCredits().map((c) => h('details', { class: 'yz-credit' },
+            h('summary', null, h('b', null, c.author), h('span', { class: 'yz-muted' }, ` — ${c.icons.length} icon${c.icons.length > 1 ? 's' : ''}`), c.url ? h('span', null, ' · ', link(c.url, 'website')) : null),
+            h('p', { class: 'yz-sub', style: { margin: '4px 0 0' } }, ...c.icons.flatMap((ic, i) => [i ? ', ' : '', link(ic.href, ic.name)]))))),
+        section('Typefaces', h('p', { style: { margin: 0 } }, link('https://rsms.me/inter/', 'Inter'), ' and ', link('https://www.jetbrains.com/lp/mono/', 'JetBrains Mono'), ', SIL Open Font License, via Fontsource.')),
+      );
     },
   });
 }
@@ -288,7 +320,9 @@ export function showHelp(root: HTMLElement): void {
           k('Click', 'Select a unit, city or tile; with a unit selected, click a tile to move or attack (tap twice on touch screens)'),
           k('Right-click', 'Move or attack with the selected unit'),
           k('Enter', 'End turn'), k('N / Space', 'Next unit / skip'), k('B', 'Found city'), k('F / S', 'Fortify / sleep'),
-          k('E', 'Explore automatically'), k('T C D H', 'Knowledge, Civilization, Diplomacy, History'), k('Esc', 'Close / deselect')));
+          k('E', 'Explore automatically'), k('T C D H', 'Knowledge, Civilization, Diplomacy, History'), k('Esc', 'Close / deselect')),
+        h('p', { class: 'yz-sub', style: { marginTop: '14px' } }, 'Map art by Kenney (CC0); icons from game-icons.net (CC BY 3.0). ',
+          h('button', { class: 'yz-linkbtn', onclick: () => showCredits(root) }, 'See all credits'), '.'));
     },
   });
 }

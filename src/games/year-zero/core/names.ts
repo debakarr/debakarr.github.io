@@ -1,4 +1,4 @@
-import { Rng } from './rng';
+import { Rng } from '../../shared/rng';
 
 // Each people gets its own tiny phonology, so its cities, leaders and rivers
 // sound related. Languages are plain data so they survive save/load.

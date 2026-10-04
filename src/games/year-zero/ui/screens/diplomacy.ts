@@ -23,7 +23,7 @@ export function openDiplomacy(root: HTMLElement, g: Game, onChange: () => void, 
   confirmWar = -1;
   openModal(root, {
     title: 'Diplomacy',
-    icon: 'handshake',
+    gicon: 'n-diplomacy',
     render: (body, _t, handle) => {
       if (!known.length) {
         body.append(h('p', { class: 'yz-quote' }, 'As far as the ' + p.name + ' know, they are alone in the world. Send explorers to find other peoples.'));

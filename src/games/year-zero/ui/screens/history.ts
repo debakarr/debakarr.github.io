@@ -22,7 +22,7 @@ const state: HistoryState = { scope: 'ours', major: false, chart: 0 };
 export function openHistory(root: HTMLElement, g: Game, jump: (tile: number) => void, tab = 'Chronicle'): void {
   openModal(root, {
     title: 'History',
-    icon: 'scroll',
+    gicon: 'n-history',
     tabs: TABS,
     tab,
     render: (body, t, handle) => {

@@ -132,14 +132,15 @@ export const IMPROVEMENTS: ImprovementDef[] = [
   { id: Imp.OilWell, name: 'Oil well', tech: 'combustion', y: { food: 0, prod: 2, trade: 0 } },
 ];
 
-// Map colors: earthy, slightly desaturated — an old atlas, not a cartoon.
+// Map colors, matched to the average colors of the Kenney hex tiles so the
+// zoomed-out view, the minimap and world previews agree with the sprites.
 export const TERRAIN_COLOR: Record<number, [number, number, number]> = {
-  [T.Ocean]: [30, 58, 84],
-  [T.Coast]: [56, 104, 128],
-  [T.Lake]: [70, 124, 146],
-  [T.Grass]: [112, 140, 74],
-  [T.Plains]: [158, 150, 88],
-  [T.Desert]: [214, 186, 128],
-  [T.Tundra]: [140, 146, 128],
-  [T.Snow]: [226, 230, 232],
+  [T.Ocean]: [36, 94, 158],
+  [T.Coast]: [58, 138, 204],
+  [T.Lake]: [72, 156, 212],
+  [T.Grass]: [39, 174, 96],
+  [T.Plains]: [187, 128, 68],
+  [T.Desert]: [233, 217, 181],
+  [T.Tundra]: [164, 175, 175],
+  [T.Snow]: [232, 238, 242],
 };

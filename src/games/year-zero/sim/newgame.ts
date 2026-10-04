@@ -1,4 +1,4 @@
-import { hashString } from '../core/rng';
+import { hashString } from '../../shared/rng';
 import { CIV_COLORS, createCiv } from './civs';
 import { Game } from './game';
 import { describePlace, logHistory } from './history';

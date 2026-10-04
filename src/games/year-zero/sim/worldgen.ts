@@ -1,7 +1,7 @@
 import { Grid } from '../core/hex';
 import { artifactName, makeLanguage, peopleName, placeName, type Language } from '../core/names';
-import { Noise2D } from '../core/noise';
-import { hashString, Rng } from '../core/rng';
+import { Noise2D } from '../../shared/noise';
+import { hashString, Rng } from '../../shared/rng';
 import { F, R, Relief, T } from '../data/terrain';
 import type { MapSize, MapType, NaturalWonder, Region, River, Ruin, Settings, WorldMap } from './state';
 import { baseYield, canSettle, isLand, isWater, siteInfo } from './tiles';

@@ -1,5 +1,5 @@
 import type { Grid } from '../core/hex';
-import { Rng } from '../core/rng';
+import { Rng } from '../../shared/rng';
 import { UNIT } from '../data/units';
 import type { City, Civ, GameState, HistoryEvent, Notice, Unit } from './state';
 import { gridFor } from './worldgen';

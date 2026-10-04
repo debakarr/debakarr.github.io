@@ -13,7 +13,7 @@ import { maxMoves } from '../sim/path';
 import type { City, Focus, Unit } from '../sim/state';
 import { resourceVisible, siteInfo, tileYield } from '../sim/tiles';
 import { canFoundAt, canPillage, canUpgrade, isEmbarked, previewAttack, upgradeCost, upgradeTarget } from '../sim/units';
-import { cap, fmt, h, signed, svg } from './dom';
+import { cap, fmt, gi, h, signed, svg } from './dom';
 import { ICON, type IconName } from './icons';
 
 export interface PanelHost {
@@ -27,22 +27,29 @@ export interface PanelHost {
   click: () => void;
 }
 
-const FOCUS: { id: Focus; label: string; icon: IconName }[] = [
-  { id: 'balanced', label: 'Balanced', icon: 'globe' },
-  { id: 'food', label: 'Food', icon: 'food' },
-  { id: 'production', label: 'Industry', icon: 'prod' },
-  { id: 'science', label: 'Science', icon: 'sci' },
-  { id: 'wealth', label: 'Wealth', icon: 'gold' },
-  { id: 'culture', label: 'Culture', icon: 'cult' },
+const FOCUS: { id: Focus; label: string; icon: string }[] = [
+  { id: 'balanced', label: 'Balanced', icon: 'n-world' },
+  { id: 'food', label: 'Food', icon: 'y-food' },
+  { id: 'production', label: 'Industry', icon: 'y-prod' },
+  { id: 'science', label: 'Science', icon: 'y-sci' },
+  { id: 'wealth', label: 'Wealth', icon: 'y-gold' },
+  { id: 'culture', label: 'Culture', icon: 'y-cult' },
 ];
 
-function yieldBox(icon: IconName, cls: string, label: string, value: string, title?: string): HTMLElement {
-  return h('div', { class: 'yz-yield', title }, h('span', { class: cls }, svg(ICON[icon])), h('span', { class: 'lbl' }, label), h('span', { class: 'val' }, value));
+function yieldBox(icon: string, cls: string, label: string, value: string, title?: string): HTMLElement {
+  return h('div', { class: 'yz-yield', title }, h('span', { class: cls }, gi(icon)), h('span', { class: 'lbl' }, label), h('span', { class: 'val' }, value));
 }
 
-function head(title: string, sub: string | Node, host: PanelHost, color?: string): HTMLElement {
+/** Icon key for a build item. */
+function itemIcon(kind: string, id: string): string {
+  return `${kind === 'unit' ? 'u' : kind === 'building' ? 'b' : kind === 'wonder' ? 'w' : 'p'}-${id}`;
+}
+
+function head(title: string, sub: string | Node, host: PanelHost, color?: string, icon?: string): HTMLElement {
   return h('div', { class: 'yz-side-head' },
-    color ? h('span', { class: 'yz-emblem', style: { background: color, width: '22px', height: '22px', marginTop: '3px' } }) : null,
+    icon && color
+      ? h('span', { class: 'yz-token', style: { background: color } }, gi(icon))
+      : color ? h('span', { class: 'yz-emblem', style: { background: color, width: '22px', height: '22px', marginTop: '3px' } }) : null,
     h('div', null, h('h3', { class: 'yz-h' }, title), h('div', { class: 'yz-sub' }, sub)),
     h('button', { class: 'yz-iconbtn yz-side-close', 'aria-label': 'Close', onclick: () => host.deselect() }, svg(ICON.close)));
 }
@@ -82,15 +89,15 @@ export function tilePanel(host: PanelHost, tile: number): HTMLElement {
   el.append(head(parts.join(' · '), region || (t.water ? 'Open water' : 'Unnamed land'), host));
   const y = tileYield(map, g.s.wonders, player, tile);
   el.append(h('div', { class: 'yz-grid3' },
-    yieldBox('food', 'c-food', 'Food', String(y.food)),
-    yieldBox('prod', 'c-prod', 'Prod.', String(y.prod)),
-    yieldBox('gold', 'c-gold', 'Trade', String(y.trade))));
+    yieldBox('y-food', 'c-food', 'Food', String(y.food)),
+    yieldBox('y-prod', 'c-prod', 'Prod.', String(y.prod)),
+    yieldBox('y-gold', 'c-gold', 'Trade', String(y.trade))));
   const kv = h('dl', { class: 'yz-kv', style: { marginTop: '10px' } });
   const add = (k: string, v: string | Node) => kv.append(h('dt', null, k), h('dd', null, v));
   const river = map.river[tile] > 0 ? riverName(g, tile) : null;
   if (river) add('River', `River ${river}`);
   const r = map.resource[tile];
-  if (r && resourceVisible(player, r)) add('Resource', `${RESOURCES[r].name} (${RESOURCES[r].kind})`);
+  if (r && resourceVisible(player, r)) add('Resource', h('span', { style: { display: 'inline-flex', gap: '5px', alignItems: 'center', color: RESOURCES[r].color } }, gi(`r-${RESOURCES[r].key}`), h('span', { style: { color: 'var(--yz-ink)' } }, `${RESOURCES[r].name} (${RESOURCES[r].kind})`)));
   if (map.improvement[tile]) add('Improvement', IMPROVEMENTS[map.improvement[tile]].name);
   if (map.road[tile]) add('Road', map.road[tile] >= 2 ? 'Railroad' : 'Road');
   const owner = map.owner[tile];
@@ -157,11 +164,11 @@ export function unitPanel(host: PanelHost, u: Unit, hoverTile: number): HTMLElem
   const civ = g.civ(u.civId);
   const own = civ.isPlayer;
   const el = h('div');
-  el.append(head(def.name, `${own ? '' : `${civ.adj} · `}${CLASS_LABEL[def.cls]} · ${unitStatus(g, u)}`, host, civ.color));
+  el.append(head(def.name, `${own ? '' : `${civ.adj} · `}${CLASS_LABEL[def.cls]} · ${unitStatus(g, u)}`, host, civ.color, `u-${u.type}`));
   const stats = h('div', { class: 'yz-grid3' });
-  if (def.str > 0 || def.rng > 0) stats.append(yieldBox('sword', 'c-bad', 'Str.', String(def.str)));
-  if (def.rng > 0) stats.append(yieldBox('target', 'c-prod', `Rng ${def.range}`, String(def.rng)));
-  stats.append(yieldBox('next', 'c-sci', 'Moves', `${fmt(u.moves, u.moves % 1 ? 1 : 0)}/${maxMoves(g, u)}`));
+  if (def.str > 0 || def.rng > 0) stats.append(yieldBox('y-strength', 'c-bad', 'Str.', String(def.str)));
+  if (def.rng > 0) stats.append(yieldBox('y-range', 'c-prod', `Rng ${def.range}`, String(def.rng)));
+  stats.append(yieldBox('y-moves', 'c-sci', 'Moves', `${fmt(u.moves, u.moves % 1 ? 1 : 0)}/${maxMoves(g, u)}`));
   el.append(stats);
   el.append(h('div', { style: { marginTop: '8px' } },
     h('div', { class: 'yz-sub', style: { display: 'flex', justifyContent: 'space-between' } }, h('span', null, 'Health'), h('span', { class: 'yz-num' }, `${u.hp}/100`)),
@@ -288,8 +295,8 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
   if (!own) {
     const st = relationStatus(g, g.player.id, civ.id);
     el.append(h('div', { class: 'yz-grid2' },
-      yieldBox('shield', 'c-bad', 'Defense', String(y.defense)),
-      yieldBox('fire', 'c-prod', 'Walls HP', `${city.hp}/${maxCityHp(city)}`)));
+      yieldBox('y-defense', 'c-bad', 'Defense', String(y.defense)),
+      yieldBox('b-walls', 'c-prod', 'Walls HP', `${city.hp}/${maxCityHp(city)}`)));
     el.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-label' }, 'Relations'), h('div', null, STATUS_LABEL[st])));
     if (city.wonders.length) el.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-chips' }, city.wonders.map((w) => h('span', { class: 'yz-chip gold' }, WONDER[w].name)))));
     return el;
@@ -298,12 +305,12 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
   const need = growthNeeded(g, city.size);
   const growTurns = y.foodNet > 0 ? Math.ceil((need - city.food) / y.foodNet) : Infinity;
   el.append(h('div', { class: 'yz-grid3' },
-    yieldBox('food', 'c-food', 'Food', signed(y.foodNet, y.foodNet % 1 ? 1 : 0), `${fmt(y.food, 1)} produced, ${city.size * 2} eaten`),
-    yieldBox('prod', 'c-prod', 'Prod.', fmt(y.prod, 1)),
-    yieldBox('sci', 'c-sci', 'Sci.', fmt(y.sci, 1)),
-    yieldBox('gold', 'c-gold', 'Gold', fmt(y.gold, 1)),
-    yieldBox('cult', 'c-cult', 'Cult.', fmt(y.cult, 1)),
-    yieldBox(y.mood >= 0 ? 'mood' : 'sad', y.mood >= 0 ? 'c-mood' : 'c-bad', 'Mood', signed(y.mood), `${y.happy} content vs ${y.unhappy} discontent`)));
+    yieldBox('y-food', 'c-food', 'Food', signed(y.foodNet, y.foodNet % 1 ? 1 : 0), `${fmt(y.food, 1)} produced, ${city.size * 2} eaten`),
+    yieldBox('y-prod', 'c-prod', 'Prod.', fmt(y.prod, 1)),
+    yieldBox('y-sci', 'c-sci', 'Sci.', fmt(y.sci, 1)),
+    yieldBox('y-gold', 'c-gold', 'Gold', fmt(y.gold, 1)),
+    yieldBox('y-cult', 'c-cult', 'Cult.', fmt(y.cult, 1)),
+    yieldBox(y.mood >= 0 ? 'y-happy' : 'y-sad', y.mood >= 0 ? 'c-mood' : 'c-bad', 'Mood', signed(y.mood), `${y.happy} content vs ${y.unhappy} discontent`)));
 
   el.append(h('div', { style: { marginTop: '10px' } },
     h('div', { class: 'yz-sub', style: { display: 'flex', justifyContent: 'space-between' } },
@@ -319,7 +326,7 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
         host.click();
         host.refresh();
       },
-    }, svg(ICON[f.icon]), f.label)))));
+    }, gi(f.icon), f.label)))));
 
   // Production
   const prodSec = h('div', { class: 'yz-section' });
@@ -333,7 +340,7 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
     const turns = estimateTurns(g, city, city.build);
     prodSec.append(
       h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: '8px', marginTop: '4px' } },
-        h('b', null, itemName(city.build)),
+        h('b', { class: 'yz-withicon' }, gi(itemIcon(city.build.kind, city.build.id)), itemName(city.build)),
         h('span', { class: 'yz-num c-prod' }, city.resistance > 0 ? 'halted' : `${turns} yr${turns === 1 ? '' : 's'}`)),
       h('div', { class: 'yz-progress c-prod' }, h('i', { style: { width: `${Math.min(100, (city.prod / cost) * 100)}%` } })),
       h('div', { class: 'yz-sub' }, city.manual ? 'Chosen by you' : 'Chosen by the city governor'));
@@ -376,7 +383,7 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
               host.click();
               opts.toggleBuild();
             },
-          }, h('span', { class: 'n' }, o.name), h('span', { class: 't' }, turns ? `${turns} yr${turns === 1 ? '' : 's'}` : 'ongoing'), h('span', { class: 'd' }, o.desc));
+          }, h('span', { class: 'n' }, gi(itemIcon(o.item.kind, o.item.id)), o.name), h('span', { class: 't' }, turns ? `${turns} yr${turns === 1 ? '' : 's'}` : 'ongoing'), h('span', { class: 'd' }, o.desc));
         }))));
     }
   }
@@ -384,8 +391,8 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
 
   const blds = h('div', { class: 'yz-section' }, h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, 'Buildings'));
   const chips = h('div', { class: 'yz-chips' });
-  for (const w of city.wonders) chips.append(h('span', { class: 'yz-chip gold', title: WONDER[w].desc }, WONDER[w].name));
-  for (const b of city.buildings) chips.append(h('span', { class: 'yz-chip', title: BUILDING[b]?.desc }, BUILDING[b]?.name ?? b));
+  for (const w of city.wonders) chips.append(h('span', { class: 'yz-chip gold', title: WONDER[w].desc }, gi(`w-${w}`), WONDER[w].name));
+  for (const b of city.buildings) chips.append(h('span', { class: 'yz-chip', title: BUILDING[b]?.desc }, gi(`b-${b}`), BUILDING[b]?.name ?? b));
   if (!chips.childNodes.length) chips.append(h('span', { class: 'yz-muted' }, 'None yet.'));
   blds.append(chips);
   el.append(blds);

@@ -1,4 +1,4 @@
-import { TERRAIN_COLOR, T } from '../data/terrain';
+import { TERRAIN_COLOR } from '../data/terrain';
 import type { Game } from '../sim/game';
 import type { MapRenderer } from './renderer';
 
@@ -49,7 +49,7 @@ export class Minimap {
       for (let c = 0; c < map.w; c++) {
         const i = r * map.w + c;
         let rgb: number[];
-        if (!player.explored[i]) rgb = [190, 172, 132];
+        if (!player.explored[i]) rgb = [26, 36, 48];
         else {
           const o = map.owner[i];
           const base = TERRAIN_COLOR[map.terrain[i]];
@@ -59,7 +59,7 @@ export class Minimap {
             rgb = [base[0] * 0.45 + oc[0] * 0.55, base[1] * 0.45 + oc[1] * 0.55, base[2] * 0.45 + oc[2] * 0.55];
           } else if (map.relief[i] === 2) rgb = [120, 110, 98];
           else rgb = [base[0], base[1], base[2]];
-          if (!player.visible[i] && map.terrain[i] > T.Lake) rgb = rgb.map((v) => v * 0.8 + 30);
+          if (!player.visible[i]) rgb = rgb.map((v) => v * 0.62 + 18);
         }
         // Odd rows shift half a hex: two pixels per tile lets us offset by one.
         const x0 = c * 2 + (r & 1);
@@ -79,7 +79,7 @@ export class Minimap {
   draw(): void {
     const ctx = this.ctx;
     ctx.imageSmoothingEnabled = false;
-    ctx.fillStyle = '#bfa97f';
+    ctx.fillStyle = '#18212c';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
     // Viewport rectangle.

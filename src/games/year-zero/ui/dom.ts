@@ -1,3 +1,5 @@
+import { hasIcon, iconSvg } from '../art';
+
 // A tiny hyperscript helper: panels are small, so rebuilding them is cheap.
 
 type Child = Node | string | number | null | undefined | false | Child[];
@@ -39,6 +41,15 @@ export function svg(markup: string, cls = 'icon'): HTMLSpanElement {
   span.className = cls;
   span.innerHTML = markup;
   span.setAttribute('aria-hidden', 'true');
+  return span;
+}
+
+/** A game-icons.net silhouette as an inline icon (tinted by CSS color). */
+export function gi(key: string, cls = 'icon gi'): HTMLSpanElement {
+  const span = document.createElement('span');
+  span.className = cls;
+  span.setAttribute('aria-hidden', 'true');
+  if (hasIcon(key)) span.innerHTML = iconSvg(key);
   return span;
 }
 

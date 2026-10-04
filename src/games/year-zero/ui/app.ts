@@ -17,8 +17,8 @@ import {
   advanceOrder, attack, canAttack, canPillage, canUpgrade, disband, pillage, settleHere, upgradeUnit, walkToward,
 } from '../sim/units';
 import { setMuted, sfx } from './audio';
-import { clear, fmt, h, persist, store, svg } from './dom';
-import { ICON, type IconName } from './icons';
+import { clear, fmt, gi, h, persist, store, svg } from './dom';
+import { ICON } from './icons';
 import { closeModal, modalOpen, openModal, showDecision } from './modal';
 import { cityPanel, tilePanel, unitBar, unitPanel, type PanelHost } from './panels';
 import { openCiv } from './screens/civ';
@@ -77,6 +77,7 @@ export class App implements PanelHost {
   private confirmDisband = -1;
   private sheetCollapsed = false;
   private mobile = window.matchMedia('(max-width: 820px)');
+  private landscape = window.matchMedia('(max-height: 520px) and (orientation: landscape)');
   settings = store('yearzero:settings', { sound: true, animations: true, tips: true });
   private tipsSeen: string[] = store('yearzero:tips', []);
   private redrawQueued = false;
@@ -111,6 +112,7 @@ export class App implements PanelHost {
       this.mini?.draw();
     }).observe(this.canvas);
     this.mobile.addEventListener('change', () => this.hasGame && this.refresh());
+    this.landscape.addEventListener('change', () => this.hasGame && this.refresh());
     // Keep moves made since the last turn: save when the page is hidden or closed.
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden' && this.hasGame && !this.busy) void this.autosave();
@@ -184,7 +186,7 @@ export class App implements PanelHost {
     const p = g.player;
     const cap = g.capital(p);
     const focus = cap?.tile ?? g.unitsOf(p.id)[0]?.tile ?? p.startTile;
-    this.r.cam.zoom = this.mobile.matches ? 0.95 : 1.15;
+    this.r.cam.zoom = this.compact() ? 0.95 : 1.15;
     this.r.centerOn(focus, false);
     this.unsub = g.on((e) => this.onGameEvent(e));
     this.sel = { tile: -1, unitId: -1, cityId: -1 };
@@ -328,11 +330,21 @@ export class App implements PanelHost {
     this.keepAboveSheet(c.tile);
   }
 
-  /** On phones the bottom sheet covers half the map: keep the selection visible above it. */
+  /** Phones and small screens: panels cover part of the map. */
+  private compact(): boolean {
+    return this.mobile.matches || this.landscape.matches;
+  }
+
+  /** Keep the selection visible beside the bottom sheet (portrait) or the drawer (landscape). */
   private keepAboveSheet(tile: number): void {
-    if (!this.mobile.matches || !this.r) return;
-    const [, sy] = this.r.tileScreen(tile);
-    if (sy > this.r.viewH * 0.4) this.r.centerOn(tile, true, this.r.viewH * 0.22);
+    if (!this.r) return;
+    const [sx, sy] = this.r.tileScreen(tile);
+    if (this.landscape.matches) {
+      const drawer = Math.min(340, this.r.viewW * 0.46);
+      if (sx > this.r.viewW - drawer - 40) this.r.centerOn(tile, true, 0, drawer / 2);
+    } else if (this.mobile.matches && sy > this.r.viewH * 0.4) {
+      this.r.centerOn(tile, true, this.r.viewH * 0.22);
+    }
   }
 
   deselect(): void {
@@ -668,7 +680,7 @@ export class App implements PanelHost {
     this.sound('discovery');
     openModal(this.modalRoot, {
       title: `A Legacy: ${L.name}`,
-      icon: 'star',
+      gicon: 'n-legacy',
       narrow: true,
       render: (body) => body.append(h('p', { class: 'yz-event-text' }, `${L.desc} The ${this.g.player.name} will be remembered for this. History does not end here — it simply goes on.`)),
       foot: (foot) => foot.append(
@@ -681,7 +693,7 @@ export class App implements PanelHost {
     const p = this.g.player;
     openModal(this.modalRoot, {
       title: `The ${p.name} Are No More`,
-      icon: 'ruin',
+      gicon: 'e-fallen',
       narrow: true,
       render: (body) => {
         for (const para of chronicle(this.g, p).slice(0, 6)) body.append(h('p', { class: 'yz-event-text', style: { fontSize: '15px', margin: '0 0 10px' } }, para));
@@ -726,9 +738,9 @@ export class App implements PanelHost {
     r.request();
   }
 
-  private stat(icon: IconName, cls: string, value: string, delta: string, title: string, onclick: () => void, extra = ''): HTMLElement {
+  private stat(icon: string, cls: string, value: string, delta: string, title: string, onclick: () => void, extra = ''): HTMLElement {
     return h('button', { class: `yz-stat ${extra}`, title, onclick },
-      h('span', { class: cls }, svg(ICON[icon])), h('span', { class: 'v' }, value), delta ? h('span', { class: 'd' }, delta) : null);
+      h('span', { class: cls }, gi(icon)), h('span', { class: 'v' }, value), delta ? h('span', { class: 'd' }, delta) : null);
   }
 
   private renderTop(): void {
@@ -745,7 +757,7 @@ export class App implements PanelHost {
       class: `yz-stat research${needResearch ? ' need' : ''}`,
       title: research ? `Researching ${research.name}` : 'Choose research',
       onclick: () => this.open('tech'),
-    }, h('span', { class: 'c-sci' }, svg(ICON.sci)), h('span', { class: 'v name' }, research ? research.name : 'Choose research'),
+    }, h('span', { class: 'c-sci' }, gi('y-sci')), h('span', { class: 'v name' }, research ? research.name : 'Choose research'),
     research ? h('span', { class: 'yz-bar c-sci' }, h('i', { style: { width: `${Math.min(100, (p.sciStore / techCostFor(g, p, research.id)) * 100)}%` } })) : null,
     h('span', { class: 'd' }, `+${tot.sci}`));
     this.top.append(
@@ -755,30 +767,30 @@ export class App implements PanelHost {
         h('div', null, h('div', { class: 'yz-civ-name' }, p.alive ? p.name : `${p.name} †`), h('div', { class: 'yz-era' }, `${era}${p.anarchy ? ' · Anarchy' : ''}`))),
       h('div', { class: 'yz-year', title: 'Each turn is one year' }, h('div', { class: 'yz-year-label' }, 'YEAR'), h('div', { class: 'yz-year-num yz-num' }, String(g.turn))),
       h('div', { class: 'yz-stats' },
-        this.stat('gold', 'c-gold', fmt(Math.floor(p.gold)), `${tot.net >= 0 ? '+' : ''}${tot.net}`, 'Treasury and income per year', () => this.open('civ')),
+        this.stat('y-gold', 'c-gold', fmt(Math.floor(p.gold)), `${tot.net >= 0 ? '+' : ''}${tot.net}`, 'Treasury and income per year', () => this.open('civ')),
         resEl,
-        this.stat('cult', 'c-cult', fmt(p.culture), `+${tot.cult}`, 'Culture', () => this.open('civ', 'Identity'), 'hide-sm'),
-        this.stat(mood >= 0 ? 'mood' : 'sad', mood >= 0 ? 'c-mood' : 'c-bad', mood >= 0 ? `+${mood.toFixed(0)}` : mood.toFixed(0), '', 'Average mood of your cities', () => this.open('civ')),
-        this.stat('pop', 'c-food', fmt(civPopulation(g, p)), '', 'Population', () => this.open('history', 'Cities'), 'hide-sm')),
+        this.stat('y-cult', 'c-cult', fmt(p.culture), `+${tot.cult}`, 'Culture', () => this.open('civ', 'Identity'), 'hide-sm'),
+        this.stat(mood >= 0 ? 'y-happy' : 'y-sad', mood >= 0 ? 'c-mood' : 'c-bad', mood >= 0 ? `+${mood.toFixed(0)}` : mood.toFixed(0), '', 'Average mood of your cities', () => this.open('civ')),
+        this.stat('y-pop', 'c-food', fmt(civPopulation(g, p)), '', 'Population', () => this.open('history', 'Cities'), 'hide-sm')),
       h('nav', { class: 'yz-nav' },
-        this.navBtn('flask', 'Knowledge', () => this.open('tech'), 'T'),
-        this.navBtn('crown', 'Civilization', () => this.open('civ'), 'C'),
-        this.navBtn('handshake', 'Diplomacy', () => this.open('diplomacy'), 'D'),
-        this.navBtn('scroll', 'History', () => this.open('history'), 'H'),
+        this.navBtn('n-tech', 'Knowledge', () => this.open('tech'), 'T'),
+        this.navBtn('n-civ', 'Civilization', () => this.open('civ'), 'C'),
+        this.navBtn('n-diplomacy', 'Diplomacy', () => this.open('diplomacy'), 'D'),
+        this.navBtn('n-history', 'History', () => this.open('history'), 'H'),
         h('button', { class: 'yz-iconbtn', title: 'Reports', onclick: () => this.openLog() }, svg(ICON.bell), this.unread ? h('span', { class: 'yz-badge' }, String(Math.min(99, this.unread))) : null),
         h('button', { class: 'yz-iconbtn', title: this.settings.sound ? 'Mute' : 'Unmute', onclick: () => { this.settings.sound = !this.settings.sound; this.menuHost().saveSettings(); } }, svg(this.settings.sound ? ICON.sound : ICON.mute)),
         h('button', { class: 'yz-iconbtn', title: 'Menu', onclick: () => showMenu(this.menuHost()) }, svg(ICON.menu))),
     );
   }
 
-  private navBtn(icon: IconName, label: string, fn: () => void, key: string): HTMLElement {
-    return h('button', { class: 'yz-navbtn', title: `${label} (${key})`, onclick: fn }, svg(ICON[icon]), h('span', null, label));
+  private navBtn(icon: string, label: string, fn: () => void, key: string): HTMLElement {
+    return h('button', { class: 'yz-navbtn', title: `${label} (${key})`, onclick: fn }, gi(icon), h('span', null, label));
   }
 
   private renderSide(): void {
     clear(this.side);
     const g = this.g;
-    const mobile = this.mobile.matches;
+    const mobile = this.compact();
     const u = this.selectedUnit();
     let content: HTMLElement | null = null;
     if (u) {
@@ -791,10 +803,10 @@ export class App implements PanelHost {
       content = tilePanel(this, this.sel.tile);
     }
     if (content) {
-      if (mobile) this.side.append(h('button', { class: 'yz-sheet-handle', 'aria-label': 'Expand or collapse', onclick: () => { this.sheetCollapsed = !this.sheetCollapsed; this.side.classList.toggle('collapsed', this.sheetCollapsed); } }));
+      if (this.mobile.matches && !this.landscape.matches) this.side.append(h('button', { class: 'yz-sheet-handle', 'aria-label': 'Expand or collapse', onclick: () => { this.sheetCollapsed = !this.sheetCollapsed; this.side.classList.toggle('collapsed', this.sheetCollapsed); } }));
       this.side.append(content);
     }
-    this.side.classList.toggle('collapsed', mobile && this.sheetCollapsed);
+    this.side.classList.toggle('collapsed', this.mobile.matches && !this.landscape.matches && this.sheetCollapsed);
     this.root.classList.toggle('has-sheet', !!content);
   }
 
@@ -802,7 +814,7 @@ export class App implements PanelHost {
     clear(this.unitbarEl);
     const u = this.selectedUnit();
     const show = !!u && u.civId === this.g.player.id;
-    if (show) for (const b of unitBar(this, u!, this.mobile.matches)) this.unitbarEl.append(b);
+    if (show) for (const b of unitBar(this, u!, this.compact())) this.unitbarEl.append(b);
     this.root.classList.toggle('has-unitbar', show);
   }
 
@@ -826,14 +838,14 @@ export class App implements PanelHost {
 
   private renderBottomNav(): void {
     clear(this.bottomnav);
-    const btn = (icon: IconName, label: string, fn: () => void, cls = '') => h('button', { class: cls, onclick: fn }, svg(ICON[icon]), h('span', null, label));
+    const btn = (icon: Node, label: string, fn: () => void, cls = '') => h('button', { class: cls, onclick: fn, 'aria-label': label }, icon, h('span', null, label));
     this.bottomnav.append(
-      btn('flask', 'Research', () => this.open('tech')),
-      btn('crown', 'Civ', () => this.open('civ')),
-      btn('handshake', 'Diplomacy', () => this.open('diplomacy')),
-      btn('scroll', 'History', () => this.open('history')),
-      btn('menu', 'Menu', () => showMenu(this.menuHost())),
-      btn(this.busy ? 'hourglass' : 'next', this.busy ? 'Wait…' : `End ${this.g.turn}`, () => void this.endTurn(), 'endturn'),
+      btn(gi('n-tech'), 'Research', () => this.open('tech')),
+      btn(gi('n-civ'), 'Civ', () => this.open('civ')),
+      btn(gi('n-diplomacy'), 'Diplomacy', () => this.open('diplomacy')),
+      btn(gi('n-history'), 'History', () => this.open('history')),
+      btn(svg(ICON.menu), 'Menu', () => showMenu(this.menuHost())),
+      btn(svg(ICON[this.busy ? 'hourglass' : 'next']), this.busy ? 'Wait…' : `End ${this.g.turn}`, () => void this.endTurn(), 'endturn'),
     );
   }
 

@@ -10,7 +10,7 @@ import { openModal } from '../modal';
 export function openCiv(root: HTMLElement, g: Game, onChange: () => void, tab = 'Overview'): void {
   openModal(root, {
     title: `The ${g.player.name}`,
-    icon: 'crown',
+    gicon: 'n-civ',
     tabs: ['Overview', 'Government', 'Identity', 'Legacies'],
     tab,
     render: (body, t, handle) => {
