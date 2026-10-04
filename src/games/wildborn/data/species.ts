@@ -197,3 +197,32 @@ export const ITEMS: Record<string, Item> = {
 
 export const PERSONALITY = ['curiosity', 'aggression', 'loyalty', 'playfulness', 'fear', 'intelligence'] as const;
 export type PersonalityKey = (typeof PERSONALITY)[number];
+
+/** The doc's rarity scale. Rarity is not power: a common creature with a rare
+ * mutation can be exceptional, so variant creatures read as Unique. */
+export type Rarity = 'Common' | 'Uncommon' | 'Rare' | 'Ancient' | 'Mythic' | 'Unique';
+
+export const RARITY_ORDER: Rarity[] = ['Common', 'Uncommon', 'Rare', 'Ancient', 'Mythic', 'Unique'];
+
+const WILD_WEIGHTS: Record<string, number> = (() => {
+  const max: Record<string, number> = {};
+  for (const b of Object.values(BIOMES)) {
+    for (const [id, w] of Object.entries(b.wild)) max[id] = Math.max(max[id] ?? 0, w);
+  }
+  return max;
+})();
+
+/** How often a species shows up in the wild, mapped to the doc's tiers. */
+export function speciesRarity(speciesId: string): Rarity {
+  const w = WILD_WEIGHTS[speciesId] ?? 0;
+  if (w >= 3) return 'Common';
+  if (w >= 2) return 'Uncommon';
+  if (w >= 0.45) return 'Rare';
+  if (w >= 0.35) return 'Ancient';
+  return 'Mythic';
+}
+
+/** A rare mutation makes any creature exceptional. */
+export function rarityOf(speciesId: string, variant?: string | null): Rarity {
+  return variant ? 'Unique' : speciesRarity(speciesId);
+}

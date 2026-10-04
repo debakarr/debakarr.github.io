@@ -457,6 +457,13 @@
 .wb-variant-golden { color: #ffd28a; border-color: #ffd28a88; }
 .wb-variant-void { color: #b39ddb; border-color: #b39ddb88; }
 
+.wb-rarity-Common { color: var(--wb-dim); }
+.wb-rarity-Uncommon { color: var(--wb-hp); border-color: color-mix(in srgb, var(--wb-hp) 55%, transparent); }
+.wb-rarity-Rare { color: var(--wb-trust); border-color: color-mix(in srgb, var(--wb-trust) 55%, transparent); }
+.wb-rarity-Ancient { color: var(--wb-accent); border-color: color-mix(in srgb, var(--wb-accent) 55%, transparent); }
+.wb-rarity-Mythic { color: var(--wb-accent2); border-color: color-mix(in srgb, var(--wb-accent2) 55%, transparent); }
+.wb-rarity-Unique { color: #e39bff; border-color: #e39bff88; }
+
 /* --- bars and meters --------------------------------------------------------------------- */
 
 .wb-bar {
@@ -809,6 +816,108 @@
   border-radius: 14px;
   padding: 10px;
   background: var(--wb-panel);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Battle feedback: the card shakes on a hit, glows on a heal, and numbers
+   float up from the point of impact. */
+.wb-hit {
+  animation: wb-hit 0.42s ease;
+}
+
+.wb-crit {
+  animation: wb-hit 0.55s ease, wb-critflash 0.55s ease;
+}
+
+.wb-heal {
+  animation: wb-heal 0.7s ease;
+}
+
+.wb-status {
+  animation: wb-status 0.6s ease;
+}
+
+.wb-float {
+  position: absolute;
+  left: 50%;
+  top: 26%;
+  transform: translateX(-50%);
+  font-weight: 800;
+  font-size: 1.15rem;
+  pointer-events: none;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  animation: wb-float 1.2s ease-out forwards;
+  z-index: 2;
+}
+
+.wb-float.dmg {
+  color: var(--wb-danger);
+}
+
+.wb-float.heal {
+  color: var(--wb-hp);
+}
+
+@keyframes wb-hit {
+  0% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px) scale(0.99);
+  }
+  45% {
+    transform: translateX(5px);
+  }
+  70% {
+    transform: translateX(-2px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes wb-critflash {
+  0%,
+  100% {
+    background: var(--wb-panel);
+  }
+  35% {
+    background: color-mix(in srgb, var(--wb-accent2) 30%, var(--wb-panel));
+  }
+}
+
+@keyframes wb-heal {
+  0% {
+    background: color-mix(in srgb, var(--wb-hp) 26%, var(--wb-panel));
+  }
+  100% {
+    background: var(--wb-panel);
+  }
+}
+
+@keyframes wb-status {
+  0% {
+    border-color: var(--wb-accent2);
+  }
+  100% {
+    border-color: var(--wb-line);
+  }
+}
+
+@keyframes wb-float {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px) scale(0.8);
+  }
+  18% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.06);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -34px) scale(1);
+  }
 }
 
 .wb-battlelog {

@@ -24,7 +24,14 @@ export interface Fighter {
 export interface BattleEvent {
   text: string;
   kind: 'attack' | 'status' | 'heal' | 'flee' | 'switch' | 'end' | 'system';
+  /** Who the event lands on, so the UI can animate the right fighter. */
+  on?: 'player' | 'foe';
+  /** Signed HP change, for floating numbers. */
+  hp?: number;
+  crit?: boolean;
 }
+
+const sideOf = (f: Fighter): 'player' | 'foe' => (f.wild ? 'foe' : 'player');
 
 export interface Battle {
   player: Fighter;
@@ -70,7 +77,7 @@ export function createBattle(game: Game, playerCreatureId: string): Battle | nul
   };
 }
 
-function weatherMult(affinity: Affinity, weather: Weather): number {
+export function weatherMult(affinity: Affinity, weather: Weather): number {
   if (weather === 'rain') return affinity === 'thermal' ? 0.8 : affinity === 'aquatic' || affinity === 'conductive' ? 1.12 : 1;
   if (weather === 'storm')
     return affinity === 'conductive' ? 1.3 : affinity === 'atmospheric' ? 1.12 : affinity === 'thermal' ? 0.85 : 1;
@@ -78,7 +85,7 @@ function weatherMult(affinity: Affinity, weather: Weather): number {
   return affinity === 'thermal' || affinity === 'radiant' ? 1.15 : affinity === 'aquatic' ? 0.9 : 1;
 }
 
-function affinityMult(ability: Affinity, defender: Creature): number {
+export function affinityMult(ability: Affinity, defender: Creature): number {
   const def = SPECIES_BY_ID[defender.speciesId].affinities;
   const strong = STRONG[ability] ?? [];
   if (strong.some((a) => def.includes(a))) return 1.5;
@@ -118,32 +125,32 @@ function hit(
   defender.hp = Math.max(0, defender.hp - dmg);
   const label = ability.power > 0 ? ability.name : 'a feint';
   const note = crit ? ' A critical hit!' : mult >= 1.5 ? ' It hits hard!' : mult < 0.8 ? ' Not very effective.' : '';
-  events.push({ kind: 'attack', text: `${attacker.name} uses ${label}: ${dmg} damage.${note}` });
+  events.push({ kind: 'attack', text: `${attacker.name} uses ${label}: ${dmg} damage.${note}`, on: sideOf(defender), hp: -dmg, crit });
   if (ability.effect === 'drain' && ability.power > 0) {
-    const heal = Math.round(dmg * 0.5);
-    attacker.hp = Math.min(attacker.stats.maxHp, attacker.hp + heal);
-    events.push({ kind: 'heal', text: `${attacker.name} drains ${heal} HP back.` });
+    const heal = Math.min(Math.round(dmg * 0.5), attacker.stats.maxHp - attacker.hp);
+    attacker.hp = Math.min(attacker.stats.maxHp, attacker.hp + Math.round(dmg * 0.5));
+    events.push({ kind: 'heal', text: `${attacker.name} drains ${Math.round(dmg * 0.5)} HP back.`, on: sideOf(attacker), hp: heal });
   }
   if (ability.effect === 'heal') {
-    const heal = Math.round(attacker.stats.maxHp * 0.32);
-    attacker.hp = Math.min(attacker.stats.maxHp, attacker.hp + heal);
-    events.push({ kind: 'heal', text: `${attacker.name} heals ${heal} HP.` });
+    const heal = Math.min(Math.round(attacker.stats.maxHp * 0.32), attacker.stats.maxHp - attacker.hp);
+    attacker.hp = Math.min(attacker.stats.maxHp, attacker.hp + Math.round(attacker.stats.maxHp * 0.32));
+    events.push({ kind: 'heal', text: `${attacker.name} heals ${Math.round(attacker.stats.maxHp * 0.32)} HP.`, on: sideOf(attacker), hp: heal });
   }
   if (ability.effect === 'guard') {
     attacker.effects.guard = 2;
-    events.push({ kind: 'status', text: `${attacker.name} guards.` });
+    events.push({ kind: 'status', text: `${attacker.name} guards.`, on: sideOf(attacker) });
   }
   if (ability.effect === 'confuse') {
     defender.effects.confuse = 2;
-    events.push({ kind: 'status', text: `${defender.name} is confused.` });
+    events.push({ kind: 'status', text: `${defender.name} is confused.`, on: sideOf(defender) });
   }
   if (ability.effect === 'weaken') {
     defender.effects.weaken = 2;
-    events.push({ kind: 'status', text: `${defender.name} is weakened.` });
+    events.push({ kind: 'status', text: `${defender.name} is weakened.`, on: sideOf(defender) });
   }
   if (ability.effect === 'focus') {
     attacker.effects.focus = true;
-    events.push({ kind: 'status', text: `${attacker.name} focuses.` });
+    events.push({ kind: 'status', text: `${attacker.name} focuses.`, on: sideOf(attacker) });
   }
 }
 
@@ -165,7 +172,7 @@ function usableAbilities(f: Fighter): Ability[] {
 
 function actWith(game: Game, battle: Battle, side: Fighter, foe: Fighter, ability: Ability, events: BattleEvent[]): void {
   if (side.effects.confuse > 0 && game.rng.chance(0.3)) {
-    events.push({ kind: 'status', text: `${side.name} is confused and misses its turn.` });
+    events.push({ kind: 'status', text: `${side.name} is confused and misses its turn.`, on: sideOf(side) });
     return;
   }
   hit(game, battle, side, foe, ability, events);
@@ -265,8 +272,9 @@ export function playerAct(game: Game, battle: Battle, action: BattleAction): voi
       const heal = item === 'salve' ? 999 : item === 'moonfruit' ? 25 : item === 'berry' ? 15 : 0;
       if (!heal || (game.state.items[item] ?? 0) <= 0) return true;
       game.state.items[item] -= 1;
+      const healed = Math.min(heal, battle.player.stats.maxHp - battle.player.hp);
       battle.player.hp = Math.min(battle.player.stats.maxHp, battle.player.hp + heal);
-      events.push({ kind: 'heal', text: `${battle.player.name} recovers ${Math.min(heal, battle.player.stats.maxHp - battle.player.hp)} HP.` });
+      events.push({ kind: 'heal', text: `${battle.player.name} recovers ${healed} HP.`, on: 'player', hp: healed });
       return true;
     }
     const ability =

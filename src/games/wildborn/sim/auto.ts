@@ -2,7 +2,7 @@
 // captures new species, trains, feeds toward a chosen evolution branch,
 // breeds, and leaves a visible log. The player can take over at any time.
 
-import { ABILITIES, BIOMES, SPECIES_BY_ID, type Exposure } from '../data/species';
+import { ABILITIES, BIOMES, ITEMS, SPECIES_BY_ID, type Exposure } from '../data/species';
 import {
   Game,
   evaluateEvolution,
@@ -11,7 +11,7 @@ import {
   type Creature,
   type GameState,
 } from './game';
-import { createBattle, playerAct, wildChoose, type Battle, type BattleAction } from './battle';
+import { affinityMult, createBattle, playerAct, weatherMult, wildChoose, type Battle, type BattleAction } from './battle';
 
 const REGION_CYCLE: (keyof typeof BIOMES)[] = ['greenwood', 'meadow', 'wetlands', 'caves', 'ember', 'ruins'];
 
@@ -25,37 +25,72 @@ export function autoStep(game: Game, battle: Battle | null): { text: string; sta
 
 // --- battles ------------------------------------------------------------------------------
 
+/** How well a creature's abilities match up against a defender, best case. */
+function matchupEdge(a: Creature, d: Creature, weather: GameState['weather']): number {
+  let best = 1;
+  for (const id of a.abilities) {
+    const ab = ABILITIES[id];
+    if (!ab || ab.power <= 0) continue;
+    best = Math.max(best, affinityMult(ab.affinity, d) * weatherMult(ab.affinity, weather));
+  }
+  return best;
+}
+
 function battleStep(game: Game, battle: Battle): string {
   const me = battle.player;
+  const foe = battle.foe;
   const hpFrac = me.hp / me.stats.maxHp;
   const state = game.state;
-  if (hpFrac < 0.3 && (state.items.salve ?? 0) > 0) {
-    playerAct(game, battle, { type: 'item', itemId: 'salve' });
-    return `${me.name} is patched up mid-battle.`;
+  // Live to fight another day: a hopeless battle is one to leave.
+  if (battle.turn > 3 && hpFrac < 0.22 && foe.hp / foe.stats.maxHp > 0.55) {
+    playerAct(game, battle, { type: 'flee' });
+    return `${me.name} withdraws from a battle it cannot win.`;
   }
-  if (hpFrac < 0.22) {
-    const swap = state.team.find((c) => c.id !== me.creature.id && c.hp > statsOf(c).maxHp * 0.6);
-    if (swap) {
-      playerAct(game, battle, { type: 'switch', creatureId: swap.id });
-      return `Switching out: ${swap.name} takes over.`;
+  // Heal early rather than late.
+  if (hpFrac < 0.45) {
+    const item =
+      (state.items.salve ?? 0) > 0 && hpFrac < 0.28 ? 'salve' : (state.items.berry ?? 0) > 0 ? 'berry' : (state.items.salve ?? 0) > 0 ? 'salve' : null;
+    if (item) {
+      playerAct(game, battle, { type: 'item', itemId: item });
+      return `${me.name} uses a ${ITEMS[item].name.toLowerCase()} mid-battle.`;
     }
   }
-  const ids = me.creature.abilities;
+  // A bad match-up is worth switching out of.
+  const edge = matchupEdge(me.creature, foe.creature, state.weather);
+  if (hpFrac < 0.6 && edge < 1.05) {
+    const swap = state.team.find(
+      (c) => c.id !== me.creature.id && c.hp > statsOf(c).maxHp * 0.6 && matchupEdge(c, foe.creature, state.weather) >= 1.3,
+    );
+    if (swap) {
+      playerAct(game, battle, { type: 'switch', creatureId: swap.id });
+      return `Switching out: ${swap.name} has the better match-up.`;
+    }
+  }
+  // Heal when hurt; otherwise the ability with the best expected damage.
   let bestIdx = -1;
-  let bestScore = -1;
-  ids.forEach((id, i) => {
+  let bestScore = -Infinity;
+  me.creature.abilities.forEach((id, i) => {
     const ab = ABILITIES[id];
     if (!ab) return;
-    if (ab.effect === 'heal' && hpFrac < 0.45) {
-      bestScore = 1e6 + i;
-      bestIdx = i;
-    } else if (ab.power > 0 && ab.power > bestScore) {
-      bestScore = ab.power;
+    if (ab.effect === 'heal' && hpFrac < 0.5) {
+      if (1e6 > bestScore) {
+        bestScore = 1e6;
+        bestIdx = i;
+      }
+      return;
+    }
+    const boost = battle.biome in BIOMES && ab.affinity === BIOMES[battle.biome as keyof typeof BIOMES].boost ? 1.25 : 1;
+    const dmg = ab.power * affinityMult(ab.affinity, foe.creature) * weatherMult(ab.affinity, battle.weather) * boost;
+    // A fresh status move is worth about one hit's damage.
+    const status = ab.power === 0 && ab.effect && foe.effects.confuse === 0 && foe.effects.weaken === 0 ? 38 : 0;
+    const score = dmg + status;
+    if (score > bestScore) {
+      bestScore = score;
       bestIdx = i;
     }
   });
-  playerAct(game, battle, { type: 'ability', index: bestIdx < 0 ? -1 : bestIdx });
-  return `${me.name} ${bestIdx < 0 ? 'strikes' : `uses ${ABILITIES[ids[bestIdx]].name}`}.`;
+  playerAct(game, battle, { type: 'ability', index: bestIdx });
+  return `${me.name} ${bestIdx < 0 ? 'strikes' : `uses ${ABILITIES[me.creature.abilities[bestIdx]].name}`}.`;
 }
 
 // --- wild encounters ------------------------------------------------------------------------
@@ -71,9 +106,15 @@ function wildStep(game: Game): { text: string; startBattle?: boolean } {
   if (!known && tries === 1) {
     return { text: game.observeWild() };
   }
-  const fighter = s.team.find((c) => c.hp > statsOf(c).maxHp * 0.35);
-  // Proud creatures are battled once to earn their respect.
-  if (sp.likes === 'battle' && fighter && !(s.counts.autoFought ?? 0)) {
+  const fighter = s.team.filter((c) => c.hp > statsOf(c).maxHp * 0.5).sort((a, b) => b.level - a.level)[0];
+  // Proud creatures are battled once to earn their respect — but only with a
+  // real fighter in a fair match-up (a Support at parity will just lose).
+  const fair =
+    !!fighter &&
+    fighter.level >= w.level &&
+    (['Striker', 'Tank'].includes(SPECIES_BY_ID[fighter.speciesId].role) || fighter.level >= w.level + 2) &&
+    statsOf(fighter).power * matchupEdge(fighter, w, s.weather) >= statsOf(w).power * 0.9;
+  if (sp.likes === 'battle' && fair && !(s.counts.autoFought ?? 0)) {
     s.counts.autoFought = 1;
     return { text: `${sp.name} respects a fight — one is starting.`, startBattle: true };
   }
@@ -189,12 +230,21 @@ export function autoWantsBattle(game: Game): boolean {
   return SPECIES_BY_ID[w.speciesId].likes === 'battle' && (s.counts.autoTries ?? 0) >= 2;
 }
 
-/** Start the battle the auto trainer decided on. */
+/** Start the battle the auto trainer decided on, with its best match-up. */
 export function autoStartBattle(game: Game): Battle | null {
   const s = game.state;
   const w = s.wild;
   if (!w) return null;
-  const lead = s.team.filter((c) => c.hp > 0).sort((a, b) => b.hp - a.hp)[0];
+  const lead = s.team
+    .filter((c) => c.hp > statsOf(c).maxHp * 0.35)
+    .sort(
+      (a, b) =>
+        (b.level >= w.level - 1 ? 1 : 0) * 10 +
+        matchupEdge(b, w, s.weather) +
+        b.hp / statsOf(b).maxHp +
+        b.level / 30 -
+        ((a.level >= w.level - 1 ? 1 : 0) * 10 + matchupEdge(a, w, s.weather) + a.hp / statsOf(a).maxHp + a.level / 30),
+    )[0];
   if (!lead) return null;
   const battle = createBattle(game, lead.id);
   if (battle) game.log('auto', `The trainer sends ${lead.name} against the wild ${SPECIES_BY_ID[w.speciesId].name}.`);

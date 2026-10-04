@@ -5,7 +5,7 @@ import { clear, download, h, pickFile } from '../../shared/dom';
 import { randomSeedString } from '../../shared/rng';
 import { SaveStore } from '../../shared/savefile';
 import { icons, type IconKey } from '../art';
-import { ABILITIES, AFFINITY, BIOMES, ITEMS, SPECIES, SPECIES_BY_ID, type BiomeId } from '../data/species';
+import { ABILITIES, AFFINITY, BIOMES, ITEMS, SPECIES, SPECIES_BY_ID, rarityOf, speciesRarity, type BiomeId } from '../data/species';
 import {
   ACHIEVEMENTS,
   Game,
@@ -75,6 +75,7 @@ export class App {
   private overlayEl!: HTMLElement;
   private logEl!: HTMLElement;
   private autoTimer: ReturnType<typeof setInterval> | null = null;
+  private battleSeen = 0;
   private breedA = '';
   private breedB = '';
 
@@ -419,7 +420,7 @@ export class App {
     this.overlay = {
       kind: 'notice',
       text:
-        `${sp.name} — ${sp.role}. ${sp.blurb} Affinities: ${sp.affinities.map((a) => AFFINITY[a].label).join(', ')}. ` +
+        `${sp.name} — ${sp.role} · ${speciesRarity(speciesId)}. ${sp.blurb} Affinities: ${sp.affinities.map((a) => AFFINITY[a].label).join(', ')}. ` +
         (sp.branches
           ? `Evolution branches: ${sp.branches.map((b) => (discovered.includes(b.to) || state === 'captured' ? SPECIES_BY_ID[b.to].name : '???')).join(', ')}.`
           : 'Fully evolved.'),
@@ -549,6 +550,7 @@ export class App {
     return h('div', { class: 'wb-sheet wb-sheet-wild' },
       h('div', { class: 'wb-sheet-head' },
         h('h2', null, known ? sp.name : 'Unknown creature'),
+        known ? chip(rarityOf(w.speciesId, w.variant), `wb-rarity-${rarityOf(w.speciesId, w.variant)}`) : null,
         chip(known ? `${sp.role} · Lv ${w.level}` : `Lv ${w.level}`, 'wb-chip-soft'),
         h('button', { class: 'wb-iconbtn', title: 'Leave', onclick: () => this.act(() => { this.game!.leaveWild(); this.overlay = null; }) }, gi('u-close')),
       ),
@@ -583,6 +585,7 @@ export class App {
       return;
     }
     this.battle = createBattle(g, lead.id);
+    this.battleSeen = 0;
     this.overlay = { kind: 'battle' };
     this.render();
   }
@@ -603,13 +606,13 @@ export class App {
         h('button', { class: 'wb-iconbtn', title: 'Close', onclick: () => this.endBattle() }, gi('u-close')),
       ),
       h('div', { class: 'wb-battlefield' },
-        h('div', { class: 'wb-fighter wb-fighter-foe' },
+        h('div', { class: 'wb-fighter wb-fighter-foe', 'data-side': 'foe' },
           h('div', { class: 'wb-wild-art' }, creatureSVG(foe.creature, 110)),
           h('b', null, foe.name),
           meter('HP', foe.hp, foe.stats.maxHp, foe.hp / foe.stats.maxHp < 0.35 ? 'wb-bar-low' : 'wb-bar-hp'),
           this.effectsLine(foe),
         ),
-        h('div', { class: 'wb-fighter' },
+        h('div', { class: 'wb-fighter', 'data-side': 'player' },
           h('div', { class: 'wb-wild-art' }, creatureSVG(me.creature, 110)),
           h('b', null, `${me.creature.name} · Lv ${me.creature.level}`),
           meter('HP', me.hp, me.stats.maxHp, me.hp / me.stats.maxHp < 0.35 ? 'wb-bar-low' : 'wb-bar-hp'),
@@ -667,8 +670,30 @@ export class App {
 
   private endBattle(): void {
     this.battle = null;
+    this.battleSeen = 0;
     this.overlay = this.game!.state.wild ? { kind: 'wild' } : null;
     this.render();
+  }
+
+  /** Battle feedback: floating numbers and hit/heal pulses from fresh events. */
+  private animateBattle(scope: Element): void {
+    const b = this.battle;
+    if (!b) return;
+    const fresh = b.events.slice(this.battleSeen);
+    this.battleSeen = b.events.length;
+    for (const e of fresh) {
+      if (!e.on) continue;
+      const card = scope.querySelector(`[data-side="${e.on}"]`);
+      if (!card) continue;
+      if (e.kind === 'attack') card.classList.add(e.crit ? 'wb-hit wb-crit' : 'wb-hit');
+      else if (e.kind === 'heal') card.classList.add('wb-heal');
+      else if (e.kind === 'status') card.classList.add('wb-status');
+      if (e.hp) {
+        const fl = h('span', { class: `wb-float ${e.hp > 0 ? 'heal' : 'dmg'}` }, e.hp > 0 ? `+${Math.round(e.hp)}` : `−${Math.round(-e.hp)}`);
+        card.appendChild(fl);
+        setTimeout(() => fl.remove(), 1300);
+      }
+    }
   }
 
   // --- feed / switch picker ------------------------------------------------------------------------
@@ -732,7 +757,7 @@ export class App {
     const discovered = g.state.discovered[c.bornSpeciesId] ?? [];
     return h('div', { class: 'wb-sheet wb-sheet-creature' },
       h('div', { class: 'wb-sheet-head' },
-        h('h2', null, c.name, c.variant ? chip(c.variant, `wb-variant-${c.variant}`) : null),
+        h('h2', null, c.name, chip(rarityOf(c.speciesId, c.variant), `wb-rarity-${rarityOf(c.speciesId, c.variant)}`), c.variant ? chip(c.variant, `wb-variant-${c.variant}`) : null),
         chip(`Lv ${c.level}`, 'wb-chip-soft'),
         h('button', { class: 'wb-iconbtn', title: 'Close', onclick: () => this.closeOverlay() }, gi('u-close')),
       ),
@@ -934,6 +959,7 @@ export class App {
                       : this.noticeOverlay(o?.kind === 'notice' ? o.text : '');
     this.overlayEl.append(h('div', { class: 'wb-overlay-scrim', onclick: () => { if (this.overlay?.kind !== 'battle') this.closeOverlay(); } }), inner);
     this.paintBadges(inner);
+    this.animateBattle(inner);
   }
 
   /** Fill [data-species] placeholders with creature art (creature id or species id). */
@@ -969,8 +995,14 @@ export class App {
     const g = this.game;
     if (!g) return;
     const result = autoStep(g, this.battle);
-    if (result.startBattle && !this.battle) this.battle = autoStartBattle(g);
-    if (this.battle?.over) this.battle = null;
+    if (result.startBattle && !this.battle) {
+      this.battle = autoStartBattle(g);
+      this.battleSeen = 0;
+    }
+    if (this.battle?.over) {
+      this.battle = null;
+      this.battleSeen = 0;
+    }
     if (this.battle && this.overlay?.kind !== 'battle') this.overlay = { kind: 'battle' };
     if (!this.battle && this.overlay?.kind === 'battle') this.overlay = g.state.wild ? { kind: 'wild' } : null;
     g.settle();

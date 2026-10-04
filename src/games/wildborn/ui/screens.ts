@@ -2,7 +2,7 @@
 // rows and cards. All vanilla DOM via the shared h() helper.
 
 import { h } from '../../shared/dom';
-import { ABILITIES, AFFINITY, ITEMS, SPECIES_BY_ID, type Exposure } from '../data/species';
+import { ABILITIES, AFFINITY, ITEMS, SPECIES_BY_ID, rarityOf, speciesRarity, type Exposure } from '../data/species';
 import { personalityWords, statsOf, type Creature, type GameState, type GuideState, type Quest } from '../sim/game';
 
 export function bar(value: number, max: number, cls = ''): HTMLElement {
@@ -39,7 +39,7 @@ export function creatureRow(c: Creature, onClick: () => void, right?: HTMLElemen
   return h('button', { class: 'wb-row', onclick: onClick },
     h('span', { class: 'wb-row-badge', 'data-species': c.id }),
     h('span', { class: 'wb-row-main' },
-      h('b', null, c.name, c.variant ? chip(c.variant, `wb-variant-${c.variant}`) : null),
+      h('b', null, c.name, chip(rarityOf(c.speciesId, c.variant), `wb-rarity-${rarityOf(c.speciesId, c.variant)}`), c.variant ? chip(c.variant, `wb-variant-${c.variant}`) : null),
       h('small', null, `${sp.name} · Lv ${c.level} · ${sp.role}`),
       hpLine(c),
     ),
@@ -111,7 +111,7 @@ export function guideCard(speciesId: string, state: GuideState, onClick?: () => 
   return h('button', { class: `wb-guidecard wb-guide-${state}`, onclick: onClick },
     h('span', { class: 'wb-guide-art', 'data-species': known ? speciesId : '' }),
     h('b', null, known ? sp.name : '???'),
-    h('small', null, known ? `${sp.role} · ${state}` : 'Unknown'),
+    h('small', null, known ? `${sp.role} · ${speciesRarity(speciesId)} · ${state}` : 'Unknown'),
   );
 }
 
