@@ -9,7 +9,7 @@ draft: false
 
 This is going to be a walkthrough of one of the labs I did on Udemy to build a Serverless Workflow in AWS. The task of the lab was to take any JSON file uploaded to an S3 bucket and store the data from it in DynamoDB.
 
-![](/posts/aws/s3todb/serverless_workflow.png)
+![](/aws/s3todb/serverless_workflow.png)
 
 > **INFO — Source code for diagram**
 > 
@@ -51,54 +51,54 @@ What it covers:
 -   Navigate to [console.aws.amazon.com/console/home](https://console.aws.amazon.com/console/home)
 -   Click “Services”
 
-![](/posts/aws/s3todb/create-bucket/click-services.jpg)
+![](/aws/s3todb/create-bucket/click-services.jpg)
 
 -   Click “Storage”
 
-![](/posts/aws/s3todb/create-bucket/click-storage.jpg)
+![](/aws/s3todb/create-bucket/click-storage.jpg)
 
 -   Click “S3”
 
-![](/posts/aws/s3todb/create-bucket/click-s3.jpg)
+![](/aws/s3todb/create-bucket/click-s3.jpg)
 
 -   Click “Create bucket”
 
-![](/posts/aws/s3todb/create-bucket/click-create-button1.jpg)
+![](/aws/s3todb/create-bucket/click-create-button1.jpg)
 
 -   Give some unique name for bucket like “json-processing-bucket”
 
-![](/posts/aws/s3todb/create-bucket/name-bucket.jpg)
+![](/aws/s3todb/create-bucket/name-bucket.jpg)
 
 -   Click “Create bucket”
 
-![](/posts/aws/s3todb/create-bucket/click-create-button2.jpg)
+![](/aws/s3todb/create-bucket/click-create-button2.jpg)
 
 ## Creating Table in DynamoDB
 
 -   Navigate to [console.aws.amazon.com/console/home](https://console.aws.amazon.com/console/home)
 -   Click “Services”
 
-![](/posts/aws/s3todb/create-table-in-db/click-services.jpg)
+![](/aws/s3todb/create-table-in-db/click-services.jpg)
 
 -   Click “Database”
 
-![](/posts/aws/s3todb/create-table-in-db/click-database.jpg)
+![](/aws/s3todb/create-table-in-db/click-database.jpg)
 
 -   Click “DynamoDB”
 
-![](/posts/aws/s3todb/create-table-in-db/click-dynamodb.jpg)
+![](/aws/s3todb/create-table-in-db/click-dynamodb.jpg)
 
 -   Click “Create table”
 
-![](/posts/aws/s3todb/create-table-in-db/click-create-table1.jpg)
+![](/aws/s3todb/create-table-in-db/click-create-table1.jpg)
 
 -   Give some unique name for DB Table like “JSONItemTable” and provide a primary key like “id”. This will be later used to update data via the AWS Lambda function.
 
-![](/posts/aws/s3todb/create-table-in-db/table-data.jpg)
+![](/aws/s3todb/create-table-in-db/table-data.jpg)
 
 -   Click “Create table”
 
-![](/posts/aws/s3todb/create-table-in-db/click-create-table2.jpg)
+![](/aws/s3todb/create-table-in-db/click-create-table2.jpg)
 
 ## Create Lambda Function
 
@@ -115,80 +115,80 @@ To create this role
 
 -   Click “Services”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-services.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-services.jpg)
 
 -   Click “Security, Identity, & Compliance”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-security-identity-compliance.jpg)
 
 -   Click “IAM”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-iam.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-iam.jpg)
 
 -   Click “Roles”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-role.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-role.jpg)
 
 -   Click “Create role”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-create-role.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-create-role.jpg)
 
 -   Select “AWS Service” and the “Lambda”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-lambda.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-lambda.jpg)
 
 -   Click “Next”
 -   Filter the roles. You can filter with this “AmazonS3ReadOnlyAccess|AWSLambdaSQSQueueExecutionRole|AmazonDynamoDBFullAccess|AWSLambdaBasicExecutionRole”
 
-![](/posts/aws/s3todb/create-role-for-lambda/filter.jpg)
+![](/aws/s3todb/create-role-for-lambda/filter.jpg)
 
-![](/posts/aws/s3todb/create-role-for-lambda/select-role.jpg)
+![](/aws/s3todb/create-role-for-lambda/select-role.jpg)
 
 -   Click “Next”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-next-role.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-next-role.jpg)
 
 -   Provide a name to the role like “LambdaRoleForJSONItems”
 
-![](/posts/aws/s3todb/create-role-for-lambda/give-role-name.jpg)
+![](/aws/s3todb/create-role-for-lambda/give-role-name.jpg)
 
 -   Click “Create role”
 
-![](/posts/aws/s3todb/create-role-for-lambda/click-create-role2.jpg)
+![](/aws/s3todb/create-role-for-lambda/click-create-role2.jpg)
 
 ### Create Lambda Function
 
 -   Click “Services”
 
-![](/posts/aws/s3todb/create-lambda/click-services.jpg)
+![](/aws/s3todb/create-lambda/click-services.jpg)
 
 -   Click “Compute”
 
-![](/posts/aws/s3todb/create-lambda/click-compute.jpg)
+![](/aws/s3todb/create-lambda/click-compute.jpg)
 
 -   Click “Lambda”
 
-![](/posts/aws/s3todb/create-lambda/click-lambda.jpg)
+![](/aws/s3todb/create-lambda/click-lambda.jpg)
 
 -   Click “Create function”
 
-![](/posts/aws/s3todb/create-lambda/click-create-function.jpg)
+![](/aws/s3todb/create-lambda/click-create-function.jpg)
 
 -   Click “Author from scratch”
 
-![](/posts/aws/s3todb/create-lambda/click-author-from-scrach.jpg)
+![](/aws/s3todb/create-lambda/click-author-from-scrach.jpg)
 
 -   Provide a Function name. Here I am calling it “JSONProcessingLambdaFunctionTriggeredBySQS”. Also I am going to use Python as Runtime.
 
-![](/posts/aws/s3todb/create-lambda/config-lambda1.jpg)
+![](/aws/s3todb/create-lambda/config-lambda1.jpg)
 
 -   Now we can use the role which we created and link it with this Lambda Function.
 
-![](/posts/aws/s3todb/create-lambda/config-lambda-role.jpg)
+![](/aws/s3todb/create-lambda/config-lambda-role.jpg)
 
 -   Click on “Create function”
 
-![](/posts/aws/s3todb/create-lambda/click-create-function2.jpg)
+![](/aws/s3todb/create-lambda/click-create-function2.jpg)
 
 -   Next screen we can add the Lambda “Code”. I am going to add the Python Code. It is well documented.
 
@@ -274,13 +274,13 @@ def lambda_handler(event, context):
     return result
 ```
 
-![](/posts/aws/s3todb/create-lambda/click-code.jpg)
+![](/aws/s3todb/create-lambda/click-code.jpg)
 
-![](/posts/aws/s3todb/create-lambda/paste-code.jpg)
+![](/aws/s3todb/create-lambda/paste-code.jpg)
 
 -   Click “Deploy”
 
-![](/posts/aws/s3todb/create-lambda/click-deploy.jpg)
+![](/aws/s3todb/create-lambda/click-deploy.jpg)
 
 ## Application integration
 
@@ -292,49 +292,49 @@ To have high resilience we will also have a **dead-letter queue** which will be 
 
 -   Click “Services”
 
-![](/posts/aws/s3todb/create-queue/click-services.jpg)
+![](/aws/s3todb/create-queue/click-services.jpg)
 
 -   Click “Application Integration”
 
-![](/posts/aws/s3todb/create-queue/click-application-integration.jpg)
+![](/aws/s3todb/create-queue/click-application-integration.jpg)
 
 -   Click “Simple Queue Service”
 
-![](/posts/aws/s3todb/create-queue/click-simple-queue-service.jpg)
+![](/aws/s3todb/create-queue/click-simple-queue-service.jpg)
 
 -   Click “Create queue”
 
-![](/posts/aws/s3todb/create-queue/click-create-queue.jpg)
+![](/aws/s3todb/create-queue/click-create-queue.jpg)
 
 -   Provide a name to dead-letter queue. Here I am giving it a name “JSONDeadLetterQueue”
 
-![](/posts/aws/s3todb/create-queue/dead-letter-queue-config.jpg)
+![](/aws/s3todb/create-queue/dead-letter-queue-config.jpg)
 
 -   We can also set the retention policy. For now I am setting it to 14 days.
 
-![](/posts/aws/s3todb/create-queue/dead-letter-queue-config2.jpg)
+![](/aws/s3todb/create-queue/dead-letter-queue-config2.jpg)
 
 -   Click “Create queue”.
 
-![](/posts/aws/s3todb/create-queue/click-create-queue2.jpg)
+![](/aws/s3todb/create-queue/click-create-queue2.jpg)
 
 ### Create queue for S3 bucket event notification
 
 -   Click back “Queue”
 
-![](/posts/aws/s3todb/create-queue/click-back-queue.jpg)
+![](/aws/s3todb/create-queue/click-back-queue.jpg)
 
 -   Click “Create queue” again.
 
-![](/posts/aws/s3todb/create-queue/click-create-queue3.jpg)
+![](/aws/s3todb/create-queue/click-create-queue3.jpg)
 
 -   Set the name for the queue. I am naming it “JSONProcessingQueue”.
 
-![](/posts/aws/s3todb/create-queue/queue-config.jpg)
+![](/aws/s3todb/create-queue/queue-config.jpg)
 
 -   Next step will be to modify the access policy for the queue. For this you will need the account ID as well as the S3 bucket name. You can get the account ID under the profile name.
 
-![](/posts/aws/s3todb/create-queue/copy-account-number.jpg)
+![](/aws/s3todb/create-queue/copy-account-number.jpg)
 
 -   Under “Access policy” click on “Advanced” and paste the following json.
 
@@ -368,127 +368,127 @@ To have high resilience we will also have a **dead-letter queue** which will be 
 }
 ```
 
-![](/posts/aws/s3todb/create-queue/modify-access-policy.jpg)
+![](/aws/s3todb/create-queue/modify-access-policy.jpg)
 
 -   Select the dead-letter queue we had created in the previous section.
 
-![](/posts/aws/s3todb/create-queue/set-dead-queue.jpg)
+![](/aws/s3todb/create-queue/set-dead-queue.jpg)
 
 -   Click “Create queue”
 
-![](/posts/aws/s3todb/create-queue/click-create-queue4.jpg)
+![](/aws/s3todb/create-queue/click-create-queue4.jpg)
 
 -   Click “Lambda triggers”
 
-![](/posts/aws/s3todb/create-queue/click-lambda-trigger.jpg)
+![](/aws/s3todb/create-queue/click-lambda-trigger.jpg)
 
 -   Click “Configure Lambda function trigger”
 
-![](/posts/aws/s3todb/create-queue/click-configure-lambda-function.jpg)
+![](/aws/s3todb/create-queue/click-configure-lambda-function.jpg)
 
 -   Select the lambda function which we created before.
 
-![](/posts/aws/s3todb/create-queue/select-the-lambda-function.jpg)
+![](/aws/s3todb/create-queue/select-the-lambda-function.jpg)
 
 -   Click “Save”
 
-![](/posts/aws/s3todb/create-queue/click-save.jpg)
+![](/aws/s3todb/create-queue/click-save.jpg)
 
 ## Push event notification from S3 to SQS
 
 -   Click “Services”
 
-![](/posts/aws/s3todb/s3-event-notification/click-services.jpg)
+![](/aws/s3todb/s3-event-notification/click-services.jpg)
 
 -   Click “Storage”
 
-![](/posts/aws/s3todb/s3-event-notification/click-storage.jpg)
+![](/aws/s3todb/s3-event-notification/click-storage.jpg)
 
 -   Click “S3”
 
-![](/posts/aws/s3todb/s3-event-notification/click-s3.jpg)
+![](/aws/s3todb/s3-event-notification/click-s3.jpg)
 
 -   Click “json-processing-bucket” (Your bucket name might be different)
 
-![](/posts/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg)
+![](/aws/s3todb/s3-event-notification/click-json-processing-bucket.jpg)
 
 -   Click “Properties”
 
-![](/posts/aws/s3todb/s3-event-notification/click-properties.jpg)
+![](/aws/s3todb/s3-event-notification/click-properties.jpg)
 
 -   Click “Create event notification”
 
-![](/posts/aws/s3todb/s3-event-notification/click-create-event-notification.jpg)
+![](/aws/s3todb/s3-event-notification/click-create-event-notification.jpg)
 
 -   Give the event notification a name. I have given it the name “sqs-event-notification”. Also I have given access to all object creation events. So anytime a new object is pushed to S3, it will trigger an event to the SQS queue.
 
-![](/posts/aws/s3todb/s3-event-notification/event-notification-config.jpg)
+![](/aws/s3todb/s3-event-notification/event-notification-config.jpg)
 
 -   We can link the SQS under “Destination”
 
-![](/posts/aws/s3todb/s3-event-notification/sqs-under-destination.jpg)
+![](/aws/s3todb/s3-event-notification/sqs-under-destination.jpg)
 
 -   Click “Save changes”
 
-![](/posts/aws/s3todb/s3-event-notification/click-save-changes.jpg)
+![](/aws/s3todb/s3-event-notification/click-save-changes.jpg)
 
 ## Try out to see if the DynamoDB database is getting updated on new push
 
 -   Click “Services”
 
-![](/posts/aws/s3todb/upload-to-s3/click-services.jpg)
+![](/aws/s3todb/upload-to-s3/click-services.jpg)
 
 -   Click “Storage”
 
-![](/posts/aws/s3todb/upload-to-s3/click-storage.jpg)
+![](/aws/s3todb/upload-to-s3/click-storage.jpg)
 
 -   Click “S3”
 
-![](/posts/aws/s3todb/upload-to-s3/click-s3.jpg)
+![](/aws/s3todb/upload-to-s3/click-s3.jpg)
 
 -   Click “json-processing-bucket”
 
-![](/posts/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg)
+![](/aws/s3todb/upload-to-s3/click-json-processing-bucket.jpg)
 
 -   Click “Upload”
 
-![](/posts/aws/s3todb/upload-to-s3/click-upload.jpg)
+![](/aws/s3todb/upload-to-s3/click-upload.jpg)
 
 -   Click “Add files”
 
-![](/posts/aws/s3todb/upload-to-s3/click-add-files.jpg)
+![](/aws/s3todb/upload-to-s3/click-add-files.jpg)
 
 -   Click “Upload” and select the file. For demonstration purposes, try to upload a valid JSON file
 
-![](/posts/aws/s3todb/upload-to-s3/upload.jpg)
+![](/aws/s3todb/upload-to-s3/upload.jpg)
 
 -   Click “Services”
 
-![](/posts/aws/s3todb/upload-to-s3/click-services.jpg)
+![](/aws/s3todb/upload-to-s3/click-services.jpg)
 
 -   Click “Database”
 
-![](/posts/aws/s3todb/upload-to-s3/click-database.jpg)
+![](/aws/s3todb/upload-to-s3/click-database.jpg)
 
 -   Click “DynamoDB”
 
-![](/posts/aws/s3todb/upload-to-s3/click-dynamo-db.jpg)
+![](/aws/s3todb/upload-to-s3/click-dynamo-db.jpg)
 
 -   Click “Tables”
 
-![](/posts/aws/s3todb/upload-to-s3/click-tables.jpg)
+![](/aws/s3todb/upload-to-s3/click-tables.jpg)
 
 -   Click “JSONItemTable”
 
-![](/posts/aws/s3todb/upload-to-s3/click-json-item-table.jpg)
+![](/aws/s3todb/upload-to-s3/click-json-item-table.jpg)
 
 -   Click “Explore table items”
 
-![](/posts/aws/s3todb/upload-to-s3/click-explore-table-items.jpg)
+![](/aws/s3todb/upload-to-s3/click-explore-table-items.jpg)
 
 -   Verify that the data is uploaded properly
 
-![](/posts/aws/s3todb/upload-to-s3/verify-data.jpg)
+![](/aws/s3todb/upload-to-s3/verify-data.jpg)
 
 That covers the whole process of deploying a simple serverless application using AWS Lambda.
 

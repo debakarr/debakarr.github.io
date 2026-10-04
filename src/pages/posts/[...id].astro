@@ -24,9 +24,9 @@ const toc = headings.filter((h) => h.depth <= 3);
 ---
 
 <BaseLayout title={`${post.data.title} — Debakar Roy`} description={post.data.description} wide>
-  <article class="py-8 sm:py-10">
+  <article class="py-8 sm:py-10" data-pagefind-body>
     <header class="mb-10 border-b border-line pb-8">
-      <div class="mb-4 flex flex-wrap gap-2">
+      <div class="mb-4 flex flex-wrap gap-2" data-pagefind-ignore>
         {
           post.data.categories.map((category) => (
             <a
@@ -38,13 +38,33 @@ const toc = headings.filter((h) => h.depth <= 3);
           ))
         }
       </div>
-      <h1 class="text-balance text-3xl font-bold tracking-tight sm:text-4xl">{post.data.title}</h1>
-      <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted">
-        <time datetime={post.data.date.toISOString()}>{formatDate(post.data.date)}</time>
+      <h1 class="text-balance text-3xl font-bold tracking-tight sm:text-4xl" data-pagefind-meta="title">
+        {post.data.title}
+      </h1>
+      <p class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-xs text-muted" data-pagefind-ignore>
+        <time datetime={post.data.date.toISOString()} data-pagefind-meta="date">{formatDate(post.data.date)}</time>
         <span aria-hidden="true">·</span>
         <span>{readingTime(post.body ?? '')}</span>
       </p>
     </header>
+
+    {
+      toc.length > 1 && (
+        <details class="toc-mobile mb-8 rounded-xl border border-line xl:hidden" data-pagefind-ignore>
+          <summary class="cursor-pointer select-none px-4 py-3 text-sm font-medium">On this page</summary>
+          <nav class="space-y-2 border-t border-line px-4 py-3 text-sm" aria-label="Table of contents">
+            {toc.map((heading) => (
+              <a
+                href={`#${heading.slug}`}
+                class:list={['block text-muted hover:text-accent', heading.depth === 3 && 'pl-3']}
+              >
+                {heading.text}
+              </a>
+            ))}
+          </nav>
+        </details>
+      )
+    }
 
     <div class="flex items-start gap-8">
       <div
@@ -72,7 +92,12 @@ const toc = headings.filter((h) => h.depth <= 3);
 
       {
         toc.length > 1 && (
-          <aside class="sticky top-24 hidden w-48 shrink-0 xl:block" aria-label="Table of contents">
+          <aside
+            class="sticky top-24 hidden w-48 shrink-0 xl:block"
+            aria-label="Table of contents"
+            data-toc
+            data-pagefind-ignore
+          >
             <p class="mb-3 font-mono text-xs font-semibold uppercase tracking-wider text-muted">On this page</p>
             <nav class="max-h-[70vh] space-y-2 overflow-y-auto text-sm">
               {toc.map((heading) => (
@@ -126,13 +151,16 @@ const toc = headings.filter((h) => h.depth <= 3);
         button.type = 'button';
         button.dataset.copy = '';
         button.textContent = 'Copy';
+        button.setAttribute('aria-label', 'Copy code');
         button.className =
-          'absolute right-2.5 top-2.5 rounded-md border border-zinc-700/60 bg-zinc-800/80 px-2 py-1 text-xs text-zinc-300 opacity-0 backdrop-blur transition-opacity hover:bg-zinc-700 focus-visible:opacity-100';
-        pre.addEventListener('mouseenter', () => (button.style.opacity = '1'));
-        pre.addEventListener('mouseleave', () => (button.style.opacity = ''));
+          'absolute right-2.5 top-2.5 rounded-md border border-zinc-700/60 bg-zinc-800/80 px-2 py-1 text-xs text-zinc-300 backdrop-blur hover:bg-zinc-700';
         button.addEventListener('click', async () => {
-          await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? '');
-          button.textContent = 'Copied!';
+          try {
+            await navigator.clipboard.writeText(pre.querySelector('code')?.innerText ?? '');
+            button.textContent = 'Copied!';
+          } catch {
+            button.textContent = 'Copy failed';
+          }
           setTimeout(() => (button.textContent = 'Copy'), 1500);
         });
         pre.appendChild(button);
@@ -140,6 +168,41 @@ const toc = headings.filter((h) => h.depth <= 3);
     }
     addCopyButtons();
     document.addEventListener('astro:page-load', addCopyButtons);
+
+    // Highlight the section being read in the side table of contents.
+    let tocPairs: { link: HTMLAnchorElement; heading: HTMLElement }[] = [];
+    let tocQueued = false;
+
+    function updateToc() {
+      tocQueued = false;
+      if (tocPairs.length === 0) return;
+      let active = 0;
+      tocPairs.forEach((pair, i) => {
+        if (pair.heading.getBoundingClientRect().top < 140) active = i;
+      });
+      tocPairs.forEach((pair, i) => pair.link.toggleAttribute('data-active', i === active));
+    }
+
+    function initToc() {
+      tocPairs = [...document.querySelectorAll<HTMLAnchorElement>('aside[data-toc] a')].flatMap((link) => {
+        const heading = document.getElementById(decodeURIComponent(link.hash.slice(1)));
+        return heading ? [{ link, heading }] : [];
+      });
+      updateToc();
+    }
+
+    initToc();
+    document.addEventListener('astro:page-load', initToc);
+    window.addEventListener(
+      'scroll',
+      () => {
+        if (!tocQueued) {
+          tocQueued = true;
+          requestAnimationFrame(updateToc);
+        }
+      },
+      { passive: true }
+    );
   </script>
 
   <style is:global>
@@ -153,6 +216,12 @@ const toc = headings.filter((h) => h.depth <= 3);
     .prose > ul,
     .prose > ol {
       max-width: 70ch;
+    }
+    aside[data-toc] a[data-active] {
+      color: var(--color-accent);
+    }
+    .toc-mobile summary::marker {
+      color: var(--color-muted);
     }
   </style>
 </BaseLayout>

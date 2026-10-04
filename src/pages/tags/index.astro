@@ -28,29 +28,35 @@ for (const post of posts) {
 const categories = [...categoryCounts.entries()].sort((a, b) => b[1].count - a[1].count);
 ---
 
-<BaseLayout title="Tags & Categories — Debakar Roy" description="Browse posts by tag and category.">
+<BaseLayout title="Topics — Debakar Roy" description="Browse posts by category and tag.">
   <div class="py-10">
-    <h1 class="mb-2 text-3xl font-bold tracking-tight">Tags</h1>
-    <p class="mb-6 text-sm text-muted">{tags.length} tags across {posts.length} posts.</p>
+    <h1 class="mb-2 text-3xl font-bold tracking-tight">Topics</h1>
+    <p class="mb-8 text-sm text-muted">
+      {categories.length} categories and {tags.length} tags across {posts.length} posts.
+    </p>
+
+    <h2 class="mb-4 text-lg font-semibold tracking-tight">Categories</h2>
     <div class="mb-12 flex flex-wrap gap-x-1 gap-y-2">
       {
-        tags.map(([slug, { display, count }]) => (
-          <a href={`/tags/${slug}`} class="group px-2 py-1 text-sm">
-            <span class="font-medium group-hover:text-accent">#{display}</span>
-            <span class="ml-1 font-mono text-xs text-muted tabular-nums">{count}</span>
+        categories.map(([slug, { display, count }]) => (
+          <a
+            href={`/categories/${slug}`}
+            class="group rounded-full border border-line px-3.5 py-1.5 text-sm transition-colors hover:border-accent"
+          >
+            <span class="font-medium group-hover:text-accent">{display}</span>
+            <span class="ml-1.5 font-mono text-xs text-muted tabular-nums">{count}</span>
           </a>
         ))
       }
     </div>
 
-    <h2 class="mb-2 text-2xl font-bold tracking-tight">Categories</h2>
-    <p class="mb-6 text-sm text-muted">{categories.length} categories.</p>
+    <h2 class="mb-4 text-lg font-semibold tracking-tight">Tags</h2>
     <div class="flex flex-wrap gap-x-1 gap-y-2">
       {
-        categories.map(([slug, { display, count }]) => (
-          <a href={`/categories/${slug}`} class="group rounded-full border border-line px-3.5 py-1.5 text-sm">
-            <span class="font-medium group-hover:text-accent">{display}</span>
-            <span class="ml-1.5 font-mono text-xs text-muted tabular-nums">{count}</span>
+        tags.map(([slug, { display, count }]) => (
+          <a href={`/tags/${slug}`} class="group px-2 py-1 text-sm">
+            <span class="font-medium group-hover:text-accent">#{display}</span>
+            <span class="ml-1 font-mono text-xs text-muted tabular-nums">{count}</span>
           </a>
         ))
       }

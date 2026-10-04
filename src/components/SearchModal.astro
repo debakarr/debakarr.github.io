@@ -1,7 +1,7 @@
 ---
 ---
 
-<div id="search-modal" hidden class="fixed inset-0 z-50">
+<div id="search-modal" hidden class="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="Search posts">
   <div
     class="absolute inset-0 bg-zinc-950/40 backdrop-blur-sm dark:bg-black/60"
     data-search-close
@@ -20,32 +20,60 @@
         type="text"
         id="search-input"
         placeholder="Search posts…"
+        aria-label="Search posts"
+        aria-controls="search-results"
         autocomplete="off"
         spellcheck="false"
         class="h-13 w-full bg-transparent py-4 text-sm outline-none placeholder:text-muted"
       />
-      <kbd class="rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-muted">esc</kbd>
+      <button
+        type="button"
+        data-search-close
+        aria-label="Close search"
+        class="shrink-0 rounded border border-line px-1.5 py-0.5 font-mono text-[10px] text-muted hover:text-ink"
+      >
+        esc
+      </button>
     </div>
     <div id="search-results" class="max-h-[55vh] overflow-y-auto p-2" role="listbox"></div>
   </div>
 </div>
 
 <style>
-  .result {
+  /* Results are injected at runtime, so they don't carry Astro's scope
+     attribute: reach them through the (scoped) results container. */
+  #search-results :global(.result) {
     display: block;
     padding: 0.625rem 0.75rem;
     border-radius: 0.625rem;
   }
-  .result:hover,
-  .result[data-selected] {
+  #search-results :global(.result:hover),
+  #search-results :global(.result[data-selected]) {
     background-color: var(--surface);
   }
-  .result-title {
+  #search-results :global(.result-title) {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--color-ink);
   }
-  .result-excerpt {
+  #search-results :global(.result-date) {
+    flex-shrink: 0;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--color-muted);
+  }
+  #search-results :global(mark) {
+    background: color-mix(in oklab, var(--accent) 22%, transparent);
+    color: var(--color-ink);
+    border-radius: 0.2rem;
+    padding: 0 0.1em;
+  }
+  #search-results :global(.result-excerpt) {
     margin-top: 0.125rem;
     font-size: 0.75rem;
     line-height: 1.5;
@@ -69,7 +97,7 @@
     search(query: string): Promise<{
       results: {
         id: string;
-        data(): Promise<{ url: string; meta?: { title?: string }; excerpt?: string }>;
+        data(): Promise<{ url: string; meta?: { title?: string; date?: string }; excerpt?: string }>;
       }[];
     }>;
   };
@@ -77,6 +105,10 @@
   let controller: AbortController | null = null;
   let selectedIndex = -1;
   let searchTimer: ReturnType<typeof setTimeout>;
+  let returnFocus: HTMLElement | null = null;
+
+  const escapeHtml = (text: string) =>
+    text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
   async function loadPagefind(): Promise<Pagefind | null> {
     if (pagefind) return pagefind;
@@ -93,19 +125,23 @@
     }
   }
 
-  function renderResults(items: { title: string; excerpt: string; url: string }[]) {
+  type Item = { title: string; date: string; excerpt: string; url: string };
+
+  function renderResults(items: Item[], query = '') {
     selectedIndex = -1;
     const resultsEl = getResults();
     if (!resultsEl) return;
     if (items.length === 0) {
-      resultsEl.innerHTML = '<p class="px-3 py-8 text-center text-sm text-muted">No results found.</p>';
+      const message = query ? 'No posts match that search.' : 'Type to search every post by title or content.';
+      resultsEl.innerHTML = `<p class="px-3 py-8 text-center text-sm text-muted">${message}</p>`;
       return;
     }
+    // Pagefind's excerpt is already escaped HTML with <mark> highlights.
     resultsEl.innerHTML = items
       .map(
         (item, i) => `
-        <a href="${item.url}" class="result" role="option" data-index="${i}">
-          <p class="result-title">${item.title}</p>
+        <a href="${escapeHtml(item.url)}" class="result" role="option" data-index="${i}">
+          <p class="result-title"><span>${escapeHtml(item.title)}</span><span class="result-date">${escapeHtml(item.date)}</span></p>
           <p class="result-excerpt">${item.excerpt}</p>
         </a>`
       )
@@ -142,11 +178,16 @@
       const items = await Promise.all(
         res.results.slice(0, 10).map(async (r) => {
           const data = await r.data();
-          return { title: data.meta?.title ?? data.url, excerpt: data.excerpt ?? '', url: data.url };
+          return {
+            title: data.meta?.title ?? data.url,
+            date: data.meta?.date ?? '',
+            excerpt: data.excerpt ?? '',
+            url: data.url,
+          };
         })
       );
       if (signal.aborted) return;
-      renderResults(items);
+      renderResults(items, query);
     }, 120);
   }
 
@@ -158,6 +199,7 @@
     const modal = getModal();
     const input = getInput();
     if (!modal) return;
+    returnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     modal.hidden = false;
     document.body.style.overflow = 'hidden';
     if (input) {
@@ -173,6 +215,9 @@
     modal.hidden = true;
     document.body.style.overflow = '';
     controller?.abort();
+    getInput()?.blur();
+    if (returnFocus?.isConnected) returnFocus.focus();
+    returnFocus = null;
   }
 
   document.addEventListener('click', (e) => {

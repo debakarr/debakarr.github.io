@@ -1,20 +1,37 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostList from '../../components/PostList.astro';
 import { formatDate, slugify } from '../../utils';
 
 const posts = (await getCollection('posts'))
   .filter((p) => !p.data.draft)
   .sort((a, b) => b.data.date.valueOf() - a.data.date.valueOf());
 
-const categorySet = [...new Set(posts.flatMap((p) => p.data.categories))];
+// Only the most used categories up top; the rest live on the Topics page.
+const categoryCounts = new Map<string, number>();
+for (const post of posts) {
+  for (const category of post.data.categories) categoryCounts.set(category, (categoryCounts.get(category) ?? 0) + 1);
+}
+const topCategories = [...categoryCounts.entries()]
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 6)
+  .map(([category]) => category);
+
+// The day-by-day DevOps series collapses into one entry, in reading order.
+const seriesDay = (id: string) => Number(/^devops\/day(\d+)-devops$/.exec(id)?.[1] ?? 0);
+const series = posts.filter((p) => seriesDay(p.id) > 0).sort((a, b) => seriesDay(a.id) - seriesDay(b.id));
+const seriesDates = series.map((p) => p.data.date.valueOf());
+const seriesYear = series.length ? new Date(Math.max(...seriesDates)).getFullYear() : null;
 
 const byYear = new Map<number, typeof posts>();
 for (const post of posts) {
+  if (seriesDay(post.id) > 0) continue;
   const year = post.data.date.getFullYear();
   if (!byYear.has(year)) byYear.set(year, []);
   byYear.get(year)!.push(post);
 }
+if (seriesYear !== null && !byYear.has(seriesYear)) byYear.set(seriesYear, []);
 const years = [...byYear.keys()].sort((a, b) => b - a);
 ---
 
@@ -22,9 +39,9 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
   <div class="py-10">
     <h1 class="mb-3 text-3xl font-bold tracking-tight">Posts</h1>
     <p class="mb-6 text-sm text-muted">{posts.length} posts and counting.</p>
-    <div class="mb-10 flex flex-wrap gap-2">
+    <div class="mb-10 flex flex-wrap items-center gap-2">
       {
-        categorySet.map((category) => (
+        topCategories.map((category) => (
           <a
             href={`/categories/${slugify(category)}`}
             class="rounded-full border border-line px-3 py-1 text-xs font-medium text-muted transition-colors hover:border-accent hover:text-accent"
@@ -33,32 +50,52 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
           </a>
         ))
       }
+      <a href="/tags" class="px-1 text-xs font-medium text-muted transition-colors hover:text-accent">All topics →</a>
     </div>
 
     {
       years.map((year) => (
         <section class="mb-10">
           <h2 class="mb-2 font-mono text-sm font-semibold text-accent">{year}</h2>
-          <ul class="flex flex-col divide-y divide-line">
-            {byYear.get(year)!.map((post) => (
-              <li>
-                <a
-                  href={`/posts/${post.id}`}
-                  class="post-row group flex items-baseline justify-between gap-4 py-3"
-                >
-                  <span class="truncate font-medium group-hover:text-accent">{post.data.title}</span>
-                  <time
-                    datetime={post.data.date.toISOString()}
-                    class="shrink-0 font-mono text-xs text-muted tabular-nums"
-                  >
-                    {formatDate(post.data.date)}
-                  </time>
-                </a>
-              </li>
-            ))}
-          </ul>
+          {year === seriesYear && (
+            <details class="series mb-1 border-b border-line">
+              <summary class="flex cursor-pointer list-none flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+                <span class="font-medium">
+                  <span class="series-chev" aria-hidden="true">
+                    ▸
+                  </span>{' '}
+                  DevOps learning series
+                  <span class="ml-1 text-sm font-normal text-muted">· {series.length} days</span>
+                </span>
+                <span class="shrink-0 font-mono text-xs text-muted tabular-nums">
+                  {formatDate(new Date(Math.min(...seriesDates)))} – {formatDate(new Date(Math.max(...seriesDates)))}
+                </span>
+              </summary>
+              <div class="mb-3 border-l-2 border-line pl-4">
+                <PostList posts={series} />
+              </div>
+            </details>
+          )}
+          <PostList posts={byYear.get(year)!} />
         </section>
       ))
     }
   </div>
 </BaseLayout>
+
+<style>
+  .series summary::-webkit-details-marker {
+    display: none;
+  }
+  .series-chev {
+    display: inline-block;
+    color: var(--color-muted);
+    transition: transform 0.15s ease;
+  }
+  .series[open] .series-chev {
+    transform: rotate(90deg);
+  }
+  .series summary:hover {
+    color: var(--color-accent);
+  }
+</style>

@@ -21,8 +21,9 @@
   --line: #e4e4e7;
   --ink: #18181b;
   --muted: #71717a;
-  --accent: #6366f1;
-  --accent-strong: #4f46e5;
+  /* indigo-600: 6:1 on the surface, so accent-coloured links pass WCAG AA. */
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
   color-scheme: light;
 }
 
@@ -53,6 +54,14 @@ body {
 }
 
 /* --- Shiki dual theme wiring (class-based) --- */
+html:not(.dark) .astro-code,
+html:not(.dark) .astro-code span {
+  color: var(--shiki-light) !important;
+  background-color: var(--shiki-light-bg) !important;
+  font-style: var(--shiki-light-font-style) !important;
+  font-weight: var(--shiki-light-font-weight) !important;
+  text-decoration: var(--shiki-light-text-decoration) !important;
+}
 html.dark .astro-code,
 html.dark .astro-code span {
   color: var(--shiki-dark) !important;
@@ -92,8 +101,36 @@ html.dark .astro-code span {
 .prose pre {
   position: relative;
 }
+/* Blockquotes are used as callouts ("INFO — …"), not quotations: drop the
+   typography plugin's italics and curly quotes. */
+.prose blockquote {
+  font-style: normal;
+}
+.prose :where(blockquote p:first-of-type)::before,
+.prose :where(blockquote p:last-of-type)::after {
+  content: none;
+}
 .prose blockquote p:first-of-type strong {
   letter-spacing: 0.02em;
+}
+/* The plugin wraps inline code in literal backticks; the pill style is enough. */
+.prose :where(code):not(:where(pre code))::before,
+.prose :where(code):not(:where(pre code))::after {
+  content: none;
+}
+/* Copy button on code blocks: shown on hover/focus, always on touch screens. */
+.prose pre > button[data-copy] {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.prose pre:hover > button[data-copy],
+.prose pre > button[data-copy]:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .prose pre > button[data-copy] {
+    opacity: 1;
+  }
 }
 .prose :where(code):not(:where(pre code)) {
   background: color-mix(in oklab, var(--accent) 12%, transparent);

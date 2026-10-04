@@ -1,0 +1,37 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { formatDate } from '../utils';
+
+interface Props {
+  posts: CollectionEntry<'posts'>[];
+  /** Show each post's description under its title. */
+  descriptions?: boolean;
+}
+
+const { posts, descriptions = false } = Astro.props;
+---
+
+<ul class="flex flex-col divide-y divide-line">
+  {
+    posts.map((post) => (
+      <li>
+        <a
+          href={`/posts/${post.id}`}
+          class="post-row group flex flex-col gap-1 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
+        >
+          <span class="min-w-0">
+            <span class:list={['block font-medium text-ink group-hover:text-accent', !descriptions && 'sm:truncate']}>
+              {post.data.title}
+            </span>
+            {descriptions && post.data.description && (
+              <span class="mt-1 line-clamp-2 block text-sm text-muted">{post.data.description}</span>
+            )}
+          </span>
+          <time datetime={post.data.date.toISOString()} class="shrink-0 font-mono text-xs text-muted tabular-nums">
+            {formatDate(post.data.date)}
+          </time>
+        </a>
+      </li>
+    ))
+  }
+</ul>
