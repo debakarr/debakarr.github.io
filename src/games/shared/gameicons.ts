@@ -17,6 +17,7 @@ export const ICON_AUTHORS: Record<string, { name: string; url?: string }> = {
   darkzaitzev: { name: 'DarkZaitzev', url: 'http://darkzaitzev.deviantart.com' },
   guard13007: { name: 'Guard13007', url: 'https://guard13007.com' },
   andymeneely: { name: 'Andy Meneely', url: 'http://www.se.rit.edu/~andy/' },
+  'lord-berandas': { name: 'Lord Berandas', url: 'http://berandas.deviantart.com' },
 };
 
 export interface IconCredit {

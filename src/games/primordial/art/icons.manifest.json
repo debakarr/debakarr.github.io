@@ -1,0 +1,23 @@
+{
+  "t-watch": "delapouite/eye-target",
+  "t-grazer": "lorc/jellyfish",
+  "t-hunter": "lorc/shark-jaws",
+  "t-bloom": "delapouite/algae",
+  "t-meteor": "lorc/meteor-impact",
+  "t-ice": "lorc/snowflake-2",
+  "t-heat": "lorc/sun",
+  "t-storm": "lorc/dna1",
+  "p-species": "lorc/trilobite",
+  "p-tree": "delapouite/family-tree",
+  "p-story": "lorc/scroll-unfurled",
+  "p-stats": "delapouite/histogram",
+  "p-creature": "lord-berandas/microscope",
+  "u-pause": "guard13007/pause-button",
+  "u-play": "guard13007/play-button",
+  "u-fast": "delapouite/fast-forward-button",
+  "u-menu": "delapouite/hamburger-menu",
+  "u-close": "sbed/cancel",
+  "u-follow": "lorc/on-target",
+  "u-fossil": "lorc/ammonite-fossil",
+  "u-egg": "lorc/egg-clutch"
+}

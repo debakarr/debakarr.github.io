@@ -1,0 +1,39 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+
+const title = 'Primordial — an evolution sandbox';
+const description =
+  'Seed a primordial sea with simple life and watch evolution take over: species split and go extinct, predators arise, herds form. Play god with meteors and ice ages, or let the director run it.';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class="pr-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#020a14" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body data-pagefind-ignore="all">
+    <div id="pr-root">
+      <noscript>
+        <p style="color:#e2f6f8;font-family:system-ui,sans-serif;padding:2rem">Primordial needs JavaScript to run.</p>
+      </noscript>
+    </div>
+    <script>
+      import '../../games/primordial/main';
+    </script>
+  </body>
+</html>
