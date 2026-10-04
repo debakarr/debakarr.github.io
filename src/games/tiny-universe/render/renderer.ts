@@ -5,7 +5,7 @@
 import { alive, ERA_INDEX } from '../sim/civ';
 import { kindOf, PLANET_STRIDE, type Kind } from '../sim/planets';
 import { Phase, tempRgb } from '../sim/stars';
-import { CELL, GRID, RADIUS, SPAN, type Fx, type Universe } from '../sim/universe';
+import { GRID, RADIUS, SPAN, type Fx, type Universe } from '../sim/universe';
 
 export type View = 'galaxy' | 'system';
 
@@ -52,6 +52,16 @@ export class Renderer {
   private fx: Effect[] = [];
   private gasCv = document.createElement('canvas');
   private gasCtx: CanvasRenderingContext2D;
+  /** Gas with the half-cell softening already baked in (one composite per frame). */
+  private gasSoftCv = document.createElement('canvas');
+  private gasSoftCtx: CanvasRenderingContext2D;
+  /** Background + gas composed in screen space; re-composited only when the camera or gas changes. */
+  private skyCv = document.createElement('canvas');
+  private skyCtx: CanvasRenderingContext2D;
+  private skyKey = '';
+  private lastCx = 0;
+  private lastCy = 0;
+  private lastZ = -1;
   private gasImg: ImageData;
   private gasAt = 0;
   private bg = document.createElement('canvas');
@@ -68,6 +78,10 @@ export class Renderer {
     this.gasCv.width = GRID;
     this.gasCv.height = GRID;
     this.gasCtx = this.gasCv.getContext('2d')!;
+    this.gasSoftCv.width = GRID;
+    this.gasSoftCv.height = GRID;
+    this.gasSoftCtx = this.gasSoftCv.getContext('2d')!;
+    this.skyCtx = this.skyCv.getContext('2d')!;
     this.gasImg = this.gasCtx.createImageData(GRID, GRID);
   }
 
@@ -224,12 +238,12 @@ export class Renderer {
     }
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#02030a';
-    ctx.fillRect(0, 0, this.w, this.h);
-    ctx.drawImage(this.bg, 0, 0, this.w, this.h);
-    if (this.view === 'system' && this.sysStar >= 0) this.drawSystem(now);
-    else this.drawGalaxy(now);
-    this.fx = this.fx.filter((e) => now - e.born < 3200);
+    if (this.view === 'system' && this.sysStar >= 0) {
+      // The background canvas is opaque and covers the whole frame.
+      ctx.drawImage(this.bg, 0, 0, this.w, this.h);
+      this.drawSystem(now);
+    } else this.drawGalaxy(now);
+    if (this.fx.length) this.fx = this.fx.filter((e) => now - e.born < 3200);
   }
 
   private drawGalaxy(now: number): void {
@@ -237,6 +251,24 @@ export class Renderer {
     const u = this.u;
     const s = u.s;
     const t = s.t;
+    // Background + gas: when the camera is still they live in one cached
+    // screen-space layer (one composite a frame); while it moves, draw them
+    // directly so the cache is never rebuilt every frame.
+    const alpha = Math.min(1, Math.max(0, (t - 20) / 280));
+    const moving =
+      Math.abs((this.cx - this.lastCx) * this.z) > 0.25 ||
+      Math.abs((this.cy - this.lastCy) * this.z) > 0.25 ||
+      Math.abs(this.z - this.lastZ) > this.z * 0.002;
+    if (moving) {
+      ctx.drawImage(this.bg, 0, 0, this.w, this.h);
+      this.drawGasDirect(alpha);
+    } else {
+      this.ensureSky(now, alpha);
+      ctx.drawImage(this.skyCv, 0, 0, this.w, this.h);
+    }
+    this.lastCx = this.cx;
+    this.lastCy = this.cy;
+    this.lastZ = this.z;
     // The Big Bang: a cooling glow that becomes the gas disc.
     if (t < 600) {
       const f = t / 600;
@@ -251,7 +283,6 @@ export class Renderer {
       ctx.fillStyle = g;
       ctx.fillRect(0, 0, this.w, this.h);
     }
-    this.drawGas(now, Math.min(1, Math.max(0, (t - 20) / 280)));
     ctx.globalCompositeOperation = 'source-over';
     this.drawCivs(now);
     this.drawStars(now);
@@ -259,8 +290,8 @@ export class Renderer {
     this.drawFx(now);
   }
 
-  private drawGas(now: number, alpha: number): void {
-    if (alpha <= 0) return;
+  /** Compose background + gas in screen space, only when something changed. */
+  private ensureSky(now: number, alpha: number): void {
     const s = this.u.s;
     if (now - this.gasAt > 220) {
       this.gasAt = now;
@@ -278,18 +309,54 @@ export class Renderer {
         d[o + 3] = Math.min(255, a * 200 + f * 50);
       }
       this.gasCtx.putImageData(this.gasImg, 0, 0);
+      // Bake the softening (once a grid the second, offset pass) into the small
+      // canvas, so it never needs a second composite.
+      const sc = this.gasSoftCtx;
+      sc.clearRect(0, 0, GRID, GRID);
+      sc.globalCompositeOperation = 'lighter';
+      sc.globalAlpha = 0.62;
+      sc.drawImage(this.gasCv, 0, 0);
+      sc.globalAlpha = 0.38;
+      sc.drawImage(this.gasCv, 0.5, 0.5);
+      sc.globalAlpha = 1;
+      this.skyKey = '';
     }
+    const key = `${this.w}|${this.h}|${this.dpr}|${this.cx.toFixed(1)}|${this.cy.toFixed(1)}|${this.z.toFixed(3)}|${alpha.toFixed(2)}`;
+    if (key === this.skyKey) return;
+    this.skyKey = key;
+    const dpr = this.dpr;
+    const W = Math.round(this.w * dpr);
+    const H = Math.round(this.h * dpr);
+    if (this.skyCv.width !== W || this.skyCv.height !== H) {
+      this.skyCv.width = W;
+      this.skyCv.height = H;
+    }
+    const sky = this.skyCtx;
+    sky.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sky.globalCompositeOperation = 'source-over';
+    sky.globalAlpha = 1;
+    sky.imageSmoothingEnabled = true;
+    sky.drawImage(this.bg, 0, 0, this.w, this.h);
+    if (alpha > 0) {
+      sky.globalCompositeOperation = 'lighter';
+      sky.globalAlpha = 0.9 * alpha;
+      const [x0, y0] = this.toScreen(-SPAN / 2, -SPAN / 2);
+      sky.drawImage(this.gasSoftCv, x0, y0, SPAN * this.z, SPAN * this.z);
+    }
+    sky.globalAlpha = 1;
+    sky.globalCompositeOperation = 'source-over';
+  }
+
+  /** The gas at its world position, for frames where the camera is moving. */
+  private drawGasDirect(alpha: number): void {
+    if (alpha <= 0) return;
     const ctx = this.ctx;
     const [x0, y0] = this.toScreen(-SPAN / 2, -SPAN / 2);
-    const size = SPAN * this.z;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     ctx.imageSmoothingEnabled = true;
-    ctx.globalAlpha = 0.55 * alpha;
-    ctx.drawImage(this.gasCv, x0, y0, size, size);
-    // A second, offset pass softens the grid.
-    ctx.globalAlpha = 0.3 * alpha;
-    ctx.drawImage(this.gasCv, x0 - CELL * this.z * 0.5, y0 - CELL * this.z * 0.5, size + CELL * this.z, size + CELL * this.z);
+    ctx.globalAlpha = 0.9 * alpha;
+    ctx.drawImage(this.gasSoftCv, x0, y0, SPAN * this.z, SPAN * this.z);
     ctx.restore();
   }
 
@@ -326,9 +393,17 @@ export class Renderer {
     const s = u.s;
     const zf = Math.min(3, Math.max(0.6, Math.sqrt(this.z / 0.45)));
     const margin = 30;
+    // Inline projection: this loop runs thousands of times a frame and tuples
+    // for every star add up.
+    const z = this.z;
+    const ox = this.w / 2 - this.cx * z;
+    const oy = this.h / 2 - this.cy * z;
+    let lastColor = '';
+    let glows = 0;
     for (let i = 0; i < s.n; i++) {
       if (s.sm[i] <= 0) continue;
-      const [x, y] = this.toScreen(s.sx[i], s.sy[i]);
+      const x = s.sx[i] * z + ox;
+      const y = s.sy[i] * z + oy;
       if (x < -margin || y < -margin || x > this.w + margin || y > this.h + margin) continue;
       const ph = s.sphase[i];
       if (ph === Phase.BlackHole) {
@@ -340,11 +415,15 @@ export class Renderer {
           ctx.ellipse(x, y, 3.2 * zf, 1.3 * zf, 0.4, 0, TAU);
           ctx.stroke();
           ctx.fillStyle = '#000';
+          lastColor = '#000';
           ctx.beginPath();
           ctx.arc(x, y, 1.5 * zf, 0, TAU);
           ctx.fill();
         } else {
-          ctx.fillStyle = 'rgba(170,120,220,0.7)';
+          if (lastColor !== 'rgba(170,120,220,0.7)') {
+            ctx.fillStyle = 'rgba(170,120,220,0.7)';
+            lastColor = 'rgba(170,120,220,0.7)';
+          }
           ctx.fillRect(x - 0.6, y - 0.6, 1.2, 1.2);
         }
         continue;
@@ -364,7 +443,9 @@ export class Renderer {
         r = 0.6 * zf;
         a = 0.6 + 0.4 * Math.abs(Math.sin(now / 120 + i));
       }
-      if ((lum > 40 || ph === Phase.Giant) && r > 0.6) {
+      // Only the brightest stars get a glow sprite, and only so many per frame.
+      if ((lum > 40 || ph === Phase.Giant) && r > 0.6 && glows < 110) {
+        glows++;
         const gr = r * (ph === Phase.Giant ? 5 : 6);
         ctx.globalCompositeOperation = 'lighter';
         ctx.globalAlpha = 0.6 * a;
@@ -373,7 +454,10 @@ export class Renderer {
       }
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = a;
-      ctx.fillStyle = color;
+      if (color !== lastColor) {
+        ctx.fillStyle = color;
+        lastColor = color;
+      }
       if (r < 1.1) ctx.fillRect(x - r, y - r, r * 2, r * 2);
       else {
         ctx.beginPath();
@@ -387,24 +471,26 @@ export class Renderer {
   private drawCivs(now: number): void {
     const ctx = this.ctx;
     const s = this.u.s;
+    const z = this.z;
+    const ox = this.w / 2 - this.cx * z;
+    const oy = this.h / 2 - this.cy * z;
     for (const c of s.civs) {
       if (!alive(c)) continue;
-      const [hx, hy] = this.toScreen(s.sx[c.star], s.sy[c.star]);
+      const hx = s.sx[c.star] * z + ox;
+      const hy = s.sy[c.star] * z + oy;
       ctx.strokeStyle = `hsla(${c.hue},85%,65%,0.45)`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       for (const j of c.stars) {
         if (j === c.star) continue;
-        const [x, y] = this.toScreen(s.sx[j], s.sy[j]);
         ctx.moveTo(hx, hy);
-        ctx.lineTo(x, y);
+        ctx.lineTo(s.sx[j] * z + ox, s.sy[j] * z + oy);
       }
       ctx.stroke();
       ctx.fillStyle = `hsla(${c.hue},85%,65%,0.16)`;
       for (const j of c.stars) {
-        const [x, y] = this.toScreen(s.sx[j], s.sy[j]);
         ctx.beginPath();
-        ctx.arc(x, y, Math.max(4, 12 * Math.sqrt(this.z)), 0, TAU);
+        ctx.arc(s.sx[j] * z + ox, s.sy[j] * z + oy, Math.max(4, 12 * Math.sqrt(this.z)), 0, TAU);
         ctx.fill();
       }
       // Home: a pulsing ring, and a swarm once they build one.
@@ -429,12 +515,16 @@ export class Renderer {
     const u = this.u;
     const s = u.s;
     const showRings = this.z > 0.22;
+    const z = this.z;
+    const ox = this.w / 2 - this.cx * z;
+    const oy = this.h / 2 - this.cy * z;
     ctx.lineWidth = 1;
     if (showRings) {
       for (let i = 0; i < s.n; i++) {
         const st = u.lifeAt[i];
         if (!st) continue;
-        const [x, y] = this.toScreen(s.sx[i], s.sy[i]);
+        const x = s.sx[i] * z + ox;
+        const y = s.sy[i] * z + oy;
         if (x < -20 || y < -20 || x > this.w + 20 || y > this.h + 20) continue;
         ctx.strokeStyle = st >= 4 ? 'rgba(120,255,220,0.85)' : st >= 2 ? 'rgba(120,230,120,0.7)' : 'rgba(120,200,120,0.45)';
         ctx.beginPath();
@@ -448,14 +538,16 @@ export class Renderer {
     if (this.z > 0.9) {
       for (let i = 0; i < s.n; i++) {
         if (!(u.lifeAt[i] >= 3 || u.civAt[i]) || i === this.selStar) continue;
-        const [x, y] = this.toScreen(s.sx[i], s.sy[i]);
+        const x = s.sx[i] * z + ox;
+        const y = s.sy[i] * z + oy;
         if (x < 0 || y < 0 || x > this.w || y > this.h) continue;
         ctx.fillStyle = 'rgba(210,225,255,0.75)';
         ctx.fillText(u.names[i], x, y - 10);
       }
     }
     if (this.selStar >= 0 && s.sm[this.selStar] > 0) {
-      const [x, y] = this.toScreen(s.sx[this.selStar], s.sy[this.selStar]);
+      const x = s.sx[this.selStar] * z + ox;
+      const y = s.sy[this.selStar] * z + oy;
       const r = 10 + Math.sin(now / 300) * 1.5;
       ctx.strokeStyle = 'rgba(255,255,255,0.9)';
       ctx.lineWidth = 1.5;

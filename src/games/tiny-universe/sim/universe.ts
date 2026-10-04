@@ -107,9 +107,20 @@ export interface UState {
   clues: number;
   nextCiv: number;
   pairs: string[];
+  /** The player's answer to the Great Filter (doc §37). */
+  endgame: EndgameChoice;
+  /** Silences turned back by your shields (the Intervene path). */
+  turned: number;
+  /** Civilizations you erased yourself (the Become-the-threat path). */
+  erased: number;
+  /** True once the Filter has withdrawn for good. */
+  filterBroken: boolean;
 }
 
 export type Fx = 'supernova' | 'grb' | 'matter' | 'impact' | 'seed' | 'spark' | 'shield';
+
+/** What the player does once they learn what the Great Filter is. */
+export type EndgameChoice = 'undecided' | 'intervene' | 'observe' | 'threat';
 
 export type UEvent =
   | { type: 'discovery'; id: string; star?: number; planet?: number; civ?: number }
@@ -117,7 +128,7 @@ export type UEvent =
   | { type: 'civ'; civ: number; what: 'born' | 'fell' | 'silent' | 'era' }
   | { type: 'fx'; fx: Fx; x: number; y: number; angle?: number; star?: number };
 
-export type Intervention = 'matter' | 'seed' | 'warm' | 'cool' | 'knowledge' | 'asteroid' | 'nova' | 'protect' | 'study';
+export type Intervention = 'matter' | 'seed' | 'warm' | 'cool' | 'knowledge' | 'asteroid' | 'nova' | 'protect' | 'study' | 'erase';
 
 export interface Target {
   x?: number;
@@ -133,6 +144,15 @@ const LORE = [
   'A warning, carved and broadcast and stored in every format they had: do not build around your star. Something is listening.',
   'The same warning, in a different alphabet, from a different species, millions of years apart.',
   'Star maps marking every civilization that ever wrapped its sun in light. Each mark is crossed out.',
+];
+
+/** What you see when you choose to watch the Silence at work (doc §37 "Stay out"). */
+const SILENCE_SIGHTS = [
+  'You watched from outside time: a child looking up as the stars went out.',
+  'No weapon, no warning, only a slow dimming, like a held breath.',
+  'Their ships were full of their art when they went. The Silence took the crews and left the art.',
+  'It moved through their worlds the way weather moves through a valley. There was nothing to fight.',
+  'Their last signal was a question: “Is anyone out there?” You were. You watched.',
 ];
 
 export class Universe {
@@ -209,6 +229,10 @@ export class Universe {
       clues: 0,
       nextCiv: 1,
       pairs: [],
+      endgame: 'undecided',
+      turned: 0,
+      erased: 0,
+      filterBroken: false,
     };
     const u = new Universe(s);
     u.history('The universe began.', 'mystery');
@@ -216,6 +240,11 @@ export class Universe {
   }
 
   constructor(state: UState) {
+    // Saves from before the endgame update.
+    state.endgame ??= 'undecided';
+    state.turned ??= 0;
+    state.erased ??= 0;
+    state.filterBroken ??= false;
     this.s = state;
     this.rng = new Rng(state.rng);
     this.profile = buildProfile(state.seed, state.params);
@@ -749,7 +778,7 @@ export class Universe {
         c.at = t1;
         const era0 = c.era;
         const ev: CivEvent[] = [];
-        advanceCiv(c, years, t0, s.params.filter, this.rng, ev);
+        advanceCiv(c, years, t0, s.params.filter * (s.filterBroken ? 0.4 : 1), this.rng, ev);
         for (const e of ev) this.civEvent(c, e);
         if (!alive(c)) break;
         this.silenceCheck(c, era0 === c.era ? years : Math.min(years, c.eraYears), t1);
@@ -792,6 +821,11 @@ export class Universe {
           s.stats.dysons++;
           this.discover('dyson', ref);
           this.history(`The ${c.name} began a Dyson swarm around ${this.names[c.star]}.`, 'civ', ref, true);
+          if (s.endgame === 'threat') {
+            const text = `The ${c.name} wrapped their star in light while you hesitated. That is what you swore to prevent.`;
+            this.history(text, 'mystery', ref, true);
+            this.emit({ type: 'chronicle', text, important: true, civ: c.id });
+          }
         }
         if (i === ERA_INDEX.galactic) {
           c.status = 'ascended';
@@ -912,18 +946,34 @@ export class Universe {
     const s = this.s;
     let rate = 0;
     if (c.status === 'quiet') return;
+    // As the threat you do the culling yourself; after the Filter breaks, nothing culls at all.
+    if (s.endgame === 'threat' || s.filterBroken) return;
+    // Once turned back, the Silence leaves them alone for good.
+    if (c.protectedUntil >= 1e9) return;
     if (c.era === ERA_INDEX.dyson) rate = 1 / 60000;
     else if (c.era >= ERA_INDEX.interstellar && c.era < ERA_INDEX.galactic && c.colonies.length >= 16) rate = 1 / 400000;
     if (!rate || !this.rng.chance(1 - Math.exp(-rate * years * s.params.filter))) return;
     if (c.protectedUntil >= t && s.found['great-filter'] !== undefined) {
       // Once turned back, the Silence leaves them alone for good.
       c.protectedUntil = 1e12;
+      s.turned++;
       const text = `The Silence reached for the ${c.name}. Your shield held, and it withdrew.`;
       civLog(c, s.t, text);
       this.history(text, 'mystery', { civ: c.id }, true);
       this.emit({ type: 'chronicle', text, important: true, civ: c.id });
+      if (s.endgame === 'intervene' && s.turned >= 3 && !s.filterBroken) this.breakFilter();
       return;
     }
+    let text = `The ${c.name} went silent. Every world, every ship, every signal: gone, with no trace of war.`;
+    if (s.endgame === 'observe') text += ` ${this.rng.pick(SILENCE_SIGHTS)}`;
+    this.silenceOut(c, t, text);
+    if (s.endgame === 'observe') s.prof.observe += 1;
+    this.checkFilter();
+  }
+
+  /** A civilization goes quiet with no trace of war. Used by the Silence and by you. */
+  private silenceOut(c: Civ, t: number, text: string, byPlayer = false): void {
+    const s = this.s;
     c.ended = t;
     c.status = 'silent';
     s.stats.silent++;
@@ -932,12 +982,22 @@ export class Universe {
       if (st.civ === c.id) st.civ = undefined;
     }
     this.loseSpecies(c);
-    const text = `The ${c.name} went silent. Every world, every ship, every signal: gone, with no trace of war.`;
     civLog(c, s.t, text);
-    this.discover('silence', { civ: c.id });
+    if (!byPlayer) this.discover('silence', { civ: c.id });
     this.history(text, 'mystery', { civ: c.id, planet: c.planet }, true);
     this.emit({ type: 'civ', civ: c.id, what: 'silent' });
-    this.checkFilter();
+    this.rev++;
+  }
+
+  /** The Intervene path's payoff: three turned-back Silences break the Filter. */
+  private breakFilter(): void {
+    const s = this.s;
+    s.filterBroken = true;
+    this.discover('open-sky');
+    const text =
+      'Three times the Silence came, and three times your shields held. It withdrew into the dark. For the first time since the first stars, nothing is culling the sky.';
+    this.history(text, 'mystery', {}, true);
+    this.emit({ type: 'chronicle', text, important: true });
     this.rev++;
   }
 
@@ -1134,6 +1194,33 @@ export class Universe {
     }
   }
 
+  /**
+   * The player's answer to the Great Filter (doc §37): intervene and protect
+   * civilizations, stay out and observe, or become the threat yourself.
+   */
+  chooseEndgame(kind: Exclude<EndgameChoice, 'undecided'>): { ok: boolean; text: string } {
+    const s = this.s;
+    if (s.found['great-filter'] === undefined) return { ok: false, text: 'You do not yet know what the Great Filter is.' };
+    if (s.endgame !== 'undecided') return { ok: false, text: 'You have already chosen your answer to the Filter.' };
+    s.endgame = kind;
+    if (kind === 'intervene') s.prof.create += 3;
+    else if (kind === 'observe') s.prof.observe += 3;
+    else s.prof.destroy += 3;
+    s.prof.interventions++;
+    s.prof.lastAct = s.t;
+    const text =
+      kind === 'intervene'
+        ? 'You chose to stand between the Silence and the civilizations of this universe. Protect them, and the Filter may yet break.'
+        : kind === 'observe'
+          ? 'You chose to stay out. Whatever the Silence does now, you will be there to see it, and to write it down.'
+          : 'You chose to become the threat. The Silence withdraws: its work is yours now. No advanced civilization may be allowed to light its star.';
+    this.history(text, 'mystery', {}, true);
+    this.emit({ type: 'chronicle', text, important: true });
+    this.checkAchievements();
+    this.rev++;
+    return { ok: true, text };
+  }
+
   // --- Interventions -----------------------------------------------------------------------
 
   /** Can this intervention be used on this target right now? Returns a reason when not. */
@@ -1170,6 +1257,11 @@ export class Universe {
         return !c || !alive(c) ? 'Pick a living civilization.' : c.protectedUntil >= s.t ? 'Already protected.' : null;
       case 'study':
         return !st?.ruins?.some((r) => !r.studied) ? 'No unstudied ruins here.' : null;
+      case 'erase': {
+        if (s.endgame !== 'threat') return 'Only the one who becomes the threat can erase a civilization.';
+        if (!c || !alive(c)) return 'Pick a living civilization.';
+        return c.era < ERA_INDEX.interstellar ? 'They have not reached the stars yet.' : null;
+      }
     }
   }
 
@@ -1273,7 +1365,20 @@ export class Universe {
         act(1, 0);
         c.protectedUntil = s.t + 3;
         this.emit({ type: 'fx', fx: 'shield', x: sx(c.star), y: sy(c.star), star: c.star });
-        text = `The ${c.species} are protected from the next catastrophe (for up to 3 million years).`;
+        text =
+          s.endgame === 'intervene'
+            ? `The ${c.species} are shielded. When the Silence comes for them, it will find you waiting.`
+            : `The ${c.species} are protected from the next catastrophe (for up to 3 million years).`;
+        break;
+      }
+      case 'erase': {
+        const c = this.civ(tg.civ!)!;
+        act(0, 4);
+        s.erased++;
+        text = `You erased the ${c.name}. Where their worlds were, there is only quiet. The Silence does this; now so do you.`;
+        this.silenceOut(c, s.t, text, true);
+        this.noticeAt(sx(c.star), sy(c.star), 0.9);
+        for (const o of this.aliveCivs()) this.notice(o, 0.35);
         break;
       }
       case 'study': {
@@ -1331,6 +1436,10 @@ export class Universe {
     give('civilization', f.industry !== undefined);
     give('contact', f['first-contact'] !== undefined);
     give('great-filter', f['great-filter'] !== undefined);
+    give('shield-bearer', s.endgame === 'intervene');
+    give('archivist', s.endgame === 'observe');
+    give('the-threat', s.endgame === 'threat');
+    give('open-sky', s.filterBroken);
     give('god-complex', s.prof.interventions >= 50);
     give('observer', s.t >= 13800 && s.prof.interventions === 0 && f['first-life'] !== undefined);
     give('creator', f['ancient-civ'] !== undefined);

@@ -9,6 +9,7 @@ import { dailyUniverse, DEFAULT_PARAMS, DIALS, GOALS, PRESETS, randomUniverseSee
 import { PLANET_STRIDE } from '../sim/planets';
 import { Phase } from '../sim/stars';
 import { SAVE_VERSION, Universe, type Intervention, type Target, type UEvent, type UState } from '../sim/universe';
+import { AudioEngine } from './audio';
 import { fmtAge, SPEED_LABEL } from './format';
 import { gi, PANEL_TITLE, profileTitle, renderPanel, type PanelId } from './panels';
 
@@ -16,14 +17,15 @@ import { gi, PANEL_TITLE, profileTitle, renderPanel, type PanelId } from './pane
 // chosen speed (years per second); first-time discoveries and new
 // civilizations can interrupt it so the player gets to look.
 
-type Tool = 'select' | 'matter' | 'seed' | 'asteroid' | 'nova';
+type Tool = 'select' | 'matter' | 'seed' | 'asteroid' | 'nova' | 'erase';
 
-const TOOLS: { id: Tool; label: string; icon: IconKey; note: string }[] = [
+const TOOLS: { id: Tool; label: string; icon: IconKey; note: string; hidden?: boolean }[] = [
   { id: 'select', label: 'Look', icon: 't-select', note: 'Tap a star to inspect it, tap again to see its planets. Drag to pan, pinch or scroll to zoom.' },
   { id: 'matter', label: 'Matter', icon: 't-matter', note: 'Tap space to pour in fresh gas. New stars will form there.' },
   { id: 'seed', label: 'Life', icon: 't-seed', note: 'Tap a star (or a planet) to seed its most promising world with microbes.' },
   { id: 'asteroid', label: 'Asteroid', icon: 't-asteroid', note: 'Tap a star with life (or a planet) to strike it with an asteroid.' },
   { id: 'nova', label: 'Nova', icon: 't-nova', note: 'Tap a star to make it explode.' },
+  { id: 'erase', label: 'Erase', icon: 't-erase', note: 'Tap a star (or a planet) to erase the advanced civilization there. You have become the threat.', hidden: true },
 ];
 
 const PANELS: { id: PanelId; icon: IconKey }[] = [
@@ -53,7 +55,12 @@ export class App {
   sel = { star: -1, planet: -1, civ: -1 };
   treeOpen = new Set<number>();
   historyAll = false;
-  settings = stored('tu:settings', { pauseOnDiscovery: true, slowForCivs: true });
+  settings = (() => {
+    const s = stored('tu:settings', { pauseOnDiscovery: true, slowForCivs: true, sound: true });
+    if (s.sound === undefined) s.sound = true;
+    return s;
+  })();
+  audio = new AudioEngine();
   private canvas!: HTMLCanvasElement;
   private els: Record<string, HTMLElement> = {};
   private last = 0;
@@ -61,6 +68,7 @@ export class App {
   private hudAt = 0;
   private panelAt = 0;
   private saveAt = 0;
+  private pendingChoice = false;
   private thinkAt = 0;
   private titleMode = true;
   private quiet = false;
@@ -114,7 +122,7 @@ export class App {
       h('nav', { class: 'tu-panelnav' }, ...PANELS.map((p) => h('button', { class: 'tu-iconbtn', 'data-panel': p.id, title: PANEL_TITLE[p.id], 'aria-label': PANEL_TITLE[p.id], onclick: () => this.togglePanel(p.id) }, gi(p.icon)))),
       h('button', { class: 'tu-iconbtn tu-menubtn', title: 'Menu', 'aria-label': 'Menu', onclick: () => this.menu() }, gi('u-menu')),
     );
-    const tools = h('nav', { class: 'tu-tools', 'aria-label': 'Powers' }, ...TOOLS.map((t) => h('button', { class: 'tu-tool', 'data-tool': t.id, title: `${t.label}: ${t.note}`, 'aria-label': t.label, onclick: () => this.pickTool(t.id) }, gi(t.icon), h('small', null, t.label))));
+    const tools = h('nav', { class: 'tu-tools', 'aria-label': 'Powers' }, ...TOOLS.map((t) => h('button', { class: 'tu-tool', 'data-tool': t.id, hidden: t.hidden ?? false, title: `${t.label}: ${t.note}`, 'aria-label': t.label, onclick: () => this.pickTool(t.id) }, gi(t.icon), h('small', null, t.label))));
     const chip = h('div', { class: 'tu-viewchip', 'data-k': 'chip', hidden: true },
       h('button', { class: 'tu-btn', onclick: () => this.exitSystem() }, gi('u-galaxy'), 'Galaxy'),
       h('span', { 'data-k': 'chiptext' }));
@@ -260,6 +268,8 @@ export class App {
     this.titleMode = false;
     this.els.title.replaceChildren();
     this.els.game.classList.remove('titling');
+    this.audio.start();
+    this.audio.setEnabled(this.settings.sound);
     this.auto = false;
     this.cards = [];
     this.closeCard();
@@ -274,6 +284,12 @@ export class App {
     if (u.s.goal) {
       const g = GOALS.find((x) => x.id === u.s.goal);
       if (g) this.toast(`Daily goal: ${g.text}.`);
+    }
+    this.syncTools();
+    // A save from before the answer was given: ask again.
+    if (u.s.found['great-filter'] !== undefined && u.s.endgame === 'undecided') {
+      this.pendingChoice = false;
+      setTimeout(() => this.endgameChoice(), 500);
     }
     if (u.t < 1) this.toast('In the beginning there was only heat and light. Watch it cool.');
     if (!store.list().length && !auto) this.help();
@@ -309,16 +325,23 @@ export class App {
     if (this.quiet || this.titleMode) return;
     if (e.type === 'discovery') {
       if (e.id === this.u.s.goal) this.toast('Daily goal complete!');
+      if (e.id === 'great-filter') this.pendingChoice = true;
       const ref = { star: e.star, planet: e.planet, civ: e.civ };
       if (isCard(e.id)) {
+        this.audio.ping('discovery');
         this.cards.push({ id: e.id, ref });
         if (!this.cardOpen) this.nextCard();
       } else this.toast(`Discovered: ${DISCOVERY[e.id]?.name ?? e.id}`, ref);
     } else if (e.type === 'chronicle') {
-      if (e.important) this.toast(e.text, e);
+      if (e.important) {
+        this.audio.ping('chronicle');
+        this.toast(e.text, e);
+      }
     } else if (e.type === 'civ') {
-      if (e.what === 'born') this.onCivBorn(e.civ);
-      else if ((e.what === 'fell' || e.what === 'silent') && !this.u.aliveCivs().length && this.speedBeforeCiv >= 0) {
+      if (e.what === 'born') {
+        this.audio.ping('era');
+        this.onCivBorn(e.civ);
+      } else if ((e.what === 'fell' || e.what === 'silent') && !this.u.aliveCivs().length && this.speedBeforeCiv >= 0) {
         if (this.speed === 1) this.setSpeed(this.speedBeforeCiv);
         this.speedBeforeCiv = -1;
       }
@@ -347,6 +370,7 @@ export class App {
     if (!this.u || !this.renderer) return;
     const dt = Math.min(0.1, (now - (this.last || now)) / 1000);
     this.last = now;
+    this.audio.tick(now, dt);
     const blocked = this.busy || this.root.querySelector('.tu-modal') || (this.cardOpen && !this.auto && this.settings.pauseOnDiscovery);
     if (this.speed > 0 && !blocked) {
       this.acc += (dt * SPEEDS[this.speed]) / 1e6;
@@ -385,6 +409,12 @@ export class App {
 
   private direct(now: number): void {
     const a = this.director.think(this.u, now);
+    if (a.choose && this.u.s.endgame === 'undecided') {
+      const res = this.u.chooseEndgame(a.choose);
+      if (res.ok) this.toast(`Director: ${a.choose === 'threat' ? 'becoming the threat' : a.choose === 'intervene' ? 'intervening' : 'watching'}.`);
+      this.syncTools();
+      this.refreshPanel();
+    }
     if (a.speed !== undefined && a.speed !== this.speed) this.setSpeed(a.speed);
     if (a.focus) {
       if (a.focus.system && !this.titleMode) {
@@ -415,6 +445,15 @@ export class App {
     this.els.stars.textContent = u.living.toLocaleString('en-US');
     this.els.life.textContent = String(u.lifeWorlds().length);
     this.els.civs.textContent = String(u.aliveCivs().length);
+    // The soundscape follows the cosmos: hum from the start, pulses with the
+    // stars, rhythm with civilizations, and space with the galaxy itself.
+    const civs = u.aliveCivs().length;
+    this.audio.setScene({
+      hum: 0.5 + 0.4 * Math.min(1, s.t / 12000),
+      pulse: Math.min(1, u.living / 1400),
+      rhythm: Math.min(1, civs / 3),
+      space: Math.min(1, era / 6),
+    });
     this.els.speed.textContent = SPEED_LABEL[this.speed];
     this.els.play.replaceChildren(gi(this.speed ? 'u-pause' : 'u-play'));
     this.els.play.setAttribute('aria-label', this.speed ? 'Pause' : 'Play');
@@ -535,6 +574,14 @@ export class App {
     this.els.game.classList.toggle('placing', id !== 'select');
   }
 
+  /** The Erase power exists only for the one who becomes the threat. */
+  private syncTools(): void {
+    const on = this.u?.s.endgame === 'threat';
+    const btn = this.els.game.querySelector<HTMLElement>('[data-tool="erase"]');
+    if (btn) btn.hidden = !on;
+    if (!on && this.tool === 'erase') this.pickTool('select');
+  }
+
   /** Run an intervention; destructive ones need a second tap to confirm. */
   act(kind: Intervention, target: Target, confirm?: string): void {
     const key = `${kind}:${JSON.stringify(target)}`;
@@ -623,6 +670,38 @@ export class App {
     this.els.card?.classList.remove('on');
     this.els.card?.replaceChildren();
     if (this.cards.length) setTimeout(() => this.nextCard(), 120);
+    else if (this.pendingChoice && !this.auto && !this.titleMode) {
+      this.pendingChoice = false;
+      this.endgameChoice();
+    }
+  }
+
+  /** The Great Filter reveal (doc §37): intervene, stay out, or become the threat. */
+  private endgameChoice(): void {
+    const u = this.u;
+    if (!u || u.s.endgame !== 'undecided' || u.s.found['great-filter'] === undefined) return;
+    if (this.root.querySelector('.tu-modal')) return;
+    const pick = (kind: 'intervene' | 'observe' | 'threat', label: string) =>
+      h('button', {
+        class: `tu-btn wide${kind === 'threat' ? ' danger' : ' primary'}`,
+        onclick: () => {
+          close();
+          const res = u.chooseEndgame(kind);
+          this.toast(res.text);
+          this.syncTools();
+          this.refreshPanel();
+          this.hud();
+        },
+      }, label);
+    const close = this.modal('The Great Filter', h('div', { class: 'tu-help' },
+      h('p', null, 'The ruins agree. Every civilization that wraps its star in light is erased by something older, patient and quiet. The universe is not naturally empty — it is kept that way.'),
+      h('p', null, 'Now that you know, what will you do about it?'),
+      h('div', { class: 'tu-acts' },
+        pick('intervene', 'Intervene — protect civilizations'),
+        pick('observe', 'Stay out — observe'),
+        pick('threat', 'Become the threat'),
+      ),
+    ));
   }
 
   // --- Input --------------------------------------------------------------------------------------------
@@ -718,6 +797,12 @@ export class App {
       else if (this.tool === 'seed' || this.tool === 'asteroid') {
         this.act(this.tool, { planet: hit });
         this.pickTool('select');
+      } else if (this.tool === 'erase') {
+        const cid = u.s.ps[hit]?.civ ?? u.aliveCivs().find((x) => x.star === star)?.id;
+        const c = cid !== undefined ? u.civ(cid) : undefined;
+        if (!c || !alive(c)) this.toast('No civilization on that world.');
+        else this.act('erase', { civ: c.id }, `erase the ${c.name}`);
+        this.pickTool('select');
       } else this.selectPlanet(hit);
       return;
     }
@@ -743,7 +828,11 @@ export class App {
       return;
     }
     if (this.tool === 'nova') this.act('nova', { star });
-    else if (this.tool === 'seed') {
+    else if (this.tool === 'erase') {
+      const c = u.aliveCivs().find((x) => x.star === star);
+      if (!c) this.toast('No civilization lives around that star.');
+      else this.act('erase', { civ: c.id }, `erase the ${c.name}`);
+    } else if (this.tool === 'seed') {
       const best = this.bestWorld(star, false);
       if (best < 0) this.toast('Nothing around that star could hold life.');
       else this.act('seed', { planet: best });
@@ -820,8 +909,8 @@ export class App {
   private menu(): void {
     const u = this.u;
     const item = (label: string, fn: () => void) => h('button', { class: 'tu-btn', onclick: () => { close(); fn(); } }, label);
-    const toggle = (label: string, key: 'pauseOnDiscovery' | 'slowForCivs') => h('label', { class: 'tu-toggle' },
-      h('input', { type: 'checkbox', checked: this.settings[key], onchange: (e: Event) => { this.settings[key] = (e.target as HTMLInputElement).checked; persist('tu:settings', this.settings); } }),
+    const toggle = (label: string, key: 'pauseOnDiscovery' | 'slowForCivs' | 'sound') => h('label', { class: 'tu-toggle' },
+      h('input', { type: 'checkbox', checked: this.settings[key], onchange: (e: Event) => { this.settings[key] = (e.target as HTMLInputElement).checked; persist('tu:settings', this.settings); if (key === 'sound') this.audio.setEnabled(this.settings.sound); } }),
       h('span', null, label));
     const close = this.modal('Menu', h('div', { class: 'tu-menu' },
       h('p', { class: 'tu-hint' }, `${fmtAge(u.t)} · seed “${u.s.seed}” · ${profileTitle(this)}`),
@@ -833,6 +922,7 @@ export class App {
       item('New universe', () => { this.saveNow(); this.title(); this.creation(); }),
       toggle('Pause for big discoveries', 'pauseOnDiscovery'),
       toggle('Slow down when intelligence appears', 'slowForCivs'),
+      toggle('Ambient sound', 'sound'),
       item('How to play', () => this.help()),
       item('Credits', () => this.credits()),
       item('Title screen', () => { this.saveNow(); this.title(); }),

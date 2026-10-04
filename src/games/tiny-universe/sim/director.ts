@@ -4,13 +4,15 @@
 import { alive, ERA_INDEX } from './civ';
 import { Phase } from './stars';
 import { PLANET_STRIDE } from './planets';
-import { CELL, GRID, SPAN, type Intervention, type Target, type Universe } from './universe';
+import { CELL, GRID, SPAN, type EndgameChoice, type Intervention, type Target, type Universe } from './universe';
 
 export interface DirectorAction {
   /** Index into the UI's speed ladder. */
   speed?: number;
   focus?: { star: number; planet?: number; system: boolean };
   act?: { kind: Intervention; target: Target; why: string };
+  /** The director's answer to the Great Filter, when the player has not given one. */
+  choose?: Exclude<EndgameChoice, 'undecided'>;
 }
 
 export const SPEEDS = [0, 1e3, 1e5, 1e7, 1e8, 1e9];
@@ -34,6 +36,12 @@ export class Director {
     else if (topStage >= 3) out.speed = 4;
     else if (s.t < 1500) out.speed = 4;
     else out.speed = lifeWorlds.length ? 4 : 5;
+
+    // The director answers the Great Filter the way it has been playing.
+    if (s.found['great-filter'] !== undefined && s.endgame === 'undecided') {
+      const pr = s.prof;
+      out.choose = pr.destroy > pr.create + pr.observe ? 'threat' : pr.create >= pr.observe ? 'intervene' : 'observe';
+    }
 
     // Camera: hold a subject for a while, then move on.
     if (now - this.focusAt > 14000) {
@@ -82,9 +90,17 @@ export class Director {
 
   private intervention(u: Universe, civs: ReturnType<Universe['aliveCivs']>, lifeWorlds: number[]): DirectorAction['act'] {
     const s = u.s;
+    // As the threat, the director does the culling itself.
+    if (s.endgame === 'threat') {
+      const mark = civs.find((c) => c.era >= ERA_INDEX.dyson) ?? civs.find((c) => c.era >= ERA_INDEX.interstellar);
+      if (mark && u.canIntervene('erase', { civ: mark.id }) === null) {
+        return { kind: 'erase', target: { civ: mark.id }, why: `erasing the ${mark.species} before they can light their star` };
+      }
+    }
     for (const c of civs) {
       const filterKnown = s.found['great-filter'] !== undefined;
-      if (c.protectedUntil < s.t && ((filterKnown && c.era >= ERA_INDEX.interstellar) || ([ERA_INDEX.nuclear, 7, 9].includes(c.era) && Math.random() < 0.5))) {
+      const shieldEarly = s.endgame === 'intervene' && c.era >= ERA_INDEX.spaceflight;
+      if (c.protectedUntil < s.t && ((filterKnown && (c.era >= ERA_INDEX.interstellar || shieldEarly)) || ([ERA_INDEX.nuclear, 7, 9].includes(c.era) && Math.random() < 0.5))) {
         return { kind: 'protect', target: { civ: c.id }, why: `shielding the ${c.species} through a dangerous era` };
       }
       if (c.status === 'dark' && Math.random() < 0.6) return { kind: 'knowledge', target: { civ: c.id }, why: `lighting a candle in the ${c.adj} dark age` };

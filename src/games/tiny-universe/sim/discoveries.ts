@@ -68,7 +68,8 @@ export const DISCOVERIES: Discovery[] = [
   { id: 'watcher', name: 'The Watcher', cat: 'Mysteries', rarity: 3, icon: 'u-eye', text: 'A civilization has noticed you. They worship The Watcher, a god who moves the stars.', hint: 'Intervene where someone can see.' },
   { id: 'observer', name: 'The Observer Hypothesis', cat: 'Mysteries', rarity: 4, icon: 'u-eye', text: 'Scientists have concluded that someone is manipulating their universe. They are right.', hint: 'Keep intervening near a scientific civilization.' },
   { id: 'silence', name: 'The Silence', cat: 'Mysteries', rarity: 4, icon: 'u-eye', text: 'An advanced civilization vanished without a trace. No war, no ruins. Just silence.', hint: 'Watch an advanced civilization closely.' },
-  { id: 'great-filter', name: 'The Great Filter', cat: 'Mysteries', rarity: 5, icon: 'u-eye', text: 'The ruins agree. Every civilization that wraps its star in light is erased by something older, patient and quiet. The universe is not naturally empty: it is kept that way. Your Protect power now works against it.', hint: 'Study ruins. Watch what happens to the advanced ones.' },
+  { id: 'great-filter', name: 'The Great Filter', cat: 'Mysteries', rarity: 5, icon: 'u-eye', text: 'The ruins agree. Every civilization that wraps its star in light is erased by something older, patient and quiet. The universe is not naturally empty: it is kept that way. Now that you know, you must answer it: intervene, observe, or become the threat yourself.', hint: 'Study ruins. Watch what happens to the advanced ones.' },
+  { id: 'open-sky', name: 'The Open Sky', cat: 'Mysteries', rarity: 5, icon: 'u-star', text: 'Three times the Silence came for a civilization, and three times your shields held. It has withdrawn. Nothing is culling the sky now, and civilizations may at last grow past the light of their star.', hint: 'Choose to intervene, then shield three civilizations from the Silence.' },
 ];
 
 export const DISCOVERY = Object.fromEntries(DISCOVERIES.map((d) => [d.id, d])) as Record<string, Discovery>;
@@ -87,6 +88,10 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: 'contact', name: 'Contact', text: 'Two civilizations meet.' },
   { id: 'empire', name: 'Empire', text: 'Civilizations inhabit 60 worlds at once.' },
   { id: 'great-filter', name: 'Great Filter', text: 'Discover the Great Filter.' },
+  { id: 'shield-bearer', name: 'Shield Bearer', text: 'Choose to protect civilizations from the Silence.' },
+  { id: 'archivist', name: 'Archivist', text: 'Choose to stay out of it and watch.' },
+  { id: 'the-threat', name: 'The Threat', text: 'Choose to become the threat.' },
+  { id: 'open-sky', name: 'Open Sky', text: 'Break the Great Filter.' },
   { id: 'god-complex', name: 'God Complex', text: 'Intervene 50 times.' },
   { id: 'observer', name: 'Observer', text: 'Reach 13.8 billion years with life and no interventions.' },
   { id: 'creator', name: 'Creator', text: 'A civilization survives a million years.' },

@@ -8,6 +8,7 @@
   "t-asteroid": "lorc/meteor-impact",
   "t-nova": "lorc/explosion-rays",
   "t-protect": "lorc/checked-shield",
+  "t-erase": "lorc/vortex",
   "t-investigate": "lorc/magnifying-glass",
   "p-observatory": "delapouite/observatory",
   "p-life": "lorc/dna1",

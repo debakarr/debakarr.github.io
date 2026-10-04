@@ -117,6 +117,15 @@ html.tu-page body {
   margin-top: 10px;
 }
 
+.tu-btn.danger {
+  border-color: #ff9c7a;
+  color: #ff9c7a;
+}
+
+.tu-btn.danger:hover:not(:disabled) {
+  background: rgba(255, 156, 122, 0.12);
+}
+
 .tu-iconbtn {
   display: inline-flex;
   align-items: center;

@@ -236,9 +236,10 @@ function civPage(app: App, c: Civ, full: boolean): HTMLElement {
     watcher ? h('p', { class: 'tu-watcher' }, gi('u-eye'), watcher) : null,
     h('div', { class: 'tu-traits' }, ...CIV_TRAITS.map((k) => h('div', { class: 'tu-trait' }, h('span', null, CIV_TRAIT_LABEL[k]), bar(c.traits[k], `hsl(${c.hue},70%,62%)`)))),
     h('p', { class: 'tu-hint' }, `Their path: ${c.eras.slice(0, Math.max(c.peak + 2, 8)).join(' → ')}${c.peak + 2 < c.eras.length ? ' → …' : ''}`),
-    alive(c) ? h('div', null, h('h4', null, 'Influence'), actions(app, [
+    alive(c) ? h('div', null, h('h4', null, s.endgame === 'threat' ? 'The threat' : 'Influence'), actions(app, [
       ['knowledge', 'Share knowledge', 't-knowledge', { civ: c.id }],
       ['protect', 'Protect', 't-protect', { civ: c.id }],
+      ...(s.endgame === 'threat' ? [['erase', 'Erase', 't-erase', { civ: c.id }, true] as [Intervention, string, IconKey, Target, boolean?]] : []),
     ])) : null,
     full && home ? h('button', { class: 'tu-btn wide', onclick: () => app.selectPlanet(home.id) }, gi('u-planet'), `Homeworld: ${home.name}`) : null,
     h('h4', null, 'Chronicle'),
@@ -314,6 +315,7 @@ function lifePanel(app: App): HTMLElement {
     ),
     h('h4', null, 'The Great Filter'),
     h('div', { class: 'tu-funnel' }, ...funnel.map((f) => h('div', null, h('span', null, f.label), bar(f.n / top, '#9aa8ff'), h('b', null, String(f.n))))),
+    h('p', { class: 'tu-hint' }, filterLine(app)),
     fallen.length ? h('h4', null, 'Fallen') : null,
     ...fallen.map((c) => h('button', { class: 'tu-item dim', onclick: () => app.selectCiv(c.id) },
       gi(c.status === 'silent' ? 'u-eye' : c.status === 'merged' ? 'u-ufo' : 'u-ruins'),
@@ -331,6 +333,18 @@ function lifePanel(app: App): HTMLElement {
 
 // --- History -------------------------------------------------------------------------------------------
 
+/** The state of the sky: what the player has decided to do about the Great Filter. */
+function filterLine(app: App): string {
+  const s = app.u.s;
+  if (s.found['great-filter'] === undefined) return 'Something keeps civilizations from reaching the stars. You do not know what yet.';
+  if (s.endgame === 'undecided') return 'You know what the Great Filter is. What will you do about it?';
+  if (s.endgame === 'threat') return `You became the threat. Civilizations erased: ${s.erased}. The Silence no longer acts.`;
+  if (s.endgame === 'observe') return 'You chose to stay out and watch. The Silence continues its work; you write it all down.';
+  return s.filterBroken
+    ? 'The Filter is broken. The sky is open, and civilizations may grow past their star.'
+    : `You chose to intervene. Silences turned back: ${s.turned} of 3 needed to break the Filter.`;
+}
+
 function history(app: App): HTMLElement {
   const u = app.u;
   const s = u.s;
@@ -342,6 +356,7 @@ function history(app: App): HTMLElement {
     lines.push(`${born} civilization${born === 1 ? '' : 's'} arose in this universe.`);
     lines.push(space ? `Only ${space} reached the stars.` : 'None reached the stars.');
     lines.push(galactic ? `${galactic} made it through the Great Filter.` : 'None survived the Great Filter.');
+    if (s.found['great-filter'] !== undefined) lines.push(filterLine(app));
   } else if (s.found['first-life'] !== undefined) lines.push('Life has begun, but nothing has looked up at the sky yet.');
   else lines.push('No life yet. Only stars, gas and time.');
   const all = app.historyAll;
