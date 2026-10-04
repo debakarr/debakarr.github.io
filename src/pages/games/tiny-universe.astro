@@ -1,0 +1,39 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+
+const title = 'Tiny Universe — a universe you can play with';
+const description =
+  'Start with nothing and watch a galaxy form: stars live and explode, heavy elements make rocky worlds, life starts and climbs toward minds, and civilizations rise, meet and fall. Intervene as a creator or a destroyer, or just watch, and find out why the sky is so quiet.';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class="tu-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#02030a" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body data-pagefind-ignore="all">
+    <div id="tu-root">
+      <noscript>
+        <p style="color:#e6ecff;font-family:system-ui,sans-serif;padding:2rem">Tiny Universe needs JavaScript to run.</p>
+      </noscript>
+    </div>
+    <script>
+      import '../../games/tiny-universe/main';
+    </script>
+  </body>
+</html>
