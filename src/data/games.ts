@@ -10,6 +10,10 @@ export interface GameEntry {
   tags: string[];
   /** Accent color used on the card. */
   accent: string;
+  /** Which generated banner the card shows. */
+  banner: 'hexmap' | 'skyline' | 'glyphs';
+  /** Third-party art credits shown on the card. */
+  credits?: { label: string; href: string; license: string }[];
 }
 
 export const games: GameEntry[] = [
@@ -23,5 +27,36 @@ export const games: GameEntry[] = [
     status: 'playable',
     tags: ['Strategy', '4X', 'Procedural', 'Single player'],
     accent: '#d9a441',
+    banner: 'hexmap',
+    credits: [
+      { label: 'Kenney', href: 'https://kenney.nl/assets/hexagon-pack', license: 'CC0' },
+      { label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' },
+    ],
+  },
+  {
+    slug: 'micro-city',
+    title: 'Micro City',
+    tagline: 'Every city tells you why it is unhappy.',
+    description:
+      'Lay roads, zone land and watch a city grow from a settlement into a megacity. Commuters jam the one road everyone shares, monsoon floods find the homes you built on the floodplain, and a city health report explains what your citizens want. Play a sandbox or take on challenges like Floodplain, No Cars and Island.',
+    href: '/games/micro-city',
+    status: 'playable',
+    tags: ['City builder', 'Simulation', 'Procedural', 'Single player'],
+    accent: '#2f7de1',
+    banner: 'skyline',
+    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
+  },
+  {
+    slug: 'first-contact',
+    title: 'First Contact',
+    tagline: 'You are not trying to defeat them. You are trying to understand them.',
+    description:
+      'Three alien ships arrive and nobody understands a word they say. Decode a generated alien language from context, build a dictionary of hypotheses that might be wrong, talk back with glyph tiles, and find out why they came. Every seed brings a different species, script and secret.',
+    href: '/games/first-contact',
+    status: 'playable',
+    tags: ['Puzzle', 'Language', 'Mystery', 'Single player'],
+    accent: '#6fd3ff',
+    banner: 'glyphs',
+    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
   },
 ];

@@ -14,7 +14,8 @@ A turn-based civilization game where the history is generated from what actually
 
 | Folder | Contents |
 | --- | --- |
-| `core/` | Seeded RNG, simplex noise, hex grid math, language/name generator |
+| `core/` | Hex grid math, language/name generator |
+| `art/` | Kenney hex tiles (`kenney/`, packed into `sprites.png` + `sprites.json`) and generated game-icons paths (`icons.ts`) |
 | `data/` | Static tables: terrain, techs, units, buildings, governments, traits, eras |
 | `sim/` | The simulation. DOM-free and deterministic; all state lives in `GameState` (plain data + typed arrays) |
 | `render/` | Canvas map renderer (cached static layer, on-demand frames), minimap, pointer input |
@@ -28,3 +29,58 @@ Key ideas:
 - **Saves.** `sim/save.ts` serializes the whole state (typed arrays as base64), gzip-compressed in `localStorage`; export/import use plain JSON.
 
 Testing aids: open `/games/year-zero/?debug` to expose `window.yz`; `await yz.debugAutoplay(200)` lets the AI govern the player for 200 years.
+
+## Shared code
+
+`src/games/shared/` holds what every game uses: the seeded `Rng` and `Noise2D`, a tiny DOM toolkit (`h()`, downloads, file picking), `SaveStore` (gzip-compressed save slots in `localStorage`, typed arrays as base64) and `gameicons.ts` (Path2D/SVG helpers and credits for game-icons.net silhouettes).
+
+## Art and credits
+
+- **game-icons.net** (CC BY 3.0, credit every author): list the icons a game uses in `art/icons.manifest.json` (`key: "author/icon-name"`), then generate the module:
+  ```sh
+  git clone --depth 1 https://github.com/game-icons/icons /tmp/game-icons
+  node scripts/game-icons.mjs /tmp/game-icons src/games/<slug>/art/icons.manifest.json src/games/<slug>/art/icons.ts
+  ```
+  Each game's Credits screen lists authors and icons from the manifest automatically. Add any new author to `ICON_AUTHORS` in `shared/gameicons.ts`.
+- **Kenney** (CC0): Year Zero's hex tiles are packed into one atlas (one image decode instead of dozens):
+  `node scripts/sprite-atlas.mjs src/games/year-zero/art/kenney src/games/year-zero/art/sprites.png src/games/year-zero/art/sprites.json`
+- Every game shows its credits on the title screen and in a Credits dialog, and `src/data/games.ts` lists them on the `/games` card.
+
+## Micro City
+
+A city builder: roads, zones, utilities, services, traffic and a city that explains why it is unhappy.
+
+| Folder | Contents |
+| --- | --- |
+| `sim/` | DOM-free simulation. `CityState` (typed arrays per tile) plus derived layers on `City`. Monthly tick in `step.ts` |
+| `render/` | Isometric canvas renderer: cached ground and object layers (cars drive between them), procedural buildings, flat map for far zoom |
+| `ui/` | HUD, tool trays, panels (inspect, city health, budget, stats, districts, history, news, challenge), menus |
+
+Key ideas:
+
+- **Monthly tick, spread over frames.** `stepPhases()` is a generator: utilities, then traffic, then environment, then growth, events and budget, so a big city never stalls a frame.
+- **Everything travels by road.** Power, water and sewage flow along road-connected networks; police, fire, health, schools and buses reach lots by driving (`coverage.ts`). Lots connect to a road within three tiles.
+- **Traffic** (`traffic.ts`): 12×12-tile districts, Dijkstra over road tiles, a gravity model for commutes and shopping, BPR congestion fed back into next month's travel times, transit share from bus/metro coverage at both ends.
+- **Happiness is explained.** `environment.ts` keeps happiness as named factors; the City health panel ranks them and suggests fixes.
+- **Disasters come from design** (`events.ts`): floods flow from the water through low ground (flood walls block, drains lower the water), fires spread without fire coverage, epidemics follow missing clinics. Indian mode has monsoons and ₹; generic mode has spring storms and $.
+
+Testing aids: `/games/micro-city/?debug` exposes `window.mc`; `mc.debugAutoplay(240)` lets a simple bot mayor (`sim/bot.ts`) build for 20 years.
+
+## First Contact
+
+A language game: decode a generated alien language from context and find out why they came.
+
+| Folder | Contents |
+| --- | --- |
+| `lang/` | The 38 concepts in semantic families with context tags; the glyph generator (family base shape + marks) and numerals |
+| `sim/` | `world.ts` generates species, characters, grammar (word order, number base), the hidden truth and 30 days of evidence; `game.ts` holds hypotheses, confidence, messages, Council decisions and the final assessment; `reply.ts` is how the aliens read human messages |
+| `ui/` | Observatory, translator, glyph sheet, dictionary, aliens, archive, message composer, journal and the finale |
+
+Key ideas:
+
+- **Hypotheses, not answers.** The player assigns meanings to glyphs; confidence comes from how well the contexts where a glyph appeared fit the guess, plus family resemblance between glyphs. It can be high and still wrong.
+- **They read what you wrote.** Replies are built from the true meanings of the glyphs you send, so a misread word can say something you never meant.
+- **One seed, one contact.** The same seed reproduces the same glyphs, grammar, number base, history and truth; the save stores only the player's state.
+
+Testing aids: `/games/first-contact/?debug` exposes `window.fc` (the app; `fc.game` is the game).
+
