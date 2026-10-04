@@ -1,0 +1,39 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+
+const title = 'Micro City — a city builder';
+const description =
+  'A browser city builder: lay roads, zone land and watch a city grow. Traffic that jams, floods that find the floodplain, and a health report that tells you why your citizens are unhappy.';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class="mc-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#e9eef3" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body data-pagefind-ignore="all">
+    <div id="mc-root">
+      <noscript>
+        <p style="font-family:system-ui,sans-serif;padding:2rem">Micro City needs JavaScript to run.</p>
+      </noscript>
+    </div>
+    <script>
+      import '../../games/micro-city/main';
+    </script>
+  </body>
+</html>
