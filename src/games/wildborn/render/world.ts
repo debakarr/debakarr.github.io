@@ -6,6 +6,7 @@
 import { hashString } from '../../shared/rng';
 import type { Game } from '../sim/game';
 import { T, type WorldMap } from '../sim/world';
+import type { WorldView } from './view';
 
 const TILE = 30;
 /** The camera looks down at an angle, so a tile is wider than it is deep. */
@@ -52,7 +53,8 @@ const SUNKEN: Record<number, number> = {
   [T.Lava]: 0.3,
 };
 
-export class WorldRenderer {
+export class WorldRenderer implements WorldView {
+  readonly kind = 'flat' as const;
   cv: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private w = 0;
@@ -826,5 +828,10 @@ export class WorldRenderer {
       ctx.fillStyle = `rgba(255,255,255,${this.flash * 0.3})`;
       ctx.fillRect(0, 0, this.w, this.h);
     }
+  }
+
+  /** Nothing to release: this renderer only holds a 2D context. */
+  dispose(): void {
+    // Intentionally empty.
   }
 }

@@ -21,7 +21,8 @@ import { ZONE_LABEL, findPath } from '../sim/world';
 import { createBattle, playerAct, type Battle, type BattleAction } from '../sim/battle';
 import { autoStartBattle, autoStep } from '../sim/auto';
 import { creatureSVG } from '../render/creature';
-import { WorldRenderer } from '../render/world';
+import { createWorldView, type WorldView } from '../render/view';
+import type { World3D } from '../render/gl/world3d';
 import { guideCounts, missingSpecies, renderMap } from '../render/map';
 import {
   abilityList,
@@ -94,12 +95,14 @@ export class App {
   private breedB = '';
   // --- overworld ------------------------------------------------------------------------------
   private worldCv!: HTMLCanvasElement;
-  private worldRenderer: WorldRenderer | null = null;
+  private worldRenderer: WorldView | null = null;
   private worldWrap!: HTMLElement;
   private worldSide!: HTMLElement;
   private worldPick!: HTMLElement;
+  private camBtn!: HTMLButtonElement;
   private heldDir: { dx: number; dy: number } | null = null;
   private walkPath: { x: number; y: number }[] | null = null;
+  private pointer: { id: number; startX: number; startY: number; lastX: number; lastY: number; moved: number; at: number } | null = null;
   private walkAcc = 0;
   private lastFrame = 0;
   private lastStepAt = 0;
@@ -121,6 +124,10 @@ export class App {
       if (e.key === ' ' && this.canWalk()) {
         this.doSearch();
         e.preventDefault();
+        return;
+      }
+      if (e.key === 'v' || e.key === 'V') {
+        this.toggleCamera();
         return;
       }
       if (e.key === 'Escape') {
@@ -182,10 +189,44 @@ export class App {
       h('button', { class: 'wb-btn wb-btn-small', onclick: () => this.doSearch() }, gi('u-observe'), 'Search here'),
       h('button', { class: 'wb-btn wb-btn-small', onclick: () => this.openRegions() }, gi('u-map'), 'Regions'),
     );
+    // Third person / first person toggle.
+    this.camBtn = h('button', {
+      class: 'wb-btn wb-btn-small wb-cambtn',
+      title: 'Switch camera (V)',
+      onclick: () => this.toggleCamera(),
+    }, 'View: 3rd') as HTMLButtonElement;
+    bar.appendChild(this.camBtn);
     this.worldCv.addEventListener('pointerdown', (e) => {
       if (!this.canWalk()) return;
+      // A drag looks around; a tap (barely moved, quick) walks there.
+      this.pointer = {
+        id: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        lastX: e.clientX,
+        lastY: e.clientY,
+        moved: 0,
+        at: performance.now(),
+      };
+      this.worldCv.setPointerCapture(e.pointerId);
+    });
+    this.worldCv.addEventListener('pointermove', (e) => {
+      const p = this.pointer;
+      if (!p || p.id !== e.pointerId) return;
+      const dx = e.clientX - p.lastX;
+      const dy = e.clientY - p.lastY;
+      p.lastX = e.clientX;
+      p.lastY = e.clientY;
+      p.moved += Math.abs(dx) + Math.abs(dy);
+      if (p.moved > 8) this.lookAround(dx, dy);
+    });
+    const endPointer = (e: PointerEvent): void => {
+      const p = this.pointer;
+      if (!p || p.id !== e.pointerId) return;
+      this.pointer = null;
+      if (p.moved > 8 || performance.now() - p.at > 400) return; // it was a look
       const rect = this.worldCv.getBoundingClientRect();
-      const { x: tx, y: ty } = this.worldRenderer!.tileAt(e.clientX - rect.left, e.clientY - rect.top, this.game!.world);
+      const { x: tx, y: ty } = this.worldRenderer!.tileAt(p.startX - rect.left, p.startY - rect.top, this.game!.world);
       const g = this.game!;
       const path = findPath(g.world, { x: g.state.x, y: g.state.y }, { x: tx, y: ty });
       if (!path || !path.length) {
@@ -194,12 +235,23 @@ export class App {
       }
       this.heldDir = null;
       this.walkPath = path;
-    });
+    };
+    this.worldCv.addEventListener('pointerup', endPointer);
+    this.worldCv.addEventListener('pointercancel', endPointer);
+    this.worldCv.addEventListener(
+      'wheel',
+      (e: WheelEvent) => {
+        if (!this.canWalk()) return;
+        e.preventDefault();
+        this.zoomCamera(e.deltaY * 0.004);
+      },
+      { passive: false },
+    );
     this.worldWrap = h('div', { class: 'wb-worldwrap' },
       h('div', { class: 'wb-worldbox' }, this.worldCv, hud, bar, dpad, this.worldPick),
       this.worldSide,
     );
-    this.worldRenderer = new WorldRenderer(this.worldCv);
+    this.worldRenderer = createWorldView(this.worldCv);
   }
 
   /** Walking is blocked while a wild creature or a battle is on screen. */
@@ -209,6 +261,34 @@ export class App {
 
   private faceDir(dir: { dx: number; dy: number }): void {
     this.worldRenderer?.face(dir.dy < 0 ? 'up' : dir.dy > 0 ? 'down' : dir.dx < 0 ? 'left' : 'right');
+  }
+
+  /** The 3D view can orbit; the flat one has nothing to do here. */
+  private lookAround(dx: number, dy: number): void {
+    const view = this.world3d();
+    view?.look(dx, dy);
+  }
+
+  private zoomCamera(delta: number): void {
+    this.world3d()?.zoom(delta);
+  }
+
+  /** The 3D view, or null when we are on the flat fallback. */
+  private world3d(): World3D | null {
+    const v = this.worldRenderer;
+    return v && v.kind === 'gl' ? (v as World3D) : null;
+  }
+
+  /** Switch between third and first person. */
+  toggleCamera(): void {
+    const view = this.world3d();
+    if (!view) {
+      this.pickText('The 3D view is not available here.');
+      return;
+    }
+    const mode = view.toggleCamera();
+    this.camBtn.textContent = mode === 'third' ? 'View: 3rd' : 'View: 1st';
+    this.pickText(mode === 'third' ? 'Third person: over your shoulder.' : 'First person: in their eyes.');
   }
 
   /** Start walking in a direction. A quick tap always moves one tile. */
@@ -265,8 +345,12 @@ export class App {
       }
       this.faceDir({ dx, dy });
     } else if (this.heldDir) {
-      dx = this.heldDir.dx;
-      dy = this.heldDir.dy;
+      // In the 3D view, "up" means away from the camera, not north.
+      const d = this.world3d()?.rotateInput(this.heldDir.dx, this.heldDir.dy) ?? this.heldDir;
+      dx = d.dx;
+      dy = d.dy;
+      if (!dx && !dy) return false;
+      this.faceDir({ dx, dy });
     } else return false;
     const res = g.move(dx, dy);
     if (this.walkPath) {

@@ -277,14 +277,18 @@
 
 .wb-main {
   flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: 14px;
+  min-height: 0;
 }
 
 .wb-screen {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  flex: 0 0 auto;
   max-width: 1100px;
   margin: 0 auto;
   width: 100%;
@@ -639,7 +643,8 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
   max-width: 1100px;
   margin: 0 auto;
   box-sizing: border-box;
@@ -729,12 +734,25 @@
 
 .wb-dpad {
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  right: 8px;
+  bottom: 8px;
   display: grid;
-  grid-template-columns: repeat(3, 46px);
-  grid-template-rows: repeat(3, 46px);
+  grid-template-columns: repeat(3, 40px);
+  grid-template-rows: repeat(3, 40px);
   gap: 3px;
+  opacity: 0.82;
+}
+
+/* On a small screen the pad must not swallow the view: keep it in the corner,
+   small and faint, so most of the canvas is free for looking around. */
+@media (max-width: 520px) {
+  .wb-dpad {
+    grid-template-columns: repeat(3, 34px);
+    grid-template-rows: repeat(3, 34px);
+    right: 6px;
+    bottom: 6px;
+    opacity: 0.7;
+  }
 }
 
 .wb-dpadbtn {
@@ -783,7 +801,39 @@
   flex-direction: column;
   gap: 12px;
   overflow-y: auto;
-  max-height: 40vh;
+  max-height: 38vh;
+}
+
+/* On a wide screen the panel sits beside the world rather than under it, so the
+   view gets the full height instead of being squeezed to its minimum. */
+@media (min-width: 760px) {
+  .wb-worldwrap {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .wb-worldbox {
+    flex: 1 1 auto;
+    min-height: 340px;
+  }
+
+  .wb-worldside {
+    flex: 0 0 300px;
+    max-height: none;
+    overflow-y: auto;
+  }
+}
+
+/* Portrait: the view takes the lion's share and the panel scrolls below it. */
+@media (max-width: 759px) and (orientation: portrait) {
+  .wb-worldbox {
+    flex: 1 1 auto;
+    min-height: 52vh;
+  }
+
+  .wb-worldside {
+    max-height: 32vh;
+  }
 }
 
 /* --- map (the regions overview) ----------------------------------------------------------------- */
