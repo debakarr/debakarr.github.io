@@ -67,6 +67,57 @@ function pick<T>(arr: readonly T[], h: number): T {
   return arr[Math.floor(h * arr.length) % arr.length];
 }
 
+/** A small speckle tile, used to give the uncharted map a paper grain. */
+let grainTile: HTMLCanvasElement | null = null;
+function makeGrain(): HTMLCanvasElement {
+  if (grainTile) return grainTile;
+  const cv = document.createElement('canvas');
+  cv.width = 96;
+  cv.height = 96;
+  const g = cv.getContext('2d')!;
+  const rng = new Rng(99);
+  for (let k = 0; k < 900; k++) {
+    const a = rng.float(0.05, 0.16);
+    g.fillStyle = rng.chance(0.5) ? `rgba(190,210,230,${a})` : `rgba(0,0,0,${a})`;
+    g.fillRect(rng.int(96), rng.int(96), 1, 1);
+  }
+  grainTile = cv;
+  return cv;
+}
+
+/** Cloudy chart mottling for the unexplored sea, tiled behind the grain. */
+let chartTile: HTMLCanvasElement | null = null;
+function makeChart(): HTMLCanvasElement {
+  if (chartTile) return chartTile;
+  const size = 256;
+  const cv = document.createElement('canvas');
+  cv.width = size;
+  cv.height = size;
+  const g = cv.getContext('2d')!;
+  const rng = new Rng(4242);
+  const noise = new Noise2D(rng);
+  // Soft cloudy variation, so the dark area has depth instead of one tone.
+  for (let y = 0; y < size; y += 4) {
+    for (let x = 0; x < size; x += 4) {
+      const a = Math.max(0, noise.fbm(x * 0.02, y * 0.02, 3)) * 0.2;
+      g.fillStyle = `rgba(120,155,190,${a.toFixed(3)})`;
+      g.fillRect(x, y, 4, 4);
+    }
+  }
+  // A few faint sounding circles, like an old survey chart.
+  for (let k = 0; k < 40; k++) {
+    g.strokeStyle = `rgba(150,185,215,${rng.float(0.06, 0.14).toFixed(3)})`;
+    g.lineWidth = 1;
+    const x = rng.int(size);
+    const y = rng.int(size);
+    g.beginPath();
+    g.arc(x, y, rng.float(6, 26), 0, Math.PI * 2);
+    g.stroke();
+  }
+  chartTile = cv;
+  return cv;
+}
+
 /** Kenney city tile for a city, by its owner's era, size and status. */
 export function cityTileName(tier: number, size: number, capital: boolean): string {
   if (tier >= 8) return capital ? 'scifi_headquarters' : size >= 14 ? 'scifi_skyscraper' : size >= 8 ? 'scifi_domes' : 'scifi_living';
@@ -88,6 +139,8 @@ export class MapRenderer {
   private fillIdx: Uint16Array = new Uint16Array(0);
   private palette: string[] = [];
   private staticCanvas: HTMLCanvasElement;
+  /** Paper grain for the uncharted area. */
+  private grain: HTMLCanvasElement | null = null;
   private staticKey = '';
   private staticVersion = 0;
   /** The static layer is rendered with a margin so small pans only blit it. */
@@ -436,6 +489,7 @@ export class MapRenderer {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = UNCHARTED;
     ctx.fillRect(0, 0, this.staticCanvas.width, this.staticCanvas.height);
+    this.drawUncharted(ctx);
     const sd = this.sdpr;
     ctx.setTransform(sd * z, 0, 0, sd * z, sd * (m + this.w / 2 - this.cam.x * z), sd * (m + this.h / 2 - this.cam.y * z));
     ctx.imageSmoothingQuality = 'high';
@@ -529,6 +583,44 @@ export class MapRenderer {
       ctx.restore();
       ctx.fillStyle = 'rgba(16, 24, 38, 0.3)';
       ctx.fill(fog);
+    }
+  }
+
+  /**
+   * The unexplored map is not a flat fill: a faint chart grain and a hex
+   * lattice suggest a map that exists but has not been drawn yet.
+   */
+  private drawUncharted(ctx: CanvasRenderingContext2D): void {
+    const W = this.staticCanvas.width;
+    const H = this.staticCanvas.height;
+    const step = HEX * this.cam.zoom * this.sdpr;
+    if (step > 10) {
+      ctx.strokeStyle = 'rgba(150,180,210,0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = (this.cam.x * step) % step; x < W + step; x += step) {
+        ctx.moveTo(Math.round(x) + 0.5, 0);
+        ctx.lineTo(Math.round(x) + 0.5, H);
+      }
+      for (let y = (this.cam.y * step) % step; y < H + step; y += step) {
+        ctx.moveTo(0, Math.round(y) + 0.5);
+        ctx.lineTo(W, Math.round(y) + 0.5);
+      }
+      ctx.stroke();
+    }
+    if (!this.grain) this.grain = makeGrain();
+    const chart = ctx.createPattern(makeChart(), 'repeat');
+    if (chart) {
+      ctx.fillStyle = chart;
+      ctx.fillRect(0, 0, W, H);
+    }
+    const pattern = ctx.createPattern(this.grain, 'repeat');
+    if (pattern) {
+      ctx.save();
+      ctx.globalAlpha = 0.07;
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, W, H);
+      ctx.restore();
     }
   }
 

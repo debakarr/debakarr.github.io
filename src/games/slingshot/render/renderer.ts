@@ -1,3 +1,5 @@
+import { Noise2D } from '../../shared/noise';
+import { Rng } from '../../shared/rng';
 import { captureRadius, positions, type Level, type Probe, type Trajectory } from '../sim/physics';
 
 // Draws a star system: starfield, orbits, shaded planets, the probe and its
@@ -38,8 +40,11 @@ export class Renderer {
   z = 1;
   private xs: Float64Array;
   private ys: Float64Array;
-  private stars: [number, number, number][] = [];
   private textures = new Map<number, HTMLCanvasElement>();
+  /** Parallax layers: [x, y, size, alpha, hue, saturation, depth]. */
+  private stars: [number, number, number, number, number, number, number][] = [];
+  /** A nebula drawn once and reused, so the sky is not a flat black field. */
+  private nebula: HTMLCanvasElement | null = null;
 
   constructor(canvas: HTMLCanvasElement, level: Level) {
     this.canvas = canvas;
@@ -47,7 +52,77 @@ export class Renderer {
     this.level = level;
     this.xs = new Float64Array(level.bodies.length);
     this.ys = new Float64Array(level.bodies.length);
-    for (let k = 0; k < 260; k++) this.stars.push([Math.random(), Math.random(), Math.random()]);
+    this.seedStars(level.seed);
+    this.buildNebula(level.seed);
+  }
+
+  /** A seeded sky: 720 stars in three depth layers, some tinted. */
+  private seedStars(seed: number): void {
+    const rng = new Rng((seed * 2654435761) >>> 0 || 7);
+    this.stars = [];
+    const layers = [
+      { n: 380, size: [0.6, 1.1], alpha: [0.25, 0.55], depth: 0.04 },
+      { n: 260, size: [0.9, 1.7], alpha: [0.4, 0.8], depth: 0.09 },
+      { n: 80, size: [1.4, 2.6], alpha: [0.6, 1], depth: 0.16 },
+    ];
+    for (const layer of layers) {
+      for (let k = 0; k < layer.n; k++) {
+        const tint = rng.next();
+        // Mostly white-blue, some warm giants, a few red dwarfs.
+        const hue = tint > 0.93 ? 20 : tint > 0.78 ? 200 : tint > 0.6 ? 45 : 220;
+        const sat = hue === 220 ? 14 : 48;
+        this.stars.push([
+          rng.next(),
+          rng.next(),
+          rng.float(layer.size[0], layer.size[1]),
+          rng.float(layer.alpha[0], layer.alpha[1]),
+          hue,
+          sat,
+          layer.depth,
+        ]);
+      }
+    }
+  }
+
+  /** Soft coloured clouds, painted once into a screen-sized canvas. */
+  private buildNebula(seed: number): void {
+    const cv = document.createElement('canvas');
+    cv.width = 512;
+    cv.height = 512;
+    const g = cv.getContext('2d')!;
+    const rng = new Rng((seed * 40503 + 12345) >>> 0 || 11);
+    const noise = new Noise2D(rng);
+    g.fillStyle = '#05060f';
+    g.fillRect(0, 0, 512, 512);
+    // A broad band of gas across the frame, with a few brighter knots.
+    g.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 34; k++) {
+      const x = rng.float(-40, 552);
+      const y = 150 + noise.fbm(x * 0.006, 7, 3) * 210 + rng.float(-40, 40);
+      const r = rng.float(60, 170);
+      const hue = rng.next() > 0.55 ? 265 : rng.next() > 0.5 ? 200 : 320;
+      const grd = g.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, `hsla(${hue},60%,42%,${rng.float(0.05, 0.11).toFixed(3)})`);
+      grd.addColorStop(1, 'hsla(0,0%,0%,0)');
+      g.fillStyle = grd;
+      g.beginPath();
+      g.arc(x, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
+    for (let k = 0; k < 5; k++) {
+      const x = rng.float(0, 512);
+      const y = rng.float(0, 512);
+      const r = rng.float(10, 26);
+      const grd = g.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, 'rgba(255,235,190,0.22)');
+      grd.addColorStop(1, 'rgba(255,235,190,0)');
+      g.fillStyle = grd;
+      g.beginPath();
+      g.arc(x, y, r, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.globalCompositeOperation = 'source-over';
+    this.nebula = cv;
   }
 
   setLevel(level: Level): void {
@@ -55,6 +130,8 @@ export class Renderer {
     this.xs = new Float64Array(level.bodies.length);
     this.ys = new Float64Array(level.bodies.length);
     this.textures.clear();
+    this.seedStars(level.seed);
+    this.buildNebula(level.seed);
     this.fit();
   }
 
@@ -139,13 +216,32 @@ export class Renderer {
     positions(L, t, this.xs, this.ys);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     const bg = ctx.createRadialGradient(this.W / 2, this.H / 2, 0, this.W / 2, this.H / 2, Math.max(this.W, this.H) * 0.7);
-    bg.addColorStop(0, '#0b1230');
-    bg.addColorStop(1, '#03040b');
+    bg.addColorStop(0, '#0d1433');
+    bg.addColorStop(0.55, '#080c22');
+    bg.addColorStop(1, '#04060f');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, this.W, this.H);
-    for (const [x, y, b] of this.stars) {
-      ctx.fillStyle = `rgba(220,230,255,${0.25 + b * 0.55 + Math.sin(now / 700 + x * 40) * 0.12})`;
-      ctx.fillRect(x * this.W, y * this.H, b > 0.85 ? 2 : 1.2, b > 0.85 ? 2 : 1.2);
+    // The nebula drifts a little with the camera, so the sky has depth.
+    if (this.nebula) {
+      const px = -((this.cx * z * 0.06) % 512) - 512;
+      const py = -((this.cy * z * 0.06) % 512) - 512;
+      for (let gx = px; gx < this.W; gx += 512) {
+        for (let gy = py; gy < this.H; gy += 512) {
+          ctx.drawImage(this.nebula, gx, gy, 512, 512);
+        }
+      }
+    }
+    // Stars in three parallax layers, twinkling a little.
+    for (const [x, y, size, alpha, hue, sat, depth] of this.stars) {
+      const sx = ((x * this.W - this.cx * z * depth) % (this.W + 40) + this.W + 40) % (this.W + 40) - 20;
+      const sy = ((y * this.H - this.cy * z * depth) % (this.H + 40) + this.H + 40) % (this.H + 40) - 20;
+      const tw = 0.82 + 0.18 * Math.sin(now / 640 + x * 57 + y * 23);
+      ctx.fillStyle = `hsla(${hue},${sat}%,88%,${(alpha * tw).toFixed(3)})`;
+      ctx.fillRect(sx, sy, size, size);
+      if (size > 1.8) {
+        ctx.fillStyle = `hsla(${hue},${sat + 10}%,92%,${(alpha * 0.22 * tw).toFixed(3)})`;
+        ctx.fillRect(sx - 1.6, sy - 1.6, size + 3.2, size + 3.2);
+      }
     }
     ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (this.W / 2 - this.cx * z), dpr * (this.H / 2 - this.cy * z));
     // Orbits.

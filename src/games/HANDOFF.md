@@ -18,6 +18,8 @@ Live at https://debakarr.github.io/games (deployed from `main` by `.github/workf
 
 Wildborn and Tiny Universe were built after the last deploy and were committed and pushed this session (three commits: one per game, one for the /games listing). The remaining work below is polish, not missing games.
 
+A graphics pass then went over the other four games: Slingshot's empty sky is now a seeded nebula with 720 parallax stars in three tinted layers; Primordial's sea gained field grain, a depth gradient, drifting light shafts and a vignette; Year Zero's uncharted map became an unfinished chart (cloudy mottling, sounding circles, hex lattice, paper grain) instead of a flat fill. Measured on the canvas (share of the single most common colour): Slingshot 56% → 35%, Primordial 61% → 25%, Year Zero 52% → 21%. Micro City was already rich (7%) and was left alone. Probe scripts live in `/home/debroy/gfx-audit/` (`gfx-regress.mjs` is the smoke: desktop + 320px for each game, checking colour variety, overflow and console errors).
+
 Every game has an **AUTO** button (automatic mode: an AI plays and the player can take over any time). This is a standing requirement: **every new game must ship with automatic mode too.**
 
 The design docs live at the repo root and are **not committed** (the owner keeps them local): `civ-game.md`, `city-skyline-game.md`, `first-contact-game.md`, `wildlife-game.md`, `tiny-universe-game.md`. If you are working somewhere without them, use the summaries below.

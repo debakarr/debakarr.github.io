@@ -27,6 +27,7 @@ Key ideas:
 - **Determinism.** A world code (`seed/size/type/rivals`) reproduces the same world and peoples; all randomness goes through `Game.rng`.
 - **History.** `sim/history.ts#logHistory` records events with the names of the moment; `sim/chronicle.ts` turns the record into prose.
 - **Saves.** `sim/save.ts` serializes the whole state (typed arrays as base64), gzip-compressed in `localStorage`; export/import use plain JSON.
+- **The unexplored sea is a chart, not a fill.** Uncharted water gets cloudy mottling, faint sounding circles, a camera-anchored hex lattice and paper grain, so most of an early map reads as an unfinished survey rather than one flat colour.
 
 Testing aids: open `/games/year-zero/?debug` to expose `window.yz`; `await yz.debugAutoplay(200)` lets the AI govern the player for 200 years.
 
@@ -111,6 +112,8 @@ An evolution sandbox: creatures with genomes forage, hunt, flock and breed in a 
 
 Key ideas: a fixed 1/30 s step, as many per frame as fit in 12 ms. Carrion makes scavenging pay, which gives grazers a gradual path to becoming hunters. Species split when a lineage, not one odd mutant, drifts far from its centroid. Testing aid: `/games/primordial/?debug` exposes `window.pr`; `pr.debugRun(300)` runs 300 sim seconds.
 
+The sea has depth: the plant field carries fine grain so open water is never one flat tone, a vertical gradient darkens the deep, three slow light shafts drift across the frame, and a soft vignette closes the edges.
+
 ## Slingshot
 
 A gravity puzzle: launch probes through generated star systems.
@@ -123,6 +126,8 @@ A gravity puzzle: launch probes through generated star systems.
 | `render/`, `ui/` | Canvas renderer and the app (aiming, flight, results, level select, progress) |
 
 Testing aid: `/games/slingshot/?debug` exposes `window.sl`.
+
+The sky is drawn, not left black: a seeded procedural nebula (soft coloured gas clouds and bright knots, tiled with slight parallax) sits behind 720 stars in three depth layers — blue-white, warm giants and red dwarfs — that twinkle and drift against the camera as you pan and zoom.
 
 ## Wildborn
 

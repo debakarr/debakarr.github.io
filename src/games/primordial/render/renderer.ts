@@ -117,9 +117,11 @@ export class Renderer {
       r += p * 30 + m * 60;
       g += p * 150 + m * 20;
       b += p * 40;
-      d[i * 4] = r;
-      d[i * 4 + 1] = g;
-      d[i * 4 + 2] = b;
+      // A little grain so open water never reads as one flat colour.
+      const grain = (((i * 2654435761) >>> 9) % 13) - 6;
+      d[i * 4] = r + grain * 0.5;
+      d[i * 4 + 1] = g + grain * 0.6;
+      d[i * 4 + 2] = b + grain * 0.4;
       d[i * 4 + 3] = 255;
     }
     this.field.getContext('2d')!.putImageData(this.fieldImg, 0, 0);
@@ -151,6 +153,13 @@ export class Renderer {
     ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (this.W / 2 - this.cx * z + sx), dpr * (this.H / 2 - this.cy * z + sy));
     ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this.field, 0, 0, W, H);
+    // Depth: the water darkens away from the light.
+    const deep = ctx.createLinearGradient(0, 0, 0, H);
+    deep.addColorStop(0, 'rgba(4,16,34,0)');
+    deep.addColorStop(0.55, 'rgba(4,14,30,0.12)');
+    deep.addColorStop(1, 'rgba(2,8,22,0.42)');
+    ctx.fillStyle = deep;
+    ctx.fillRect(0, 0, W, H);
     // Caustic shimmer.
     ctx.globalAlpha = 0.06;
     ctx.strokeStyle = '#bfefff';
@@ -267,5 +276,39 @@ export class Renderer {
         ctx.fillRect(0, 0, this.W, this.H);
       }
     }
+    if (this.flash) return;
+    // Light through the water, and a soft vignette: the sea feels deep.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.globalCompositeOperation = 'lighter';
+    for (let k = 0; k < 3; k++) {
+      const sway = Math.sin(now / 5200 + k * 2.1) * 0.16;
+      const cx = this.W * (0.22 + k * 0.28) + sway * this.W;
+      const spread = this.W * 0.16;
+      const shaft = ctx.createLinearGradient(cx - spread, 0, cx + spread, 0);
+      shaft.addColorStop(0, 'rgba(150,220,255,0)');
+      shaft.addColorStop(0.5, 'rgba(150,220,255,0.035)');
+      shaft.addColorStop(1, 'rgba(150,220,255,0)');
+      ctx.fillStyle = shaft;
+      ctx.beginPath();
+      ctx.moveTo(cx - spread * 0.35, 0);
+      ctx.lineTo(cx + spread * 0.35, 0);
+      ctx.lineTo(cx + spread * 1.5, this.H);
+      ctx.lineTo(cx + spread * 0.9, this.H);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    const vig = ctx.createRadialGradient(
+      this.W / 2,
+      this.H / 2,
+      Math.min(this.W, this.H) * 0.42,
+      this.W / 2,
+      this.H / 2,
+      Math.max(this.W, this.H) * 0.78,
+    );
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(2,6,16,0.5)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, this.W, this.H);
   }
 }
