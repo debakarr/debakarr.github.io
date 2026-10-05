@@ -3,6 +3,7 @@
 // with genetics and lineage, research quests and saves. DOM-free and seeded.
 
 import { Rng, hashString } from '../../shared/rng';
+import { T, buildWorld, isEncounterTile, walkable, zoneAt, type WorldMap, type ZoneId } from './world';
 import {
   BIOMES,
   ITEMS,
@@ -110,6 +111,11 @@ export interface GameState {
   hour: number;
   weather: Weather;
   region: BiomeId | 'village';
+  /** Where the player stands on the overworld (tile coordinates). */
+  x: number;
+  y: number;
+  /** Overworld features already picked: feature index -> day taken. */
+  picked: Record<string, number>;
   team: Creature[];
   reserve: Creature[];
   items: Record<string, number>;
@@ -258,14 +264,23 @@ export class Game {
     this.rng = new Rng(rngState ?? hashString(state.seed));
   }
 
+  /** The overworld, generated from the seed (cached; never saved). */
+  get world(): WorldMap {
+    return buildWorld(this.state.seed);
+  }
+
   static new(seed: string): Game {
     const rng = new Rng(hashString(seed));
+    const spawn = buildWorld(seed).spawn;
     const state: GameState = {
       seed,
       day: 1,
       hour: 8,
       weather: 'sun',
-      region: 'greenwood',
+      region: 'village',
+      x: spawn.x,
+      y: spawn.y,
+      picked: {},
       team: [],
       reserve: [],
       items: { berry: 4, salve: 1, fragment: 0, seed: 2 },
@@ -281,7 +296,7 @@ export class Game {
     };
     const game = new Game(state, rng.s);
     game.state.quests = game.rollQuests();
-    game.log('system', 'You arrive in Greenwood with an empty team and a researcher waiting at the village.');
+    game.log('system', 'You arrive in the village with an empty team, a bag of berries, and a researcher waiting by the gate.');
     return game;
   }
 
@@ -291,6 +306,11 @@ export class Game {
 
   static deserialize(json: string): Game {
     const data = JSON.parse(json) as { v: number; rngS: number; state: GameState };
+    // Saves from before the overworld: stand the player at the village spawn.
+    const world = buildWorld(data.state.seed);
+    data.state.x ??= world.spawn.x;
+    data.state.y ??= world.spawn.y;
+    data.state.picked ??= {};
     return new Game(data.state, data.rngS);
   }
 
@@ -326,11 +346,101 @@ export class Game {
 
   // --- exploration --------------------------------------------------------------------------
 
+  /** The zone under the player's feet. */
+  zoneNow(): ZoneId {
+    return zoneAt(this.world, this.state.x, this.state.y);
+  }
+
+  /**
+   * Step the player one tile. Movement is exploration: time passes, the team
+   * picks up exposures from the ground you walk, features get picked, and
+   * wild creatures step out of the tall grass, the ruins, the crystal dark.
+   */
+  move(dx: number, dy: number): { ok: boolean; event?: 'encounter' | 'pickup' | 'fragment'; text?: string } {
+    const s = this.state;
+    if (s.wild) return { ok: false };
+    if (!dx && !dy) return { ok: false };
+    const world = this.world;
+    const nx = s.x + dx;
+    const ny = s.y + dy;
+    if (!walkable(world, nx, ny)) return { ok: false };
+    s.x = nx;
+    s.y = ny;
+    s.steps += 1;
+    this.advance(0.1);
+    const zone = zoneAt(world, nx, ny);
+    const night = s.hour >= 19 || s.hour <= 5;
+    if (zone === 'village') {
+      if (s.region !== 'village') this.log('explore', 'You step into the village. It smells of cooking and lantern smoke.');
+      s.region = 'village';
+    } else if (zone !== 'wilds' && zone !== s.region) {
+      s.region = zone as BiomeId;
+      s.counts[`visit:${zone}`] = (s.counts[`visit:${zone}`] ?? 0) + 1;
+      this.log('explore', `You cross into ${BIOMES[zone as BiomeId].name}.`);
+      for (const c of s.team) {
+        const b = BIOMES[zone as BiomeId];
+        for (const [e, v] of Object.entries(b.exposure)) c.exposures[e as Exposure] += (v as number) * 0.6;
+      }
+      this.checkAchievements();
+    }
+    // Exposure from the ground you walk.
+    if (zone !== 'village') {
+      for (const c of s.team) {
+        if (zone !== 'wilds') {
+          const b = BIOMES[zone as BiomeId];
+          for (const [e, v] of Object.entries(b.exposure)) c.exposures[e as Exposure] += (v as number) * 0.06;
+        }
+        c.exposures.explore += 0.03;
+        if (night) c.exposures.night += 0.02;
+        if (s.weather === 'storm') c.exposures.storm += 0.03;
+        else if (s.weather === 'rain') c.exposures.storm += 0.01;
+      }
+    }
+    // Pickups: bushes, shards, fragments. They regrow after a couple of days.
+    const worldIdx = ny * world.w + nx;
+    const fIdx = world.featureAt[worldIdx];
+    const f = fIdx >= 0 ? world.features[fIdx] : null;
+    if (f && f.kind in ITEMS) {
+      const takenDay = s.picked[String(fIdx)] ?? -1;
+      if (takenDay < 0 || s.day - takenDay >= 2) {
+        s.picked[String(fIdx)] = s.day;
+        s.items[f.kind] = (s.items[f.kind] ?? 0) + 1;
+        if (f.kind === 'fragment') {
+          s.counts.fragments = (s.counts.fragments ?? 0) + 1;
+          this.progressQuests('fragment', 1);
+          const text = 'You find a carved ruin fragment. The researcher will want it.';
+          this.log('explore', text);
+          return { ok: true, event: 'fragment', text };
+        }
+        const text = `You pick a ${ITEMS[f.kind].name.toLowerCase()}.`;
+        this.log('explore', text);
+        return { ok: true, event: 'pickup', text };
+      }
+    }
+    // Creatures step out of the tall grass, the ruins, the crystal dark.
+    if (zone !== 'village' && zone !== 'wilds' && isEncounterTile(world, nx, ny)) {
+      const rate = world.tiles[worldIdx] === T.Tall ? 0.12 : 0.08;
+      if (this.rng.chance(rate)) {
+        const wild = this.rollWild(BIOMES[zone as BiomeId], night);
+        s.wild = wild;
+        s.guide[wild.speciesId] = guideOf(s, wild.speciesId) === 'unknown' ? 'seen' : guideOf(s, wild.speciesId);
+        const text = `A wild ${SPECIES_BY_ID[wild.speciesId].name} steps out of the ${zone === 'ruins' ? 'ruins' : zone === 'caves' ? 'dark' : 'grass'}.`;
+        this.log('explore', text);
+        return { ok: true, event: 'encounter', text };
+      }
+    }
+    return { ok: true };
+  }
+
+  /** Fast-walk to a region's heart (the Regions overview calls this). */
   travel(region: BiomeId | 'village'): void {
     const s = this.state;
-    if (s.region === region) return;
+    const center = this.world.centers[region === 'village' ? 'village' : region];
+    const hours = Math.max(1, Math.round(Math.hypot(center.x - s.x, center.y - s.y) / 6));
+    s.x = center.x;
+    s.y = center.y;
     s.region = region;
-    this.advance(1);
+    this.advance(hours);
     if (region !== 'village') {
       s.counts[`visit:${region}`] = (s.counts[`visit:${region}`] ?? 0) + 1;
       for (const c of s.team) {
@@ -338,27 +448,30 @@ export class Game {
         for (const [e, v] of Object.entries(b.exposure)) c.exposures[e as Exposure] += (v as number) * 0.5;
         if (s.hour >= 19 || s.hour <= 5) c.exposures.night += 0.5;
       }
-      this.log('explore', `You travel to ${BIOMES[region].name}.`);
+      this.log('explore', `You hike to ${BIOMES[region].name} (${hours} h on the road).`);
     } else {
-      this.log('explore', 'You return to the village.');
+      this.log('explore', 'You hike back to the village.');
     }
     this.checkAchievements();
   }
 
-  /** One exploration action in the current region. */
+  /** Search the area you are standing in. Movement is exploration; this is
+   * the patient version: stand still a while and see what turns up. */
   explore(): ExploreOutcome {
     const s = this.state;
-    if (s.region === 'village') {
-      return { kind: 'nothing', text: 'The village is home. Travel to a wild region to explore.' };
+    const zone = this.zoneNow();
+    if (zone === 'village') {
+      return { kind: 'nothing', text: 'The village is home. Walk out into the wilds to explore.' };
     }
-    const biome = BIOMES[s.region];
+    const inWilds = zone === 'wilds';
+    const biome = inWilds ? this.rng.pick(Object.values(BIOMES)) : BIOMES[zone as BiomeId];
     s.steps += 1;
     s.counts.explores = (s.counts.explores ?? 0) + 1;
-    this.advance(this.rng.range(2, 3));
+    this.advance(this.rng.range(1, 2));
     const night = s.hour >= 19 || s.hour <= 5;
 
     for (const c of s.team) {
-      for (const [e, v] of Object.entries(biome.exposure)) c.exposures[e as Exposure] += (v as number) * 1.2;
+      if (!inWilds) for (const [e, v] of Object.entries(biome.exposure)) c.exposures[e as Exposure] += (v as number) * 1.2;
       c.exposures.explore += 1;
       if (night) c.exposures.night += 1;
       if (s.weather === 'storm') c.exposures.storm += 1;
@@ -366,7 +479,8 @@ export class Game {
     }
 
     const roll = this.rng.next();
-    if (roll < 0.55) {
+    const encounterAt = inWilds ? 0.34 : 0.55;
+    if (roll < encounterAt) {
       const wild = this.rollWild(biome, night);
       s.wild = wild;
       s.guide[wild.speciesId] = guideOf(s, wild.speciesId) === 'unknown' ? 'seen' : guideOf(s, wild.speciesId);
@@ -374,14 +488,14 @@ export class Game {
       this.log('explore', `Tracks in the ${biome.name} lead to a wild ${SPECIES_BY_ID[wild.speciesId].name}.`);
       return { kind: 'encounter', wild, text: `A wild ${SPECIES_BY_ID[wild.speciesId].name} watches you from the ${biome.name}.` };
     }
-    if (roll < 0.77) {
+    if (roll < 0.79) {
       const item = this.rng.pick(biome.resources);
       const count = this.rng.range(1, 2);
       s.items[item] = (s.items[item] ?? 0) + count;
       this.log('explore', `You gather ${count} × ${ITEMS[item].name}.`);
       return { kind: 'resource', item, count, text: `You gather ${count} × ${ITEMS[item].name} (${ITEMS[item].desc}).` };
     }
-    if (roll < 0.85) {
+    if (roll < 0.87 && (zone === 'ruins' || inWilds)) {
       s.items.fragment = (s.items.fragment ?? 0) + 1;
       s.counts.fragments = (s.counts.fragments ?? 0) + 1;
       this.progressQuests('fragment', 1);

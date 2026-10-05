@@ -598,6 +598,161 @@
 
 /* --- map -------------------------------------------------------------------------------------- */
 
+/* --- the overworld ---------------------------------------------------------------------------- */
+
+.wb-worldwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+.wb-worldbox {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 300px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--wb-line);
+  background: #0c1512;
+}
+
+.wb-world {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.wb-worldhud {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: rgba(12, 21, 18, 0.78);
+  border: 1px solid var(--wb-line);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.wb-worldhud span {
+  color: var(--wb-dim);
+}
+
+.wb-worldbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.wb-worldpick {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%) translateY(8px);
+  background: rgba(12, 21, 18, 0.86);
+  border: 1px solid var(--wb-line);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  opacity: 0;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.wb-worldpick.go {
+  animation: wb-pick 2.4s ease forwards;
+}
+
+@keyframes wb-pick {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  10% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+}
+
+.wb-dpad {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(3, 46px);
+  gap: 3px;
+}
+
+.wb-dpadbtn {
+  background: rgba(20, 34, 30, 0.82);
+  border: 1px solid var(--wb-line);
+  color: var(--wb-text);
+  border-radius: 10px;
+  font-size: 15px;
+  cursor: pointer;
+  touch-action: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wb-dpadbtn:active {
+  background: var(--wb-accent);
+  color: #06231a;
+}
+
+.wb-dpad-up {
+  grid-area: 1 / 2;
+}
+
+.wb-dpad-left {
+  grid-area: 2 / 1;
+}
+
+.wb-dpad-mid {
+  grid-area: 2 / 2;
+  border-radius: 50%;
+  border: 1px dashed var(--wb-line);
+}
+
+.wb-dpad-right {
+  grid-area: 2 / 3;
+}
+
+.wb-dpad-down {
+  grid-area: 3 / 2;
+}
+
+.wb-worldside {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 40vh;
+}
+
+/* --- map (the regions overview) ----------------------------------------------------------------- */
+
 .wb-mapbox {
   border-radius: 18px;
   overflow: hidden;
@@ -1067,6 +1222,22 @@
   .wb-shell {
     flex-direction: row;
     height: 100dvh;
+  }
+
+  /* The overworld sits beside its panel, not above it. */
+  .wb-worldwrap {
+    flex-direction: row;
+  }
+
+  .wb-worldbox {
+    flex: 1 1 62%;
+    min-height: 0;
+  }
+
+  .wb-worldside {
+    flex: 1 1 38%;
+    max-height: none;
+    overflow-y: auto;
   }
 
   .wb-header {

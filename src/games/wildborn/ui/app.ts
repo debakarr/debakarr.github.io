@@ -17,9 +17,11 @@ import {
   statsOf,
   type Creature,
 } from '../sim/game';
+import { ZONE_LABEL, findPath } from '../sim/world';
 import { createBattle, playerAct, type Battle, type BattleAction } from '../sim/battle';
 import { autoStartBattle, autoStep } from '../sim/auto';
 import { creatureSVG } from '../render/creature';
+import { WorldRenderer } from '../render/world';
 import { guideCounts, missingSpecies, renderMap } from '../render/map';
 import {
   abilityList,
@@ -51,11 +53,23 @@ type Overlay =
   | { kind: 'menu' }
   | { kind: 'credits' }
   | { kind: 'breed' }
+  | { kind: 'regions' }
   | { kind: 'evolve'; id: string; to: string }
   | { kind: 'notice'; text: string };
 
 function gi(key: IconKey, cls = ''): HTMLElement {
   return h('span', { class: `wb-gi ${cls}`, html: icons.svg(key) });
+}
+
+const DIRS: Record<string, { dx: number; dy: number }> = {
+  ArrowUp: { dx: 0, dy: -1 }, w: { dx: 0, dy: -1 }, W: { dx: 0, dy: -1 },
+  ArrowDown: { dx: 0, dy: 1 }, s: { dx: 0, dy: 1 }, S: { dx: 0, dy: 1 },
+  ArrowLeft: { dx: -1, dy: 0 }, a: { dx: -1, dy: 0 }, A: { dx: -1, dy: 0 },
+  ArrowRight: { dx: 1, dy: 0 }, d: { dx: 1, dy: 0 }, D: { dx: 1, dy: 0 },
+};
+
+function keyDir(key: string): { dx: number; dy: number } | null {
+  return DIRS[key] ?? null;
 }
 
 export class App {
@@ -78,18 +92,257 @@ export class App {
   private battleSeen = 0;
   private breedA = '';
   private breedB = '';
+  // --- overworld ------------------------------------------------------------------------------
+  private worldCv!: HTMLCanvasElement;
+  private worldRenderer: WorldRenderer | null = null;
+  private worldWrap!: HTMLElement;
+  private worldSide!: HTMLElement;
+  private worldPick!: HTMLElement;
+  private heldDir: { dx: number; dy: number } | null = null;
+  private walkPath: { x: number; y: number }[] | null = null;
+  private walkAcc = 0;
+  private lastFrame = 0;
+  private lastStepAt = 0;
+  private saveAcc = 0;
 
   constructor(root: HTMLElement) {
     this.root = root;
     root.classList.add('wb');
     root.textContent = '';
     this.buildDom();
+    this.buildWorld();
     window.addEventListener('keydown', (e) => {
+      const dir = keyDir(e.key);
+      if (dir && this.canWalk()) {
+        this.pulse(dir);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === ' ' && this.canWalk()) {
+        this.doSearch();
+        e.preventDefault();
+        return;
+      }
       if (e.key === 'Escape') {
         if (this.overlay && this.overlay.kind !== 'battle') this.closeOverlay();
       }
     });
+    window.addEventListener('keyup', (e) => {
+      const dir = keyDir(e.key);
+      if (dir && this.heldDir && this.heldDir.dx === dir.dx && this.heldDir.dy === dir.dy) this.heldDir = null;
+    });
+    window.addEventListener('blur', () => {
+      this.heldDir = null;
+    });
+    window.addEventListener('resize', () => this.worldRenderer?.resize());
+    const loop = (now: number) => {
+      requestAnimationFrame(loop);
+      this.frame(now);
+    };
+    requestAnimationFrame(loop);
     void this.title();
+  }
+
+  /** The walkable overworld: canvas, HUD, D-pad and the side panel. */
+  private buildWorld(): void {
+    this.worldCv = h('canvas', { class: 'wb-world', 'aria-label': 'The overworld' }) as HTMLCanvasElement;
+    this.worldSide = h('div', { class: 'wb-worldside' });
+    this.worldPick = h('div', { class: 'wb-worldpick' });
+    const dpadBtn = (label: string, dir: { dx: number; dy: number }, cls: string) => {
+      const b = h('button', {
+        class: `wb-dpadbtn ${cls}`,
+        'aria-label': label,
+        onpointerdown: (e: PointerEvent) => {
+          e.preventDefault();
+          if (!this.canWalk()) return;
+          this.pulse(dir);
+          b.setPointerCapture(e.pointerId);
+        },
+        onpointerup: () => {
+          if (this.heldDir === dir) this.heldDir = null;
+        },
+        onpointercancel: () => {
+          if (this.heldDir === dir) this.heldDir = null;
+        },
+      }, label);
+      return b;
+    };
+    const dpad = h('div', { class: 'wb-dpad' },
+      dpadBtn('▲', { dx: 0, dy: -1 }, 'wb-dpad-up'),
+      dpadBtn('◀', { dx: -1, dy: 0 }, 'wb-dpad-left'),
+      h('span', { class: 'wb-dpad-mid' }),
+      dpadBtn('▶', { dx: 1, dy: 0 }, 'wb-dpad-right'),
+      dpadBtn('▼', { dx: 0, dy: 1 }, 'wb-dpad-down'),
+    );
+    const hud = h('div', { class: 'wb-worldhud' },
+      h('b', { 'data-k': 'zone' }),
+      h('span', { 'data-k': 'weather' }),
+    );
+    const bar = h('div', { class: 'wb-worldbar' },
+      h('button', { class: 'wb-btn wb-btn-small', onclick: () => this.doSearch() }, gi('u-observe'), 'Search here'),
+      h('button', { class: 'wb-btn wb-btn-small', onclick: () => this.openRegions() }, gi('u-map'), 'Regions'),
+    );
+    this.worldCv.addEventListener('pointerdown', (e) => {
+      if (!this.canWalk()) return;
+      const rect = this.worldCv.getBoundingClientRect();
+      const { x: tx, y: ty } = this.worldRenderer!.tileAt(e.clientX - rect.left, e.clientY - rect.top, this.game!.world);
+      const g = this.game!;
+      const path = findPath(g.world, { x: g.state.x, y: g.state.y }, { x: tx, y: ty });
+      if (!path || !path.length) {
+        this.pickText('You cannot walk there.');
+        return;
+      }
+      this.heldDir = null;
+      this.walkPath = path;
+    });
+    this.worldWrap = h('div', { class: 'wb-worldwrap' },
+      h('div', { class: 'wb-worldbox' }, this.worldCv, hud, bar, dpad, this.worldPick),
+      this.worldSide,
+    );
+    this.worldRenderer = new WorldRenderer(this.worldCv);
+  }
+
+  /** Walking is blocked while a wild creature or a battle is on screen. */
+  private canWalk(): boolean {
+    return this.mode === 'play' && !!this.game && !this.game.state.wild && !this.battle && !this.overlay;
+  }
+
+  private faceDir(dir: { dx: number; dy: number }): void {
+    this.worldRenderer?.face(dir.dy < 0 ? 'up' : dir.dy > 0 ? 'down' : dir.dx < 0 ? 'left' : 'right');
+  }
+
+  /** Start walking in a direction. A quick tap always moves one tile. */
+  private pulse(dir: { dx: number; dy: number }): void {
+    this.heldDir = dir;
+    this.walkPath = null;
+    this.faceDir(dir);
+    if (performance.now() - this.lastStepAt > 70) this.step();
+  }
+
+  private pickText(text: string): void {
+    this.worldPick.textContent = text;
+    this.worldPick.classList.remove('go');
+    void this.worldPick.offsetWidth;
+    this.worldPick.classList.add('go');
+  }
+
+  /** The animation frame: walking, the world render and a paced autosave. */
+  private frame(now: number): void {
+    const dt = Math.min(0.1, (now - (this.lastFrame || now)) / 1000);
+    this.lastFrame = now;
+    if (this.mode !== 'play' || !this.game) return;
+    // Walking: held direction or a tap-to-move path, both on a step cadence.
+    if (this.canWalk() && (this.heldDir || this.walkPath?.length)) {
+      this.walkAcc += dt;
+      const step = this.walkPath ? 0.05 : 0.12;
+      let budget = 4;
+      while (this.walkAcc >= step && budget-- > 0) {
+        this.walkAcc -= step;
+        if (!this.step()) break;
+      }
+    } else this.walkAcc = 0;
+    if (this.screen === 'map' && this.worldRenderer) this.worldRenderer.draw(this.game, now);
+    this.saveAcc += dt;
+    if (this.saveAcc > 20 && this.canWalk()) {
+      this.saveAcc = 0;
+      this.autosave();
+    }
+  }
+
+  /** One step of walking. Returns false when blocked (or an encounter interrupts). */
+  private step(): boolean {
+    const g = this.game!;
+    this.lastStepAt = performance.now();
+    let dx = 0;
+    let dy = 0;
+    if (this.walkPath?.length) {
+      const next = this.walkPath[0];
+      dx = Math.sign(next.x - g.state.x);
+      dy = Math.sign(next.y - g.state.y);
+      if (!dx && !dy) {
+        this.walkPath = null;
+        return false;
+      }
+      this.faceDir({ dx, dy });
+    } else if (this.heldDir) {
+      dx = this.heldDir.dx;
+      dy = this.heldDir.dy;
+    } else return false;
+    const res = g.move(dx, dy);
+    if (this.walkPath) {
+      if (res.ok) this.walkPath.shift();
+      else this.walkPath = null; // blocked: stop the path walk
+    }
+    if (!res.ok) {
+      this.heldDir = null;
+      return false;
+    }
+    if (res.event === 'encounter') {
+      this.heldDir = null;
+      this.walkPath = null;
+      this.worldRenderer?.encounterFlash();
+      this.overlay = { kind: 'wild' };
+      this.render();
+      return false;
+    }
+    if (res.text) this.pickText(res.text);
+    this.refreshWorldSide();
+    return true;
+  }
+
+  private doSearch(): void {
+    this.act(() => {
+      const outcome = this.game!.explore();
+      if (outcome.kind === 'encounter') this.overlay = { kind: 'wild' };
+      else if (outcome.kind === 'resource' || outcome.kind === 'fragment') this.pickText(outcome.text);
+      this.refreshWorldSide();
+    });
+  }
+
+  private openRegions(): void {
+    this.overlay = { kind: 'regions' };
+    this.render();
+  }
+
+  /** The regions overview: the old node map, now a fast-walk menu. */
+  private regionsOverlay(): HTMLElement {
+    const g = this.game!;
+    const s = g.state;
+    const here = g.zoneNow();
+    const box = h('div', { class: 'wb-mapbox' });
+    box.appendChild(renderMap(s, (region) => this.act(() => { g.travel(region); this.overlay = null; })));
+    const rows: HTMLElement[] = [];
+    const row = (id: BiomeId | 'village', name: string, blurb: string, known: string) => {
+      const selected = here === id;
+      rows.push(
+        h('button', {
+          class: `wb-row${selected ? ' wb-row-selected' : ''}`,
+          onclick: () => this.act(() => { g.travel(id); this.overlay = null; }),
+        },
+          h('span', { class: 'wb-row-main' },
+            h('b', null, name, selected ? chip('Here', 'wb-chip-ok') : chip('Walk here', 'wb-chip-soft')),
+            h('small', null, blurb),
+            h('small', null, known),
+          ),
+        ),
+      );
+    };
+    for (const id of ['greenwood', 'meadow', 'wetlands', 'caves', 'ember', 'ruins'] as BiomeId[]) {
+      const b = BIOMES[id];
+      const ids = Object.keys(b.wild);
+      const known = ids.filter((sid) => guideOf(s, sid) !== 'unknown').length;
+      row(id, b.name, b.blurb, `Species known here: ${known}/${ids.length}`);
+    }
+    row('village', 'Village', 'Rest, train, breed and read the researcher’s notes.', `${guideCounts(s).captured} species linked · ${s.items.fragment ?? 0} fragments`);
+    return h('div', { class: 'wb-sheet wb-sheet-regions' },
+      h('div', { class: 'wb-sheet-head' },
+        h('h2', null, 'The overworld'),
+        h('button', { class: 'wb-iconbtn', title: 'Close', onclick: () => this.closeOverlay() }, gi('u-close')),
+      ),
+      h('p', { class: 'wb-dim' }, 'Walk anywhere with the D-pad, the arrow keys or by tapping the map. Fast-walking costs the hours it would take.'),
+      box,
+      ...rows,
+    );
   }
 
   // --- DOM skeleton --------------------------------------------------------------------------
@@ -287,22 +540,48 @@ export class App {
     }
   }
 
-  // --- map screen ------------------------------------------------------------------------------
+  // --- the overworld screen ----------------------------------------------------------------------
 
   private mapScreen(): HTMLElement {
-    const s = this.game!.state;
-    const wrap = h('div', { class: 'wb-screen wb-mapwrap' });
-    const mapBox = h('div', { class: 'wb-mapbox' });
-    mapBox.appendChild(renderMap(s, (region) => this.act(() => this.game!.travel(region))));
-    wrap.append(mapBox);
-    wrap.append(s.region === 'village' ? this.villagePanel() : this.regionPanel());
-    return wrap;
+    this.refreshWorldSide();
+    // The canvas keeps its DOM across renders so the renderer keeps its state.
+    requestAnimationFrame(() => this.worldRenderer?.resize());
+    return this.worldWrap;
   }
 
-  private regionPanel(): HTMLElement {
+  /** Rebuild only the side panel (cheap, called on every step). */
+  private refreshWorldSide(): void {
+    if (!this.game) return;
+    const zone = this.game.zoneNow();
+    clear(this.worldSide);
+    this.worldSide.append(zone === 'village' ? this.villagePanel() : zone === 'wilds' ? this.wildsPanel() : this.regionPanel(zone as BiomeId));
+    this.worldSide.append(this.feedPanel());
+    const hud = this.worldWrap.querySelector<HTMLElement>('.wb-worldhud');
+    if (hud) {
+      const s = this.game.state;
+      hud.querySelector('[data-k="zone"]')!.textContent = ZONE_LABEL[zone];
+      hud.querySelector('[data-k="weather"]')!.textContent = `${WEATHER_LABEL[s.weather]} · ${String(Math.floor(s.hour)).padStart(2, '0')}:00`;
+    }
+  }
+
+  private wildsPanel(): HTMLElement {
     const s = this.game!.state;
-    const b = BIOMES[s.region as BiomeId];
-    const missing = missingSpecies(s, s.region as BiomeId);
+    return h('section', { class: 'wb-panel' },
+      h('h2', null, 'The Wilds'),
+      h('p', { class: 'wb-dim' }, 'Grass between the regions. Creatures drift through, and walking is its own reward.'),
+      h('div', { class: 'wb-chips' },
+        chip(`Weather: ${WEATHER_LABEL[s.weather]}`, 'wb-chip-soft'),
+        chip(`Time: ${String(Math.floor(s.hour)).padStart(2, '0')}:00`, 'wb-chip-soft'),
+        chip(`Regions known: ${['greenwood', 'meadow', 'wetlands', 'caves', 'ember', 'ruins'].filter((r) => s.counts[`visit:${r}`]).length}/6`, 'wb-chip-soft'),
+      ),
+      h('p', { class: 'wb-dim' }, 'Walk into tall grass to find creatures. Tap the map to walk there; hold the D-pad or the arrow keys to stride.'),
+    );
+  }
+
+  private regionPanel(biome: BiomeId): HTMLElement {
+    const s = this.game!.state;
+    const b = BIOMES[biome];
+    const missing = missingSpecies(s, biome);
     return h('section', { class: 'wb-panel' },
       h('h2', null, b.name, chip(b.boost ? AFFINITY[b.boost].label : '', `wb-aff-${b.boost}`)),
       h('p', { class: 'wb-dim' }, b.blurb),
@@ -314,11 +593,7 @@ export class App {
       missing.length
         ? h('p', { class: 'wb-dim' }, `Unseen here: ${missing.slice(0, 4).join(', ')}${missing.length > 4 ? '…' : ''}`)
         : h('p', { class: 'wb-dim' }, 'You know every species that lives here.'),
-      h('div', { class: 'wb-actions' },
-        h('button', { class: 'wb-btn wb-btn-primary', onclick: () => this.act(() => this.doExplore()) }, gi('u-explore'), 'Explore'),
-        h('button', { class: 'wb-btn', onclick: () => this.act(() => this.game!.travel('village')) }, 'Return to village'),
-      ),
-      this.feedPanel(),
+      h('p', { class: 'wb-dim' }, 'Walk the tall grass to meet what lives here. Searching here takes a couple of hours.'),
     );
   }
 
@@ -497,16 +772,6 @@ export class App {
     fn();
     this.game?.settle();
     this.autosave();
-    this.render();
-  }
-
-  private doExplore(): void {
-    const outcome = this.game!.explore();
-    if (outcome.kind === 'encounter') {
-      this.overlay = { kind: 'wild' };
-    } else {
-      this.overlay = { kind: 'notice', text: outcome.text };
-    }
     this.render();
   }
 
@@ -950,7 +1215,9 @@ export class App {
               ? this.feedOverlay(o.target)
               : o?.kind === 'menu'
                 ? this.menuOverlay()
-                : o?.kind === 'credits'
+                : o?.kind === 'regions'
+                  ? this.regionsOverlay()
+                  : o?.kind === 'credits'
                   ? this.creditsOverlay()
                   : o?.kind === 'breed'
                     ? this.breedOverlay()

@@ -1,8 +1,8 @@
-// The automatic mode: an AI trainer that explores, befriends or battles,
-// captures new species, trains, feeds toward a chosen evolution branch,
-// breeds, and leaves a visible log. The player can take over at any time.
+// The automatic mode: an AI trainer that walks the overworld, observes,
+// befriends or battles, captures new species, trains, feeds toward a chosen
+// evolution branch and breeds. One visible action per tick.
 
-import { ABILITIES, BIOMES, ITEMS, SPECIES_BY_ID, type Exposure } from '../data/species';
+import { ABILITIES, BIOMES, ITEMS, SPECIES_BY_ID, type BiomeId, type Exposure } from '../data/species';
 import {
   Game,
   evaluateEvolution,
@@ -11,19 +11,185 @@ import {
   type Creature,
   type GameState,
 } from './game';
+import { findPath, randomGrassIn, type WorldMap } from './world';
 import { affinityMult, createBattle, playerAct, weatherMult, wildChoose, type Battle, type BattleAction } from './battle';
 
-const REGION_CYCLE: (keyof typeof BIOMES)[] = ['greenwood', 'meadow', 'wetlands', 'caves', 'ember', 'ruins'];
+const ZONES: BiomeId[] = ['greenwood', 'meadow', 'wetlands', 'caves', 'ember', 'ruins'];
+
+/** The walking plan for one universe, kept outside the save state. */
+interface Plan {
+  path: { x: number; y: number }[];
+  goal: { x: number; y: number };
+  /** Where the trainer is headed. */
+  target: string | null;
+}
+const PLANS = new WeakMap<Game, Plan>();
 
 export function autoStep(game: Game, battle: Battle | null): { text: string; startBattle?: boolean } {
-  const s = game.state;
   if (battle) return { text: battleStep(game, battle) };
-  if (s.wild) return wildStep(game);
-  if (s.region === 'village') return { text: villageStep(game) };
-  return { text: exploreStep(game) };
+  if (game.state.wild) return wildStep(game);
+  return walkStep(game);
 }
 
-// --- battles ------------------------------------------------------------------------------
+// --- the walk ---------------------------------------------------------------------------------
+
+/** Walk toward a goal, up to `maxSteps` tiles. Stops on an encounter. */
+function walkToward(game: Game, goal: { x: number; y: number }, maxSteps: number): { moved: number } {
+  const s = game.state;
+  const map = game.world;
+  let plan = PLANS.get(game);
+  if (!plan || plan.goal.x !== goal.x || plan.goal.y !== goal.y) {
+    plan = { path: findPath(map, { x: s.x, y: s.y }, goal) ?? [], goal, target: plan?.target ?? null };
+    PLANS.set(game, plan);
+  }
+  let moved = 0;
+  for (let k = 0; k < maxSteps && plan.path.length; k++) {
+    const next = plan.path[0];
+    const res = game.move(Math.sign(next.x - s.x), Math.sign(next.y - s.y));
+    if (!res.ok) {
+      plan.path = [];
+      break;
+    }
+    if (res.event === 'encounter') {
+      plan.path = [];
+      break;
+    }
+    plan.path.shift();
+    moved++;
+  }
+  return { moved };
+}
+
+function planOf(game: Game): Plan {
+  let plan = PLANS.get(game);
+  if (!plan) {
+    plan = { path: [], goal: { x: game.state.x, y: game.state.y }, target: null };
+    PLANS.set(game, plan);
+  }
+  return plan;
+}
+
+/** An encounter tile in this zone, near where we stand, so the trainer wanders. */
+function nearbyGrass(map: WorldMap, zone: string, from: { x: number; y: number }, rng: Game['rng']): { x: number; y: number } | null {
+  for (let tries = 0; tries < 40; tries++) {
+    const x = from.x + rng.range(-24, 24);
+    const y = from.y + rng.range(-24, 24);
+    if (x < 1 || y < 1 || x >= map.w - 1 || y >= map.h - 1) continue;
+    const i = y * map.w + x;
+    if ((map.zones[i] as string) !== zone) continue;
+    const t = map.tiles[i];
+    if (t === 1 /* tall grass */ || t === 8 /* ash */ || t === 11 /* cave floor */ || t === 12 /* ruin floor */ || t === 16 /* reeds */) {
+      return { x, y };
+    }
+  }
+  return null;
+}
+
+/** Where the trainer wants to go next: somewhere with species it has not met. */
+function pickTargetZone(game: Game): BiomeId {
+  const s = game.state;
+  const unseen = ZONES.filter((z) => Object.keys(BIOMES[z].wild).some((sid) => guideOf(s, sid) === 'unknown'));
+  const pool = unseen.length ? unseen : ZONES;
+  s.counts.autoTravel = (s.counts.autoTravel ?? 0) + 1;
+  return pool[(s.counts.autoTravel ?? 1) % pool.length];
+}
+
+function walkStep(game: Game): { text: string } {
+  const plan = planOf(game);
+  const zone = game.zoneNow();
+  if (zone === 'village') {
+    const care = villageCare(game);
+    if (care) {
+      plan.path = [];
+      return { text: care };
+    }
+    const target = pickTargetZone(game);
+    plan.target = target;
+    const c = game.world.centers[target];
+    const goal = { x: c.x + game.rng.range(-10, 10), y: c.y + game.rng.range(-10, 10) };
+    const { moved } = walkToward(game, goal, 6);
+    if (moved === 0) game.travel(target); // walled off: take the long road
+    return { text: moved ? `Walking toward ${BIOMES[target].name}.` : `Taking the long road to ${BIOMES[target].name}.` };
+  }
+  // Heading somewhere?
+  if (!plan.target || !ZONES.includes(plan.target as BiomeId)) {
+    plan.target = pickTargetZone(game);
+    plan.path = [];
+  }
+  const want = plan.target as BiomeId;
+  if (zone !== want) {
+    const c = game.world.centers[want];
+    const { moved } = walkToward(game, { x: c.x, y: c.y }, 6);
+    if (moved === 0) game.travel(want);
+    return { text: `On the road to ${BIOMES[want].name}.` };
+  }
+  // In the target zone: prowl the grass, and search when there is none to reach.
+  const grass = nearbyGrass(game.world, zone, { x: game.state.x, y: game.state.y }, game.rng);
+  if (grass) {
+    const { moved } = walkToward(game, grass, 6);
+    if (moved) return { text: `Prowling the ${BIOMES[want].name} grass.` };
+  }
+  plan.path = [];
+  return { text: game.explore().text };
+}
+
+// --- village -------------------------------------------------------------------------------------
+
+/** One useful thing to do at the village, or null when there is nothing left. */
+function villageCare(game: Game): string | null {
+  const s = game.state;
+  s.counts.autoVillage = (s.counts.autoVillage ?? 0) + 1;
+  if (s.counts.autoVillage > 4) {
+    s.counts.autoVillage = 0;
+    return null; // enough tending: back out into the world
+  }
+  const all = [...s.team, ...s.reserve];
+  const hurt = all.find((c) => c.hp < statsOf(c).maxHp * 0.5);
+  if (hurt && hurt.hp > 0) return game.rest(hurt.id);
+  if (s.eggs.length === 0) {
+    for (const a of all) {
+      const partner = all.find(
+        (b) => b.id !== a.id && SPECIES_BY_ID[a.speciesId].family === SPECIES_BY_ID[b.speciesId].family && game.canBreed(a.id, b.id).ok,
+      );
+      if (partner) return game.breed(a.id, partner.id);
+    }
+  }
+  const learner = all.find((c) => c.level >= 6 && SPECIES_BY_ID[c.speciesId].branches);
+  if (learner) {
+    const result = evaluateEvolution(learner);
+    const target = [...result.scores].sort((a, b) => b.score - a.score)[0];
+    const item = missingExposureItem(learner, target ? SPECIES_BY_ID[target.to] : undefined);
+    if (item && (s.items[item] ?? 0) > 0) return game.feed(learner.id, item);
+  }
+  const playmate = all.filter((c) => c.bond < 55).sort((a, b) => a.bond - b.bond)[0];
+  if (playmate && game.rng.chance(0.5)) return game.play(playmate.id);
+  const trainee = [...s.team].sort((a, b) => a.level - b.level)[0];
+  if (trainee) return game.train(trainee.id);
+  return null;
+}
+
+function missingExposureItem(c: Creature, target?: { id: string }): string | null {
+  const wanted: Exposure[] = [];
+  const branches = SPECIES_BY_ID[c.speciesId].branches ?? [];
+  const branch = target ? branches.find((b) => b.to === target.id) : branches[0];
+  for (const key of Object.keys(branch?.drivers ?? {})) {
+    if (!(key in c.personality)) wanted.push(key as Exposure);
+  }
+  const map: Partial<Record<Exposure, string>> = {
+    thermal: 'pepper',
+    aquatic: 'reed',
+    mineral: 'crystal',
+    organic: 'berry',
+    night: 'moonfruit',
+  };
+  for (const e of wanted) {
+    const item = map[e];
+    if (item) return item;
+  }
+  return 'berry';
+}
+
+// --- battles ----------------------------------------------------------------------------------
 
 /** How well a creature's abilities match up against a defender, best case. */
 function matchupEdge(a: Creature, d: Creature, weather: GameState['weather']): number {
@@ -49,7 +215,13 @@ function battleStep(game: Game, battle: Battle): string {
   // Heal early rather than late.
   if (hpFrac < 0.45) {
     const item =
-      (state.items.salve ?? 0) > 0 && hpFrac < 0.28 ? 'salve' : (state.items.berry ?? 0) > 0 ? 'berry' : (state.items.salve ?? 0) > 0 ? 'salve' : null;
+      (state.items.salve ?? 0) > 0 && hpFrac < 0.28
+        ? 'salve'
+        : (state.items.berry ?? 0) > 0
+          ? 'berry'
+          : (state.items.salve ?? 0) > 0
+            ? 'salve'
+            : null;
     if (item) {
       playerAct(game, battle, { type: 'item', itemId: item });
       return `${me.name} uses a ${ITEMS[item].name.toLowerCase()} mid-battle.`;
@@ -93,7 +265,7 @@ function battleStep(game: Game, battle: Battle): string {
   return `${me.name} ${bestIdx < 0 ? 'strikes' : `uses ${ABILITIES[me.creature.abilities[bestIdx]].name}`}.`;
 }
 
-// --- wild encounters ------------------------------------------------------------------------
+// --- wild encounters -----------------------------------------------------------------------------
 
 function wildStep(game: Game): { text: string; startBattle?: boolean } {
   const s = game.state;
@@ -135,93 +307,6 @@ function wildStep(game: Game): { text: string; startBattle?: boolean } {
   return { text: `Leaving the ${sp.name} be for now.` };
 }
 
-// --- the village -----------------------------------------------------------------------------
-
-function villageStep(game: Game): string {
-  const s = game.state;
-  const all = [...s.team, ...s.reserve];
-  s.counts.villageSteps = (s.counts.villageSteps ?? 0) + 1;
-
-  // A short stop: a few actions of care, then back out into the world.
-  if (s.counts.villageSteps > 3) {
-    s.counts.villageSteps = 0;
-    const region = REGION_CYCLE[(s.counts.autoTravel ?? 0) % REGION_CYCLE.length];
-    s.counts.autoTravel = (s.counts.autoTravel ?? 0) + 1;
-    game.travel(region);
-    return `Setting out for ${BIOMES[region].name}.`;
-  }
-
-  const hurt = all.find((c) => c.hp < statsOf(c).maxHp * 0.5);
-  if (hurt && hurt.hp > 0) return game.rest(hurt.id);
-
-  // Breed when two same-family creatures are close and no egg is on the way.
-  if (s.eggs.length === 0) {
-    for (const a of all) {
-      const partner = all.find((b) => b.id !== a.id && SPECIES_BY_ID[a.speciesId].family === SPECIES_BY_ID[b.speciesId].family && game.canBreed(a.id, b.id).ok);
-      if (partner) return game.breed(a.id, partner.id);
-    }
-  }
-
-  // Feed toward a creature's most likely evolution branch.
-  const learner = all.find((c) => c.level >= 6 && SPECIES_BY_ID[c.speciesId].branches);
-  if (learner) {
-    const result = evaluateEvolution(learner);
-    const target = [...result.scores].sort((a, b) => b.score - a.score)[0];
-    const item = missingExposureItem(learner, target ? SPECIES_BY_ID[target.to] : undefined);
-    if (item && (s.items[item] ?? 0) > 0) return game.feed(learner.id, item);
-  }
-
-  const playmate = all.filter((c) => c.bond < 55).sort((a, b) => a.bond - b.bond)[0];
-  if (playmate && game.rng.chance(0.5)) return game.play(playmate.id);
-
-  const trainee = [...s.team].sort((a, b) => a.level - b.level)[0];
-  if (trainee) return game.train(trainee.id);
-  if (all[0]) return game.rest(all[0].id);
-  return 'The village is quiet while the trainer plans the next expedition.';
-}
-
-function missingExposureItem(c: Creature, target?: { id: string }): string | null {
-  const wanted: Exposure[] = [];
-  const branches = SPECIES_BY_ID[c.speciesId].branches ?? [];
-  const branch = target ? branches.find((b) => b.to === target.id) : branches[0];
-  for (const key of Object.keys(branch?.drivers ?? {})) {
-    if (!(key in c.personality)) wanted.push(key as Exposure);
-  }
-  const map: Partial<Record<Exposure, string>> = {
-    thermal: 'pepper',
-    aquatic: 'reed',
-    mineral: 'crystal',
-    organic: 'berry',
-    night: 'moonfruit',
-  };
-  for (const e of wanted) {
-    const item = map[e];
-    if (item) return item;
-  }
-  return 'berry';
-}
-
-// --- exploration -------------------------------------------------------------------------------
-
-function exploreStep(game: Game): string {
-  const s = game.state;
-  s.counts.sinceVillage = (s.counts.sinceVillage ?? 0) + 1;
-  const hurt = [...s.team, ...s.reserve].find((c) => c.hp < statsOf(c).maxHp * 0.4);
-  if (hurt || (s.counts.sinceVillage ?? 0) > 12) {
-    s.counts.sinceVillage = 0;
-    s.counts.villageSteps = 0;
-    game.travel('village');
-    return 'Heading back to the village to rest, train and breed.';
-  }
-  const outcome = game.explore();
-  if (outcome.kind === 'encounter' && outcome.wild) {
-    s.counts.autoTries = 0;
-    s.counts.autoFought = 0;
-    return outcome.text;
-  }
-  return outcome.text;
-}
-
 /** Whether the auto trainer wants to start a battle with the current wild creature. */
 export function autoWantsBattle(game: Game): boolean {
   const s = game.state;
@@ -260,3 +345,5 @@ export function autoBattleAction(game: Game, battle: Battle): void {
 export function autoDescribe(s: GameState): string {
   return `Day ${s.day}, ${s.hour}:00 · ${s.region === 'village' ? 'village' : BIOMES[s.region].name} · ${s.team.length} companions`;
 }
+
+export { randomGrassIn };
