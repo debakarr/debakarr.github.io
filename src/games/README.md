@@ -139,11 +139,14 @@ A creature game where a creature's life shapes its evolution: where it lives, wh
 | `sim/game.ts` | DOM-free state and simulation: world clock and weather, exploration, wild encounters, Companion Link capture, raising (train/play/rest/feed), life-driven evolution, breeding with mixed genomes and rare variants, quests, achievements and saves |
 | `sim/battle.ts` | Turn-based 1v1 battles with switching: three abilities per creature, affinity strength, biome boost and weather modifiers, status effects, events with structured HP changes for the UI, and a wild AI that heals, uses status, or flees when scared |
 | `sim/auto.ts` | The automatic trainer: one visible action per tick — explore, observe, befriend, battle (only fair fights, with its best match-up), train, feed toward a chosen branch, breed |
-| `render/creature.ts` | Procedural SVG creature art built from layers per family (body, head, ears, tail, pattern, eyes, feature), coloured by species hue plus per-individual variation and crystal/golden/void variants |
-| `render/map.ts` | The illustrated node map (village + 6 regions) with a day/night sky and weather |
-| `ui/` | `app.ts` (screens, encounters, battles, overlays, automatic mode) and `screens.ts` (bars, rows, cards) |
+| `render/creature.ts` | Procedural SVG creature art built from layers per family (body, head, ears, tail, pattern, eyes, feature), coloured by species hue plus per-individual variation and crystal/golden/void variants; portraits (≥72px) get a lit volume filter and a soft contact shadow, list badges stay flat for cheap scrolling |
+| `render/world.ts` | The walkable overworld as a lit 2.5D scene: bevelled tile slabs, extruded trees/rocks/crystals/houses casting shadows that swing and stretch with the hour, depth-sorted objects, rippling water with foam and glints, glowing lava, lantern pools at night, drifting weather and a vignette |
+| `render/map.ts` | The illustrated node map (village + 6 regions) with a day/night sky and weather, now the fast-walk overview |
+| `ui/` | `app.ts` (screens, encounters, battles, overlays, automatic mode, walking: keys, D-pad, tap-to-path) and `screens.ts` (bars, rows, cards) |
 
 Key ideas:
+
+- **You walk the world, you do not click it.** One seeded 152×112 tile map (`sim/world.ts`) holds all six regions as organic zones around a village, joined by paths, rivers and bridges. Arrow keys/WASD, the D-pad or a tap (BFS pathfinding) move you; each step advances the clock, grants small exposures, picks up bushes and ruin fragments, and rolls encounters on tall grass, reeds, ash and ruins. The Regions screen is a fast-walk menu.
 
 - **Evolution is earned, not bought.** Every creature accumulates exposure counters (thermal, aquatic, mineral, organic, night, storm, wins, losses, explore, play, ruins) from the places it goes and the things it does. From level 8, `sim/game.ts#evaluateEvolution` scores the three branches of its family from those counters plus personality; the best branch past a threshold evolves it. Branches stay "???" in the Field Guide until discovered.
 - **Capture is a bond.** Companion Link has no capture items: its chance comes from trust, HP, fear, stress and personality, so you befriend by observing, feeding and playing.

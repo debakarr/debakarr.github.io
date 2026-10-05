@@ -308,7 +308,15 @@ const BODIES: Record<FamilyId, (p: Palette) => SVGElement> = {
   moth: bodyMoth,
 };
 
-/** A full creature drawing as an inline SVG element. */
+/** Filters are per-instance so several portraits can share a page. */
+let filterSeq = 0;
+
+/**
+ * A full creature drawing as an inline SVG element. Portraits (anything from
+ * list-badge size up) get a lit volume: a warm highlight from the upper left, a
+ * cool shadow to the lower right and a soft contact shadow, so the flat shapes
+ * read as a small solid figure standing on a surface.
+ */
 export function creatureSVG(art: CreatureArt, px = 120): SVGSVGElement {
   const sp = SPECIES_BY_ID[art.speciesId];
   const p = palette(art);
@@ -320,8 +328,31 @@ export function creatureSVG(art: CreatureArt, px = 120): SVGSVGElement {
     role: 'img',
     'aria-label': sp.name,
   }) as SVGSVGElement;
-  svg.appendChild(S('ellipse', { cx: 60, cy: 106, rx: 26 * p.scale, ry: 6, fill: '#000', opacity: 0.18 }));
+  const lit = px >= 72;
+  const id = `wb-vol-${(filterSeq = (filterSeq + 1) % 100000)}`;
+  if (lit) {
+    const defs = S('defs');
+    // One warm highlight from the upper left, one cool shade to the lower
+    // right: the cheapest convincing way to round a flat silhouette.
+    defs.appendChild(S('filter', { id: `${id}-lit`, x: '-30%', y: '-30%', width: '160%', height: '160%' },
+      S('feDropShadow', { dx: -2.2, dy: -3, stdDeviation: 2.6, 'flood-color': '#fff8e0', 'flood-opacity': 0.34 }),
+      S('feDropShadow', { dx: 3, dy: 5.5, stdDeviation: 4.2, 'flood-color': '#0a1420', 'flood-opacity': 0.42 }),
+    ));
+    const shade = S('radialGradient', { id: `${id}-ground`, cx: '50%', cy: '50%', r: '50%' },
+      S('stop', { offset: '0', 'stop-color': '#03080f', 'stop-opacity': 0.5 }),
+      S('stop', { offset: '0.6', 'stop-color': '#03080f', 'stop-opacity': 0.22 }),
+      S('stop', { offset: '1', 'stop-color': '#03080f', 'stop-opacity': 0 }),
+    );
+    defs.appendChild(shade);
+    svg.appendChild(defs);
+  }
+  if (lit) {
+    svg.appendChild(S('ellipse', { cx: 60, cy: 106, rx: 30 * p.scale, ry: 8, fill: `url(#${id}-ground)` }));
+  } else {
+    svg.appendChild(S('ellipse', { cx: 60, cy: 106, rx: 26 * p.scale, ry: 6, fill: '#000', opacity: 0.18 }));
+  }
   const art2 = S('g', { transform: `translate(60,66) scale(${p.scale}) translate(-60,-66)` });
+  if (lit) art2.setAttribute('filter', `url(#${id}-lit)`);
   art2.appendChild(BODIES[sp.look.body](p));
   art2.appendChild(feature(p, sp.look.feature));
   svg.appendChild(art2);
