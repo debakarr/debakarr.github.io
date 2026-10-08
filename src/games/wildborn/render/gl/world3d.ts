@@ -3,13 +3,14 @@
 // casting the camera ray onto the ground, and the avatar eases between tiles so
 // walking looks continuous.
 
-import { Raycaster, Vector2 } from 'three';
+import { type Group, Raycaster, Vector2 } from 'three';
 import type { Game } from '../../sim/game';
 import { findPath, type WorldMap } from '../../sim/world';
 import type { WorldView } from '../view';
 import { Actor } from './actor';
 import { CameraRig, type CameraMode } from './camera';
 import { PROP_VIEW, Props } from './props';
+import { buildCreature } from './creature3d';
 import { Stage, sunAt } from './stage';
 import { Terrain, groundAt } from './terrain';
 import { Weather } from './weather';
@@ -22,6 +23,9 @@ export class World3D implements WorldView {
   private props: Props | null = null;
   private actor = new Actor();
   private weather = new Weather();
+  /** The 3D model of the wild creature in state, when there is one. */
+  private creature: Group | null = null;
+  private creatureFor: string | null = null;
   private map: WorldMap | null = null;
   private builtFor: WorldMap | null = null;
   /** Smoothed avatar position in tile units. */
@@ -43,6 +47,11 @@ export class World3D implements WorldView {
   private underSince = 0;
   /** Seconds of tuning to ignore, while a freshly built world settles. */
   private settleUntil = 2;
+  // --- encounter framing: push in and level out until the encounter ends ----
+  /** True while a wild creature is in state (sets apart from clearing it). */
+  private wasWild = false;
+  private distBeforeWild = 6.4;
+  private pitchBeforeWild = 0.34;
 
   constructor(canvas: HTMLCanvasElement) {
     this.stage = new Stage(canvas);
@@ -72,6 +81,56 @@ export class World3D implements WorldView {
     this.ay = map.spawn.y;
     // Building the meshes costs a frame or two; ignore that while tuning.
     this.settleUntil = 2;
+    // A world change means any wild creature in play is a new one.
+    this.clearCreature();
+  }
+
+  /** Remove the wild creature model from the scene. */
+  private clearCreature(): void {
+    if (this.creature) {
+      this.stage.scene.remove(this.creature);
+      this.creature.traverse((o) => {
+        const m = o as { geometry?: { dispose: () => void } };
+        m.geometry?.dispose();
+      });
+      this.creature = null;
+    }
+    this.creatureFor = null;
+  }
+
+  /**
+   * Keep a 3D model of the wild creature in state. It stands a couple of tiles
+   * in front of you in the direction the camera is looking, facing you, so
+   * meeting something in the grass actually looks like meeting something.
+   */
+  private syncCreature(game: Game, now: number): void {
+    const wild = game.state.wild;
+    if (!wild) {
+      this.clearCreature();
+      return;
+    }
+    if (this.creatureFor !== wild.id) {
+      this.clearCreature();
+      this.creature = buildCreature({ speciesId: wild.speciesId, id: wild.id, variant: wild.variant, genome: wild.genome });
+      this.creatureFor = wild.id;
+      const forward = this.rig.forward();
+      const px = this.ax + 0.5;
+      const pz = this.ay + 0.5;
+      // In front of you, but off to one side so you do not stand in it.
+      const ahead = 2.7;
+      const over = 0.85;
+      const cx = px + forward.x * ahead + forward.z * over;
+      const cz = pz + forward.z * ahead - forward.x * over;
+      const groundY = groundAt(this.map!, cx, cz);
+      this.creature.position.set(cx, groundY, cz);
+      this.creature.rotation.y = Math.atan2(px - cx, pz - cz);
+      this.stage.scene.add(this.creature);
+    } else if (this.creature) {
+      // Bob and breathe so it is a meeting, not a taxidermy mount.
+      const phase = (this.creature.userData.phase as number) ?? 0;
+      this.creature.position.y = groundAt(this.map!, this.creature.position.x, this.creature.position.z) + Math.sin(now / 520 + phase) * 0.045;
+      this.creature.rotation.z = Math.sin(now / 700 + phase) * 0.03;
+    }
   }
 
   resize(): void {
@@ -171,6 +230,9 @@ export class World3D implements WorldView {
     this.actor.group.position.x = this.ax + 0.5;
     this.actor.group.position.z = this.ay + 0.5;
 
+    // A wild creature you meet stands up in front of you.
+    this.syncCreature(game, now);
+
     // Light and weather for the hour.
     const sun = sunAt(s.hour);
     this.stage.applyLight(sun);
@@ -181,6 +243,24 @@ export class World3D implements WorldView {
     this.weather.applyFog(this.stage.fog, s.weather);
     this.weather.update(dt, this.stage.camera.position, s.weather === 'storm');
 
+    // During a wild encounter the bottom sheet frames the scene: tilt the aim
+    // down to push the player and creature into the visible strip above it.
+    this.rig.aimDrop = game.state.wild ? 1.15 : 0;
+    // Push in on the player and meet the creature more face-on. The values are
+    // restored when state.wild clears.
+    if (game.state.wild && !this.wasWild) {
+      this.distBeforeWild = this.rig.distance;
+      this.pitchBeforeWild = this.rig.targetPitch;
+    }
+    if (!game.state.wild && this.wasWild) {
+      this.rig.distance = this.distBeforeWild;
+      this.rig.targetPitch = this.pitchBeforeWild;
+    }
+    if (game.state.wild) {
+      this.rig.distance += (4.4 - this.rig.distance) * 0.06;
+      this.rig.targetPitch += (0.55 - this.rig.targetPitch) * 0.06;
+    }
+    this.wasWild = !!game.state.wild;
     this.rig.update(dt, map, this.ax, this.ay);
 
     // A white wash on an encounter, and a lightning flash on a storm.
@@ -209,14 +289,11 @@ export class World3D implements WorldView {
    * view feels broken the moment the camera is not facing north.
    */
   rotateInput(dx: number, dy: number): { dx: number; dy: number } {
-    const y = this.rig.yaw;
-    const s = Math.sin(y);
-    const c = Math.cos(y);
-    // Forward is (-dy) in screen terms. Screen-right is the forward vector
-    // crossed with up, which in tile space is (-c, s) -- note the sign, or
-    // "left" walks to the right of where you are looking.
-    let wx = -dy * s - dx * c;
-    let wz = -dy * c + dx * s;
+    const f = this.rig.forward();
+    // Forward is (-dy) in screen terms; screen-right is the perpendicular
+    // (-f.z, f.x). The camera-relative test verifies both directions.
+    let wx = f.x * -dy + -f.z * dx;
+    let wz = f.z * -dy + f.x * dx;
     const len = Math.hypot(wx, wz);
     if (len < 0.0001) return { dx: 0, dy: 0 };
     wx /= len;
@@ -283,6 +360,7 @@ export class World3D implements WorldView {
     this.props?.dispose();
     this.actor.dispose();
     this.weather.dispose();
+    this.clearCreature();
     this.stage.dispose();
   }
 }

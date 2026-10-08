@@ -22,12 +22,17 @@ export class CameraRig {
   /** Distance behind the player in third person. */
   distance = 6.4;
   private targetYaw = Math.PI;
-  private targetPitch = 0.34;
+  /** Where to point the camera vertically; eased toward in update(). */
+  targetPitch = 0.34;
   private smoothYaw = Math.PI;
   private smoothPitch = 0.34;
   private pos = new Vector3();
   private aim = new Vector3();
   private player = new Vector3();
+
+    /** Drop the aim point this many units during an encounter, so the sheet (which
+   * sits at the bottom) does not cover the player and the creature. */
+  public aimDrop = 0;
 
   constructor(readonly camera: PerspectiveCamera) {}
 
@@ -93,7 +98,7 @@ export class CameraRig {
       const floor = groundAt(map, ox, oz) + 0.85;
       this.pos.set(ox, Math.max(oy, floor), oz);
       // Look a little ahead of the player so the figure sits low in frame.
-      this.aim.set(this.player.x, this.player.y + 1.15, this.player.z);
+      this.aim.set(this.player.x, this.player.y + 1.15 - this.aimDrop, this.player.z);
     }
 
     this.camera.position.lerp(this.pos, Math.min(1, dt * 14));
@@ -108,8 +113,18 @@ export class CameraRig {
     this.camera.position.copy(this.pos);
   }
 
-  /** Unit vector the camera is looking along, on the ground plane. */
+  /**
+   * Unit vector the camera is actually looking along, on the ground plane.
+   * In third person the eye sits behind the player and aims at it, so the
+   * net view direction points from the eye toward and past the player --
+   * the opposite of the offset direction that a naive (sin, cos) gives.
+   * First person looks along the offset. Getting this wrong makes "up"
+   * walk toward the camera.
+   */
   forward(): { x: number; z: number } {
-    return { x: Math.sin(this.smoothYaw), z: Math.cos(this.smoothYaw) };
+    const s = Math.sin(this.smoothYaw);
+    const c = Math.cos(this.smoothYaw);
+    const k = this.mode === 'first' ? 1 : -1;
+    return { x: s * k, z: c * k };
   }
 }

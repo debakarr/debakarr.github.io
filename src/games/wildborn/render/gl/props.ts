@@ -169,7 +169,7 @@ const SPECS: Record<string, KindSpec> = {
   house: {
     geometry: merge([
       { geo: new BoxGeometry(1.5, 1.1, 1.5), color: 0xb08f68, y: 0.55 },
-      { geo: new ConeGeometry(1.35, 0.85, 4, 1, true), color: 0xa34a3c, y: 1.5 },
+      { geo: new ConeGeometry(1.42, 1.0, 4, 1, false), color: 0xa34a3c, y: 1.6 },
     ]),
     material: matte(),
     sway: 0,
@@ -251,7 +251,7 @@ const FEATURE_SPECS: Record<string, KindSpec> = {
   home: {
     geometry: merge([
       { geo: new BoxGeometry(2.2, 1.4, 2.2), color: 0xb08f68, y: 0.7 },
-      { geo: new ConeGeometry(1.95, 1.15, 4), color: 0xa34a3c, y: 1.9 },
+      { geo: new ConeGeometry(1.95, 1.15, 4, 1, false), color: 0xa34a3c, y: 1.9 },
       { geo: new BoxGeometry(0.4, 0.7, 0.1), color: 0x5c4130, y: 0.35 },
     ]),
     material: matte(),

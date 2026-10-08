@@ -78,9 +78,9 @@ class Quads {
     for (let k = 0; k < 3; k++) this.col.push(c.r, c.g, c.b);
   }
 
-  /** Flat quad in the XZ plane at height `y`, corners in order. */
-  tile(x: number, y: number, z: number, h: number, c: Color): void {
-    this.quad(x, h, z, x, h, z + 1, x + 1, h, z + 1, x + 1, h, z, c);
+  /** Flat quad in the XZ plane at height `h`, spanning from (x, y) in tiles. */
+  tile(x: number, y: number, h: number, c: Color): void {
+    this.quad(x, h, y, x, h, y + 1, x + 1, h, y + 1, x + 1, h, y, c);
   }
 
   get count(): number {
@@ -130,7 +130,7 @@ export class Terrain {
             // Steep ground takes the jitter harder, flat ground barely at all.
             const jitter = (((hashString(`${x}:${y}`) % 11) - 5) / 220) * (th > 0.1 ? 1.4 : 0.4);
             const top = C(COLOR[t] ?? 0x4f9c5e).offsetHSL(0, 0, jitter);
-            q.tile(x, y, 0, th, top);
+            q.tile(x, y, th, top);
             // Cliff walls toward any lower neighbour, wound to face outward.
             const wall = (nx: number, nz: number, ax: number, az: number, bx: number, bz: number): void => {
               const nh = heightOf(tileAt(x + nx, y + nz));
@@ -162,7 +162,7 @@ export class Terrain {
         const t = map.tiles[y * w + x];
         if (t !== T.Water && t !== T.DeepWater) continue;
         const deep = t === T.DeepWater;
-        wq.tile(x, y, 0, heightOf(t) + 0.035, C(deep ? 0x14324f : 0x2a6ea8));
+        wq.tile(x, y, heightOf(t) + 0.035, C(deep ? 0x14324f : 0x2a6ea8));
         waterTiles++;
       }
     }
@@ -179,7 +179,7 @@ export class Terrain {
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         if (map.tiles[y * w + x] !== T.Lava) continue;
-        lq.tile(x, y, 0, heightOf(T.Lava) + 0.04, C(0xffffff));
+        lq.tile(x, y, heightOf(T.Lava) + 0.04, C(0xffffff));
         lavaTiles++;
       }
     }

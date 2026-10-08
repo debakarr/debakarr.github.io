@@ -39,7 +39,7 @@ interface Palette {
   glow: number;
 }
 
-function palette(art: CreatureArt): Palette {
+export function palette(art: CreatureArt): Palette {
   const sp = SPECIES_BY_ID[art.speciesId];
   const seed = hashString(art.id ?? sp.id);
   const jitter = ((seed % 17) - 8) as number;

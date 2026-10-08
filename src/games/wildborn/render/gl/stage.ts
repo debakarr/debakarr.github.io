@@ -143,7 +143,7 @@ export class Stage {
     this.renderer.toneMappingExposure = 1.05;
 
     this.scene = new Scene();
-    this.scene.fog = new Fog(0xc3e0e8, 44, 190);
+    this.scene.fog = new Fog(0xc3e0e8, 36, 132);
 
     // The far plane sits just past the fog, so chunks the fog has already
     // swallowed are culled instead of drawn and thrown away.
@@ -179,8 +179,9 @@ export class Stage {
         }
       `,
     });
-    this.sky = new Mesh(new SphereGeometry(260, 20, 14), this.skyMat);
+    this.sky = new Mesh(new SphereGeometry(150, 20, 14), this.skyMat);
     this.sky.frustumCulled = false;
+    this.sky.renderOrder = -1;
     this.scene.add(this.sky);
 
     this.sun = new DirectionalLight(0xffffff, 2);
@@ -214,6 +215,8 @@ export class Stage {
     this.ambient.intensity = sun.night ? 0.22 : 0.3;
     this.skyMat.uniforms.top.value.copy(sun.skyTop);
     this.skyMat.uniforms.bottom.value.copy(sun.skyBottom);
+    // Never show raw clear color at the frame edges, even if the sky misses.
+    this.renderer.setClearColor(sun.skyBottom, 1);
     const fog = this.scene.fog as Fog;
     fog.color.copy(sun.fog);
     fog.near = sun.fogNear;

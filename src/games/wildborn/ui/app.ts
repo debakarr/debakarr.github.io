@@ -1309,6 +1309,10 @@ export class App {
                       ? this.noticeOverlay(`${findCreature(this.game!.state, o.id)?.name ?? 'Your creature'} evolved into ${SPECIES_BY_ID[o.to].name}, shaped by the life it has lived!`)
                       : this.noticeOverlay(o?.kind === 'notice' ? o.text : '');
     this.overlayEl.append(h('div', { class: 'wb-overlay-scrim', onclick: () => { if (this.overlay?.kind !== 'battle') this.closeOverlay(); } }), inner);
+    // The wild encounter stays "out in the field": light scrim and a bottom
+    // sheet, so the 3D creature is visible on the canvas above it.
+    if (o?.kind === 'wild') this.overlayEl.classList.add('wb-overlay-encounter');
+    else this.overlayEl.classList.remove('wb-overlay-encounter');
     this.paintBadges(inner);
     this.animateBattle(inner);
   }

@@ -1007,6 +1007,25 @@
   background: rgba(4, 12, 10, 0.66);
 }
 
+/* In a wild encounter you can see the creature on the canvas: dim lightly and
+   let the sheet sit at the bottom instead of taking the middle of the screen. */
+.wb-overlay-encounter {
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.wb-overlay-encounter .wb-overlay-scrim {
+  background: rgba(4, 12, 10, 0.22);
+}
+
+.wb-overlay-encounter .wb-sheet {
+  width: min(680px, calc(100vw - 16px));
+  max-height: 46vh;
+  margin-bottom: calc(10px + env(safe-area-inset-bottom));
+  border-bottom-left-radius: 14px;
+  border-bottom-right-radius: 14px;
+}
+
 .wb-sheet {
   position: relative;
   width: min(560px, calc(100vw - 24px));
