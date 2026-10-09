@@ -4,6 +4,7 @@
 // camera (which must not sink into the ground) need to agree on them.
 
 import {
+  ACESFilmicToneMapping,
   AmbientLight,
   BackSide,
   Color,
@@ -21,27 +22,32 @@ import {
   WebGLRenderer,
 } from 'three';
 
-/** Ground height in world units for each tile (1 tile = 1 unit wide). */
+/**
+ * Ground height in world units for each tile (1 tile = 1 unit wide).
+ * Flat ground types share exactly 0 on purpose: the smallest step between two
+ * tiles draws a visible coloured wall, and a field of them reads as a tiled
+ * floor rather than ground. Only real features step up or sink.
+ */
 export const HEIGHT: Record<number, number> = {
   0: 0, // Grass
-  1: 0.04, // Tall grass
-  2: 0.05, // Path
+  1: 0, // Tall grass
+  2: 0, // Path
   3: 0, // Tree (the tree itself is a prop)
-  4: -0.34, // Water
-  5: -0.72, // Deep water
-  6: 0.42, // Rock
-  7: 1.85, // Mountain
-  8: 0.06, // Ash
-  9: -0.22, // Lava
-  10: 0.34, // Crystal formation
-  11: 0.08, // Cave floor
-  12: 0.07, // Ruin floor
-  13: 0.16, // Pillar base
-  14: 0.09, // Village floor
+  4: -0.3, // Water
+  5: -0.6, // Deep water
+  6: 0.45, // Rock
+  7: 1.6, // Mountain
+  8: 0, // Ash
+  9: -0.18, // Lava
+  10: 0.3, // Crystal formation
+  11: 0, // Cave floor
+  12: 0, // Ruin floor
+  13: 0.14, // Pillar base
+  14: 0, // Village floor
   15: 0, // Wall (the house itself is a prop)
-  16: -0.06, // Reeds
-  17: 0.04, // Flowers
-  18: 0.08, // Sand
+  16: 0, // Reeds
+  17: 0, // Flowers
+  18: 0, // Sand
 };
 
 /** How tall the player is, and where their eyes are. */
@@ -86,13 +92,18 @@ export function sunAt(hour: number): SunState {
   const t = ((hour - 6) / 12 + 1) % 1;
   const elevation = Math.max(0.08, Math.sin(t * Math.PI));
   const azimuth = (t - 0.5) * 2;
-  const dir = new Vector3(azimuth * 0.85, -(0.35 + elevation * 0.9), 0.55).normalize();
+  // Never quite overhead: a sun at 65-70 degrees off vertical gives shadows
+  // that read as shapes instead of a dark smudge directly under objects, which
+  // is what makes flat low-poly forms readable as 3D at all.
+  const dir = new Vector3(azimuth * 1.15, -(0.72 + elevation * 0.5), 0.62).normalize();
 
   const warm = C(0xffb46a);
   const noon = C(0xfff6e4);
   const moonlight = C(0x9fc0ff);
   const color = night ? moonlight : dusk ? mix(noon, warm, day) : noon;
-  const intensity = night ? 0.5 : dusk ? 1.15 : 1.85;
+  // three.js r155+ uses physically-correct lights, which divide diffuse by PI.
+  // These values are scaled so a noon day reads as bright as it looks.
+  const intensity = night ? 1.7 : dusk ? 3.6 : 5.9;
 
   const skyTop = night ? C(0x070d24) : dusk ? mix(C(0x2b2f5e), C(0x12183a), day) : C(0x2f7fb8);
   const skyBottom = night ? C(0x121c38) : dusk ? mix(C(0xd88a52), C(0x3a2f52), day) : C(0xbfe4ef);
@@ -105,9 +116,9 @@ export function sunAt(hour: number): SunState {
     skyTop,
     skyBottom,
     fog,
-    fogNear: night ? 22 : 36,
-    fogFar: night ? 92 : 132,
-    ambient: night ? 0.5 : dusk ? 0.75 : 0.95,
+    fogNear: night ? 16 : 26,
+    fogFar: night ? 78 : 96,
+    ambient: night ? 1.5 : dusk ? 2.2 : 2.9,
     night,
     dusk,
   };
@@ -138,6 +149,9 @@ export class Stage {
       alpha: false,
     });
     this.renderer.outputColorSpace = SRGBColorSpace;
+    // Filmic tone mapping: rolls highlights off instead of clipping them and
+    // gives the world a cinematic grade rather than flat diffuse.
+    this.renderer.toneMapping = ACESFilmicToneMapping;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = PCFShadowMap;
     this.renderer.toneMappingExposure = 1.05;
@@ -199,8 +213,8 @@ export class Stage {
     this.sun.shadow.normalBias = 0.035;
     this.scene.add(this.sun, this.sun.target);
 
-    this.hemi = new HemisphereLight(0xbfe4ef, 0x3a4a34, 1.1);
-    this.ambient = new AmbientLight(0xffffff, 0.35);
+    this.hemi = new HemisphereLight(0xbfe4ef, 0x3a4a34, 3.4);
+    this.ambient = new AmbientLight(0xffffff, 1.0);
     this.scene.add(this.hemi, this.ambient);
 
     this.resize();
@@ -212,7 +226,7 @@ export class Stage {
     this.sun.intensity = sun.intensity;
     this.hemi.intensity = sun.ambient;
     this.hemi.color.copy(sun.skyTop).lerp(new Color(0xffffff), 0.35);
-    this.ambient.intensity = sun.night ? 0.22 : 0.3;
+    this.ambient.intensity = sun.night ? 0.75 : 0.95;
     this.skyMat.uniforms.top.value.copy(sun.skyTop);
     this.skyMat.uniforms.bottom.value.copy(sun.skyBottom);
     // Never show raw clear color at the frame edges, even if the sky misses.
@@ -221,7 +235,7 @@ export class Stage {
     fog.color.copy(sun.fog);
     fog.near = sun.fogNear;
     fog.far = sun.fogFar;
-    this.renderer.toneMappingExposure = sun.night ? 1.25 : 1.05;
+    this.renderer.toneMappingExposure = sun.night ? 1.3 : 1.05;
     this.sunDir.copy(sun.dir);
   }
 

@@ -57,6 +57,8 @@ export class World3D implements WorldView {
     this.stage = new Stage(canvas);
     this.rig = new CameraRig(this.stage.camera);
     this.stage.scene.add(this.actor.group, this.weather.mesh);
+    // Start at full quality; the controller steps down if frames are slow.
+    this.setQuality(3);
   }
 
   /** Build (or rebuild) the static world for a map. */
@@ -316,17 +318,18 @@ export class World3D implements WorldView {
       this.frameAvg = 16;
       return;
     }
-    if (this.frameAvg > 26 && this.quality > 0) {
+    // A 30fps cap still looks smooth, so do not degrade until well past it.
+    if (this.frameAvg > 30 && this.quality > 0) {
       this.underSince = 0;
       this.overSince += dt;
-      if (this.overSince > 2) {
+      if (this.overSince > 2.5) {
         this.setQuality(this.quality - 1);
         this.overSince = 0;
         this.frameAvg = 16;
       }
       return;
     }
-    if (this.frameAvg < 12 && this.quality < 3) {
+    if (this.frameAvg < 13 && this.quality < 3) {
       this.overSince = 0;
       this.underSince += dt;
       // Step back up slowly, and only after a sustained comfortable stretch.
@@ -341,18 +344,24 @@ export class World3D implements WorldView {
     this.underSince = 0;
   }
 
+  /**
+   * Shadows stay on at every level: they are the main cue that separates an
+   * object from the ground, and a scene without them reads as cardboard
+   * cut-outs no matter how good the rest of it is. What a slow machine loses is
+   * resolution and distance instead.
+   */
   private setQuality(level: number): void {
     this.quality = Math.max(0, Math.min(3, level));
-    const shadows = this.quality >= 2;
-    this.stage.renderer.shadowMap.enabled = shadows;
-    this.stage.maxDpr = [0.75, 1, 1.25, 1.75][this.quality];
+    // The shadow volume is tight (+-26 units), so 1024 is already ~20 texels
+    // per unit; bigger maps cost memory and, on software renderers, can kill
+    // the context entirely. Quality differences come from resolution and draw
+    // distance instead.
+    this.stage.renderer.shadowMap.enabled = true;
+    this.stage.maxDpr = [0.7, 0.9, 1.2, 1.75][this.quality];
     this.stage.resize();
     this.props?.setView(PROP_VIEW[this.quality]);
-    // Materials must be told their shadow settings changed.
-    this.stage.scene.traverse((o) => {
-      const mat = (o as { material?: { needsUpdate: boolean } }).material;
-      if (mat) mat.needsUpdate = true;
-    });
+    // No material recompile: shadows are always on now, and touching every
+    // material in a scene this size costs seconds and can drop the context.
   }
 
   dispose(): void {

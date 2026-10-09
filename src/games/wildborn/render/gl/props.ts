@@ -95,24 +95,26 @@ const matte = (extra: Partial<MeshLambertMaterialParameters> = {}): MeshLambertM
  *  never seen, and skipping them roughly halves the triangle count. */
 const SPECS: Record<string, KindSpec> = {
   tree: {
+    // Broadleaf: a clear conical crown over a bare trunk, so the silhouette
+    // reads as a tree from any angle rather than a ball on a stick.
     geometry: merge([
-      { geo: new CylinderGeometry(0.13, 0.19, 1.5, 5, 1, true), color: 0x5c4130, y: 0.75 },
-      { geo: new ConeGeometry(1.0, 1.5, 6, 1, true), color: 0x2f6b41, y: 1.95 },
-      { geo: new ConeGeometry(0.76, 1.25, 6, 1, true), color: 0x3b7f4e, y: 2.85 },
-      { geo: new ConeGeometry(0.48, 0.95, 6, 1, true), color: 0x4a9c60, y: 3.6 },
+      { geo: new CylinderGeometry(0.06, 0.09, 0.75, 5, 1, true), color: 0x5c4130, y: 0.37 },
+      { geo: new ConeGeometry(0.52, 1.15, 7, 1, true), color: 0x2f6b41, y: 1.15 },
+      { geo: new ConeGeometry(0.4, 0.95, 7, 1, true), color: 0x3b7f4e, y: 1.62 },
+      { geo: new ConeGeometry(0.27, 0.7, 7, 1, true), color: 0x4a9c60, y: 2.0 },
     ]),
     material: matte(),
-    sway: 0.045,
+    sway: 0.015,
     shadow: true,
   },
   pine: {
     geometry: merge([
-      { geo: new CylinderGeometry(0.11, 0.17, 1.2, 5, 1, true), color: 0x4a3324, y: 0.6 },
-      { geo: new ConeGeometry(0.88, 1.6, 6, 1, true), color: 0x25553a, y: 1.7 },
-      { geo: new ConeGeometry(0.64, 1.4, 6, 1, true), color: 0x2e6b47, y: 2.8 },
+      { geo: new CylinderGeometry(0.05, 0.08, 0.55, 5, 1, true), color: 0x4a3324, y: 0.27 },
+      { geo: new ConeGeometry(0.4, 0.85, 6, 1, true), color: 0x25553a, y: 0.78 },
+      { geo: new ConeGeometry(0.27, 0.68, 6, 1, true), color: 0x2e6b47, y: 1.26 },
     ]),
     material: matte(),
-    sway: 0.035,
+    sway: 0.015,
     shadow: true,
   },
   bush: {
@@ -126,11 +128,22 @@ const SPECS: Record<string, KindSpec> = {
   },
   reed: {
     geometry: merge([
-      { geo: new CylinderGeometry(0.03, 0.05, 1.15, 4), color: 0x5d8a3c, y: 0.57 },
-      { geo: new CylinderGeometry(0.03, 0.04, 0.9, 4), color: 0x6f9c46, y: 0.45 },
+      { geo: new CylinderGeometry(0.03, 0.05, 1.15, 4, 1, true), color: 0x5d8a3c, y: 0.57 },
+      { geo: new CylinderGeometry(0.03, 0.04, 0.9, 4, 1, true), color: 0x6f9c46, y: 0.45 },
     ]),
     material: matte(),
     sway: 0.11,
+    shadow: false,
+  },
+  /** A few blades of grass: cheap, and it stops bare ground reading as plastic. */
+  tuft: {
+    geometry: merge([
+      { geo: new ConeGeometry(0.1, 0.36, 4, 1, true), color: 0x40915a, y: 0.17 },
+      { geo: new ConeGeometry(0.075, 0.26, 4, 1, true), color: 0x4da368, y: 0.13 },
+      { geo: new ConeGeometry(0.085, 0.3, 4, 1, true), color: 0x367a4e, y: 0.15 },
+    ]),
+    material: matte(),
+    sway: 0.05,
     shadow: false,
   },
   rock: {
@@ -354,13 +367,15 @@ export class Props {
         const yaw = ((r % 628) / 100) % (Math.PI * 2);
         switch (t) {
           case T.Tree:
-            place(r % 3 === 0 ? 'pine' : 'tree', x, y, 0.82 + (r % 40) / 100, yaw);
+            // Not every tree tile carries one: gaps give the forest depth and
+            // let you see through it instead of staring at a wall of trunks.
+            if (r % 7 !== 0) place(r % 3 === 0 ? 'pine' : 'tree', x, y, 0.78 + (r % 42) / 100, yaw);
             break;
           case T.Rock:
-            if (r % 4 !== 0) place('rock', x, y, 0.55 + (r % 50) / 70, yaw);
+            if (r % 4 !== 0) place('rock', x, y, 0.5 + (r % 55) / 80, yaw);
             break;
           case T.Mountain:
-            place('mountain', x, y, 0.85 + (r % 40) / 90, yaw);
+            place('mountain', x, y, 0.8 + (r % 45) / 90, yaw);
             break;
           case T.Crystal:
             place('crystal', x, y, 0.7 + (r % 45) / 90, yaw);
@@ -373,12 +388,18 @@ export class Props {
             break;
           case T.Tall:
             if (r % 8 === 0) place('bush', x, y, 0.65, yaw);
+            else if (r % 3 === 0) place('tuft', x, y, 0.7 + (r % 40) / 100, yaw);
             break;
           case T.Reed:
             place('reed', x, y, 0.8 + (r % 40) / 90, yaw);
             break;
           case T.Flower:
             if (r % 2 === 0) place('bush', x, y, 0.42, yaw);
+            else if (r % 4 === 1) place('tuft', x, y, 0.6 + (r % 30) / 100, yaw);
+            break;
+          case T.Grass:
+            // Sparse tufts on open grass: variation without a forest of props.
+            if (r % 11 === 0) place('tuft', x, y, 0.65 + (r % 45) / 100, yaw);
             break;
           default:
             break;

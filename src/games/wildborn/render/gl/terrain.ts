@@ -14,9 +14,10 @@ import {
   ShaderMaterial,
   UniformsUtils,
 } from 'three';
-import { hashString } from '../../../shared/rng';
+import { Rng } from '../../../shared/rng';
 import { T, type WorldMap } from '../../sim/world';
 import { HEIGHT } from './stage';
+import { GROUND_TEX_TILES, makeGroundTexture } from './textures';
 
 const C = (hex: number) => new Color(hex);
 
@@ -43,11 +44,57 @@ const COLOR: Record<number, number> = {
   [T.Sand]: 0xe2d19c,
 };
 
-/** Ground and cliff faces: a cooler, darker stone. */
+/** One tile's corner colour, taken from the smooth world-scale field. */
+function cornerColor(base: number, i: number, field: { dl: Float32Array; dh: Float32Array; ds: Float32Array }): Color {
+  return C(base).offsetHSL(field.dh[i] * 0.03, field.ds[i] * 0.11, field.dl[i] * 0.06);
+}
+
+/** Rock and cliff faces: a cooler, darker stone. */
 const CLIFF = C(0x6f6a60);
 
 /** Terrain is split into chunks this many tiles across, so three can cull. */
 const CHUNK = 14;
+
+/**
+ * A smooth noise field sampled at every tile CORNER of the map. Tiles take the
+ * four corner values for their vertices, so neighbouring tiles share values
+ * and the ground reads as one continuous surface instead of a patchwork of
+ * flat-coloured squares.
+ */
+function cornerField(w: number, h: number): { dl: Float32Array; dh: Float32Array; ds: Float32Array } {
+  const cw = w + 1;
+  const ch = h + 1;
+  const cell = 11;
+  const gw = Math.ceil(cw / cell) + 2;
+  const gh = Math.ceil(ch / cell) + 2;
+  const rng = new Rng(w * 2246822519 + h * 3266489917);
+  const cells = (): Float32Array => {
+    const v = new Float32Array(gw * gh);
+    for (let i = 0; i < v.length; i++) v[i] = rng.float(-1, 1);
+    return v;
+  };
+  const l = cells();
+  const hue = cells();
+  const sat = cells();
+  const at = (arr: Float32Array, x: number, y: number): number => {
+    const fx = x / cell;
+    const fy = y / cell;
+    const x0 = Math.floor(fx);
+    const y0 = Math.floor(fy);
+    const tx = fx - x0;
+    const ty = fy - y0;
+    const sx = tx * tx * (3 - 2 * tx);
+    const sy = ty * ty * (3 - 2 * ty);
+    const a = arr[y0 * gw + x0] * (1 - sx) + arr[y0 * gw + x0 + 1] * sx;
+    const b = arr[(y0 + 1) * gw + x0] * (1 - sx) + arr[(y0 + 1) * gw + x0 + 1] * sx;
+    return a * (1 - sy) + b * sy;
+  };
+  return {
+    dl: Float32Array.from({ length: cw * ch }, (_, i) => at(l, i % cw, (i / cw) | 0)),
+    dh: Float32Array.from({ length: cw * ch }, (_, i) => at(hue, i % cw, (i / cw) | 0)),
+    ds: Float32Array.from({ length: cw * ch }, (_, i) => at(sat, i % cw, (i / cw) | 0)),
+  };
+}
 
 const heightOf = (tile: number): number => HEIGHT[tile] ?? 0;
 
@@ -55,6 +102,7 @@ const heightOf = (tile: number): number => HEIGHT[tile] ?? 0;
 class Quads {
   private pos: number[] = [];
   private col: number[] = [];
+  private uv: number[] = [];
 
   /** One quad, wound counter-clockwise seen from the front. */
   quad(
@@ -75,22 +123,42 @@ class Quads {
     c: Color,
   ): void {
     this.pos.push(ax, ay, az, bx, by, bz, cx, cy, cz);
+    this.uv.push(0, 0, 0, 0, 0, 0);
     for (let k = 0; k < 3; k++) this.col.push(c.r, c.g, c.b);
   }
 
-  /** Flat quad in the XZ plane at height `h`, spanning from (x, y) in tiles. */
-  tile(x: number, y: number, h: number, c: Color): void {
-    this.quad(x, h, y, x, h, y + 1, x + 1, h, y + 1, x + 1, h, y, c);
+  /**
+   * Flat quad in the XZ plane at height `h`, spanning from (x, y) in tiles.
+   * UVs are world-space so the ground texture tiles continuously across the
+   * map instead of repeating once per tile.
+   */
+  tile(x: number, y: number, h: number, c: Color, corners?: [Color, Color, Color, Color]): void {
+    const s = 1 / GROUND_TEX_TILES;
+    // Vertex order below, with its uv: 0,1,2 then 0,2,3.
+    const p = [
+      [x, h, y, x * s, y * s],
+      [x, h, y + 1, x * s, (y + 1) * s],
+      [x + 1, h, y + 1, (x + 1) * s, (y + 1) * s],
+      [x + 1, h, y, (x + 1) * s, y * s],
+    ] as const;
+    const cols = corners ?? [c, c, c, c];
+    const order = [0, 1, 2, 0, 2, 3] as const;
+    for (const i of order) {
+      this.pos.push(p[i][0], p[i][1], p[i][2]);
+      this.uv.push(p[i][3], p[i][4]);
+      this.col.push(cols[i].r, cols[i].g, cols[i].b);
+    }
   }
 
   get count(): number {
     return this.pos.length / 3;
   }
 
-  build(colors = true): BufferGeometry {
+  build(): BufferGeometry {
     const geo = new BufferGeometry();
     geo.setAttribute('position', new BufferAttribute(new Float32Array(this.pos), 3));
-    if (colors) geo.setAttribute('color', new BufferAttribute(new Float32Array(this.col), 3));
+    geo.setAttribute('color', new BufferAttribute(new Float32Array(this.col), 3));
+    geo.setAttribute('uv', new BufferAttribute(new Float32Array(this.uv), 2));
     geo.computeVertexNormals();
     geo.computeBoundingSphere();
     return geo;
@@ -105,6 +173,8 @@ export class Terrain {
   private waterMat: ShaderMaterial | null = null;
   private lava: Mesh | null = null;
   private lavaMat: MeshBasicMaterial | null = null;
+  /** Grass grain for the ground, shared by every chunk. */
+  private texture = makeGroundTexture(7);
 
   constructor(map: WorldMap) {
     // Ground, split into chunks so three can frustum-cull most of the map.
@@ -114,7 +184,8 @@ export class Terrain {
     const rows = Math.ceil(h / CHUNK);
     const tileAt = (x: number, y: number): number =>
       x < 0 || y < 0 || x >= w || y >= h ? T.Mountain : map.tiles[y * w + x];
-    this.material = new MeshLambertMaterial({ vertexColors: true });
+    const field = cornerField(w, h);
+    this.material = new MeshLambertMaterial({ vertexColors: true, map: this.texture });
 
     for (let cy = 0; cy < rows; cy++) {
       for (let cx = 0; cx < cols; cx++) {
@@ -127,10 +198,23 @@ export class Terrain {
           for (let x = x0; x < x1; x++) {
             const t = map.tiles[y * w + x];
             const th = heightOf(t);
-            // Steep ground takes the jitter harder, flat ground barely at all.
-            const jitter = (((hashString(`${x}:${y}`) % 11) - 5) / 220) * (th > 0.1 ? 1.4 : 0.4);
-            const top = C(COLOR[t] ?? 0x4f9c5e).offsetHSL(0, 0, jitter);
-            q.tile(x, y, th, top);
+                        // Smooth world-scale variation, so the ground has regions of tone
+            // the way real ground does, instead of a per-tile checkerboard.
+            // Corner colours sampled from a smooth world-scale field, so
+            // neighbouring tiles share corner values and the ground reads as
+            // one continuous surface instead of a grid of flat squares.
+            // Corner indices run one wider per row than tiles, so the stride
+            // is (w + 1), not w.
+            const vi = y * (w + 1) + x;
+            const base = COLOR[t] ?? 0x4f9c5e;
+            // Corners in tile()'s own order: (x,y), (x,y+1), (x+1,y+1), (x+1,y).
+            const cc: [Color, Color, Color, Color] = [
+              cornerColor(base, vi, field),
+              cornerColor(base, vi + w + 1, field),
+              cornerColor(base, vi + w + 2, field),
+              cornerColor(base, vi + 1, field),
+            ];
+            q.tile(x, y, th, C(base), cc);
             // Cliff walls toward any lower neighbour, wound to face outward.
             const wall = (nx: number, nz: number, ax: number, az: number, bx: number, bz: number): void => {
               const nh = heightOf(tileAt(x + nx, y + nz));
@@ -185,7 +269,7 @@ export class Terrain {
     }
     if (lavaTiles > 0) {
       this.lavaMat = new MeshBasicMaterial({ color: 0xff7a30, toneMapped: false });
-      this.lava = new Mesh(lq.build(false), this.lavaMat);
+      this.lava = new Mesh(lq.build(), this.lavaMat);
       this.group.add(this.lava);
     }
   }
@@ -205,6 +289,7 @@ export class Terrain {
   dispose(): void {
     for (const chunk of this.chunks) chunk.geometry.dispose();
     this.material.dispose();
+    this.texture.dispose();
     this.water?.geometry.dispose();
     this.waterMat?.dispose();
     this.lava?.geometry.dispose();
