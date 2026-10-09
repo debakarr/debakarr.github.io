@@ -11,7 +11,7 @@ export interface GameEntry {
   /** Accent color used on the card. */
   accent: string;
   /** Which generated banner the card shows. */
-  banner: 'hexmap' | 'skyline' | 'glyphs' | 'sea' | 'orbits' | 'wilds' | 'cosmos';
+  banner: 'hexmap' | 'skyline' | 'glyphs' | 'sea' | 'orbits' | 'lumi' | 'cosmos';
   /** Third-party art credits shown on the card. */
   credits?: { label: string; href: string; license: string }[];
 }
@@ -86,17 +86,16 @@ export const games: GameEntry[] = [
     credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
   },
   {
-    slug: 'wildborn',
-    title: 'Wildborn',
-    tagline: 'Every creature has a history.',
+    slug: 'lumiquest',
+    title: 'LumiQuest',
+    tagline: 'Explore, befriend, discover.',
     description:
-      'Explore an unknown world and befriend its creatures. Their evolution is shaped by the life they live — where you take them, what they eat, who they fight and what they love — so no two collections are alike. Battle, breed generations and open the lineage tree.',
-    href: '/games/wildborn',
+      'A cute 3D creature adventure. Create your ranger, choose a first companion and explore Brightwater Vale in first or third person. Bond with six original creatures through patience and Resonance, use their abilities to open new paths, and restore the Lost Beacon.',
+    href: '/lumiquest/',
     status: 'playable',
-    tags: ['Creatures', 'Evolution', 'RPG', 'Breeding'],
-    accent: '#7fe0a8',
-    banner: 'wilds',
-    credits: [{ label: 'game-icons.net', href: 'https://game-icons.net', license: 'CC BY 3.0' }],
+    tags: ['3D', 'Adventure', 'Creatures', 'Open world'],
+    accent: '#ffd75a',
+    banner: 'lumi',
   },
   {
     slug: 'tiny-universe',

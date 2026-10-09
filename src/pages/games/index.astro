@@ -104,23 +104,21 @@ function orbits() {
   return { W, H, cx, cy, rings, planets, stars };
 }
 
-/** A dusk forest with fireflies and foxlike silhouettes for Wildborn. */
-function wilds() {
-  let seed = 23;
+/** A sunny vale with the beacon on its hill and a little fire fox for LumiQuest. */
+function lumi() {
+  let seed = 31;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const W = 480;
   const H = 150;
-  const trees = Array.from({ length: 22 }, (_, k) => ({
-    x: (k + rnd() * 0.8) * (W / 22),
-    h: 28 + rnd() * 34,
-    w: 10 + rnd() * 10,
+  const trees = Array.from({ length: 16 }, (_, k) => ({
+    x: (k + rnd() * 0.7) * (W / 16),
+    y: 104 + rnd() * 10,
+    r: 6 + rnd() * 6,
+    pink: rnd() < 0.25,
   }));
-  const fireflies = Array.from({ length: 26 }, () => ({ x: rnd() * W, y: 18 + rnd() * (H - 40), r: 1 + rnd() * 1.8 }));
-  const creatures = [
-    { x: 118, y: 118, s: 1.15, hue: 168 },
-    { x: 322, y: 126, s: 0.9, hue: 38 },
-  ];
-  return { W, H, trees, fireflies, creatures };
+  const sparks = Array.from({ length: 22 }, () => ({ x: rnd() * W, y: 10 + rnd() * 70, r: 0.6 + rnd() * 1.4 }));
+  const flowers = Array.from({ length: 40 }, () => ({ x: rnd() * W, y: 128 + rnd() * 20, c: ['#ffffff', '#ffd84a', '#ff8fc0', '#a88cff'][Math.floor(rnd() * 4)] }));
+  return { W, H, trees, sparks, flowers };
 }
 
 /** A spiral galaxy with a bright core and a lit world for Tiny Universe. */
@@ -149,7 +147,7 @@ const city = skyline();
 const field = glyphField();
 const ocean = sea();
 const system = orbits();
-const forest = wilds();
+const vale = lumi();
 const galaxy = cosmos();
 ---
 
@@ -296,42 +294,58 @@ const galaxy = cosmos();
                   <circle cx="412" cy="92" r="17" fill="none" stroke="#9fe0c0" stroke-opacity="0.35" />
                 </svg>
               )}
-              {game.banner === 'wilds' && (
+              {game.banner === 'lumi' && (
                 <svg
-                  viewBox={`0 0 ${forest.W} ${forest.H}`}
+                  viewBox={`0 0 ${vale.W} ${vale.H}`}
                   class="block h-44 w-full transition-transform duration-500 group-hover:scale-[1.03] sm:h-56"
                   preserveAspectRatio="xMidYMid slice"
                   aria-hidden="true"
                 >
                   <defs>
-                    <linearGradient id="wb-dusk" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stop-color="#152b3f" />
-                      <stop offset="55%" stop-color="#27554a" />
-                      <stop offset="100%" stop-color="#3c7355" />
+                    <linearGradient id="lq-sky" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#4f9ef0" />
+                      <stop offset="70%" stop-color="#bfe4ff" />
+                      <stop offset="100%" stop-color="#ffe2b8" />
                     </linearGradient>
+                    <radialGradient id="lq-glow" cx="0.5" cy="0.5" r="0.5">
+                      <stop offset="0%" stop-color="#e8fbff" stop-opacity="0.95" />
+                      <stop offset="100%" stop-color="#8ff0ff" stop-opacity="0" />
+                    </radialGradient>
                   </defs>
-                  <rect width={forest.W} height={forest.H} fill="url(#wb-dusk)" />
-                  <circle cx="392" cy="34" r="17" fill="#f6efc8" opacity="0.92" />
-                  <circle cx="402" cy="28" r="14" fill="#152b3f" />
-                  <path d={`M0 ${forest.H} L0 108 Q120 92 240 106 Q360 120 480 100 L480 ${forest.H} Z`} fill="#1d3b2e" />
-                  {forest.trees.map((t) => (
-                    <path d={`M${t.x.toFixed(1)} ${forest.H} L${(t.x - t.w / 2).toFixed(1)} ${(forest.H - t.h).toFixed(1)} L${(t.x + t.w / 2).toFixed(1)} ${(forest.H - t.h).toFixed(1)} Z`} fill="#12291f" />
-                  ))}
-                  {forest.fireflies.map((f) => (
+                  <rect width={vale.W} height={vale.H} fill="url(#lq-sky)" />
+                  <path d="M0 92 L40 60 L74 82 L120 40 L162 76 L200 50 L250 84 L300 46 L342 78 L390 52 L430 74 L480 58 L480 150 L0 150 Z" fill="#9fb4d8" opacity="0.7" />
+                  <path d="M300 46 L314 58 L306 57 L300 52 L292 58 L286 56 Z M120 40 L134 52 L126 51 L120 46 L112 52 L106 50 Z" fill="#ffffff" opacity="0.9" />
+                  <ellipse cx="96" cy="44" rx="34" ry="9" fill="#ffffff" opacity="0.75" />
+                  <ellipse cx="378" cy="30" rx="44" ry="10" fill="#ffffff" opacity="0.7" />
+                  <path d="M0 118 Q90 92 170 104 Q250 116 330 92 Q400 74 480 98 L480 150 L0 150 Z" fill="#6fbf4a" />
+                  <path d="M190 104 Q240 66 290 100 Z" fill="#7fcf56" />
+                  <rect x="236" y="54" width="10" height="34" rx="2" fill="#e8e2d2" />
+                  <path d="M232 56 L250 56 L241 44 Z" fill="#3f7fd0" />
+                  <circle cx="241" cy="52" r="20" fill="url(#lq-glow)" />
+                  <path d="M238 52 L241 46 L244 52 L241 58 Z" fill="#bff4ff" />
+                  {vale.trees.map((t) => (
                     <g>
-                      <circle cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r={(f.r * 3).toFixed(1)} fill="#c9f7a8" opacity="0.18" />
-                      <circle cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r={f.r.toFixed(1)} fill="#e7ffb8" opacity="0.9" />
+                      <rect x={(t.x - 1).toFixed(1)} y={t.y.toFixed(1)} width="2.4" height="8" fill="#7a5236" />
+                      <circle cx={t.x.toFixed(1)} cy={(t.y - 2).toFixed(1)} r={t.r.toFixed(1)} fill={t.pink ? '#ffb7d5' : '#3f8f3e'} />
+                      <circle cx={(t.x - t.r * 0.3).toFixed(1)} cy={(t.y - 2 - t.r * 0.35).toFixed(1)} r={(t.r * 0.5).toFixed(1)} fill={t.pink ? '#ffd2e6' : '#6fbf4a'} />
                     </g>
                   ))}
-                  {forest.creatures.map((c) => (
-                    <g transform={`translate(${c.x} ${c.y}) scale(${c.s})`}>
-                      <path d="M-26 12 Q-26 -6 0 -6 Q26 -6 26 12 Q26 26 0 26 Q-26 26 -26 12 Z" fill={`hsl(${c.hue},22%,12%)`} />
-                      <path d="M-16 -4 L-22 -22 L-6 -12 Z M16 -4 L22 -22 L6 -12 Z" fill={`hsl(${c.hue},22%,12%)`} />
-                      <circle cx="-8" cy="4" r="2.6" fill={`hsl(${c.hue},80%,72%)`} />
-                      <circle cx="8" cy="4" r="2.6" fill={`hsl(${c.hue},80%,72%)`} />
-                      <path d="M22 18 Q44 12 42 -6 Q34 6 26 8 Z" fill={`hsl(${c.hue},22%,12%)`} />
-                    </g>
+                  <path d="M0 132 Q120 118 240 128 Q360 138 480 122 L480 150 L0 150 Z" fill="#8fd05a" />
+                  {vale.flowers.map((f) => (
+                    <circle cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r="1.6" fill={f.c} />
                   ))}
+                  {vale.sparks.map((s) => (
+                    <circle cx={s.x.toFixed(1)} cy={s.y.toFixed(1)} r={s.r.toFixed(1)} fill="#fff6c8" opacity="0.8" />
+                  ))}
+                  <g transform="translate(118 122)">
+                    <path d="M14 6 Q30 -6 30 -22 Q22 -12 16 -10 Z" fill="#ffcf5a" />
+                    <ellipse cx="0" cy="4" rx="13" ry="10" fill="#ff8a3d" />
+                    <circle cx="-8" cy="-8" r="10" fill="#ff8a3d" />
+                    <path d="M-16 -12 L-19 -26 L-9 -16 Z M-4 -15 L0 -28 L3 -14 Z" fill="#ff8a3d" />
+                    <ellipse cx="-11" cy="-4" rx="5" ry="3.4" fill="#fff1dc" />
+                    <circle cx="-12" cy="-10" r="1.9" fill="#3a1a0a" />
+                    <circle cx="-5" cy="-10" r="1.9" fill="#3a1a0a" />
+                  </g>
                 </svg>
               )}
               {game.banner === 'glyphs' && (
