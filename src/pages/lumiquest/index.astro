@@ -1,0 +1,36 @@
+---
+const title = 'LumiQuest — explore, befriend, discover';
+const description =
+  'A cute 3D creature adventure in your browser. Create a ranger, choose your first companion, explore Brightwater Vale in first or third person, bond with original creatures through Resonance, and restore the Lost Beacon.';
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en" class="lq-page">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f1a2e" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+  </head>
+  <body data-pagefind-ignore="all">
+    <div id="lq-root">
+      <noscript>
+        <p style="color:#eef4ff;font-family:system-ui,sans-serif;padding:2rem">LumiQuest needs JavaScript and WebGL to run.</p>
+      </noscript>
+    </div>
+    <script>
+      import '../../games/lumiquest/main';
+    </script>
+  </body>
+</html>

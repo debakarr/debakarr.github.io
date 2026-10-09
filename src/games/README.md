@@ -42,7 +42,7 @@ Every game has an **AUTO** toggle that hands control to an AI you can watch, and
 | First Contact | An auto-linguist reads evidence, advises the Council, talks to the aliens and writes the report, with its own mistakes | `sim/auto.ts` |
 | Primordial | A director plays god (seeding, meteors, climate, mutation storms) and keeps the camera on interesting creatures | `sim/director.ts` |
 | Slingshot | An autopilot simulates hundreds of launches and flies the best | `sim/autopilot.ts` |
-| Wildborn | An AI trainer explores, observes, befriends or battles, trains, feeds toward an evolution branch and breeds | `sim/auto.ts` |
+| LumiQuest | An auto-ranger follows the main quest: walks to each objective, talks, examines, observes, uses its companion's ability and solves the beacon puzzle | `systems/auto.ts` |
 | Tiny Universe | A director sets the pace (slow for young civilizations, fast for empty eons), flies the camera to life and civilizations, and plays god now and then (mostly kindly) | `sim/director.ts` |
 
 ## Shared code
@@ -129,38 +129,32 @@ Testing aid: `/games/slingshot/?debug` exposes `window.sl`.
 
 The sky is drawn, not left black: a seeded procedural nebula (soft coloured gas clouds and bright knots, tiled with slight parallax) sits behind 720 stars in three depth layers — blue-white, warm giants and red dwarfs — that twinkle and drift against the camera as you pan and zoom.
 
-## Wildborn
+## LumiQuest
 
-A creature game where a creature's life shapes its evolution: where it lives, what it eats, who it fights and what it loves decide which branch it takes.
+A cute 3D creature adventure at `/lumiquest/` (page: `src/pages/lumiquest/index.astro`). Create a ranger, choose a first companion, explore Brightwater Vale in third or first person, bond with original creatures through Resonance, and restore the Lost Beacon.
 
 | Folder | Contents |
 | --- | --- |
-| `data/species.ts` | Affinities and the `STRONG` table, 22 abilities, 20 species (5 families × base + 3 evolutions) with stats, likes, art parameters and evolution branch drivers, 6 biomes with wild tables and exposures, items and foods, and the rarity tiers (Common → Unique) |
-| `sim/game.ts` | DOM-free state and simulation: world clock and weather, exploration, wild encounters, Companion Link capture, raising (train/play/rest/feed), life-driven evolution, breeding with mixed genomes and rare variants, quests, achievements and saves |
-| `sim/battle.ts` | Turn-based 1v1 battles with switching: three abilities per creature, affinity strength, biome boost and weather modifiers, status effects, events with structured HP changes for the UI, and a wild AI that heals, uses status, or flees when scared |
-| `sim/auto.ts` | The automatic trainer: one visible action per tick — explore, observe, befriend, battle (only fair fights, with its best match-up), train, feed toward a chosen branch, breed |
-| `render/creature.ts` | Procedural SVG creature art built from layers per family (body, head, ears, tail, pattern, eyes, feature), coloured by species hue plus per-individual variation and crystal/golden/void variants; portraits (≥72px) get a lit volume filter and a soft contact shadow, list badges stay flat for cheap scrolling |
-| `render/gl/` | The 3D view (three.js): `stage` (renderer, sky dome, sun/hemisphere light, fog, day/night), `terrain` (chunked tile mesh with cliff walls, animated water shader, glowing lava), `props` (instanced trees/rocks/crystals/houses/pickups), `actor` (the player's low-poly figure and walk cycle), `camera` (third-person orbit + first-person rig), `weather` (instanced rain, mist), `world3d` (the `WorldView` the app drives) |
-| `render/world.ts` | The 2.5D canvas renderer: bevelled tile slabs, extruded objects with hour-driven shadows, depth sorting, lit water and lantern pools. Kept as the fallback when WebGL is unavailable |
-| `render/view.ts` | The `WorldView` interface both renderers satisfy, and the pick-a-renderer factory |
-| `render/map.ts` | The illustrated node map (village + 6 regions) with a day/night sky and weather, now the fast-walk overview |
-| `ui/` | `app.ts` (screens, encounters, battles, overlays, automatic mode, walking: keys, D-pad, tap-to-path, drag-to-look, wheel-zoom) and `screens.ts` (bars, rows, cards) |
+| `data/` | Creature species (six originals, variants, temperaments, abilities), items, character presets and customization options, the world layout (locations, river, paths, every interactable and wild spawn), and villager dialogue |
+| `engine/` | Renderer and quality presets with adaptive resolution, input (rebindable keys, pointer lock, touch), the camera rig (third person with collision, first person), collision (cylinders and yawed boxes with walkable tops and height ranges in a spatial hash), skeletal animation (procedural clips through `AnimationMixer`, rigid parts baked into `SkinnedMesh` batches), procedural textures and geometry helpers, synthesized audio |
+| `world/` | Terrain heightfield (chunked meshes; collision samples the same triangles), sky/sun/fog/weather, water (depth-coloured surface fitted to the river, pool and cove; the falls), nature (instanced trees and props refilled around the camera; streamed grass and flower chunks with a wind shader), architecture (`props.ts`, then merged by material per 60 m cell in `batch.ts`), ambient life, effects, interactables |
+| `entities/` | The modular chibi character (player and villagers), creature models, creature AI and the population streamer, the player controller, villagers |
+| `systems/` | Game state and versioned saves with validation, quests (stages read live state), Resonance Bonding rules, the auto-ranger |
+| `ui/` | Title, creation screens with live 3D previews (`studio.ts` renders scissored viewports), HUD, map and minimap, collection, inventory, journal, dialogue, the Resonance minigame, settings, touch controls |
 
 Key ideas:
 
-- **The overworld is 3D.** One seeded 152×112 tile world (`sim/world.ts`) holds all six regions as organic zones around a village, joined by paths, rivers and bridges. The scene is WebGL via three.js: terrain is one static mesh split into chunks so it can be culled, props are instanced (one draw call per kind) and refilled as you move, and the light, sky and fog follow the clock. If WebGL is missing the 2.5D canvas view takes over, so the game always runs.
-- **Both cameras, one rig.** `V` or the View button switches third person (orbiting, pulled in when the ground would clip it) and first person (at eye height). Dragging looks around, the wheel zooms, and movement is rotated into camera space so "forward" is forward.
-- **Quality adapts.** A rolling frame-time average steps shadows, prop distance and pixel ratio down (and back up) so a phone that cannot hold 60fps gets a playable scene instead of a slideshow.
-- **You walk the world, you do not click it.** Arrow keys/WASD, the D-pad or a tap (BFS pathfinding) move you; each step advances the clock, grants small exposures, picks up bushes and ruin fragments, and rolls encounters on tall grass, reeds, ash and ruins. The Regions screen is a fast-walk menu.
+- **Everything is generated.** Characters, creatures, buildings, plants, textures, sounds and music are built in code at load time from original designs, so the game has no third-party art to license or host. The only runtime dependency is three.js; the fonts (Lilita One, Nunito) are OFL and bundled through `@fontsource`.
+- **Real skeletons.** Every character and creature is a `Bone` hierarchy. Clips are sampled from pose functions into quaternion tracks and cross-faded by `AnimationMixer`; each model's rigid parts are baked into one `SkinnedMesh` per material bound to that skeleton, so a creature is a handful of draw calls.
+- **Modular characters.** Hair styles, outfits, accessories and the painted face are separate parts rebuilt on change, so the customization preview updates instantly and every option is a real model change.
+- **Both cameras, one player.** `V` switches the rig between third person (orbit, shoulder offset, boom that pulls in before walls and terrain) and first person (eye height, pointer lock, a hand wearing the Resonance Device). Position, movement, companion and quests are untouched by the switch.
+- **Resonance Bonding.** Creatures notice you by sound (sprinting is loud, sneaking is quiet), fear rises when you rush them, trust rises with patience, liked food and preferred conditions (water for Aquoray, darkness for Lumelle, a quiet approach for Zephyra). At 70 trust the Resonance minigame (three timed pulses) completes the bond.
+- **Abilities change the world.** Ember Puff burns thorns and lights braziers; Moss Quake shatters cracked boulders; Tide Call fills basins and lets you dive under the rock curtain into the Hidden Cove; Breeze Wings glides to the Sky Pillar; Lumen Glow lights the cave and reveals hidden glyphs; Green Sense finds hidden herbs. Every starter's ability opens a different crystal for the main quest.
+- **Quest state is world state.** Objectives are functions of `GameState` (`done`, `flags`, inventory, prisms), so they cannot disagree with what has happened, and a save restores them exactly.
+- **Renderer choice.** three r186 includes `WebGPURenderer`, but it runs only node (TSL) materials; the wind, water and sky shaders here patch WebGL shader chunks, and its WebGL 2 fallback is slower than `WebGLRenderer` on the low-end devices the low preset is for. The game uses `WebGLRenderer` (WebGL 2) and fails gracefully with an explanation when WebGL 2 is missing.
+- **Performance.** Quality presets (low/medium/high, or auto with a frame-time governor that scales resolution), draw-distance and shadow ranges per preset, instanced vegetation refilled around the camera, streamed grass, models built only for nearby creatures, distant creatures think less often, static architecture batched, and the loop pauses (and saves) when the tab is hidden.
 
-- **Evolution is earned, not bought.** Every creature accumulates exposure counters (thermal, aquatic, mineral, organic, night, storm, wins, losses, explore, play, ruins) from the places it goes and the things it does. From level 8, `sim/game.ts#evaluateEvolution` scores the three branches of its family from those counters plus personality; the best branch past a threshold evolves it. Branches stay "???" in the Field Guide until discovered.
-- **Capture is a bond.** Companion Link has no capture items: its chance comes from trust, HP, fear, stress and personality, so you befriend by observing, feeding and playing.
-- **Rarity is not power.** Species carry the design doc's tiers (Common, Uncommon, Rare, Ancient, Mythic) from how often they show up in the wild; a rare mutation (crystal, golden, void) makes any creature Unique. Tiers show on rows, the field guide and the creature screen.
-- **Lineages.** Two creatures of one family with a high bond lay an egg whose genome mixes the parents' (plus a chance of a rare variant). The lineage view shows ancestors and descendants, and notes the generation the creature carries a trait from.
-- **Battles give feedback.** Hits shake the fighter's card, heals glow, damage and healing float up as numbers, and the log carries the words; the events carry structured HP changes so the UI never parses text.
-- **Deterministic world.** A seed reproduces the same regions and species tables; saves are JSON (gzip in `localStorage` via `SaveStore`) and exportable.
-
-Testing aids: `/games/wildborn/?debug` exposes `window.wb`; `wb.debugAutoplay(300)` lets the automatic trainer play 300 steps.
+Testing aids: `/lumiquest/?debug` exposes `window.lq` (`lq.beginAdventure('flamkit', '')`, `lq.player.place(x, y, z, yaw)`, `lq.state`, `lq.startAuto(true)`).
 
 ## Tiny Universe
 

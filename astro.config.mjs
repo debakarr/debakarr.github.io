@@ -15,6 +15,8 @@ export default defineConfig({
     '/tags/best-pactice': '/tags/best-practices',
     '/tags/comparision': '/tags/comparison',
     '/categories/best-pactice': '/categories/best-practices',
+    '/games/wildborn': '/lumiquest/',
+    '/games/lumiquest': '/lumiquest/',
   },
   vite: {
     plugins: [tailwindcss()],
