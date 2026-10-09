@@ -130,7 +130,9 @@ export class TitleScene implements StageScene {
     this.buildLand();
     this.water = this.buildWater();
     this.buildTown();
+    N.setCanopyDetail(2);
     this.buildNature();
+    N.setCanopyDetail(1);
     // the hero
     const rig = soldierRig({ ...LOOKS.explorer, helmet: 'none', torso: 'team', cape: false, backpack: false, weapon: 'staff', hair: '#4a2e1c' }, 7);
     const mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });

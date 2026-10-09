@@ -22,10 +22,10 @@ export const games: GameEntry[] = [
     title: 'Year Zero',
     tagline: 'A civilization that remembers.',
     description:
-      'Found a people in Year Zero and guide them toward the stars. Every world is generated from a shareable seed, and the game writes a history from what you actually do: wars and betrayals, famines and plagues, rulers who earn their names, and the ruins of peoples who came before.',
+      'Found a people in Year Zero and guide them toward the stars across a storybook 3D world of hexes: towns that grow from huts to glass towers, chibi armies whose battles play out as little films, and rival rulers who receive you in their halls. Every world comes from a shareable seed, and the game writes a history from what you actually do: wars and betrayals, famines and plagues, rulers who earn their names, and the ruins of peoples who came before.',
     href: '/games/year-zero',
     status: 'playable',
-    tags: ['Strategy', '4X', 'Procedural', 'Single player'],
+    tags: ['Strategy', '4X', '3D', 'Procedural', 'Single player'],
     accent: '#d9a441',
     banner: 'hexmap',
     credits: [

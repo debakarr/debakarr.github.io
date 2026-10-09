@@ -116,7 +116,7 @@ export function bindMapInput(canvas: HTMLCanvasElement, r: MapView, h: InputHand
     e.preventDefault();
     const [x, y] = local(e);
     const delta = e.deltaMode === 1 ? e.deltaY * 30 : e.deltaY;
-    r.zoomAt(Math.exp(-delta * 0.0015), x, y);
+    r.zoomAt(Math.exp(-delta * 0.0015), x, y, true);
   };
 
   const leave = (e: PointerEvent) => {

@@ -39,7 +39,7 @@ interface CityView {
   smoke: [number, number, number, number][];
 }
 
-const S = 1.85;
+const S = 2.15;
 
 export class Cities {
   readonly group = new Group();
@@ -158,7 +158,7 @@ export class Cities {
     const facing = (lx: number, lz: number) => Math.atan2(-lx, -lz) + rng.float(-0.25, 0.25);
     const buildings = new Set(city.buildings);
     const walls = buildings.has('walls') || buildings.has('castle') || tier <= 1;
-    const wallR = 0.74;
+    const wallR = 0.8;
 
     // Ground: a plaza and paths.
     parts.push(B.place(B.plaza(0.2, tier >= 2 ? '#d8cdb6' : '#c8a676'), cx, ground(0, 0) - 0.002, cz, 0, 1));
@@ -308,11 +308,11 @@ export class Cities {
     }
 
     // Homes: more with every size, styled by era.
-    const homes = Math.max(5, Math.min(30, Math.round(4 + city.size * 1.8)));
+    const homes = Math.max(6, Math.min(40, Math.round(5 + city.size * 2.2)));
     const inner = walls ? wallR - 0.08 : 0.8;
     for (let k = 0; k < homes; k++) {
       const outside = walls && k > homes * 0.75;
-      const p = outside ? spot(wallR + 0.08, 0.92, 0.055) : spot(0.2, inner, 0.055);
+      const p = outside ? spot(wallR + 0.06, 0.95, 0.06) : spot(0.22, inner, 0.062);
       if (!p) continue;
       const rot = facing(p[0], p[1]);
       let geo: BufferGeometry;

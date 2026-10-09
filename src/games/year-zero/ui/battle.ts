@@ -10,6 +10,7 @@ import type { Game } from '../sim/game';
 import { regionName } from '../sim/history';
 import type { Unit } from '../sim/state';
 import { attackTarget, battleFactors, previewAttack } from '../sim/units';
+import { maxCityHp } from '../sim/cities';
 import { BattleScene, type BattleInfo } from '../render3d/battle';
 import type { Stage } from '../render3d/stage';
 import { clear, gi, h, svg } from './dom';
@@ -33,11 +34,12 @@ function shieldBadge(color: string, icon: string): HTMLElement {
   return h('span', { class: 'yz-crest', style: { '--civ': color } as never }, gi(icon));
 }
 
-function hpBar(before: number, loss: number, tone: 'good' | 'bad'): HTMLElement {
+function hpBar(before: number, loss: number, tone: 'good' | 'bad', max = 100): HTMLElement {
   const after = Math.max(0, before - loss);
+  const k = 100 / Math.max(1, max, before);
   return h('div', { class: `yz-hp ${tone}` },
-    h('i', { class: 'now', style: { width: `${after}%` } }),
-    h('i', { class: 'loss', style: { left: `${after}%`, width: `${Math.min(before, loss)}%` } }));
+    h('i', { class: 'now', style: { width: `${after * k}%` } }),
+    h('i', { class: 'loss', style: { left: `${after * k}%`, width: `${Math.min(before, loss) * k}%` } }));
 }
 
 // --- Preview -------------------------------------------------------------------------------
@@ -61,19 +63,19 @@ export function battlePreview(g: Game, u: Unit, tile: number, on: PreviewHandler
   const win = odds.dmgToDef >= odds.defHp;
   const lose = odds.dmgToAtk >= odds.atkHp;
   const verdict = lose ? { t: 'Likely defeat', c: 'bad' } : win ? { t: target.city ? 'The city should fall' : 'Likely victory', c: 'good' } : odds.dmgToDef > odds.dmgToAtk * 1.4 ? { t: 'Favourable', c: 'good' } : odds.dmgToAtk > odds.dmgToDef * 1.4 ? { t: 'Costly', c: 'bad' } : { t: 'An even fight', c: 'even' };
-  const row = (label: string, color: string, icon: string, name: string, sub: string, strength: number, hp: number, loss: number, tone: 'good' | 'bad') =>
+  const row = (label: string, color: string, icon: string, name: string, sub: string, strength: number, hp: number, loss: number, tone: 'good' | 'bad', max = 100) =>
     h('div', { class: 'yz-bp-row' },
       h('div', { class: 'yz-bp-label' }, label),
       h('div', { class: 'yz-bp-unit' }, shieldBadge(color, icon),
         h('div', { class: 'yz-bp-name' }, h('b', null, name), h('span', null, sub)),
         h('div', { class: 'yz-bp-str', title: 'Combat strength' }, gi('y-strength'), h('span', null, strength.toFixed(strength < 10 ? 1 : 0)))),
-      h('div', { class: 'yz-bp-hp' }, hpBar(hp, loss, tone), h('span', { class: 'yz-num' }, `${hp} → ${Math.max(0, hp - loss)}`)));
+      h('div', { class: 'yz-bp-hp' }, hpBar(hp, loss, tone, max), h('span', { class: 'yz-num' }, `${hp} → ${Math.max(0, hp - loss)}`)));
   const card = h('div', { class: 'yz-battle-preview', role: 'dialog', 'aria-label': 'Battle preview' },
     h('div', { class: 'yz-bp-head' }, svg(ICON.sword), h('span', null, placeName(g, tile))),
     row('Attacker', civ.color, `u-${u.type}`, def.name, `${civ.adj}${u.veteran ? ' · veteran' : ''}`, f.attack, u.hp, odds.dmgToAtk, 'good'),
     h('div', { class: 'yz-bp-vs' }, 'VS'),
     target.city
-      ? row('Defender', enemyCiv.color, 'n-city', target.city.name, `${enemyCiv.name} · size ${target.city.size}`, f.defense, odds.defHp, odds.dmgToDef, 'bad')
+      ? row('Defender', enemyCiv.color, 'n-city', target.city.name, `${enemyCiv.name} · size ${target.city.size}`, f.defense, odds.defHp, odds.dmgToDef, 'bad', maxCityHp(target.city))
       : row('Defender', enemyCiv.color, `u-${target.unit!.type}`, UNIT[target.unit!.type].name, enemyCiv.adj, f.defense, odds.defHp, odds.dmgToDef, 'bad'),
     f.mods.length ? h('div', { class: 'yz-chips yz-bp-mods' }, f.mods.map((m) => h('span', { class: `yz-chip ${m.good ? 'good' : 'war'}` }, m.label))) : null,
     h('div', { class: `yz-bp-verdict ${verdict.c}` }, verdict.t, h('span', null, ` · we deal ~${odds.dmgToDef}, take ~${odds.dmgToAtk}`)),
@@ -133,8 +135,8 @@ export function battleBefore(g: Game, u: Unit, tile: number): BattleBefore | nul
     return {
       tile,
       ranged: def.rng > 0,
-      attacker: { civName: civ.name, adj: civ.adj, color: civ.color, skin: SKINS[civ.id % SKINS.length], type: u.type, label: def.name, hpBefore: u.hp, tier: civ.eraTier },
-      defender: { civName: ec.name, adj: ec.adj, color: ec.color, skin: SKINS[ec.id % SKINS.length], type: garrison?.type ?? null, label: c.name, hpBefore: c.hp, tier: ec.eraTier },
+      attacker: { civName: civ.name, adj: civ.adj, color: civ.color, skin: SKINS[civ.id % SKINS.length], type: u.type, label: def.name, hpBefore: u.hp, max: 100, tier: civ.eraTier },
+      defender: { civName: ec.name, adj: ec.adj, color: ec.color, skin: SKINS[ec.id % SKINS.length], type: garrison?.type ?? null, label: c.name, hpBefore: c.hp, max: Math.max(c.hp, maxCityHp(c)), tier: ec.eraTier },
       city: { name: c.name, size: c.size, walls: c.buildings.includes('walls') || c.buildings.includes('castle') },
     };
   }
@@ -143,8 +145,8 @@ export function battleBefore(g: Game, u: Unit, tile: number): BattleBefore | nul
   return {
     tile,
     ranged: def.rng > 0,
-    attacker: { civName: civ.name, adj: civ.adj, color: civ.color, skin: SKINS[civ.id % SKINS.length], type: u.type, label: def.name, hpBefore: u.hp, tier: civ.eraTier },
-    defender: { civName: ec.name, adj: ec.adj, color: ec.color, skin: SKINS[ec.id % SKINS.length], type: d.type, label: UNIT[d.type].name, hpBefore: d.hp, tier: ec.eraTier },
+    attacker: { civName: civ.name, adj: civ.adj, color: civ.color, skin: SKINS[civ.id % SKINS.length], type: u.type, label: def.name, hpBefore: u.hp, max: 100, tier: civ.eraTier },
+    defender: { civName: ec.name, adj: ec.adj, color: ec.color, skin: SKINS[ec.id % SKINS.length], type: d.type, label: UNIT[d.type].name, hpBefore: d.hp, max: 100, tier: ec.eraTier },
     city: null,
   };
 }
@@ -160,14 +162,15 @@ export function playBattle(host: BattleHost, info: BattleInfo): Promise<void> {
     const a = info.attacker;
     const d = info.defender;
     const side = (label: string, s: typeof a, tone: 'good' | 'bad') => {
-      const bar = h('i', { class: 'now', style: { width: `${s.hpBefore}%` } });
+      const pct = (hp: number) => `${Math.max(0, Math.min(100, (hp / s.max) * 100))}%`;
+      const bar = h('i', { class: 'now', style: { width: pct(s.hpBefore) } });
       const num = h('b', { class: 'yz-num' }, String(s.hpBefore));
       const el = h('div', { class: 'yz-bh-side' },
         h('div', { class: 'yz-bp-label' }, label),
         h('div', { class: 'yz-bh-unit' }, shieldBadge(s.color, s.type ? `u-${s.type}` : 'n-city'),
           h('div', { class: 'yz-bp-name' }, h('b', null, s.label), h('span', null, s.adj)), num),
         h('div', { class: `yz-hp ${tone}` }, bar));
-      return { el, set: (hp: number) => { bar.style.width = `${Math.max(0, hp)}%`; num.textContent = String(Math.max(0, Math.round(hp))); } };
+      return { el, set: (hp: number) => { bar.style.width = pct(hp); num.textContent = String(Math.max(0, Math.round(hp))); } };
     };
     const A = side('Attacker', a, 'good');
     const D = side('Defender', d, 'bad');

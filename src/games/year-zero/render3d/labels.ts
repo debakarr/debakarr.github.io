@@ -23,6 +23,7 @@ export class Labels {
   readonly root: HTMLElement;
   private banners = new Map<number, Banner>();
   private bars = new Map<number, HTMLElement>();
+  private stacks = new Map<number, HTMLElement>();
   private floaters: Floater[] = [];
   private path: { el: HTMLElement; tile: number }[] = [];
   private w = 1;
@@ -52,6 +53,7 @@ export class Labels {
     this.root.textContent = '';
     this.banners.clear();
     this.bars.clear();
+    this.stacks.clear();
     this.floaters = [];
     this.path = [];
   }
@@ -141,6 +143,33 @@ export class Labels {
       if (!live.has(id)) {
         el.remove();
         this.bars.delete(id);
+      }
+    }
+    // Stack counts (more than one unit on a tile)
+    const stackSeen = new Set<number>();
+    if (z > 0.45 && view.units) {
+      for (const st of view.units.stacks()) {
+        if (!p.visible[st.tile]) continue;
+        const pos = view.units.anchor(st.unitId);
+        if (!pos) continue;
+        stackSeen.add(st.tile);
+        let el = this.stacks.get(st.tile);
+        if (!el) {
+          el = document.createElement('div');
+          el.className = 'yz-stack';
+          this.root.append(el);
+          this.stacks.set(st.tile, el);
+        }
+        const txt = `×${st.count}`;
+        if (el.textContent !== txt) el.textContent = txt;
+        const [sx, sy] = view.project(pos[0] + 0.28, pos[1] + 0.34, pos[2]);
+        this.place(el, sx, sy);
+      }
+    }
+    for (const [t, el] of this.stacks) {
+      if (!stackSeen.has(t)) {
+        el.remove();
+        this.stacks.delete(t);
       }
     }
     // Route markers

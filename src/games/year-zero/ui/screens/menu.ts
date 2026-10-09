@@ -327,15 +327,17 @@ export function showCredits(root: HTMLElement): void {
           h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, title), ...children);
       body.append(
         section('Game', h('p', { style: { margin: 0 } }, 'Year Zero — designed and built by Debakar Roy. Worlds, names, histories and sounds are generated procedurally in your browser.')),
-        section('Map art',
-          h('p', { style: { margin: '0 0 6px' } }, 'Terrain tiles, cities, trees, rocks and improvements from ', link('https://kenney.nl/assets/hexagon-pack', 'Hexagon Pack'), ' by ', link('https://kenney.nl', 'Kenney'), '.'),
+        section('3D world',
+          h('p', { style: { margin: 0 } }, 'The terrain, water, forests, cities, soldiers, leaders, battlefields and royal halls are modelled and painted in code for this game, rendered with ', link('https://threejs.org', 'three.js'), ' (MIT).')),
+        section('Classic map art',
+          h('p', { style: { margin: '0 0 6px' } }, 'When a browser cannot show 3D, the 2D map uses terrain tiles, cities, trees, rocks and improvements from ', link('https://kenney.nl/assets/hexagon-pack', 'Hexagon Pack'), ' by ', link('https://kenney.nl', 'Kenney'), '.'),
           h('p', { class: 'yz-sub', style: { margin: 0 } }, 'License: ', link('https://creativecommons.org/publicdomain/zero/1.0/', 'Creative Commons Zero (CC0)'), '. Thank you, Kenney!')),
         section('Icons',
           h('p', { style: { margin: '0 0 6px' } }, 'Unit, resource, building and event icons from ', link('https://game-icons.net', 'game-icons.net'), ', licensed ', link('https://creativecommons.org/licenses/by/3.0/', 'CC BY 3.0'), '. Icons made by:'),
           ...iconCredits().map((c) => h('details', { class: 'yz-credit' },
             h('summary', null, h('b', null, c.author), h('span', { class: 'yz-muted' }, ` — ${c.icons.length} icon${c.icons.length > 1 ? 's' : ''}`), c.url ? h('span', null, ' · ', link(c.url, 'website')) : null),
             h('p', { class: 'yz-sub', style: { margin: '4px 0 0' } }, ...c.icons.flatMap((ic, i) => [i ? ', ' : '', link(ic.href, ic.name)]))))),
-        section('Typefaces', h('p', { style: { margin: 0 } }, link('https://rsms.me/inter/', 'Inter'), ' and ', link('https://www.jetbrains.com/lp/mono/', 'JetBrains Mono'), ', SIL Open Font License, via Fontsource.')),
+        section('Typefaces', h('p', { style: { margin: 0 } }, link('https://fonts.google.com/specimen/Cinzel', 'Cinzel'), ', ', link('https://fonts.google.com/specimen/Nunito', 'Nunito'), ', ', link('https://rsms.me/inter/', 'Inter'), ' and ', link('https://www.jetbrains.com/lp/mono/', 'JetBrains Mono'), ', SIL Open Font License, via Fontsource.')),
       );
     },
   });
@@ -362,7 +364,7 @@ export function showHelp(root: HTMLElement): void {
           k('Right-click', 'Move or attack with the selected unit'),
           k('Enter', 'End turn'), k('N / Space', 'Next unit / skip'), k('B', 'Found city'), k('F / S', 'Fortify / sleep'),
           k('E', 'Explore automatically'), k('T C D H', 'Knowledge, Civilization, Diplomacy, History'), k('Esc', 'Close / deselect')),
-        h('p', { class: 'yz-sub', style: { marginTop: '14px' } }, 'Map art by Kenney (CC0); icons from game-icons.net (CC BY 3.0). ',
+        h('p', { class: 'yz-sub', style: { marginTop: '14px' } }, '3D art made in code for Year Zero; classic map art by Kenney (CC0); icons from game-icons.net (CC BY 3.0). ',
           h('button', { class: 'yz-linkbtn', onclick: () => showCredits(root) }, 'See all credits'), '.'));
     },
   });

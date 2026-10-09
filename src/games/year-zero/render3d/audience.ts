@@ -333,11 +333,12 @@ export class AudienceScene implements StageScene {
     const narrow = this.aspect < 1;
     const sideShift = narrow ? 0 : 0.9;
     const k = 1 - Math.exp(-t * 0.8);
-    const dist = (narrow ? 5.2 : 4.1) - k * 0.3;
+    const dist = (narrow ? 6.2 : 4.1) - k * 0.3;
     this.camera.fov = narrow ? 42 : 32;
     this.camera.updateProjectionMatrix();
-    const look = new Vector3(sideShift * 0.5, 1.62, -0.2);
-    this.camera.position.set(look.x - 0.35 + Math.sin(t * 0.3) * 0.05, 1.82 + Math.sin(t * 0.4) * 0.02, look.z + dist);
+    // on phones the dialogue covers the lower half: frame the leader above it
+    const look = new Vector3(sideShift * 0.5, narrow ? 0.55 : 1.62, -0.2);
+    this.camera.position.set(look.x - (narrow ? 0 : 0.35) + Math.sin(t * 0.3) * 0.05, (narrow ? 2.0 : 1.82) + Math.sin(t * 0.4) * 0.02, look.z + dist);
     this.camera.lookAt(look);
     // the leader breathes, glances and gestures
     const L = this.leader;

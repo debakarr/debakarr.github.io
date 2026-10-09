@@ -308,6 +308,7 @@ export class Map3D implements MapView, StageScene {
 
   pan(dx: number, dy: number): void {
     this.camTween = null;
+    this.zoomGlide = null;
     // keep the ground under the pointer: vertical drags cover more ground when tilted
     const k = 1 / Math.max(0.55, Math.sin(this.pitch()));
     this.cam.x -= dx / this.cam.zoom;
@@ -317,8 +318,22 @@ export class Map3D implements MapView, StageScene {
     this.onCamera?.();
   }
 
-  zoomAt(factor: number, sx: number, sy: number): void {
+  zoomAt(factor: number, sx: number, sy: number, smooth = false): void {
     this.camTween = null;
+    if (smooth && this.animations) {
+      // glide toward the new zoom over a few frames, around the same point
+      const base = this.zoomGlide ? this.zoomGlide.target : this.cam.zoom;
+      const target = Math.max(this.minZoom(), Math.min(this.maxZoom, base * factor));
+      this.zoomGlide = { target, sx, sy };
+      return;
+    }
+    this.zoomGlide = null;
+    this.applyZoom(factor, sx, sy);
+  }
+
+  private zoomGlide: { target: number; sx: number; sy: number } | null = null;
+
+  private applyZoom(factor: number, sx: number, sy: number): void {
     const [wx, wy] = this.screenToWorld(sx, sy);
     this.cam.zoom *= factor;
     this.clampCamera();
@@ -406,6 +421,15 @@ export class Map3D implements MapView, StageScene {
       this.onCamera?.();
       if (t >= 1) this.camTween = null;
     }
+    if (this.zoomGlide) {
+      const z = this.zoomGlide;
+      const k = 1 - Math.exp(-dt * 14);
+      const next = this.cam.zoom * Math.pow(z.target / this.cam.zoom, k);
+      if (Math.abs(Math.log(z.target / this.cam.zoom)) < 0.003) {
+        this.applyZoom(z.target / this.cam.zoom, z.sx, z.sy);
+        this.zoomGlide = null;
+      } else this.applyZoom(next / this.cam.zoom, z.sx, z.sy);
+    }
     const key = `${this.cam.x.toFixed(2)},${this.cam.y.toFixed(2)},${this.cam.zoom.toFixed(4)},${this.w},${this.h}`;
     const camMoved = key !== this.camKey;
     if (camMoved) {
@@ -415,6 +439,7 @@ export class Map3D implements MapView, StageScene {
     const g = this.g;
     if (this.worldDirty) {
       this.worldDirty = false;
+      this.terrain?.update(g.player.explored, this.reveal);
       this.rivers?.updateRoads(g.s.map);
       this.props?.update(g, this.reveal);
       this.cities?.update(g, this.reveal);
@@ -497,7 +522,10 @@ export class Map3D implements MapView, StageScene {
     cam.lookAt(x, y + 0.1, z - 0.1);
     cam.updateMatrixWorld();
     this.labels.hidden = true;
+    const badges = this.props?.badgeMesh;
+    if (badges) badges.visible = false;
     const out = this.stage.snapshot(this.scene, cam, w, h);
+    if (badges) badges.visible = true;
     this.labels.hidden = false;
     return out;
   }

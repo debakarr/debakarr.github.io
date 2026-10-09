@@ -68,10 +68,10 @@ const KINDS: Record<string, KindDef> = {
   rockDark: { build: () => M.rock(63, '#5d524c', '#6d5a50'), detail: true },
   snowrock: { build: () => M.rock(64, '#b9c2cc', '#f4f8fb'), detail: true },
   sandrock: { build: () => M.rock(65, '#e2c48e', '#f0d9a8'), detail: true },
-  mtn0: { build: () => M.mountain(71, true), shadow: true },
-  mtn1: { build: () => M.mountain(72, true), shadow: true },
-  mtnBare0: { build: () => M.mountain(73, false), shadow: true },
-  mtnBare1: { build: () => M.mountain(74, false), shadow: true },
+  mtn0: { build: () => M.mountainRange(71, true), shadow: true },
+  mtn1: { build: () => M.mountainRange(72, true), shadow: true },
+  mtnBare0: { build: () => M.mountainRange(73, false), shadow: true },
+  mtnBare1: { build: () => M.mountainRange(74, false), shadow: true },
   volcano: { build: () => M.volcano(81), shadow: true },
   lava: { build: () => M.lava(), glow: true },
   cactus0: { build: () => M.cactus(91), shadow: true },
@@ -117,8 +117,6 @@ export class Props {
   readonly group = new Group();
   private geos = new Map<string, BufferGeometry>();
   private mats: { plain: MeshStandardMaterial; sway: MeshStandardMaterial; glow: MeshStandardMaterial; depth: MeshDepthMaterial; swayDepth: MeshDepthMaterial };
-  private key = '';
-  private meshes: InstancedMesh[] = [];
   private badges: Badges;
 
   constructor(private shape: Shape, uniforms: SharedUniforms) {
@@ -172,52 +170,81 @@ export class Props {
     return g;
   }
 
+  /**
+   * Places props for explored land only. The map is split into regions;
+   * a region is rebuilt when its exploration, features, improvements,
+   * roads or cities change (or newly revealed resources).
+   */
   update(g: Game, reveal: boolean): void {
     const map = g.s.map;
     this.wonders = g.s.wonders.map((w) => w.kind);
     const p = g.player;
-    // Only features, improvements, cities and revealed resources change the props.
-    let h = 2166136261;
-    const mix = (v: number) => {
-      h = Math.imul(h ^ v, 16777619);
-    };
-    for (let i = 0; i < map.feature.length; i++) {
-      mix(map.feature[i]);
-      mix(map.improvement[i]);
-      mix(map.cityAt[i] >= 0 ? 1 : 0);
-      mix(map.road[i]);
+    let res = 0;
+    for (let r = 1; r < RESOURCES.length; r++) res = res * 2 + (reveal || resourceVisible(p, r) ? 1 : 0);
+    const rw = Math.ceil(map.w / REGION);
+    const rh = Math.ceil(map.h / REGION);
+    let changed = false;
+    for (let ry = 0; ry < rh; ry++) {
+      for (let rx = 0; rx < rw; rx++) {
+        let h = 2166136261 ^ res;
+        const mix = (v: number) => {
+          h = Math.imul(h ^ v, 16777619);
+        };
+        for (let r = ry * REGION; r < Math.min(map.h, (ry + 1) * REGION); r++) {
+          for (let c = rx * REGION; c < Math.min(map.w, (rx + 1) * REGION); c++) {
+            const i = r * map.w + c;
+            const seen = reveal || p.explored[i] ? 1 : 0;
+            mix(seen);
+            if (!seen) continue;
+            mix(map.feature[i]);
+            mix(map.improvement[i]);
+            mix(map.cityAt[i] >= 0 ? 1 : 0);
+            mix(map.road[i]);
+          }
+        }
+        const id = `${rx},${ry}`;
+        const key = String(h >>> 0);
+        if (this.regionKeys.get(id) === key) continue;
+        this.regionKeys.set(id, key);
+        this.rebuildRegion(g, rx, ry, reveal);
+        changed = true;
+      }
     }
-    for (let r = 1; r < RESOURCES.length; r++) mix(reveal || resourceVisible(p, r) ? 1 : 0);
-    const key = String(h >>> 0);
-    if (key === this.key) return;
-    this.key = key;
-    this.rebuild(g, reveal);
+    if (changed) this.badges.rebuild(g, reveal);
   }
 
-  private rebuild(g: Game, reveal: boolean): void {
-    for (const m of this.meshes) {
+  private regionKeys = new Map<string, string>();
+  private regionMeshes = new Map<string, InstancedMesh[]>();
+
+  private rebuildRegion(g: Game, rx: number, ry: number, reveal: boolean): void {
+    const id = `${rx},${ry}`;
+    for (const m of this.regionMeshes.get(id) ?? []) {
       this.group.remove(m);
       m.dispose();
     }
-    this.meshes = [];
+    const meshes: InstancedMesh[] = [];
+    this.regionMeshes.set(id, meshes);
     const shape = this.shape;
     const map = shape.map;
+    const p = g.player;
     const lists = new Map<string, Inst[]>();
-    const add = (kind: string, tile: number, x: number, z: number, s = 1, rot = Math.random() * 6.28, tint: Color = WHITE, y?: number) => {
-      const rk = `${kind}|${Math.floor(shape.grid.col(tile) / REGION)},${Math.floor(shape.grid.row(tile) / REGION)}`;
-      let list = lists.get(rk);
-      if (!list) lists.set(rk, (list = []));
+    const add = (kind: string, tile: number, x: number, z: number, s = 1, rot = 0, tint: Color = WHITE, y?: number) => {
+      let list = lists.get(kind);
+      if (!list) lists.set(kind, (list = []));
       list.push({ x, y: y ?? shape.height(tile, x, z) - 0.004, z, rot, s, tile, tint });
     };
-    for (let i = 0; i < map.w * map.h; i++) this.placeTile(i, add);
-    this.badges.rebuild(g, reveal);
+    for (let r = ry * REGION; r < Math.min(map.h, (ry + 1) * REGION); r++) {
+      for (let c = rx * REGION; c < Math.min(map.w, (rx + 1) * REGION); c++) {
+        const i = r * map.w + c;
+        if (reveal || p.explored[i]) this.placeTile(i, add);
+      }
+    }
     const mat4 = new Matrix4();
     const q = new Quaternion();
     const up = new Vector3(0, 1, 0);
     const pos = new Vector3();
     const scl = new Vector3();
-    for (const [rk, list] of lists) {
-      const kind = rk.split('|')[0];
+    for (const [kind, list] of lists) {
       const def = KINDS[kind];
       const base = this.geo(kind);
       const geo = new InstancedBufferGeometry();
@@ -243,10 +270,18 @@ export class Props {
       mesh.receiveShadow = !def.glow;
       mesh.customDepthMaterial = def.sway ? this.mats.swayDepth : this.mats.depth;
       mesh.userData.detail = !!def.detail;
+      mesh.visible = !(def.detail && this.far);
       mesh.matrixAutoUpdate = false;
-      this.meshes.push(mesh);
+      meshes.push(mesh);
       this.group.add(mesh);
     }
+  }
+
+  private far = false;
+
+  /** The floating resource badges (hidden in portraits). */
+  get badgeMesh(): Mesh {
+    return this.badges.mesh;
   }
 
   /** Decides what grows and stands on one tile. */
@@ -381,13 +416,7 @@ export class Props {
         add('lava', i, cx, cz, 1.05, 0, WHITE, shape.height(i, cx, cz) - 0.02);
       } else {
         const big = snow ? (rnd() < 0.5 ? 'mtn0' : 'mtn1') : rnd() < 0.5 ? 'mtnBare0' : 'mtnBare1';
-        add(big, i, cx + (rnd() - 0.5) * 0.12, cz + (rnd() - 0.5) * 0.1, 0.9 + rnd() * 0.2, rnd() * 6.28, WHITE, LAND_BASE);
-        const n = 1 + Math.floor(rnd() * 2);
-        for (let k = 0; k < n; k++) {
-          const a = rnd() * 6.28;
-          const small = snow && rnd() < 0.5 ? 'mtn1' : 'mtnBare0';
-          add(small, i, cx + Math.cos(a) * 0.48, cz + Math.sin(a) * 0.42, 0.45 + rnd() * 0.15, rnd() * 6, WHITE, LAND_BASE);
-        }
+        add(big, i, cx + (rnd() - 0.5) * 0.1, cz + (rnd() - 0.5) * 0.08, 0.82 + rnd() * 0.16, rnd() * 6.28, WHITE, LAND_BASE);
       }
       scatter(['rock0', 'rock1'], 2, { min: 0.55, max: 0.8, center: 0.5 });
       if (t !== T.Snow && t !== T.Desert) scatter(['pine0', 'pine1'], 2, { min: 0.55, max: 0.8, center: 0.5, s: [0.7, 0.9] });
@@ -474,12 +503,15 @@ export class Props {
 
   tick(_time: number, zoom = 1): void {
     const far = zoom < 0.55;
-    for (const m of this.meshes) if (m.userData.detail) m.visible = !far;
+    if (far !== this.far) {
+      this.far = far;
+      for (const list of this.regionMeshes.values()) for (const m of list) if (m.userData.detail) m.visible = !far;
+    }
     this.badges.setZoom(zoom);
   }
 
   dispose(): void {
-    for (const m of this.meshes) m.dispose();
+    for (const list of this.regionMeshes.values()) for (const m of list) m.dispose();
     for (const g of this.geos.values()) g.dispose();
     Object.values(this.mats).forEach((m) => m.dispose());
     this.badges.dispose();

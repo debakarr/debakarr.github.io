@@ -41,7 +41,7 @@ export interface MapView {
   tileAt(sx: number, sy: number): number;
   tileScreen(tile: number): [number, number];
   pan(dx: number, dy: number): void;
-  zoomAt(factor: number, sx: number, sy: number): void;
+  zoomAt(factor: number, sx: number, sy: number, smooth?: boolean): void;
   centerOn(tile: number, smooth?: boolean, lift?: number, shift?: number): void;
   isOnScreen(tile: number, margin?: number): boolean;
   addEffect(kind: EffectKind, tile: number, color: string, text?: string, dur?: number): void;

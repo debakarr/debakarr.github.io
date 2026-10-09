@@ -231,29 +231,47 @@ export class Terrain {
         }
         gl_FragColor.rgb = yzFog(gl_FragColor.rgb, yzVis);`,
     });
-    this.build();
   }
 
-  private build(): void {
+  private chunks = new Map<string, { mesh: Mesh | null; key: string }>();
+
+  /** Builds (or rebuilds) the chunks whose explored land has changed. Unexplored land has no geometry at all. */
+  update(explored: Uint8Array, reveal: boolean): void {
     const shape = this.shape;
     const map = shape.map;
     const cw = Math.ceil(map.w / CHUNK);
     const ch = Math.ceil(map.h / CHUNK);
     for (let cy = 0; cy < ch; cy++) {
       for (let cx = 0; cx < cw; cx++) {
+        let h = 2166136261;
+        for (let r = cy * CHUNK; r < Math.min(map.h, (cy + 1) * CHUNK); r++) {
+          for (let c = cx * CHUNK; c < Math.min(map.w, (cx + 1) * CHUNK); c++) h = Math.imul(h ^ (reveal || explored[r * map.w + c] ? 1 : 0), 16777619);
+        }
+        const id = `${cx},${cy}`;
+        const key = String(h >>> 0);
+        const old = this.chunks.get(id);
+        if (old && old.key === key) continue;
+        if (old?.mesh) {
+          this.group.remove(old.mesh);
+          old.mesh.geometry.dispose();
+        }
         const b = new Buf();
         for (let r = cy * CHUNK; r < Math.min(map.h, (cy + 1) * CHUNK); r++) {
           for (let c = cx * CHUNK; c < Math.min(map.w, (cx + 1) * CHUNK); c++) {
             const i = r * map.w + c;
+            if (!reveal && !explored[i]) continue;
             if (shape.isWater(i) && !shape.isIce(i)) continue;
             this.tile(b, i);
           }
         }
-        if (!b.count) continue;
-        const mesh = new Mesh(b.geometry(), this.material);
-        mesh.receiveShadow = true;
-        mesh.matrixAutoUpdate = false;
-        this.group.add(mesh);
+        let mesh: Mesh | null = null;
+        if (b.count) {
+          mesh = new Mesh(b.geometry(), this.material);
+          mesh.receiveShadow = true;
+          mesh.matrixAutoUpdate = false;
+          this.group.add(mesh);
+        }
+        this.chunks.set(id, { mesh, key });
       }
     }
   }

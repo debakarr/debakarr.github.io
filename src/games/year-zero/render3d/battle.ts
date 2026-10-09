@@ -18,6 +18,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
+  NormalBlending,
   Object3D,
   PerspectiveCamera,
   PlaneGeometry,
@@ -47,6 +48,8 @@ export interface Side {
   label: string;
   hpBefore: number;
   hpAfter: number;
+  /** full health (100 for units, more for walled cities) */
+  max: number;
   /** destroyed (unit) or taken (city) */
   lost: boolean;
   /** era tier, for city styles */
@@ -190,7 +193,9 @@ export class BattleScene implements StageScene {
     this.sun.shadow.normalBias = 0.03;
     this.scene.add(this.sun);
     this.buildGround();
+    N.setCanopyDetail(2);
     this.buildScenery();
+    N.setCanopyDetail(1);
     if (info.city) this.buildCity();
     this.buildArmies();
     this.length = info.ranged ? 6.6 : 7.2;
@@ -573,7 +578,7 @@ export class BattleScene implements StageScene {
   }
 
   private puff(at: Vector3, size: number, color: string, dur: number, glow: boolean): void {
-    const m = new Mesh(new SphereGeometry(1, 10, 8), new MeshBasicMaterial({ color, transparent: true, opacity: 0.8, depthWrite: false, blending: glow ? AdditiveBlending : undefined }));
+    const m = new Mesh(new SphereGeometry(1, 10, 8), new MeshBasicMaterial({ color, transparent: true, opacity: 0.8, depthWrite: false, blending: glow ? AdditiveBlending : NormalBlending }));
     m.position.copy(at);
     m.scale.setScalar(size);
     this.scene.add(m);
@@ -770,7 +775,8 @@ export class BattleScene implements StageScene {
   private updateCamera(t: number): void {
     const cam = this.camera;
     const i = this.info;
-    const far = i.water ? 1.6 : 1;
+    const big = this.actors.some((a) => a.side === -1 && (a.kind === 'rider' || a.kind === 'machine'));
+    const far = i.water ? 1.6 : big ? 1.35 : 1;
     const wide = this.aspect < 1 ? 1.5 : 1;
     // four shots: behind the attackers, a dolly along the line, the clash, the aftermath
     const shots: { at: number; pos: [number, number, number]; look: [number, number, number] }[] = [

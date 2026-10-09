@@ -119,7 +119,7 @@ vec3 yzOwnerColor(float g) {
 /** Desaturate and cool what is explored but not currently in sight. */
 vec3 yzFog(vec3 c, float visible) {
   float l = dot(c, vec3(0.299, 0.587, 0.114));
-  vec3 grey = mix(vec3(l), c, 0.72) * vec3(0.8, 0.84, 0.93);
+  vec3 grey = mix(vec3(l), c, 0.78) * vec3(0.84, 0.87, 0.95);
   return mix(mix(c, grey, uFogDim), c, visible);
 }
 

@@ -3,7 +3,7 @@
 // units (a hex has a corner radius of 1). Every builder returns one merged
 // geometry, so each kind is drawn with a single instanced mesh.
 
-import { BufferGeometry, Vector3 } from 'three';
+import { BufferGeometry, Color, Vector3 } from 'three';
 import { Rng } from '../../../shared/rng';
 import {
   box, capColor, capsule, cone, cylinder, ellipsoid, faceted, gradient, ico, lathe, lumpy, merge, part, prep, radialNormals, rockGeo, sphere, xf,
@@ -15,8 +15,14 @@ const WOOD = '#a8774a';
 const WOOD_L = '#c9965e';
 const STONE = '#c9c0b0';
 
+/** Smooth leafy blob. Map trees use detail 1 (light); close-up scenes may ask for more. */
+export let CANOPY_DETAIL = 1;
+export function setCanopyDetail(d: number): void {
+  CANOPY_DETAIL = d;
+}
+
 function canopy(r: number, seed: number, low: string, high: string, sx = 1, sy = 0.9): BufferGeometry {
-  const g = ico(r, 2);
+  const g = ico(r, CANOPY_DETAIL);
   g.scale(sx, sy, sx);
   lumpy(g, r * 0.22, 6 / r * 0.12, seed);
   radialNormals(g);
@@ -158,6 +164,30 @@ export function rock(seed = 1, color = '#9d958c', moss = '#7fae55'): BufferGeome
   return gradient(g, '#6f6861', color, { moss, mossAmount: 0.5, jitter: 0.06, seed });
 }
 
+/** A cluster of peaks with green foothills: one map mountain tile. */
+export function mountainRange(seed = 1, snow = true): BufferGeometry {
+  const rng = new Rng(seed);
+  const parts: BufferGeometry[] = [mountain(seed, snow, 1)];
+  const n = 2 + rng.int(2);
+  for (let k = 0; k < n; k++) {
+    const a = rng.float(0, Math.PI * 2);
+    const r = rng.float(0.32, 0.46);
+    const s = rng.float(0.5, 0.68);
+    const g = mountain(seed * 7 + k, snow && s > 0.58, s);
+    g.translate(Math.cos(a) * r, -0.02, Math.sin(a) * r * 0.85);
+    parts.push(g);
+  }
+  for (let k = 0; k < 5; k++) {
+    const a = rng.float(0, Math.PI * 2);
+    const hill = ico(rng.float(0.14, 0.2), 1);
+    hill.scale(1.4, 0.6, 1.2);
+    lumpy(hill, 0.03, 6, seed + k * 13);
+    hill.translate(Math.cos(a) * 0.58, 0.0, Math.sin(a) * 0.5);
+    parts.push(gradient(hill, '#5d8f3a', '#8cc04e', { jitter: 0.05, seed: seed + k }));
+  }
+  return merge(parts);
+}
+
 export function mountain(seed = 1, snow = true, scale = 1): BufferGeometry {
   const rng = new Rng(seed);
   const g = lathe([[0.66, 0], [0.6, 0.1], [0.47, 0.3], [0.32, 0.52], [0.17, 0.72], [0.05, 0.86], [0, 0.88]], 10);
@@ -177,8 +207,21 @@ export function mountain(seed = 1, snow = true, scale = 1): BufferGeometry {
   lumpy(g, 0.05, 3, seed);
   let f = faceted(g);
   f.scale(scale, scale * rng.float(0.92, 1.1), scale);
-  f = gradient(f, '#7c6f64', '#b8aa9a', { jitter: 0.08, seed, moss: '#8fb35a', mossAmount: 0.35 });
-  if (snow) capColor(f, 0.5 * scale, '#f6f9fc', 0.08 * scale, 0.1);
+  f = gradient(f, '#6f655d', '#b3a596', { jitter: 0.08, seed, moss: '#79a84a', mossAmount: 0.45, above: 0 });
+  // greener lower slopes
+  {
+    const pos = f.attributes.position;
+    const col = f.attributes.color;
+    const green = new Color('#6f9a45');
+    const c = new Color();
+    for (let i = 0; i < pos.count; i++) {
+      const t = 1 - pos.getY(i) / (0.2 * scale);
+      if (t <= 0) continue;
+      c.setRGB(col.getX(i), col.getY(i), col.getZ(i)).lerp(green, Math.min(1, t) * 0.7);
+      col.setXYZ(i, c.r, c.g, c.b);
+    }
+  }
+  if (snow) capColor(f, 0.48 * scale, '#f7faff', 0.07 * scale, 0.15);
   return f;
 }
 
@@ -245,11 +288,12 @@ export function iceChunk(seed = 1): BufferGeometry {
 
 export function wheatField(seed = 1): BufferGeometry {
   const rng = new Rng(seed);
-  const parts: BufferGeometry[] = [part(box(0.46, 0.012, 0.34), '#8e6236', { p: [0, 0.006, 0] })];
-  for (let k = 0; k < 5; k++) {
-    const row = box(0.42, 0.035, 0.04);
-    lumpy(row, 0.006, 40, seed + k);
-    parts.push(gradient(xf(row, { p: [0, 0.028, -0.13 + k * 0.065] }), '#c99a2e', rng.chance(0.5) ? '#f1cf5a' : '#e9c04a'));
+  const parts: BufferGeometry[] = [part(box(0.44, 0.008, 0.32), '#a07a42', { p: [0, 0.004, 0] })];
+  for (let k = 0; k < 6; k++) {
+    const row = box(0.4, 0.022, 0.036);
+    lumpy(row, 0.005, 40, seed + k);
+    const ripe = rng.chance(0.5);
+    parts.push(gradient(xf(row, { p: [0, 0.016, -0.125 + k * 0.05] }), ripe ? '#b8a23a' : '#7fae3c', ripe ? '#e8d26a' : '#b4d65a'));
   }
   return merge(parts);
 }

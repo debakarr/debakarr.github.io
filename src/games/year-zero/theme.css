@@ -1002,6 +1002,8 @@ button.yz-buildcard:hover {
     color: var(--yz-gold-2);
   }
   .yz-side {
+    top: auto;
+    width: auto;
     border-width: 2px 0 0;
   }
   .yz-worldmap,
@@ -1027,8 +1029,63 @@ button.yz-buildcard:hover {
 }
 
 @media (max-height: 520px) and (orientation: landscape) {
-  .yz-leftnav {
+  .yz-leftnav,
+  .yz-top .yz-back,
+  .yz-civ-text,
+  .yz-turnchip span,
+  .yz-turnchip .sun,
+  .yz-res.hide-sm,
+  .yz-res .d,
+  .yz-res.research .rs,
+  .yz-sqbtn.hide-sm,
+  .yz-autobtn {
     display: none;
+  }
+  .yz-top {
+    top: 0;
+    left: calc(62px + env(safe-area-inset-left));
+    right: 0;
+    padding: 4px calc(8px + env(safe-area-inset-right)) 4px 6px;
+    gap: 5px;
+  }
+  .yz-civ,
+  .yz-res,
+  .yz-turnchip {
+    height: 38px;
+    padding: 0 8px 0 4px;
+  }
+  .yz-sqbtn {
+    width: 36px;
+    height: 36px;
+  }
+  .yz-side {
+    top: 46px;
+    width: min(340px, 46vw);
+  }
+  .yz-toasts {
+    left: calc(70px + env(safe-area-inset-left));
+    top: 52px;
+  }
+  .yz-bottomnav {
+    background: linear-gradient(90deg, rgba(30, 40, 70, 0.98), rgba(13, 18, 34, 0.98));
+    border-right: 2px solid rgba(213, 166, 78, 0.7);
+  }
+  .yz-bottomnav button {
+    color: var(--yz-ink);
+    font-weight: 800;
+  }
+  .yz-bottomnav .icon {
+    color: var(--yz-gold-2);
+  }
+  .yz-battle-preview {
+    bottom: 8px;
+    max-height: calc(100% - 16px);
+    overflow-y: auto;
+  }
+  .yz-au-panel {
+    top: 56px;
+    bottom: 8px;
+    width: min(360px, 48vw);
   }
 }
 
@@ -1370,4 +1427,14 @@ button.yz-buildcard:hover {
 /* Before a game starts only the title and its dialogs show. */
 .yz:not(.yz-ingame) > :is(.yz-top, .yz-leftnav, .yz-side, .yz-toasts, .yz-minimap-wrap, .yz-endturn-wrap, .yz-unitbar, .yz-bottomnav, .yz-turnpill, .yz-tip, .yz-labels) {
   display: none !important;
+}
+
+.yz-stack {
+  padding: 1px 6px;
+  border-radius: 9px;
+  background: #141c33;
+  border: 1.5px solid var(--yz-gold);
+  color: #fff4d6;
+  font: 900 11px/16px var(--yz-ui);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
