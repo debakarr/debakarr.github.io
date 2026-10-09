@@ -1,4 +1,5 @@
 import './styles.css';
+import './theme.css';
 import { MapRenderer } from './render/renderer';
 import { meet } from './sim/diplomacy';
 import { createUnit } from './sim/units';

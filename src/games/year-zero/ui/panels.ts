@@ -25,6 +25,15 @@ export interface PanelHost {
   centerOn: (tile: number) => void;
   unitAction: (action: string) => void;
   click: () => void;
+  /** A rendered picture of a tile or city (3D only). */
+  portraitOf?: (tile: number, kind: 'tile' | 'city') => string | null;
+  /** Opens the full city management screen. */
+  manageCity?: (id: number) => void;
+}
+
+function portrait(host: PanelHost, tile: number, kind: 'tile' | 'city'): HTMLElement | null {
+  const url = host.portraitOf?.(tile, kind);
+  return url ? h('div', { class: `yz-portrait ${kind}` }, h('img', { src: url, alt: '', draggable: 'false' })) : null;
 }
 
 const FOCUS: { id: Focus; label: string; icon: string }[] = [
@@ -86,7 +95,10 @@ export function tilePanel(host: PanelHost, tile: number): HTMLElement {
   const feat = FEATURE_NAME[map.feature[tile]];
   if (feat) parts.push(feat);
   const region = regionName(g, tile);
+  el.append(h('div', { class: 'yz-panel-title' }, 'Tile Info'));
   el.append(head(parts.join(' · '), region || (t.water ? 'Open water' : 'Unnamed land'), host));
+  const pic = portrait(host, tile, 'tile');
+  if (pic) el.append(pic);
   const y = tileYield(map, g.s.wonders, player, tile);
   el.append(h('div', { class: 'yz-grid3' },
     yieldBox('y-food', 'c-food', 'Food', String(y.food)),
@@ -279,7 +291,10 @@ export function cityPanel(host: PanelHost, city: City, opts: { showBuild: boolea
   const el = h('div');
   const pop = realPopulation(city, civ);
   const capital = civ.capitalId === city.id;
-  el.append(head(`${capital ? '★ ' : ''}${city.name}`, `${own ? '' : `${civ.name} · `}Size ${city.size} · ${pop.toLocaleString('en-US')} people`, host, civ.color));
+  el.append(head(`${capital ? '♛ ' : ''}${city.name}`, `${own ? '' : `${civ.name} · `}Size ${city.size} · ${pop.toLocaleString('en-US')} people`, host, civ.color));
+  const pic = portrait(host, city.tile, 'city');
+  if (pic) el.append(pic);
+  if (own && host.manageCity) el.append(h('button', { class: 'yz-btn gold yz-manage', onclick: () => host.manageCity!(city.id) }, gi('n-city'), 'City Management'));
 
   const status = h('div', { class: 'yz-chips', style: { marginBottom: '8px' } });
   const y = city.y;

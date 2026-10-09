@@ -492,9 +492,9 @@ export class Map3D implements MapView, StageScene {
     const x = this.shape.cx(tile);
     const z = this.shape.cz(tile);
     const y = this.shape.height(tile, x, z);
-    const d = 3.1 / close;
-    cam.position.set(x + d * 0.35, y + d * 0.62, z + d * 0.85);
-    cam.lookAt(x, y + 0.12, z - 0.05);
+    const d = 2.6 / close;
+    cam.position.set(x + d * 0.3, y + d * 0.5, z + d * 0.9);
+    cam.lookAt(x, y + 0.1, z - 0.1);
     cam.updateMatrixWorld();
     this.labels.hidden = true;
     const out = this.stage.snapshot(this.scene, cam, w, h);

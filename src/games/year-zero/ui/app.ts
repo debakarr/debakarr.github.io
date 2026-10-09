@@ -29,7 +29,9 @@ import { openCiv } from './screens/civ';
 import { openAudience } from './screens/audience';
 import { openDiplomacyModal } from './screens/diplomacy';
 import { openHistory } from './screens/history';
-import { hideTitle, showHelp, showMenu, showNewGame, showTitle, type MenuHost } from './screens/menu';
+import { hideTitle, showHelp, showMenu, showNewGame, showSettings, showTitle, type MenuHost } from './screens/menu';
+import { openCityList, openUnitList, openWorldMap } from './screens/lists';
+import { openCityManager } from './screens/city';
 import { openTech } from './screens/tech';
 
 const TIPS: Record<string, string> = {
@@ -60,6 +62,7 @@ export class App implements PanelHost {
   private hint: HTMLElement;
   private unitbarEl: HTMLElement;
   private bottomnav: HTMLElement;
+  private leftnav: HTMLElement;
   private turnpill: HTMLElement;
   private tipEl: HTMLElement;
   private modalRoot: HTMLElement;
@@ -110,6 +113,7 @@ export class App implements PanelHost {
     this.hint = h('div', { class: 'yz-hint' });
     this.unitbarEl = h('div', { class: 'yz-unitbar yz-panel' });
     this.bottomnav = h('nav', { class: 'yz-bottomnav', 'aria-label': 'Game' });
+    this.leftnav = h('nav', { class: 'yz-leftnav', 'aria-label': 'Empire' });
     this.turnpill = h('div', { class: 'yz-turnpill yz-panel', role: 'status' });
     this.tipEl = h('div', { class: 'yz-tip yz-panel' });
     this.modalRoot = h('div', { class: 'yz-modal-root' });
@@ -124,7 +128,7 @@ export class App implements PanelHost {
     }
     root.classList.toggle('yz-3d', !!this.stage);
     root.append(
-      this.canvas, this.labelsEl, this.top, this.side, this.toasts, this.miniWrap,
+      this.canvas, this.labelsEl, this.top, this.leftnav, this.side, this.toasts, this.miniWrap,
       h('div', { class: 'yz-endturn-wrap' }, this.hint, this.endBtn),
       this.unitbarEl, this.bottomnav, this.turnpill, this.tipEl, this.modalRoot, this.titleRoot,
     );
@@ -162,6 +166,8 @@ export class App implements PanelHost {
       load: (g) => this.attach(g),
       toTitle: () => this.toTitle(),
       settings: this.settings,
+      quality: () => (this.stage ? this.stage.quality : null),
+      stage: () => this.stage,
       saveSettings: () => {
         persist('yearzero:settings', this.settings);
         setMuted(!this.settings.sound);
@@ -176,6 +182,7 @@ export class App implements PanelHost {
 
   toTitle(): void {
     this.setAuto(false);
+    this.root.classList.remove('yz-ingame');
     closeModal();
     showTitle(this.menuHost(), this.titleRoot);
   }
@@ -190,6 +197,7 @@ export class App implements PanelHost {
     this.unsub?.();
     this.g = g;
     this.hasGame = true;
+    this.root.classList.add('yz-ingame');
     this.gameOverShown = false;
     this.unread = 0;
     hideTitle(this.titleRoot);
@@ -887,59 +895,78 @@ export class App implements PanelHost {
     r.request();
   }
 
-  private stat(icon: string, cls: string, value: string, delta: string, title: string, onclick: () => void, extra = ''): HTMLElement {
-    return h('button', { class: `yz-stat ${extra}`, title, onclick },
-      h('span', { class: cls }, gi(icon)), h('span', { class: 'v' }, value), delta ? h('span', { class: 'd' }, delta) : null);
-  }
-
   private renderTop(): void {
     const g = this.g;
     const p = g.player;
     const tot = civTotals(g, p);
     const cities = g.citiesOf(p.id);
     const mood = cities.length ? cities.reduce((s, c) => s + c.y.mood, 0) / cities.length : 0;
+    const food = cities.reduce((s, c) => s + c.y.foodNet, 0);
+    const prod = cities.reduce((s, c) => s + c.y.prod, 0);
     const era = p.eraPath[p.eraPath.length - 1]?.name ?? 'Tribal Age';
     clear(this.top);
     const research = p.research ? TECHS.find((t) => t.id === p.research)! : null;
     const needResearch = !research && availableTechs(p).length > 0 && cities.length > 0;
+    const sign = (n: number) => `${n >= 0 ? '+' : ''}${fmt(n, Math.abs(n) < 10 && n % 1 ? 1 : 0)}`;
+    const chip = (icon: string, cls: string, value: string, delta: string, title: string, fn: () => void, extra = '') =>
+      h('button', { class: `yz-res ${extra}`, title, onclick: fn },
+        h('span', { class: `ic ${cls}` }, gi(icon)), h('b', { class: 'yz-num' }, value), delta ? h('span', { class: `d${delta.startsWith('-') ? ' neg' : ''}` }, delta) : null);
     const resEl = h('button', {
-      class: `yz-stat research${needResearch ? ' need' : ''}`,
+      class: `yz-res research${needResearch ? ' need' : ''}`,
       title: research ? `Researching ${research.name}` : 'Choose research',
       onclick: () => this.open('tech'),
-    }, h('span', { class: 'c-sci' }, gi('y-sci')), h('span', { class: 'v name' }, research ? research.name : 'Choose research'),
-    research ? h('span', { class: 'yz-bar c-sci' }, h('i', { style: { width: `${Math.min(100, (p.sciStore / techCostFor(g, p, research.id)) * 100)}%` } })) : null,
+    }, h('span', { class: 'ic c-sci' }, gi('y-sci')),
+    h('span', { class: 'rs' }, h('b', null, research ? research.name : 'Choose research'),
+      research ? h('span', { class: 'yz-bar c-sci' }, h('i', { style: { width: `${Math.min(100, (p.sciStore / techCostFor(g, p, research.id)) * 100)}%` } })) : null),
     h('span', { class: 'd' }, `+${tot.sci}`));
     this.top.append(
-      h('a', { class: 'yz-iconbtn', href: '/games', title: 'Back to games', 'aria-label': 'Back to games' }, svg(ICON.back)),
-      h('button', { class: 'yz-civ', style: { background: 'none', border: 'none', padding: 0, textAlign: 'left' }, onclick: () => this.open('civ'), title: 'Your civilization' },
-        h('span', { class: 'yz-emblem', style: { background: p.color } }),
-        h('div', null, h('div', { class: 'yz-civ-name' }, p.alive ? p.name : `${p.name} †`), h('div', { class: 'yz-era' }, `${era}${p.anarchy ? ' · Anarchy' : ''}`))),
-      h('div', { class: 'yz-year', title: 'Each turn is one year' }, h('div', { class: 'yz-year-label' }, 'YEAR'), h('div', { class: 'yz-year-num yz-num' }, String(g.turn))),
-      h('div', { class: 'yz-stats' },
-        this.stat('y-gold', 'c-gold', fmt(Math.floor(p.gold)), `${tot.net >= 0 ? '+' : ''}${tot.net}`, 'Treasury and income per year', () => this.open('civ')),
+      h('a', { class: 'yz-iconbtn yz-back', href: '/games', title: 'Back to games', 'aria-label': 'Back to games' }, svg(ICON.back)),
+      h('button', { class: 'yz-civ', onclick: () => this.open('civ'), title: 'Your civilization' },
+        h('span', { class: 'yz-crest small', style: { '--civ': p.color } as never }, gi('n-civ')),
+        h('div', { class: 'yz-civ-text' }, h('div', { class: 'yz-civ-name' }, p.alive ? p.name : `${p.name} †`), h('div', { class: 'yz-era' }, `${era}${p.anarchy ? ' · Anarchy' : ''}`))),
+      h('div', { class: 'yz-resbar' },
+        chip('y-gold', 'c-gold', fmt(Math.floor(p.gold)), sign(tot.net), 'Treasury and income per year', () => this.open('civ')),
+        chip('y-food', 'c-food', fmt(civPopulation(g, p)), sign(Math.round(food)), 'Population and food surplus per year', () => this.open('history', 'Cities'), 'hide-sm'),
+        chip('y-prod', 'c-prod', fmt(Math.round(prod)), '', 'Production per year', () => this.openCities(), 'hide-md'),
         resEl,
-        this.stat('y-cult', 'c-cult', fmt(p.culture), `+${tot.cult}`, 'Culture', () => this.open('civ', 'Identity'), 'hide-sm'),
-        this.stat(mood >= 0 ? 'y-happy' : 'y-sad', mood >= 0 ? 'c-mood' : 'c-bad', mood >= 0 ? `+${mood.toFixed(0)}` : mood.toFixed(0), '', 'Average mood of your cities', () => this.open('civ')),
-        this.stat('y-pop', 'c-food', fmt(civPopulation(g, p)), '', 'Population', () => this.open('history', 'Cities'), 'hide-sm')),
-      h('nav', { class: 'yz-nav' },
-        this.navBtn('n-tech', 'Knowledge', () => this.open('tech'), 'T'),
-        this.navBtn('n-civ', 'Civilization', () => this.open('civ'), 'C'),
-        this.navBtn('n-diplomacy', 'Diplomacy', () => this.open('diplomacy'), 'D'),
-        this.navBtn('n-history', 'History', () => this.open('history'), 'H'),
-        h('button', { class: 'yz-iconbtn', title: 'Reports', onclick: () => this.openLog() }, svg(ICON.bell), this.unread ? h('span', { class: 'yz-badge' }, String(Math.min(99, this.unread))) : null),
-        h('button', { class: 'yz-iconbtn', title: this.settings.sound ? 'Mute' : 'Unmute', onclick: () => { this.settings.sound = !this.settings.sound; this.menuHost().saveSettings(); } }, svg(this.settings.sound ? ICON.sound : ICON.mute)),
-        h('button', { class: 'yz-iconbtn', title: 'Menu', onclick: () => showMenu(this.menuHost()) }, svg(ICON.menu))),
-      h('button', {
-        class: `yz-autobtn${this.auto ? ' on' : ''}`,
-        title: this.auto ? 'Automatic mode is on: tap to take over' : 'Automatic mode: let the AI play',
-        'aria-pressed': String(this.auto),
-        onclick: () => this.setAuto(!this.auto),
-      }, 'AUTO'),
+        chip('y-cult', 'c-cult', fmt(p.culture), `+${tot.cult}`, 'Culture', () => this.open('civ', 'Identity'), 'hide-sm'),
+        chip(mood >= 0 ? 'y-happy' : 'y-sad', mood >= 0 ? 'c-mood' : 'c-bad', mood >= 0 ? `+${mood.toFixed(0)}` : mood.toFixed(0), '', 'Average mood of your cities', () => this.open('civ'), 'hide-md')),
+      h('div', { class: 'yz-turnchip', title: 'Each turn is one year' },
+        h('span', { class: 'sun' }, gi('w-sunhouse')),
+        h('div', null, h('b', null, `Year ${g.turn}`), h('span', null, era))),
+      h('div', { class: 'yz-topbtns' },
+        h('button', { class: 'yz-sqbtn hide-sm', title: 'History (H)', onclick: () => this.open('history') }, svg(ICON.book)),
+        h('button', { class: 'yz-sqbtn hide-sm', title: 'Legacies', onclick: () => this.open('civ', 'Legacies') }, svg(ICON.trophy)),
+        h('button', { class: 'yz-sqbtn', title: 'Reports', onclick: () => this.openLog() }, svg(ICON.bell), this.unread ? h('span', { class: 'yz-badge' }, String(Math.min(99, this.unread))) : null),
+        h('button', { class: 'yz-sqbtn hide-sm', title: this.settings.sound ? 'Mute' : 'Unmute', onclick: () => { this.settings.sound = !this.settings.sound; this.menuHost().saveSettings(); } }, svg(this.settings.sound ? ICON.sound : ICON.mute)),
+        h('button', { class: 'yz-sqbtn', title: 'Settings', onclick: () => showSettings(this.menuHost()) }, svg(ICON.gear)),
+        h('button', { class: 'yz-sqbtn', title: 'Menu', onclick: () => showMenu(this.menuHost()) }, svg(ICON.menu)),
+        h('button', {
+          class: `yz-autobtn${this.auto ? ' on' : ''}`,
+          title: this.auto ? 'Automatic mode is on: tap to take over' : 'Automatic mode: let the AI play',
+          'aria-pressed': String(this.auto),
+          onclick: () => this.setAuto(!this.auto),
+        }, 'AUTO')),
     );
+    this.renderLeftNav();
   }
 
-  private navBtn(icon: string, label: string, fn: () => void, key: string): HTMLElement {
-    return h('button', { class: 'yz-navbtn', title: `${label} (${key})`, onclick: fn }, gi(icon), h('span', null, label));
+  private renderLeftNav(): void {
+    clear(this.leftnav);
+    const item = (icon: Node, label: string, fn: () => void, key: string, badge = '') =>
+      h('button', { class: 'yz-lnav', title: `${label} (${key})`, onclick: fn }, h('span', { class: 'ic' }, icon), h('span', { class: 'lb' }, label), badge ? h('span', { class: 'yz-badge' }, badge) : null);
+    const p = this.g.player;
+    const idle = this.idleUnits().length;
+    const known = this.g.s.civs.filter((c) => c.id !== p.id && c.alive && this.g.knows(p.id, c.id)).length;
+    this.leftnav.append(
+      item(gi('n-city'), 'Cities', () => this.openCities(), 'Y'),
+      item(gi('u-swordsmen'), 'Units', () => this.openUnits(), 'U', idle ? String(idle) : ''),
+      item(gi('n-tech'), 'Research', () => this.open('tech'), 'T', !p.research && availableTechs(p).length && this.g.citiesOf(p.id).length ? '!' : ''),
+      item(gi('n-diplomacy'), 'Diplomacy', () => this.open('diplomacy'), 'D', known ? String(known) : ''),
+      item(gi('n-civ'), 'Civics', () => this.open('civ'), 'C'),
+      item(gi('n-history'), 'History', () => this.open('history'), 'H'),
+      item(svg(ICON.map), 'World Map', () => this.openWorldMap(), 'M'),
+    );
   }
 
   private renderSide(): void {
@@ -1037,6 +1064,55 @@ export class App implements PanelHost {
     }
   }
 
+  manageCity(id: number): void {
+    if (!this.hasGame || this.busy) return;
+    sfx.click();
+    openCityManager(this.modalRoot, {
+      g: this.g,
+      portrait: (tile) => this.portraitOf(tile, 'city'),
+      changed: () => this.refresh(),
+      click: () => sfx.click(),
+      select: (uid) => { closeModal(); this.selectUnit(uid); },
+    }, id);
+  }
+
+  openCities(): void {
+    if (!this.hasGame || this.busy) return;
+    sfx.click();
+    openCityList(this.modalRoot, this.g, (id) => { closeModal(); const c = this.g.city(id); if (c) { this.centerOn(c.tile); this.selectCity(id); } }, (id) => this.portraitOf(this.g.city(id)?.tile ?? -1, 'city'));
+  }
+
+  openUnits(): void {
+    if (!this.hasGame || this.busy) return;
+    sfx.click();
+    openUnitList(this.modalRoot, this.g, (id) => { closeModal(); const u = this.g.unit(id); if (u) { this.centerOn(u.tile); this.selectUnit(id); } });
+  }
+
+  openWorldMap(): void {
+    if (!this.hasGame || this.busy) return;
+    sfx.click();
+    openWorldMap(this.modalRoot, this.g, (t) => { closeModal(); this.centerOn(t); });
+  }
+
+  private portraits = new Map<string, string>();
+
+  /** A small 3D picture of a tile or city for the panels (cached per year). */
+  portraitOf(tile: number, kind: 'tile' | 'city'): string | null {
+    if (tile < 0 || !(this.r instanceof Map3D) || !this.stage) return null;
+    const key = `${tile}|${kind}|${this.g.turn}|${this.g.s.map.cityAt[tile]}|${this.g.s.map.improvement[tile]}`;
+    let url = this.portraits.get(key);
+    if (!url) {
+      if (this.portraits.size > 60) this.portraits.clear();
+      try {
+        url = this.r.portrait(tile, 360, 200, kind === 'city' ? 1.05 : 1.25).toDataURL('image/jpeg', 0.85);
+      } catch {
+        return null;
+      }
+      this.portraits.set(key, url);
+    }
+    return url;
+  }
+
   private openLog(): void {
     this.unread = 0;
     this.renderTop();
@@ -1093,14 +1169,16 @@ export class App implements PanelHost {
       case 'f': this.unitAction('fortify'); break;
       case 's': this.unitAction('sleep'); break;
       case 'e': this.unitAction('explore'); break;
-      case 'u': this.unitAction('upgrade'); break;
+      case 'u': if (this.selectedUnit()) this.unitAction('upgrade'); else this.openUnits(); break;
       case 'p': this.unitAction('pillage'); break;
       case 'w': this.unitAction('cancel'); break;
       case 't': this.open('tech'); break;
       case 'c': this.open('civ'); break;
       case 'd': this.open('diplomacy'); break;
       case 'h': this.open('history'); break;
-      case 'm': showMenu(this.menuHost()); break;
+      case 'm': this.openWorldMap(); break;
+      case 'y': this.openCities(); break;
+      case 'o': showSettings(this.menuHost()); break;
       case '?': showHelp(this.modalRoot); break;
       case 'Escape': this.deselect(); break;
       case 'ArrowLeft': r.pan(120, 0); break;
