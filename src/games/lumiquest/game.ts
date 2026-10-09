@@ -332,8 +332,13 @@ export class Game implements InteractHost, DialogueHost {
   }
 
   skipCinematic(): void {
-    if (this.cinematic) this.cinematic.t = this.cinematic.dur;
+    if (this.cinematic) {
+      this.cinematic.t = this.cinematic.dur;
+      this.skipped = true;
+    }
   }
+
+  private skipped = false;
 
   // -------------------------------------------------------------------------
   // Frame loop
@@ -417,6 +422,9 @@ export class Game implements InteractHost, DialogueHost {
         const done = this.cinematic.done;
         this.cinematic = null;
         this.rig.shot = null;
+        // a skipped shot cuts straight back to the player
+        if (this.skipped) this.rig.snap();
+        this.skipped = false;
         done();
       }
     }

@@ -72,10 +72,11 @@ function canopy(seed: number, blobs: [number, number, number, number][], bottom:
     const pos = g.attributes.position;
     const nor = g.attributes.normal;
     for (let k = 0; k < pos.count; k++) {
+      // radial normals: shared by every face at a vertex, so the shading is smooth
       v.fromBufferAttribute(pos, k).normalize();
-      const nx = nor.getX(k) * 0.3 + v.x * 0.7;
-      const ny = nor.getY(k) * 0.3 + v.y * 0.7;
-      const nz = nor.getZ(k) * 0.3 + v.z * 0.7;
+      const nx = nor.getX(k) * 0.05 + v.x * 0.95;
+      const ny = nor.getY(k) * 0.05 + v.y * 0.95;
+      const nz = nor.getZ(k) * 0.05 + v.z * 0.95;
       const l = Math.hypot(nx, ny, nz) || 1;
       nor.setXYZ(k, nx / l, ny / l, nz / l);
     }
@@ -262,6 +263,8 @@ export class Nature {
 
   private scatter(): void {
     const rng = new Rng(4242);
+    // keep the title-screen vantage point open
+    clearings.push({ x: -46, z: 56, r: 12 });
     const t = this.terrain;
     const interact = INTERACTABLES.map((i) => i.at);
     const nearInteract = (x: number, z: number, r: number) => interact.some(([ix, iz]) => Math.hypot(x - ix, z - iz) < r);

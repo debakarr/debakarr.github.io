@@ -2529,7 +2529,7 @@ html.lq-page body {
   .lq-hud-comp {
     left: 10px;
     bottom: auto;
-    top: 96px;
+    top: 112px;
     padding: 5px 8px 5px 5px;
     max-width: 190px;
   }
@@ -2728,5 +2728,52 @@ html.lq-page body {
 
   .lq-cust-main {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* touch screens held sideways: chips along the top, companion card clear of the stick */
+@media (orientation: landscape) {
+  .lq-has-touch .lq-compass {
+    display: none;
+  }
+
+  .lq-has-touch .lq-hotkeys {
+    top: 8px;
+    bottom: auto;
+    right: 50%;
+    transform: translateX(50%);
+    flex-direction: row;
+    flex-wrap: nowrap;
+    max-width: none;
+  }
+
+  .lq-has-touch .lq-chip {
+    padding: 6px;
+  }
+
+  .lq-has-touch .lq-chip .lq-chip-label,
+  .lq-has-touch .lq-chip .lq-kbd {
+    display: none;
+  }
+
+  .lq-has-touch .lq-hud-comp {
+    top: 112px;
+    bottom: auto;
+    padding: 5px 8px 5px 5px;
+    max-width: 200px;
+  }
+
+  .lq-has-touch .lq-comp-portrait {
+    width: 40px;
+    height: 40px;
+  }
+
+  .lq-has-touch .lq-comp-ab,
+  .lq-has-touch .lq-comp-state {
+    display: none;
+  }
+
+  .lq-has-touch .lq-toasts {
+    top: 48px;
   }
 }

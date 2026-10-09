@@ -112,9 +112,11 @@ export class TouchControls {
 
   show(): void {
     this.root.hidden = false;
+    this.g.root.classList.add('lq-has-touch');
   }
 
   hide(): void {
     this.root.hidden = true;
+    this.g.root.classList.remove('lq-has-touch');
   }
 }

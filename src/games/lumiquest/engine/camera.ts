@@ -85,8 +85,11 @@ export class CameraRig {
       const dir = this.aim(new Vector3()).negate();
       // shoulder offset to the right of the view
       const right = new Vector3(Math.cos(this.yaw), 0, -Math.sin(this.yaw));
-      const pivot = head.clone().addScaledVector(right, 0.42);
-      const hit = physics.raycast(pivot.x, pivot.y, pivot.z, dir.x, dir.y, dir.z, this.distance, 0.3);
+      // narrow (portrait) screens get a centred, slightly longer boom
+      const aspect = this.camera.aspect;
+      const pivot = head.clone().addScaledVector(right, 0.42 * Math.min(1, Math.max(0, aspect - 0.6) / 0.8));
+      const want = this.distance * (aspect < 1 ? 1.25 : 1);
+      const hit = physics.raycast(pivot.x, pivot.y, pivot.z, dir.x, dir.y, dir.z, want, 0.3);
       // pull in quickly, ease back out
       this.boom = hit < this.boom ? hit : this.boom + (hit - this.boom) * Math.min(1, dt * 3);
       pos.copy(pivot).addScaledVector(dir, this.boom);
