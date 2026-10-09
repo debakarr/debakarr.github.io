@@ -1,6 +1,6 @@
 import { TERRAIN_COLOR } from '../data/terrain';
 import type { Game } from '../sim/game';
-import type { MapRenderer } from './renderer';
+import type { MapView } from './view';
 
 // A pixel-per-tile overview. The terrain image is rebuilt once per turn; the
 // viewport rectangle redraws whenever the camera moves.
@@ -10,10 +10,10 @@ export class Minimap {
   private ctx: CanvasRenderingContext2D;
   private image: HTMLCanvasElement;
   private g: Game;
-  private r: MapRenderer;
+  private r: MapView;
   private scale = 3;
 
-  constructor(canvas: HTMLCanvasElement, g: Game, r: MapRenderer) {
+  constructor(canvas: HTMLCanvasElement, g: Game, r: MapView) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
     this.image = document.createElement('canvas');
@@ -82,15 +82,27 @@ export class Minimap {
     ctx.fillStyle = '#18212c';
     ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
     ctx.drawImage(this.image, 0, 0, this.canvas.width, this.canvas.height);
-    // Viewport rectangle.
+    // The area in view: a trapezoid when the map is tilted in 3D.
     const [ww, wh] = this.r.worldSize();
-    const [x0, y0] = this.r.screenToWorld(0, 0);
-    const [x1, y1] = this.r.screenToWorld(this.r.viewW, this.r.viewH);
     const sx = this.canvas.width / ww;
     const sy = this.canvas.height / wh;
+    const poly = this.r.viewPolygon?.() ?? [
+      this.r.screenToWorld(0, 0), this.r.screenToWorld(this.r.viewW, 0),
+      this.r.screenToWorld(this.r.viewW, this.r.viewH), this.r.screenToWorld(0, this.r.viewH),
+    ];
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.clip();
+    ctx.beginPath();
+    poly.forEach(([x, y], k) => (k ? ctx.lineTo(x * sx, y * sy) : ctx.moveTo(x * sx, y * sy)));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 246, 216, 0.12)';
+    ctx.fill();
     ctx.strokeStyle = '#fff6d8';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(Math.max(0, x0 * sx), Math.max(0, y0 * sy), Math.min(this.canvas.width, (x1 - x0) * sx), Math.min(this.canvas.height, (y1 - y0) * sy));
+    ctx.stroke();
+    ctx.restore();
   }
 
   private bind(): void {

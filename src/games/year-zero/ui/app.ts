@@ -3,6 +3,9 @@ import { UNIT, isMilitary } from '../data/units';
 import { bindMapInput, type TapInfo } from '../render/input';
 import { Minimap } from '../render/minimap';
 import { MapRenderer } from '../render/renderer';
+import type { MapView } from '../render/view';
+import { Map3D } from '../render3d/map3d';
+import { Stage, webglAvailable, type QualitySetting } from '../render3d/stage';
 import { civPopulation } from '../sim/cities';
 import { availableTechs, civTotals, techCostFor } from '../sim/civs';
 import { chronicle } from '../sim/chronicle';
@@ -17,12 +20,14 @@ import {
   advanceOrder, attack, canAttack, canPillage, canUpgrade, disband, pillage, settleHere, upgradeUnit, walkToward,
 } from '../sim/units';
 import { setMuted, sfx } from './audio';
+import { battleBefore, battleInfo, battlePreview, playBattle } from './battle';
 import { clear, fmt, gi, h, persist, store, svg } from './dom';
 import { ICON } from './icons';
 import { closeModal, modalOpen, openModal, showDecision } from './modal';
 import { cityPanel, tilePanel, unitBar, unitPanel, type PanelHost } from './panels';
 import { openCiv } from './screens/civ';
-import { openDiplomacy } from './screens/diplomacy';
+import { openAudience } from './screens/audience';
+import { openDiplomacyModal } from './screens/diplomacy';
 import { openHistory } from './screens/history';
 import { hideTitle, showHelp, showMenu, showNewGame, showTitle, type MenuHost } from './screens/menu';
 import { openTech } from './screens/tech';
@@ -62,7 +67,10 @@ export class App implements PanelHost {
 
   g!: Game;
   private hasGame = false;
-  private r: MapRenderer | null = null;
+  private r: MapView | null = null;
+  /** The WebGL stage (null when the browser cannot run 3D: the canvas map is used instead). */
+  stage: Stage | null = null;
+  private labelsEl: HTMLElement;
   private mini: Minimap | null = null;
   private sel: Selection = { tile: -1, unitId: -1, cityId: -1 };
   private hoverTile = -1;
@@ -81,7 +89,10 @@ export class App implements PanelHost {
   private sheetCollapsed = false;
   private mobile = window.matchMedia('(max-width: 820px)');
   private landscape = window.matchMedia('(max-height: 520px) and (orientation: landscape)');
-  settings = store('yearzero:settings', { sound: true, animations: true, tips: true });
+  settings: { sound: boolean; animations: boolean; tips: boolean; quality: QualitySetting; battles: boolean } = {
+    sound: true, animations: true, tips: true, quality: 'auto', battles: true,
+    ...store<Partial<App['settings']>>('yearzero:settings', {}),
+  };
   private tipsSeen: string[] = store('yearzero:tips', []);
   private redrawQueued = false;
 
@@ -89,6 +100,7 @@ export class App implements PanelHost {
     this.root = root;
     root.classList.add('yz');
     this.canvas = h('canvas', { class: 'yz-map', 'aria-label': 'World map' });
+    this.labelsEl = h('div');
     this.top = h('header', { class: 'yz-top yz-panel' });
     this.side = h('aside', { class: 'yz-side yz-panel', 'aria-live': 'polite' });
     this.toasts = h('div', { class: 'yz-toasts', 'aria-live': 'polite' });
@@ -102,16 +114,25 @@ export class App implements PanelHost {
     this.tipEl = h('div', { class: 'yz-tip yz-panel' });
     this.modalRoot = h('div', { class: 'yz-modal-root' });
     this.titleRoot = h('div');
+    if (webglAvailable()) {
+      try {
+        this.stage = new Stage(this.canvas, this.settings.quality);
+      } catch (err) {
+        console.warn('3D unavailable, using the classic map', err);
+        this.stage = null;
+      }
+    }
+    root.classList.toggle('yz-3d', !!this.stage);
     root.append(
-      this.canvas, this.top, this.side, this.toasts, this.miniWrap,
+      this.canvas, this.labelsEl, this.top, this.side, this.toasts, this.miniWrap,
       h('div', { class: 'yz-endturn-wrap' }, this.hint, this.endBtn),
       this.unitbarEl, this.bottomnav, this.turnpill, this.tipEl, this.modalRoot, this.titleRoot,
     );
     setMuted(!this.settings.sound);
     window.addEventListener('keydown', (e) => this.onKey(e));
     new ResizeObserver(() => {
-      if (!this.r) return;
-      this.r.resize();
+      if (this.r) this.r.resize();
+      else this.stage?.resize();
       this.mini?.draw();
     }).observe(this.canvas);
     this.mobile.addEventListener('change', () => this.hasGame && this.refresh());
@@ -145,6 +166,7 @@ export class App implements PanelHost {
         persist('yearzero:settings', this.settings);
         setMuted(!this.settings.sound);
         if (this.r) this.r.animations = this.settings.animations;
+        this.stage?.setQuality(this.settings.quality);
         if (!this.settings.tips) clear(this.tipEl);
         this.renderTop();
       },
@@ -174,7 +196,8 @@ export class App implements PanelHost {
     closeModal();
     clear(this.toasts);
     if (!this.r) {
-      this.r = new MapRenderer(this.canvas, g);
+      this.r = this.stage ? new Map3D(this.stage, g, this.labelsEl) : new MapRenderer(this.canvas, g);
+      if (this.r instanceof Map3D) this.stage!.show(this.r);
       this.r.animations = this.settings.animations;
       this.r.onCamera = () => this.mini?.draw();
       this.mini = new Minimap(this.miniCanvas, g, this.r);
@@ -186,6 +209,7 @@ export class App implements PanelHost {
     } else {
       this.r.setGame(g);
       this.mini!.setGame(g);
+      if (this.r instanceof Map3D) this.stage!.show(this.r);
     }
     this.r.resize();
     const p = g.player;
@@ -226,6 +250,7 @@ export class App implements PanelHost {
           if (e.dmgDef) r.addEffect('text', e.to, '#ff9b8a', `−${e.dmgDef}`);
           if (e.dmgAtk) r.addEffect('text', e.from, '#ffc58a', `−${e.dmgAtk}`, 1000);
           if (e.killed) r.addEffect('flash', e.to, '#ff5a40', undefined, 600);
+          if (r instanceof Map3D) r.combat(e.from, e.to, e.killed);
           if (e.civs.includes(g.player.id)) this.sound('combat');
         }
         break;
@@ -353,6 +378,7 @@ export class App implements PanelHost {
   }
 
   deselect(): void {
+    this.closeBattlePreview();
     this.sel = { tile: -1, unitId: -1, cityId: -1 };
     this.pending = -1;
     this.refresh();
@@ -368,6 +394,14 @@ export class App implements PanelHost {
 
   private onTap(t: TapInfo): void {
     if (!this.hasGame || this.busy || t.tile < 0) return;
+    if (this.previewEl) {
+      // a tap elsewhere puts the battle off
+      this.closeBattlePreview();
+      this.pending = -1;
+      this.r!.overlay.path = null;
+      this.refresh();
+      return;
+    }
     const g = this.g;
     const player = g.player;
     const u = this.selectedUnit();
@@ -414,7 +448,7 @@ export class App implements PanelHost {
   }
 
   private onHover(tile: number): void {
-    if (!this.hasGame || this.busy) return;
+    if (!this.hasGame || this.busy || this.previewEl) return;
     const prev = this.hoverTile;
     this.hoverTile = tile;
     const r = this.r!;
@@ -448,16 +482,7 @@ export class App implements PanelHost {
   private orderUnit(u: Unit, tile: number, confirm: boolean): void {
     const g = this.g;
     if (canAttack(g, u, tile)) {
-      if (confirm && this.pending !== tile) {
-        this.pending = tile;
-        this.hoverTile = tile;
-        this.previewPath(u, tile);
-        this.renderSide();
-        this.r!.request();
-        return;
-      }
-      this.pending = -1;
-      this.doAttack(u, tile);
+      this.openBattlePreview(u, tile);
       return;
     }
     const path = findPath(g, u, tile, { attackTarget: true, maxNodes: 4000 });
@@ -479,7 +504,8 @@ export class App implements PanelHost {
       const stop = path[path.length - 2];
       if (stop !== undefined) walkToward(g, u, stop);
       if (canAttack(g, u, tile)) {
-        this.doAttack(u, tile);
+        this.r!.invalidate();
+        this.openBattlePreview(u, tile);
         return;
       }
     } else {
@@ -489,6 +515,91 @@ export class App implements PanelHost {
     }
     this.sound('move');
     this.afterUnitAct(u);
+  }
+
+  // --- Battles ------------------------------------------------------------------------------
+
+  private previewEl: HTMLElement | null = null;
+  private previewStart: (() => void) | null = null;
+
+  private openBattlePreview(u: Unit, tile: number): void {
+    this.closeBattlePreview();
+    this.pending = tile;
+    this.hoverTile = tile;
+    this.previewPath(u, tile);
+    this.r!.overlay.hoverTile = tile;
+    this.r!.request();
+    this.renderSide();
+    const start = () => {
+      this.closeBattlePreview();
+      void this.startBattle(u, tile);
+    };
+    const el = battlePreview(this.g, u, tile, {
+      start,
+      cancel: () => {
+        this.closeBattlePreview();
+        this.pending = -1;
+        this.r!.overlay.path = null;
+        this.refresh();
+      },
+      watch: this.settings.battles,
+      setWatch: (on) => {
+        this.settings.battles = on;
+        persist('yearzero:settings', this.settings);
+      },
+      canWatch: !!this.stage,
+    });
+    if (!el) return;
+    sfx.alert();
+    this.previewEl = el;
+    this.previewStart = start;
+    this.root.append(el);
+    (el.querySelector('[data-start]') as HTMLButtonElement | null)?.focus();
+  }
+
+  private closeBattlePreview(): void {
+    this.previewEl?.remove();
+    this.previewEl = null;
+    this.previewStart = null;
+  }
+
+  /** Resolves the attack for real, then (if enabled) plays it as a battle scene. */
+  private async startBattle(u: Unit, tile: number): Promise<void> {
+    const g = this.g;
+    this.pending = -1;
+    if (!canAttack(g, u, tile)) return;
+    const film = this.settings.battles && this.settings.animations && this.stage && this.r instanceof Map3D && g.playerSees(tile);
+    if (!film) {
+      this.doAttack(u, tile);
+      return;
+    }
+    const before = battleBefore(g, u, tile);
+    let ev: Extract<GameEvent, { type: 'combat' }> | null = null;
+    const off = g.on((e) => {
+      if (e.type === 'combat' && !ev) ev = e;
+    });
+    this.busy = true;
+    this.queued = [];
+    let res: ReturnType<typeof attack> = null;
+    try {
+      res = attack(g, u, tile);
+    } finally {
+      off();
+    }
+    const combat = ev as Extract<GameEvent, { type: 'combat' }> | null;
+    if (res && combat && before) {
+      const info = battleInfo(g, before, { dmgAtk: combat.dmgAtk, dmgDef: combat.dmgDef, killed: res.killed, died: res.died, captured: res.captured });
+      try {
+        await playBattle({ root: this.root, stage: this.stage!, sound: (k) => this.sound(k) }, info);
+      } catch (err) {
+        console.error(err);
+        this.stage!.show(this.r as Map3D);
+      }
+    }
+    this.busy = false;
+    this.flushQueued();
+    this.afterUnitAct(u);
+    this.nextDecision();
   }
 
   private doAttack(u: Unit, tile: number): void {
@@ -907,7 +1018,21 @@ export class App implements PanelHost {
     switch (what) {
       case 'tech': return openTech(this.modalRoot, this.g, () => this.refresh());
       case 'civ': return openCiv(this.modalRoot, this.g, () => this.refresh(), tab);
-      case 'diplomacy': return openDiplomacy(this.modalRoot, this.g, () => { this.refresh(); this.r?.invalidate(); });
+      case 'diplomacy': {
+        const p = this.g.player;
+        const anyone = this.g.s.civs.some((c) => c.id !== p.id && c.alive && this.g.knows(p.id, c.id));
+        if (this.stage && this.r instanceof Map3D && anyone && this.settings.animations) {
+          closeModal();
+          openAudience({
+            root: this.root, stage: this.stage, g: this.g,
+            onChange: () => { this.r?.invalidate(); this.mini?.rebuild(); },
+            onClose: () => this.refresh(),
+            sound: (k) => this.sound(k),
+          }, typeof tab === 'string' ? Number(tab) : -1);
+          return;
+        }
+        return openDiplomacyModal(this.modalRoot, this.g, () => { this.refresh(); this.r?.invalidate(); });
+      }
       case 'history': return openHistory(this.modalRoot, this.g, jump, tab);
     }
   }
@@ -940,11 +1065,23 @@ export class App implements PanelHost {
     const target = e.target as HTMLElement | null;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'TEXTAREA')) return;
     if (!this.hasGame || e.metaKey || e.ctrlKey || e.altKey) return;
+    // battle films and audiences handle their own keys
+    if (this.root.classList.contains('yz-cinema')) return;
     if (modalOpen()) {
       if (e.key === 'Escape' && !this.g.s.decisions.some((d) => d.civId === this.g.player.id)) closeModal();
       return;
     }
     if (this.busy) return;
+    if (this.previewEl) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.previewStart?.();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        (this.previewEl.querySelector('.yz-btn') as HTMLButtonElement | null)?.click();
+      }
+      return;
+    }
     const r = this.r!;
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
     let handled = true;

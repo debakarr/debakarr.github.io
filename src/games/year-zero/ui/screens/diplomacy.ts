@@ -14,7 +14,7 @@ let response: { civ: number; text: string; ok: boolean } | null = null;
 let confirmWar = -1;
 const asked = new Map<string, number>();
 
-export function openDiplomacy(root: HTMLElement, g: Game, onChange: () => void, focusCiv = -1): void {
+export function openDiplomacyModal(root: HTMLElement, g: Game, onChange: () => void, focusCiv = -1): void {
   const p = g.player;
   const known = g.s.civs.filter((c) => c.id !== p.id && g.knows(p.id, c.id));
   if (focusCiv >= 0) selected = focusCiv;
@@ -46,7 +46,7 @@ export function openDiplomacy(root: HTMLElement, g: Game, onChange: () => void, 
   });
 }
 
-function renderDetail(el: HTMLElement, g: Game, id: number, refresh: () => void): void {
+export function renderDetail(el: HTMLElement, g: Game, id: number, refresh: () => void): void {
   const p = g.player;
   const civ = g.civ(id);
   const l = currentLeader(g, civ);
@@ -94,79 +94,21 @@ function renderDetail(el: HTMLElement, g: Game, id: number, refresh: () => void)
 
   // Actions
   const actions = h('div', { class: 'yz-actions' });
-  const propose = (key: string, label: string, prop: Proposal, title?: string) => {
-    const last = asked.get(`${civ.id}:${key}`);
-    const wait = last !== undefined && g.turn - last < 5;
+  for (const a of diplomacyActions(g, civ.id, confirmWar === civ.id)) {
     actions.append(h('button', {
-      class: 'yz-btn small', disabled: wait, title: wait ? 'They will not hear the same request again so soon.' : title,
+      class: `yz-btn small${a.danger ? ' danger' : ''}`,
+      disabled: !!a.disabled,
+      title: a.title,
       onclick: () => {
-        const v = evaluateProposal(g, civ.id, p.id, prop);
-        if (v.accept) applyProposal(g, p.id, civ.id, prop);
-        else asked.set(`${civ.id}:${key}`, g.turn);
-        response = { civ: civ.id, text: v.reason, ok: v.accept };
-        refresh();
-      },
-    }, label));
-  };
-  const cancel = (kind: TreatyKind, label: string) => actions.append(h('button', {
-    class: 'yz-btn small',
-    onclick: () => {
-      cancelTreaty(g, p.id, civ.id, kind);
-      addMemory(g, civ.id, p.id, 'cancelled', -8, 0.2, 0, 'You tore up our agreement {ago}.');
-      response = { civ: civ.id, text: 'So be it.', ok: false };
-      refresh();
-    },
-  }, label));
-
-  if (war) {
-    propose('peace', 'Offer peace', { kind: 'peace', terms: 'white' });
-    const gold = Math.min(p.gold, 50 + p.eraTier * 30);
-    if (gold >= 20) propose('peace-pay', `Peace for ${gold} gold`, { kind: 'peace', terms: 'wePay', gold });
-    const theirCities = g.citiesOf(civ.id).filter((c) => c.id !== civ.capitalId).sort((a, b) => a.size - b.size);
-    if (theirCities.length) propose('peace-city', `Demand ${theirCities[0].name}`, { kind: 'peace', terms: 'theyCede', cityId: theirCities[0].id });
-    propose('peace-gold', `Demand ${Math.min(civ.gold, 60 + civ.eraTier * 25)} gold`, { kind: 'peace', terms: 'theyPay', gold: Math.min(civ.gold, 60 + civ.eraTier * 25) });
-    if (warScore(war, p.id) > 40) propose('peace-vassal', 'Demand submission', { kind: 'peace', terms: 'theyVassal' });
-  } else {
-    if (ourRel.trade < 0) {
-      if (p.techs.writing === undefined) actions.append(h('button', { class: 'yz-btn small', disabled: true, title: 'Requires Writing' }, 'Propose trade'));
-      else propose('trade', 'Propose trade', { kind: 'trade' });
-    }
-    else cancel('trade', 'End trade');
-    if (ourRel.openBorders < 0) propose('borders', 'Open borders', { kind: 'openBorders' });
-    else cancel('openBorders', 'Close borders');
-    if (ourRel.alliance < 0) propose('alliance', 'Propose alliance', { kind: 'alliance' });
-    else cancel('alliance', 'End alliance');
-    for (const amt of [25, 100]) {
-      if (p.gold >= amt) {
-        actions.append(h('button', {
-          class: 'yz-btn small',
-          onclick: () => {
-            applyProposal(g, p.id, civ.id, { kind: 'gift', gold: amt });
-            response = { civ: civ.id, text: 'A generous gift. We will remember it.', ok: true };
-            refresh();
-          },
-        }, `Gift ${amt} gold`));
-      }
-    }
-    if (civ.gold >= 30) propose('demand', `Demand ${Math.round(Math.min(civ.gold * 0.4, 50 + p.eraTier * 30))} gold`, { kind: 'demand', gold: Math.round(Math.min(civ.gold * 0.4, 50 + p.eraTier * 30)) });
-    for (const e of g.enemiesOf(p.id)) {
-      if (e !== civ.id && g.civ(e).alive && !g.atWar(civ.id, e) && g.knows(civ.id, e)) propose(`join-${e}`, `Ask to join war on the ${g.civ(e).name}`, { kind: 'joinWar', against: e });
-    }
-    const betrayal = ourRel.peaceUntil > g.turn || ourRel.alliance >= 0;
-    actions.append(h('button', {
-      class: 'yz-btn small danger',
-      onclick: () => {
-        if (confirmWar !== civ.id) {
-          confirmWar = civ.id;
-          refresh();
-          return;
+        const r = a.run();
+        if (r.confirm) confirmWar = civ.id;
+        else {
+          confirmWar = -1;
+          response = { civ: civ.id, text: r.text, ok: r.ok };
         }
-        confirmWar = -1;
-        declareWar(g, p.id, civ.id, 'ambition');
-        response = { civ: civ.id, text: betrayal ? 'Traitors! We will never forget this.' : 'Then let it be war.', ok: false };
         refresh();
       },
-    }, confirmWar === civ.id ? (betrayal ? 'Confirm — break our word and attack' : 'Confirm: declare war') : 'Declare war'));
+    }, a.label));
   }
   el.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-label', style: { marginBottom: '8px' } }, war ? 'Negotiate' : 'Propose'), actions));
   if (response && response.civ === civ.id) {
@@ -174,7 +116,95 @@ function renderDetail(el: HTMLElement, g: Game, id: number, refresh: () => void)
   }
 }
 
-function reasonsList(parts: { label: string; value: number }[]): HTMLElement {
+export interface DiploAction {
+  key: string;
+  label: string;
+  icon: 'trade' | 'borders' | 'alliance' | 'gift' | 'demand' | 'war' | 'peace' | 'cancel' | 'join';
+  title?: string;
+  disabled?: boolean;
+  danger?: boolean;
+  /** Carries out the action on the real diplomacy state. */
+  run: () => { text: string; ok: boolean; confirm?: boolean };
+}
+
+/** Everything the player can propose to (or do to) another people right now. */
+export function diplomacyActions(g: Game, id: number, confirmingWar: boolean): DiploAction[] {
+  const p = g.player;
+  const civ = g.civ(id);
+  const ourRel = p.relations[civ.id];
+  const war = warBetween(g, p.id, civ.id);
+  const out: DiploAction[] = [];
+  const propose = (key: string, label: string, icon: DiploAction['icon'], prop: Proposal, title?: string) => {
+    const last = asked.get(`${civ.id}:${key}`);
+    const wait = last !== undefined && g.turn - last < 5;
+    out.push({
+      key, label, icon, disabled: wait, title: wait ? 'They will not hear the same request again so soon.' : title,
+      run: () => {
+        const v = evaluateProposal(g, civ.id, p.id, prop);
+        if (v.accept) applyProposal(g, p.id, civ.id, prop);
+        else asked.set(`${civ.id}:${key}`, g.turn);
+        return { text: v.reason, ok: v.accept };
+      },
+    });
+  };
+  const cancel = (kind: TreatyKind, label: string) => out.push({
+    key: `cancel-${kind}`, label, icon: 'cancel',
+    run: () => {
+      cancelTreaty(g, p.id, civ.id, kind);
+      addMemory(g, civ.id, p.id, 'cancelled', -8, 0.2, 0, 'You tore up our agreement {ago}.');
+      return { text: 'So be it.', ok: false };
+    },
+  });
+  if (war) {
+    propose('peace', 'Offer peace', 'peace', { kind: 'peace', terms: 'white' });
+    const gold = Math.min(p.gold, 50 + p.eraTier * 30);
+    if (gold >= 20) propose('peace-pay', `Peace for ${gold} gold`, 'gift', { kind: 'peace', terms: 'wePay', gold });
+    const theirCities = g.citiesOf(civ.id).filter((c) => c.id !== civ.capitalId).sort((a, b) => a.size - b.size);
+    if (theirCities.length) propose('peace-city', `Demand ${theirCities[0].name}`, 'demand', { kind: 'peace', terms: 'theyCede', cityId: theirCities[0].id });
+    propose('peace-gold', `Demand ${Math.min(civ.gold, 60 + civ.eraTier * 25)} gold`, 'demand', { kind: 'peace', terms: 'theyPay', gold: Math.min(civ.gold, 60 + civ.eraTier * 25) });
+    if (warScore(war, p.id) > 40) propose('peace-vassal', 'Demand submission', 'demand', { kind: 'peace', terms: 'theyVassal' });
+    return out;
+  }
+  if (ourRel.trade < 0) {
+    if (p.techs.writing === undefined) out.push({ key: 'trade', label: 'Propose trade agreement', icon: 'trade', disabled: true, title: 'Requires Writing', run: () => ({ text: '', ok: false }) });
+    else propose('trade', 'Propose trade agreement', 'trade', { kind: 'trade' });
+  } else cancel('trade', 'End trade');
+  if (ourRel.alliance < 0) propose('alliance', 'Discuss alliance', 'alliance', { kind: 'alliance' });
+  else cancel('alliance', 'End alliance');
+  if (ourRel.openBorders < 0) propose('borders', 'Request open borders', 'borders', { kind: 'openBorders' });
+  else cancel('openBorders', 'Close borders');
+  for (const amt of [25, 100]) {
+    if (p.gold >= amt) {
+      out.push({
+        key: `gift-${amt}`, label: `Gift ${amt} gold`, icon: 'gift',
+        run: () => {
+          applyProposal(g, p.id, civ.id, { kind: 'gift', gold: amt });
+          return { text: 'A generous gift. We will remember it.', ok: true };
+        },
+      });
+    }
+  }
+  if (civ.gold >= 30) {
+    const amt = Math.round(Math.min(civ.gold * 0.4, 50 + p.eraTier * 30));
+    propose('demand', `Demand ${amt} gold`, 'demand', { kind: 'demand', gold: amt });
+  }
+  for (const e of g.enemiesOf(p.id)) {
+    if (e !== civ.id && g.civ(e).alive && !g.atWar(civ.id, e) && g.knows(civ.id, e)) propose(`join-${e}`, `Ask to join war on the ${g.civ(e).name}`, 'join', { kind: 'joinWar', against: e });
+  }
+  const betrayal = ourRel.peaceUntil > g.turn || ourRel.alliance >= 0;
+  out.push({
+    key: 'war', icon: 'war', danger: true,
+    label: confirmingWar ? (betrayal ? 'Confirm — break our word and attack' : 'Confirm: declare war') : 'Declare war',
+    run: () => {
+      if (!confirmingWar) return { text: '', ok: false, confirm: true };
+      declareWar(g, p.id, civ.id, 'ambition');
+      return { text: betrayal ? 'Traitors! We will never forget this.' : 'Then let it be war.', ok: false };
+    },
+  });
+  return out;
+}
+
+export function reasonsList(parts: { label: string; value: number }[]): HTMLElement {
   if (!parts.length) return h('p', { class: 'yz-muted', style: { margin: '6px 0 0' } }, 'They have no strong feelings about us — yet.');
   return h('ul', { class: 'yz-reasons' }, [...parts].sort((a, b) => a.value - b.value).map((r) =>
     h('li', null, h('span', null, r.label), h('span', { class: `yz-num ${r.value >= 0 ? 'c-good' : 'c-bad'}` }, r.value > 0 ? `+${r.value}` : String(r.value)))));

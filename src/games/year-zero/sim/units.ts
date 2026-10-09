@@ -341,6 +341,43 @@ function casualties(g: Game, civId: number, enemy: number, def: UnitDef, hpLost:
   if (war) war.casualties[civId] = (war.casualties[civId] ?? 0) + n;
 }
 
+/**
+ * What shapes a fight, for the battle preview: both strengths and the
+ * modifiers behind them. Read-only — it mirrors attackStrength and
+ * defenseStrength without rolling any dice.
+ */
+export function battleFactors(g: Game, u: Unit, tile: number): { attack: number; defense: number; mods: { label: string; good: boolean }[] } | null {
+  const target = attackTarget(g, u, tile);
+  if (!target) return null;
+  const def = UNIT[u.type];
+  const civ = g.civ(u.civId);
+  const mods: { label: string; good: boolean }[] = [];
+  const sa = attackStrength(g, u, target);
+  if (u.veteran) mods.push({ label: 'Veteran +15%', good: true });
+  if (leaderHas(g, civ, 'aggressive')) mods.push({ label: 'Aggressive ruler +10%', good: true });
+  if (target.city && def.vsCity) mods.push({ label: `Siege ×${def.vsCity} vs cities`, good: true });
+  if (u.hp < 100) mods.push({ label: `Wounded (${u.hp} HP)`, good: false });
+  if (isEmbarked(g, u)) mods.push({ label: 'Attacking from boats −50%', good: false });
+  if (target.city) {
+    const sd = cityStrength(g, target.city);
+    return { attack: sa, defense: sd, mods };
+  }
+  const d = target.unit!;
+  const dd = UNIT[d.type];
+  const sd = defenseStrength(g, d, u);
+  if (dd.cls !== 'air' && dd.cls !== 'naval') {
+    const t = terrainDefense(g, d.tile);
+    if (t > 1) mods.push({ label: `Defender in cover +${Math.round((t - 1) * 100)}%`, good: false });
+    if (t < 1) mods.push({ label: 'Defender in marsh −10%', good: true });
+  }
+  if (d.fortified) mods.push({ label: `Defender fortified +${d.fortified * 10}%`, good: false });
+  if (def.antiCav && dd.cls === 'cavalry') mods.push({ label: 'Spears vs horses +50%', good: true });
+  if (dd.antiCav && def.cls === 'cavalry') mods.push({ label: 'Charging into spears', good: false });
+  if (def.cls === 'cavalry' && (dd.cls === 'ranged' || dd.cls === 'siege')) mods.push({ label: 'Riders vs archers +25%', good: true });
+  if (dd.cls === 'civilian') mods.push({ label: 'Defenceless civilians', good: true });
+  return { attack: sa, defense: sd, mods };
+}
+
 export interface AttackResult {
   killed: boolean;
   died: boolean;

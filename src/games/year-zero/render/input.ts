@@ -1,4 +1,4 @@
-import type { MapRenderer } from './renderer';
+import type { MapView } from './view';
 
 // Pointer handling for the map: drag to pan, wheel or pinch to zoom, and taps
 // that are distinguished from drags.
@@ -17,7 +17,7 @@ export interface InputHandlers {
   onLongPress?: (t: TapInfo) => void;
 }
 
-export function bindMapInput(canvas: HTMLCanvasElement, r: MapRenderer, h: InputHandlers): () => void {
+export function bindMapInput(canvas: HTMLCanvasElement, r: MapView, h: InputHandlers): () => void {
   const pointers = new Map<number, { x: number; y: number }>();
   let startX = 0;
   let startY = 0;
