@@ -1,6 +1,21 @@
 # Year Zero — art credits
 
-## Kenney — Hexagon Pack (CC0)
+## 3D art (original)
+
+The 3D world (`render3d/`) — terrain, water, rivers, vegetation, mountains,
+cities and buildings, soldiers and war machines, leaders, battlefields, the
+throne room and the title vista — is procedural: every model is built from
+primitives and painted in code for this game. No third-party 3D assets are
+used. Rendering uses [three.js](https://threejs.org) (MIT).
+
+## Typefaces (SIL OFL 1.1)
+
+Cinzel and Nunito (headings and interface), Inter and JetBrains Mono, all via
+[Fontsource](https://fontsource.org).
+
+## Kenney — Hexagon Pack (CC0) — classic 2D map
+
+Used only by the canvas map (`render/renderer.ts`) shown when a browser cannot run WebGL 2.
 
 `kenney/*.png` are from [Hexagon Pack](https://kenney.nl/assets/hexagon-pack) by
 [Kenney](https://kenney.nl), released under

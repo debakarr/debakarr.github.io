@@ -7,6 +7,7 @@ import { UNIT } from '../data/units';
 import type { Game } from '../sim/game';
 import { resourceVisible } from '../sim/tiles';
 import { sprites } from './sprites';
+import type { Camera, MapView, Overlay } from './view';
 
 // Canvas renderer. It never runs continuously: frames are requested when the
 // camera, the selection or the world changes, or while a short effect plays.
@@ -20,11 +21,7 @@ const TILE_H = 2 * HEX;
 /** Kenney tiles are 120x140 px; this maps sprite pixels to world units. */
 const SPRITE_K = TILE_W / 120;
 
-export interface Camera {
-  x: number;
-  y: number;
-  zoom: number;
-}
+export type { Camera, Overlay } from './view';
 
 interface Effect {
   kind: 'text' | 'ring' | 'flash';
@@ -41,16 +38,6 @@ interface MoveAnim {
   start: number;
 }
 
-export interface Overlay {
-  selectedTile: number;
-  selectedUnit: number;
-  hoverTile: number;
-  reach: Map<number, number> | null;
-  attack: Set<number> | null;
-  path: number[] | null;
-  pathTurns: number[] | null;
-  pathAttack: boolean;
-}
 
 const UNCHARTED = '#131a23';
 
@@ -127,7 +114,7 @@ export function cityTileName(tier: number, size: number, capital: boolean): stri
   return capital ? 'medieval_smallCastle' : size >= 4 ? 'medieval_house' : 'medieval_cabin';
 }
 
-export class MapRenderer {
+export class MapRenderer implements MapView {
   readonly canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private g: Game;

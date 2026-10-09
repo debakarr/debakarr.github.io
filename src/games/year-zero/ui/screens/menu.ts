@@ -10,6 +10,8 @@ import { iconCredits } from '../../art';
 import { clear, download, h, pickFile, svg } from '../dom';
 import { ICON } from '../icons';
 import { closeModal, openModal } from '../modal';
+import { TitleScene } from '../../render3d/title';
+import type { Stage } from '../../render3d/stage';
 
 export interface MenuHost {
   root: HTMLElement;
@@ -17,9 +19,13 @@ export interface MenuHost {
   start: (settings: Settings) => void;
   load: (g: Game) => void;
   toTitle: () => void;
-  settings: { sound: boolean; animations: boolean; tips: boolean };
+  settings: { sound: boolean; animations: boolean; tips: boolean; quality: 'auto' | 'low' | 'medium' | 'high'; battles: boolean };
+  /** The quality the 3D view actually runs at (null without 3D). */
+  quality?: () => string | null;
   saveSettings: () => void;
   toast: (text: string, tone?: 'good' | 'bad' | 'info') => void;
+  /** The 3D stage, when the browser can run it. */
+  stage?: () => Stage | null;
 }
 
 /** Draw a whole world as tiny hexes — for previews and the title backdrop. */
@@ -74,46 +80,55 @@ export function renderWorldPreview(canvas: HTMLCanvasElement, map: WorldMap, css
 
 // --- Title ---------------------------------------------------------------------------
 
+let titleScene: TitleScene | null = null;
+
 export function showTitle(host: MenuHost, container: HTMLElement): void {
   clear(container);
-  const bg = h('canvas', { class: 'yz-title-bg' });
   const saves = listSaves();
   const auto = saves.find((s) => s.key === 'auto');
-  const card = h('div', { class: 'yz-title-card yz-panel' },
-    h('h1', { class: 'yz-logo' }, 'YEAR ZERO'),
-    h('p', { class: 'yz-tagline' }, 'Every civilization begins somewhere. Yours begins now.'),
+  const stage = host.stage?.() ?? null;
+  const item = (icon: Node, label: string, fn: () => void, primary = false, meta?: string) =>
+    h('button', { class: `yz-title-btn${primary ? ' primary' : ''}`, onclick: fn }, h('span', { class: 'ic' }, icon), h('span', { class: 'lb' }, label, meta ? h('small', null, meta) : null));
+  const menu = h('div', { class: 'yz-title-menu' },
+    h('h1', { class: 'yz-logo' }, h('span', { class: 'leaf', 'aria-hidden': 'true' }), 'YEAR ZERO'),
+    h('p', { class: 'yz-tagline' }, 'A New Beginning'),
     h('div', { class: 'yz-title-actions' },
-      auto ? h('button', {
-        class: 'yz-btn primary',
-        onclick: async () => {
-          try {
-            host.load(await loadFromStorage('auto'));
-          } catch (e) {
-            host.toast(`Could not continue: ${(e as Error).message}`, 'bad');
-          }
-        },
-      }, svg(ICON.play), h('span', null, 'Continue ', h('span', { class: 'yz-continue-meta' }, `· the ${auto.civ}, Year ${auto.year}`))) : null,
-      h('button', { class: `yz-btn${auto ? '' : ' primary'}`, onclick: () => showNewGame(host) }, svg(ICON.globe), 'New civilization'),
-      saves.length ? h('button', { class: 'yz-btn', onclick: () => showLoad(host) }, svg(ICON.save), 'Load a saved game') : null,
-      h('button', { class: 'yz-btn', onclick: () => importSave(host) }, svg(ICON.upload), 'Import a save file'),
-      h('button', { class: 'yz-btn', onclick: () => showHelp(host.root) }, svg(ICON.info), 'How to play')),
-    h('p', { class: 'yz-muted', style: { fontSize: '12px', margin: '18px 0 0' } },
-      h('a', { href: '/games', style: { color: 'inherit' } }, '← Back to games'), ' · ',
-      h('button', { class: 'yz-linkbtn', onclick: () => showCredits(host.root) }, 'Credits')),
-    h('p', { class: 'yz-muted', style: { fontSize: '11px', margin: '6px 0 0' } },
-      'Map art by Kenney (CC0) · Icons from game-icons.net (CC BY 3.0)'));
-  const screen = h('div', { class: 'yz-title' }, bg, card);
+      auto ? item(svg(ICON.play), 'Continue', async () => {
+        try {
+          host.load(await loadFromStorage('auto'));
+        } catch (e) {
+          host.toast(`Could not continue: ${(e as Error).message}`, 'bad');
+        }
+      }, true, `the ${auto.civ}, Year ${auto.year}`) : null,
+      item(svg(ICON.globe), 'New Game', () => showNewGame(host), !auto),
+      item(svg(ICON.save), 'Load Game', () => (saves.length ? showLoad(host) : importSave(host))),
+      item(svg(ICON.gear), 'Settings', () => showSettings(host)),
+      item(svg(ICON.info), 'How to Play', () => showHelp(host.root)),
+      item(svg(ICON.star), 'Credits', () => showCredits(host.root))),
+    h('p', { class: 'yz-title-foot' },
+      h('a', { href: '/games' }, '← Back to games'), ' · ',
+      h('button', { class: 'yz-linkbtn', onclick: () => importSave(host) }, 'Import a save file')));
+  const screen = h('div', { class: `yz-title${stage ? ' is-3d' : ''}` }, menu);
+  if (stage) {
+    titleScene?.dispose();
+    titleScene = new TitleScene(stage.quality !== 'low');
+    stage.show(titleScene);
+  } else {
+    const bg = h('canvas', { class: 'yz-title-bg' });
+    screen.prepend(bg);
+    requestAnimationFrame(() => {
+      const rect = screen.getBoundingClientRect();
+      const w = generateWorld({ ...DEFAULT_SETTINGS, seed: randomSeedString(), size: 'small', mapType: 'continents' });
+      renderWorldPreview(bg, w.map, rect.width, rect.height, 1);
+    });
+  }
   container.append(screen);
-  requestAnimationFrame(() => {
-    const rect = screen.getBoundingClientRect();
-    const w = generateWorld({ ...DEFAULT_SETTINGS, seed: randomSeedString(), size: 'small', mapType: 'continents' });
-    // The backdrop is dimmed and softened: 1x resolution is plenty and saves memory.
-    renderWorldPreview(bg, w.map, rect.width, rect.height, 1);
-  });
 }
 
 export function hideTitle(container: HTMLElement): void {
   clear(container);
+  titleScene?.dispose();
+  titleScene = null;
 }
 
 // --- New game --------------------------------------------------------------------------
@@ -260,16 +275,42 @@ export function showMenu(host: MenuHost): void {
         body.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, 'Saved games'),
           h('div', { class: 'yz-saves' }, saves.map((m) => saveRow(host, m, () => handle.rerender())))));
       }
-      const toggle = (key: 'sound' | 'animations' | 'tips', label: string) =>
-        h('button', { class: `yz-btn small${host.settings[key] ? ' active' : ''}`, onclick: () => { host.settings[key] = !host.settings[key]; host.saveSettings(); handle.rerender(); } }, `${label}: ${host.settings[key] ? 'on' : 'off'}`);
       body.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, 'Settings'),
-        h('div', { class: 'yz-actions' }, toggle('sound', 'Sound'), toggle('animations', 'Animations'), toggle('tips', 'Tips'))));
+        h('div', { class: 'yz-actions' }, h('button', { class: 'yz-btn', onclick: () => showSettings(host) }, svg(ICON.gear), 'Graphics, sound & battles'))));
       body.append(h('div', { class: 'yz-section' }, h('div', { class: 'yz-actions' },
         h('button', { class: 'yz-btn', onclick: () => showHelp(host.root) }, svg(ICON.info), 'How to play'),
         h('button', { class: 'yz-btn', onclick: () => showCredits(host.root) }, svg(ICON.star), 'Credits'),
         h('button', { class: 'yz-btn', onclick: () => showNewGame(host) }, svg(ICON.globe), 'New game'),
         h('button', { class: 'yz-btn', onclick: () => { closeModal(); host.toTitle(); } }, 'Title screen'),
         h('a', { class: 'yz-btn', href: '/games' }, svg(ICON.back), 'Leave to games'))));
+    },
+  });
+}
+
+export function showSettings(host: MenuHost): void {
+  openModal(host.root, {
+    title: 'Settings',
+    icon: 'gear',
+    narrow: true,
+    render: (body, _t, handle) => {
+      const st = host.settings;
+      const toggle = (key: 'sound' | 'animations' | 'tips' | 'battles', label: string, desc: string) =>
+        h('label', { class: 'yz-setting' },
+          h('div', null, h('b', null, label), h('span', { class: 'yz-sub' }, desc)),
+          h('input', { type: 'checkbox', class: 'yz-switch', checked: st[key], onchange: (e: Event) => { st[key] = (e.target as HTMLInputElement).checked; host.saveSettings(); handle.rerender(); } }));
+      const active = host.quality?.();
+      body.append(
+        active !== undefined && active !== null ? h('div', { class: 'yz-setting col' },
+          h('div', null, h('b', null, 'Graphics quality'), h('span', { class: 'yz-sub' }, `Shadows, glow and resolution. Running at: ${active}.`)),
+          h('div', { class: 'yz-seg' }, (['auto', 'low', 'medium', 'high'] as const).map((q) => h('button', {
+            class: st.quality === q ? 'on' : '',
+            onclick: () => { st.quality = q; host.saveSettings(); handle.rerender(); },
+          }, q === 'auto' ? 'Auto' : q[0].toUpperCase() + q.slice(1))))) : h('p', { class: 'yz-sub' }, 'This browser cannot run the 3D view, so the classic map is shown.'),
+        toggle('battles', 'Battle scenes', 'Watch your attacks play out as short films (you can skip them).'),
+        toggle('animations', 'Animations', 'Marching units, camera glides and effects on the map.'),
+        toggle('sound', 'Sound', 'Clicks, battles and fanfares.'),
+        toggle('tips', 'Tips', 'Short hints for new players.'),
+      );
     },
   });
 }
@@ -286,15 +327,17 @@ export function showCredits(root: HTMLElement): void {
           h('div', { class: 'yz-label', style: { marginBottom: '6px' } }, title), ...children);
       body.append(
         section('Game', h('p', { style: { margin: 0 } }, 'Year Zero — designed and built by Debakar Roy. Worlds, names, histories and sounds are generated procedurally in your browser.')),
-        section('Map art',
-          h('p', { style: { margin: '0 0 6px' } }, 'Terrain tiles, cities, trees, rocks and improvements from ', link('https://kenney.nl/assets/hexagon-pack', 'Hexagon Pack'), ' by ', link('https://kenney.nl', 'Kenney'), '.'),
+        section('3D world',
+          h('p', { style: { margin: 0 } }, 'The terrain, water, forests, cities, soldiers, leaders, battlefields and royal halls are modelled and painted in code for this game, rendered with ', link('https://threejs.org', 'three.js'), ' (MIT).')),
+        section('Classic map art',
+          h('p', { style: { margin: '0 0 6px' } }, 'When a browser cannot show 3D, the 2D map uses terrain tiles, cities, trees, rocks and improvements from ', link('https://kenney.nl/assets/hexagon-pack', 'Hexagon Pack'), ' by ', link('https://kenney.nl', 'Kenney'), '.'),
           h('p', { class: 'yz-sub', style: { margin: 0 } }, 'License: ', link('https://creativecommons.org/publicdomain/zero/1.0/', 'Creative Commons Zero (CC0)'), '. Thank you, Kenney!')),
         section('Icons',
           h('p', { style: { margin: '0 0 6px' } }, 'Unit, resource, building and event icons from ', link('https://game-icons.net', 'game-icons.net'), ', licensed ', link('https://creativecommons.org/licenses/by/3.0/', 'CC BY 3.0'), '. Icons made by:'),
           ...iconCredits().map((c) => h('details', { class: 'yz-credit' },
             h('summary', null, h('b', null, c.author), h('span', { class: 'yz-muted' }, ` — ${c.icons.length} icon${c.icons.length > 1 ? 's' : ''}`), c.url ? h('span', null, ' · ', link(c.url, 'website')) : null),
             h('p', { class: 'yz-sub', style: { margin: '4px 0 0' } }, ...c.icons.flatMap((ic, i) => [i ? ', ' : '', link(ic.href, ic.name)]))))),
-        section('Typefaces', h('p', { style: { margin: 0 } }, link('https://rsms.me/inter/', 'Inter'), ' and ', link('https://www.jetbrains.com/lp/mono/', 'JetBrains Mono'), ', SIL Open Font License, via Fontsource.')),
+        section('Typefaces', h('p', { style: { margin: 0 } }, link('https://fonts.google.com/specimen/Cinzel', 'Cinzel'), ', ', link('https://fonts.google.com/specimen/Nunito', 'Nunito'), ', ', link('https://rsms.me/inter/', 'Inter'), ' and ', link('https://www.jetbrains.com/lp/mono/', 'JetBrains Mono'), ', SIL Open Font License, via Fontsource.')),
       );
     },
   });
@@ -321,7 +364,7 @@ export function showHelp(root: HTMLElement): void {
           k('Right-click', 'Move or attack with the selected unit'),
           k('Enter', 'End turn'), k('N / Space', 'Next unit / skip'), k('B', 'Found city'), k('F / S', 'Fortify / sleep'),
           k('E', 'Explore automatically'), k('T C D H', 'Knowledge, Civilization, Diplomacy, History'), k('Esc', 'Close / deselect')),
-        h('p', { class: 'yz-sub', style: { marginTop: '14px' } }, 'Map art by Kenney (CC0); icons from game-icons.net (CC BY 3.0). ',
+        h('p', { class: 'yz-sub', style: { marginTop: '14px' } }, '3D art made in code for Year Zero; classic map art by Kenney (CC0); icons from game-icons.net (CC BY 3.0). ',
           h('button', { class: 'yz-linkbtn', onclick: () => showCredits(root) }, 'See all credits'), '.'));
     },
   });

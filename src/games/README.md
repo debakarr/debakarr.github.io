@@ -18,8 +18,9 @@ A turn-based civilization game where the history is generated from what actually
 | `art/` | Kenney hex tiles (`kenney/`, packed into `sprites.png` + `sprites.json`) and generated game-icons paths (`icons.ts`) |
 | `data/` | Static tables: terrain, techs, units, buildings, governments, traits, eras |
 | `sim/` | The simulation. DOM-free and deterministic; all state lives in `GameState` (plain data + typed arrays) |
-| `render/` | Canvas map renderer (cached static layer, on-demand frames), minimap, pointer input |
-| `ui/` | HUD, panels, screens and modals (vanilla TS, small `h()` helper) |
+| `render/` | The `MapView` contract (`view.ts`), pointer input, minimap, and the classic canvas map used when WebGL 2 is unavailable |
+| `render3d/` | The three.js world: `stage.ts` (renderer, quality, post), `map3d.ts` (the 3D `MapView`: camera, picking, overlays), `terrain.ts`/`water.ts`/`rivers.ts`/`props.ts`/`cities.ts`/`units.ts` (map layers), `battle.ts` (battle films), `audience.ts` (diplomacy hall), `title.ts` (title vista), `models/` (procedural meshes) |
+| `ui/` | HUD, panels, screens and modals (vanilla TS, small `h()` helper); `battle.ts` (preview + film HUD), `screens/audience.ts` (diplomacy), `screens/city.ts`, `screens/lists.ts` (cities, units, world map) |
 
 Key ideas:
 
@@ -27,9 +28,12 @@ Key ideas:
 - **Determinism.** A world code (`seed/size/type/rivals`) reproduces the same world and peoples; all randomness goes through `Game.rng`.
 - **History.** `sim/history.ts#logHistory` records events with the names of the moment; `sim/chronicle.ts` turns the record into prose.
 - **Saves.** `sim/save.ts` serializes the whole state (typed arrays as base64), gzip-compressed in `localStorage`; export/import use plain JSON.
-- **The unexplored sea is a chart, not a fill.** Uncharted water gets cloudy mottling, faint sounding circles, a camera-anchored hex lattice and paper grain, so most of an early map reads as an unfinished survey rather than one flat colour.
+- **One 3D map, many layers.** `render3d/map3d.ts` implements the same `MapView` API as the canvas map (camera in map pixels, `tileAt`, `centerOn`…), so the app, input and minimap work with either. Per-tile state (fog, territory, reach, attack, hover, selection) lives in a small data texture (`terrain.ts#TileState`) read by every shader, so overlays never rebuild geometry. Unexplored land has no geometry; a cloud sea (`water.ts`) covers it. Props and terrain are rebuilt per region only when exploration or improvements change.
+- **Battles stage the real result.** `ui/app.ts#startBattle` resolves `attack()` first, then `render3d/battle.ts` choreographs that outcome (damage, casualties, capture) on a field built from the defender's tile. Skipping jumps to the same result.
+- **Diplomacy is an audience.** `ui/screens/audience.ts` drives the same proposals and treaties as before (`screens/diplomacy.ts#diplomacyActions`) while the leader in `render3d/audience.ts` reacts.
+- **Saves are unchanged.** The 3D layer only reads the game state; the save format and `SAVE_VERSION` are as before, and new settings (graphics quality, battle scenes) are merged with defaults.
 
-Testing aids: open `/games/year-zero/?debug` to expose `window.yz`; `await yz.debugAutoplay(200)` lets the AI govern the player for 200 years.
+Testing aids: open `/games/year-zero/?debug` to expose `window.yz` (the app; `yz.r` is the map view, `yz.stage` the WebGL stage) and `window.yzSim` (`createUnit`, `meet`); `await yz.debugAutoplay(200)` lets the AI govern the player for 200 years.
 
 ## Automatic mode
 
