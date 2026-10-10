@@ -6,6 +6,7 @@
 
 import {
   AdditiveBlending,
+  CircleGeometry,
   Color,
   ConeGeometry,
   CylinderGeometry,
@@ -21,6 +22,7 @@ import {
   Object3D,
   Quaternion,
   RGBADepthPacking,
+  ShaderMaterial,
   TorusGeometry,
   Vector3,
 } from 'three';
@@ -91,6 +93,10 @@ export class Units {
   private meshes = new Map<string, InstancedMesh>();
   private time = 0;
   private uniforms: SharedUniforms;
+  /** Shared by every look: 1 freezes the clips (strategic zoom, low quality). */
+  private rigStatic = { value: 0 };
+  /** Set from the stage quality. */
+  lowQuality = false;
   /** Clip each unit is playing (one-shots return to idle when done). */
   private playing = new Map<number, { state: AnimState; until: number }>();
   private slots: Slot[] = [];
@@ -123,6 +129,65 @@ export class Units {
     this.arrow = new Mesh(cone, new MeshBasicMaterial({ color: '#ffe08a' }));
     this.arrow.visible = false;
     this.group.add(this.ring, this.arrow);
+    // soft contact shadows for when the squads do not cast real ones
+    const disc = new CircleGeometry(0.3, 20);
+    disc.rotateX(-Math.PI / 2);
+    const bg = new InstancedBufferGeometry();
+    bg.setAttribute('position', disc.attributes.position);
+    bg.setAttribute('uv', disc.attributes.uv);
+    bg.setIndex(disc.index);
+    bg.setAttribute('aTile', new InstancedBufferAttribute(new Float32Array(512), 1));
+    const blobMat = new ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms,
+      vertexShader: `${HEX_GLSL}
+        attribute float aTile;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec3 p = position;
+          if ((yzFlags(texelFetch(uTiles, yzTileCoord(aTile), 0)) & 2) == 0) p *= 0.0;
+          gl_Position = projectionMatrix * viewMatrix * instanceMatrix * vec4(p, 1.0);
+        }`,
+      fragmentShader: `
+        varying vec2 vUv;
+        void main() {
+          float d = length(vUv - 0.5) * 2.0;
+          float a = (1.0 - smoothstep(0.35, 1.0, d)) * 0.3;
+          gl_FragColor = vec4(0.05, 0.08, 0.02, a);
+        }`,
+    });
+    this.blobs = new InstancedMesh(bg, blobMat, 512);
+    this.blobs.count = 0;
+    this.blobs.frustumCulled = false;
+    this.blobs.renderOrder = 1;
+    this.group.add(this.blobs);
+  }
+
+  private blobs: InstancedMesh;
+  private realShadows = true;
+
+  /** Places one blob per squad (skipping aircraft, whose shadow is far below). */
+  private writeBlobs(): void {
+    let k = 0;
+    const tiles = this.blobs.geometry.attributes.aTile as InstancedBufferAttribute;
+    for (const s of this.slots) {
+      if (k >= 512) break;
+      if (UNIT[s.type]?.cls === 'air') continue;
+      const a = this.anchor(s.unitId) ?? [s.x, s.y, s.z];
+      const naval = UNIT[s.type]?.cls === 'naval' || s.embarked;
+      this.q.identity();
+      this.v.set(a[0], (naval ? 0.005 : a[1]) + 0.012, a[2]);
+      this.s.setScalar((this.scale / BASE_SCALE) * (naval ? 1.3 : 1));
+      this.matrix.compose(this.v, this.q, this.s);
+      this.blobs.setMatrixAt(k, this.matrix);
+      tiles.setX(k, s.tile);
+      k++;
+    }
+    this.blobs.count = this.realShadows ? 0 : k;
+    this.blobs.instanceMatrix.needsUpdate = true;
+    tiles.needsUpdate = true;
   }
 
   /** The baked look of a type (geometry + bone texture), made on first use. */
@@ -142,7 +207,7 @@ export class Units {
     let m = this.mats.get(key);
     if (m) return m;
     const b = this.look(key);
-    const uniforms = { ...this.uniforms, uBones: { value: b.bones } };
+    const uniforms = { ...this.uniforms, uBones: { value: b.bones }, uRigStatic: this.rigStatic };
     const head = `attribute float aTile;\nattribute float aPhase;\nflat varying float vTileF;\n${RIG_GLSL}`;
     const hide = `
       vTileF = aTile;
@@ -197,7 +262,7 @@ export class Units {
     const { mat, depth } = this.materials(key);
     const m = new InstancedMesh(geo, mat, cap);
     m.setColorAt(0, new Color());
-    m.castShadow = true;
+    m.castShadow = this.realShadows;
     m.receiveShadow = true;
     m.customDepthMaterial = depth;
     m.frustumCulled = false;
@@ -230,7 +295,7 @@ export class Units {
   }
 
   /** Rebuilds the squads from the game state. */
-  update(g: Game, _o: Overlay | null, _reveal: boolean): void {
+  update(g: Game, _o: Overlay | null, reveal: boolean): void {
     this.g = g;
     const map = g.s.map;
     this.slots = [];
@@ -240,6 +305,8 @@ export class Units {
     const sel = this.selected;
     for (const [tile, ids] of g.unitsAt) {
       if (!ids.length) continue;
+      // squads we cannot see are not drawn at all (the shader would hide them anyway)
+      if (!reveal && !g.player.visible[tile]) continue;
       const units = ids.map((id) => g.s.units[id]).filter(Boolean);
       if (!units.length) continue;
       const top = units.find((u) => u.id === sel) ?? units.reduce((a, b) => (UNIT[b.type].str > UNIT[a.type].str ? b : a));
@@ -292,6 +359,7 @@ export class Units {
       if (m.instanceColor) m.instanceColor.needsUpdate = true;
       for (const a of ['aTile', 'aPhase', 'aAnim', 'aSkin']) (m.geometry.attributes[a] as InstancedBufferAttribute).needsUpdate = true;
     }
+    this.writeBlobs();
   }
 
   private writeExtra(m: InstancedMesh, k: number, s: Slot, dy: number): void {
@@ -389,8 +457,17 @@ export class Units {
     void dt;
     this.time = time;
     // squads grow a little when zoomed out so they stay readable
-    const sc = BASE_SCALE * Math.min(1.5, Math.max(1, Math.pow(zoom, -0.32)));
+    const sc = BASE_SCALE * Math.min(2.3, Math.max(1, 1.55 * Math.pow(zoom, -0.5)));
     const zk = Math.round(sc * 100);
+    const still = this.lowQuality || zoom < 0.62 ? 1 : 0;
+    this.rigStatic.value = still;
+    // real shadows only up close; elsewhere a soft blob grounds each squad
+    const real = !still && zoom >= 1.6;
+    if (real !== this.realShadows) {
+      this.realShadows = real;
+      for (const m of this.meshes.values()) m.castShadow = real;
+      this.writeBlobs();
+    }
     const now = performance.now();
     if (zk !== this.zoomKey) {
       this.zoomKey = zk;
@@ -409,6 +486,7 @@ export class Units {
         m.instanceMatrix.needsUpdate = true;
         (m.geometry.attributes.aAnim as InstancedBufferAttribute).needsUpdate = true;
       }
+      if (touched.size && !this.realShadows) this.writeBlobs();
       this.actions = this.actions.filter((a) => now - a.start < a.dur + 60);
     }
     // selection marker

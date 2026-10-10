@@ -28,7 +28,7 @@ import type { Game } from '../sim/game';
 import type { City, Civ } from '../sim/state';
 import { Relief } from '../data/terrain';
 import { merge, xf } from './geo';
-import { CELL, kitGeo, kitPart } from './kit';
+import { CELL, hasModel, kitGeo, kitPart } from './kit';
 import { broadleaf } from './models/kitnature';
 import { HEX_GLSL } from './hexgl';
 import * as B from './models/buildings';
@@ -37,7 +37,10 @@ import { depthKey, hexPatch, type SharedUniforms } from './terrain';
 
 interface CityView {
   key: string;
+  root: Group;
   mesh: Mesh;
+  /** The same town from far away (simplified buildings, no street clutter). */
+  lod: Mesh;
   sails: Object3D[];
   flags: [number, number, number][];
   smoke: [number, number, number, number][];
@@ -144,8 +147,9 @@ export class Cities {
   }
 
   private drop(v: CityView): void {
-    this.group.remove(v.mesh);
+    this.group.remove(v.root);
     v.mesh.geometry.dispose();
+    v.lod.geometry.dispose();
   }
 
   private build(city: City, civ: Civ, key: string): CityView {
@@ -167,13 +171,22 @@ export class Cities {
     const smoke: [number, number, number, number][] = [];
     const ground = (lx: number, lz: number) => shape.height(tile, cx + lx, cz + lz);
     /** Places a kit model (feet on the ground) with its team parts painted. */
+    const lodParts: BufferGeometry[] = [];
+    /** Adds a piece to the town (and to its far version: simplified if the kit has one, dropped if it is clutter). */
+    const both = (full: BufferGeometry, lod: BufferGeometry | null | 'same') => {
+      parts.push(full);
+      if (lod === 'same') lodParts.push(full.clone());
+      else if (lod) lodParts.push(lod);
+    };
     const kitPut = (name: string, lx: number, lz: number, rot: number, s: number, r: number, paint: Color = team, dy = 0) => {
-      const g = paintTeam(kitGeo(name, STONE, 'town').clone(), paint);
-      parts.push(B.place(g, cx + lx, ground(lx, lz) - 0.006 + dy, cz + lz, rot, s));
+      const y = ground(lx, lz) - 0.006 + dy;
+      const full = B.place(paintTeam(kitGeo(name, STONE, 'town').clone(), paint), cx + lx, y, cz + lz, rot, s);
+      const lod = hasModel(`${name}@lod`) ? B.place(paintTeam(kitGeo(`${name}@lod`, STONE, 'town').clone(), paint), cx + lx, y, cz + lz, rot, s) : r > 0.05 ? 'same' : null;
+      both(full, lod);
       taken.push([lx, lz, r]);
     };
     const put = (geo: BufferGeometry, lx: number, lz: number, rot: number, s = S, r = 0.08) => {
-      parts.push(B.place(geo, cx + lx, ground(lx, lz) - 0.004, cz + lz, rot, s));
+      both(B.place(geo, cx + lx, ground(lx, lz) - 0.004, cz + lz, rot, s), r > 0.045 ? 'same' : null);
       taken.push([lx, lz, r]);
     };
     const free = (lx: number, lz: number, r: number) => taken.every(([x, z, rr]) => Math.hypot(x - lx, z - lz) > r + rr);
@@ -199,7 +212,7 @@ export class Cities {
     const modern = tier >= 5;
 
     // Ground: a plaza in the middle.
-    parts.push(B.place(B.plaza(0.2, tier >= 2 ? '#d8cdb6' : '#c8a676'), cx, ground(0, 0) - 0.002, cz, 0, 1));
+    both(B.place(B.plaza(0.2, tier >= 2 ? '#d8cdb6' : '#c8a676'), cx, ground(0, 0) - 0.002, cz, 0, 1), 'same');
     taken.push([0, 0, 0.05]);
 
     // The heart of the city.
@@ -233,7 +246,7 @@ export class Cities {
         const gate = k === 1;
         if (!stone) {
           const mx = (x0 + x1) / 2, mz = (z0 + z1) / 2;
-          parts.push(B.place(B.palisade(Math.hypot(x1 - x0, z1 - z0) / S), cx + mx, ground(mx, mz) - 0.005, cz + mz, rot, S));
+          both(B.place(B.palisade(Math.hypot(x1 - x0, z1 - z0) / S), cx + mx, ground(mx, mz) - 0.005, cz + mz, rot, S), 'same');
         } else {
           // two wall pieces per side; the side facing the viewer gets the gate
           for (let j = 0; j < 2; j++) {
@@ -241,9 +254,12 @@ export class Cities {
             const lx = x0 + (x1 - x0) * t;
             const lz = z0 + (z1 - z0) * t;
             const name = gate && j === 0 ? 'wall_straight_gate' : 'wall_straight';
-            parts.push(B.place(kitGeo(name, STONE, 'town').clone(), cx + lx, ground(lx, lz) - 0.01, cz + lz, rot, WALL));
+            const wy = ground(lx, lz) - 0.01;
+            both(B.place(kitGeo(name, STONE, 'town').clone(), cx + lx, wy, cz + lz, rot, WALL), hasModel(`${name}@lod`) ? B.place(kitGeo(`${name}@lod`, STONE, 'town').clone(), cx + lx, wy, cz + lz, rot, WALL) : 'same');
           }
-          parts.push(B.place(paintTeam(kitGeo('building_tower_base', STONE, 'town').clone(), team), cx + x0, ground(x0, z0) - 0.01, cz + z0, rng.float(0, 6), WALL * 1.05));
+          const tr = rng.float(0, 6);
+          const ty = ground(x0, z0) - 0.01;
+          both(B.place(paintTeam(kitGeo('building_tower_base', STONE, 'town').clone(), team), cx + x0, ty, cz + z0, tr, WALL * 1.05), B.place(paintTeam(kitGeo('building_tower_base@lod', STONE, 'town').clone(), team), cx + x0, ty, cz + z0, tr, WALL * 1.05));
         }
       }
       for (let k = 0; k < 6; k++) {
@@ -343,10 +359,10 @@ export class Cities {
       const [nx, nz] = EDGE_N[coastDir];
       const hx = nx * 0.8;
       const hz = nz * 0.8;
-      parts.push(B.place(B.harbor(), cx + hx, 0.0, cz + hz, -Math.atan2(nz, nx) + Math.PI / 2, S));
-      parts.push(B.place(paintTeam(kitGeo(tier >= 4 ? 'k_ship-light' : 'k_boat-small').clone(), team), cx + nx * 1.12 + nz * 0.15, -0.01, cz + nz * 1.12 - nx * 0.15, rng.float(0, 6), tier >= 4 ? 0.07 : 0.28));
+      both(B.place(B.harbor(), cx + hx, 0.0, cz + hz, -Math.atan2(nz, nx) + Math.PI / 2, S), 'same');
+      both(B.place(paintTeam(kitGeo(tier >= 4 ? 'k_ship-light' : 'k_boat-small').clone(), team), cx + nx * 1.12 + nz * 0.15, -0.01, cz + nz * 1.12 - nx * 0.15, rng.float(0, 6), tier >= 4 ? 0.07 : 0.28), null);
       for (let k = 0; k < 2; k++) parts.push(B.place(kitGeo(rng.pick(['barrel', 'crate_A_small', 'sack'])).clone(), cx + hx * 0.92 + nz * (k - 0.5) * 0.12, ground(hx * 0.9, hz * 0.9), cz + hz * 0.92 - nx * (k - 0.5) * 0.12, rng.float(0, 6), 0.32));
-      if (city.wonders.includes('beacon')) parts.push(B.place(B.lighthouse(), cx + nx * 0.62 - nz * 0.22, ground(nx * 0.62 - nz * 0.22, nz * 0.62 + nx * 0.22), cz + nz * 0.62 + nx * 0.22, 0, S));
+      if (city.wonders.includes('beacon')) both(B.place(B.lighthouse(), cx + nx * 0.62 - nz * 0.22, ground(nx * 0.62 - nz * 0.22, nz * 0.62 + nx * 0.22), cz + nz * 0.62 + nx * 0.22, 0, S), 'same');
     }
     // World wonders stand out.
     for (const w of city.wonders) {
@@ -398,18 +414,26 @@ export class Cities {
       if (p) put(xf(broadleaf(city.id * 13 + k, rng.pick(['green', 'fresh', 'blossom'] as const)), { s: 0.8 / S }), p[0], p[1], rng.float(0, 6), S, 0.04);
     }
 
-    const geo = merge(parts);
-    const n = geo.attributes.position.count;
-    geo.setAttribute('aTile', new BufferAttribute(new Float32Array(n).fill(tile), 1));
-    geo.computeBoundingSphere();
-    const mesh = new Mesh(geo, this.mat);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
-    mesh.customDepthMaterial = this.depth;
-    for (const s of sails) mesh.add(s);
-    mesh.matrixAutoUpdate = false;
-    this.group.add(mesh);
-    return { key, mesh, sails, flags, smoke };
+    const make = (list: BufferGeometry[]) => {
+      const geo = merge(list);
+      const n = geo.attributes.position.count;
+      geo.setAttribute('aTile', new BufferAttribute(new Float32Array(n).fill(tile), 1));
+      geo.computeBoundingSphere();
+      const mesh = new Mesh(geo, this.mat);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.customDepthMaterial = this.depth;
+      mesh.matrixAutoUpdate = false;
+      return mesh;
+    };
+    const root = new Group();
+    const mesh = make(parts);
+    const lod = make(lodParts);
+    mesh.visible = !this.far;
+    lod.visible = this.far;
+    root.add(mesh, lod, ...sails);
+    this.group.add(root);
+    return { key, root, mesh, lod, sails, flags, smoke };
   }
 
   /** Dry, unmountainous land at a world point (suburbs and fields stay off water and peaks). */
@@ -465,6 +489,18 @@ export class Cities {
     mesh.computeBoundingSphere();
     this.flagMesh = mesh;
     this.group.add(mesh);
+  }
+
+  private far = false;
+
+  /** Far away (or for a quick overview) towns use their simplified version. */
+  setFar(far: boolean): void {
+    if (far === this.far) return;
+    this.far = far;
+    for (const v of this.views.values()) {
+      v.mesh.visible = !far;
+      v.lod.visible = far;
+    }
   }
 
   tick(dt: number, _time: number): void {

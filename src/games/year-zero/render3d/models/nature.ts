@@ -1,7 +1,8 @@
-// Procedural models of the natural world and of tile improvements, built
-// from soft primitives with painted vertex colours. All sizes are in tile
-// units (a hex has a corner radius of 1). Every builder returns one merged
-// geometry, so each kind is drawn with a single instanced mesh.
+// Hand-made models for the natural features the KayKit kit lacks: jungle
+// giants, cacti, volcanoes and lava, ice floes, marsh pools, grass tufts and
+// flowers, livestock, oil derricks, plantations, wonders (pillars, the great
+// tree, crystals, reefs, waterfalls). Sizes are in tile units (a hex has a
+// corner radius of 1); each builder returns one merged geometry.
 
 import { BufferGeometry, Color, Vector3 } from 'three';
 import { Rng } from '../../../shared/rng';
@@ -29,35 +30,6 @@ function canopy(r: number, seed: number, low: string, high: string, sx = 1, sy =
   return gradient(g, low, high, { jitter: 0.05, seed });
 }
 
-export function pineTree(seed = 1, snow = false): BufferGeometry {
-  const rng = new Rng(seed);
-  const parts: BufferGeometry[] = [part(cylinder(0.022, 0.032, 0.09, 6), BARK, { p: [0, 0.045, 0] })];
-  const tiers: [number, number, number][] = [[0.13, 0.17, 0.13], [0.105, 0.15, 0.21], [0.075, 0.13, 0.285]];
-  tiers.forEach(([r, h, y], k) => {
-    let g = cone(r * rng.float(0.95, 1.08), h, 9);
-    g = xf(g, { p: [0, y, 0], r: [0, rng.float(0, 1), 0] });
-    g = gradient(g, k === 0 ? '#1f6b34' : '#277a3a', k === 2 ? '#5aa84a' : '#3f9444');
-    if (snow) capColor(g, y + h * 0.05, '#f4f8fb', 0.06, 0.35);
-    parts.push(g);
-  });
-  return merge(parts);
-}
-
-export function roundTree(seed = 1, tint: [string, string] = ['#3f8f2f', '#9bd34f']): BufferGeometry {
-  const rng = new Rng(seed);
-  const h = rng.float(0.1, 0.13);
-  const parts: BufferGeometry[] = [part(cylinder(0.02, 0.03, h + 0.04, 6), BARK, { p: [0, (h + 0.04) / 2, 0] })];
-  const c = canopy(0.12, seed, tint[0], tint[1]);
-  xf(c, { p: [0, h + 0.1, 0] });
-  parts.push(c);
-  if (rng.chance(0.6)) {
-    const c2 = canopy(0.075, seed + 7, tint[0], tint[1]);
-    xf(c2, { p: [rng.float(-0.08, 0.08), h + 0.07, rng.float(0.04, 0.08)] });
-    parts.push(c2);
-  }
-  return merge(parts);
-}
-
 export function poplar(seed = 1): BufferGeometry {
   const parts: BufferGeometry[] = [part(cylinder(0.016, 0.022, 0.08, 6), BARK, { p: [0, 0.04, 0] })];
   const c = ico(1, 2);
@@ -66,31 +38,6 @@ export function poplar(seed = 1): BufferGeometry {
   radialNormals(c);
   xf(c, { p: [0, 0.22, 0] });
   parts.push(gradient(c, '#4f9a32', '#b9dc5a', { jitter: 0.04, seed }));
-  return merge(parts);
-}
-
-export function palm(seed = 1): BufferGeometry {
-  const rng = new Rng(seed);
-  const parts: BufferGeometry[] = [];
-  const lean = rng.float(0.15, 0.35);
-  let x = 0;
-  let y = 0;
-  for (let k = 0; k < 5; k++) {
-    const seg = part(cylinder(0.018 - k * 0.002, 0.022 - k * 0.002, 0.065, 6), k % 2 ? '#a07a4c' : '#8a6640', { r: [0, 0, -lean * (k / 5)], p: [x, y + 0.032, 0] });
-    parts.push(seg);
-    x += Math.sin(lean * (k / 5)) * 0.065;
-    y += Math.cos(lean * (k / 5)) * 0.062;
-  }
-  for (let k = 0; k < 7; k++) {
-    const a = (k / 7) * Math.PI * 2 + rng.float(0, 0.4);
-    const leaf = ellipsoid(0.11, 0.012, 0.035, 8, 4);
-    leaf.translate(0.1, 0, 0);
-    leaf.rotateZ(-0.45);
-    leaf.rotateY(a);
-    leaf.translate(x, y + 0.01, 0);
-    parts.push(gradient(leaf, '#2f8a3a', '#7cc94a'));
-  }
-  for (let k = 0; k < 3; k++) parts.push(part(sphere(0.016, 6, 5), '#6b4a26', { p: [x + Math.cos(k * 2.1) * 0.02, y - 0.012, Math.sin(k * 2.1) * 0.02] }));
   return merge(parts);
 }
 
@@ -162,30 +109,6 @@ export function rock(seed = 1, color = '#9d958c', moss = '#7fae55'): BufferGeome
   g.scale(0.055, 0.055, 0.055);
   g.translate(0, 0.022, 0);
   return gradient(g, '#6f6861', color, { moss, mossAmount: 0.5, jitter: 0.06, seed });
-}
-
-/** A cluster of peaks with green foothills: one map mountain tile. */
-export function mountainRange(seed = 1, snow = true): BufferGeometry {
-  const rng = new Rng(seed);
-  const parts: BufferGeometry[] = [mountain(seed, snow, 1)];
-  const n = 2 + rng.int(2);
-  for (let k = 0; k < n; k++) {
-    const a = rng.float(0, Math.PI * 2);
-    const r = rng.float(0.32, 0.46);
-    const s = rng.float(0.5, 0.68);
-    const g = mountain(seed * 7 + k, snow && s > 0.58, s);
-    g.translate(Math.cos(a) * r, -0.02, Math.sin(a) * r * 0.85);
-    parts.push(g);
-  }
-  for (let k = 0; k < 5; k++) {
-    const a = rng.float(0, Math.PI * 2);
-    const hill = ico(rng.float(0.14, 0.2), 1);
-    hill.scale(1.4, 0.6, 1.2);
-    lumpy(hill, 0.03, 6, seed + k * 13);
-    hill.translate(Math.cos(a) * 0.58, 0.0, Math.sin(a) * 0.5);
-    parts.push(gradient(hill, '#5d8f3a', '#8cc04e', { jitter: 0.05, seed: seed + k }));
-  }
-  return merge(parts);
 }
 
 export function mountain(seed = 1, snow = true, scale = 1): BufferGeometry {
@@ -286,18 +209,6 @@ export function iceChunk(seed = 1): BufferGeometry {
 
 // --- Improvements ----------------------------------------------------------------
 
-export function wheatField(seed = 1): BufferGeometry {
-  const rng = new Rng(seed);
-  const parts: BufferGeometry[] = [part(box(0.44, 0.008, 0.32), '#a07a42', { p: [0, 0.004, 0] })];
-  for (let k = 0; k < 6; k++) {
-    const row = box(0.4, 0.022, 0.036);
-    lumpy(row, 0.005, 40, seed + k);
-    const ripe = rng.chance(0.5);
-    parts.push(gradient(xf(row, { p: [0, 0.016, -0.125 + k * 0.05] }), ripe ? '#b8a23a' : '#7fae3c', ripe ? '#e8d26a' : '#b4d65a'));
-  }
-  return merge(parts);
-}
-
 export function hayBale(): BufferGeometry {
   const g = cylinder(0.035, 0.035, 0.05, 10);
   g.rotateZ(Math.PI / 2);
@@ -350,19 +261,6 @@ export function horse(color = '#8a5a34', mane = '#3a2618'): BufferGeometry {
   return merge(parts);
 }
 
-export function mineEntrance(): BufferGeometry {
-  return merge([
-    part(box(0.1, 0.08, 0.04), '#2a2420', { p: [0, 0.04, -0.01] }),
-    part(box(0.016, 0.1, 0.016), WOOD, { p: [-0.06, 0.05, 0.01] }),
-    part(box(0.016, 0.1, 0.016), WOOD, { p: [0.06, 0.05, 0.01] }),
-    part(box(0.15, 0.018, 0.02), WOOD_L, { p: [0, 0.1, 0.01] }),
-    part(box(0.06, 0.03, 0.04), '#6b6f75', { p: [0.08, 0.025, 0.08] }),
-    part(cylinder(0.012, 0.012, 0.008, 8), '#3a3a3a', { r: [Math.PI / 2, 0, 0], p: [0.06, 0.01, 0.1] }),
-    part(cylinder(0.012, 0.012, 0.008, 8), '#3a3a3a', { r: [Math.PI / 2, 0, 0], p: [0.1, 0.01, 0.1] }),
-    part(ico(0.02, 0), '#8f8a85', { p: [0.08, 0.045, 0.08] }),
-  ]);
-}
-
 export function logPile(): BufferGeometry {
   const parts: BufferGeometry[] = [];
   const spots: [number, number][] = [[-0.03, 0.018], [0, 0.018], [0.03, 0.018], [-0.015, 0.045], [0.015, 0.045], [0, 0.07]];
@@ -387,15 +285,6 @@ export function oilDerrick(): BufferGeometry {
   for (let k = 1; k < 4; k++) parts.push(part(box(0.09 - k * 0.018, 0.006, 0.09 - k * 0.018), '#55525a', { p: [0, k * 0.065, 0] }));
   parts.push(part(box(0.08, 0.05, 0.06), '#7a3a2a', { p: [0.09, 0.025, 0.04] }), part(cylinder(0.02, 0.02, 0.05, 8), '#2b2b30', { p: [-0.08, 0.025, 0.06] }));
   return merge(parts);
-}
-
-export function fishingBoat(): BufferGeometry {
-  const hull = lathe([[0.001, -0.02], [0.03, -0.012], [0.04, 0.01], [0.042, 0.02]], 10);
-  hull.scale(1, 1, 2.2);
-  hull.rotateY(Math.PI / 2);
-  hull.translate(0, 0.02, 0);
-  const s = prep(xf(cone(0.05, 0.11, 3), { s: [0.08, 1, 1], p: [0, 0.1, 0] }), '#fff8ea');
-  return merge([prep(hull, '#8a5a32'), part(cylinder(0.004, 0.004, 0.13, 4), BARK_D, { p: [0, 0.09, 0] }), s]);
 }
 
 export function plantationRow(seed = 1): BufferGeometry {

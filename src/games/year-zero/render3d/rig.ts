@@ -354,6 +354,7 @@ export function bakeLook(spec: LookSpec): BakedLook {
 /** GLSL: skinning from a baked bone texture. Needs uniforms uBones, uTime and attributes skinIndex/skinWeight/aAnim. */
 export const RIG_GLSL = /* glsl */ `
 uniform highp sampler2D uBones;
+uniform float uRigStatic;
 attribute vec4 skinIndex;
 attribute vec4 skinWeight;
 attribute vec4 aAnim; // row, frames, start time (s), mode (0 loop, 1 once)
@@ -372,6 +373,8 @@ mat4 yzSkin(int row) {
   return m;
 }
 mat4 yzRig(float phase) {
+  // far away (or on low quality) everyone holds the first frame of their clip
+  if (uRigStatic > 0.5) return yzSkin(int(aAnim.x));
   float frames = aAnim.y;
   float f = max(0.0, uTime - aAnim.z) * ${FPS.toFixed(1)};
   float fa;

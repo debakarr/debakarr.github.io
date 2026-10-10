@@ -1,6 +1,6 @@
-// Procedural architecture for cities: huts and longhouses, timber and stone
-// houses, keeps with pointed roofs, temples, windmills, brick mills,
-// glass towers and domes. Roofs and banners take the owner's colour.
+// Hand-made architecture for what the KayKit town kit lacks: tribal huts and
+// teepees, palisades, fields, domes, arenas, aqueducts, factories, harbours,
+// lighthouses and world wonders. Roofs and banners take the owner's colour.
 
 import { BufferGeometry } from 'three';
 import { Rng } from '../../../shared/rng';
@@ -65,17 +65,6 @@ export function house(rng: Rng, roof: string, opts: { w?: number; d?: number; h?
   return merge(parts);
 }
 
-/** A round hut with a thatched cone roof. */
-export function hut(rng: Rng, roof = STYLE.thatch): BufferGeometry {
-  const r = rng.float(0.05, 0.062);
-  const h = rng.float(0.045, 0.055);
-  return merge([
-    part(cylinder(r, r * 1.05, h, 10), STYLE.mud, { p: [0, h / 2, 0] }),
-    gradient(xf(cone(r * 1.45, r * 1.5, 10), { p: [0, h + r * 0.72, 0] }), '#b48a3c', roof),
-    part(box(0.016, 0.026, 0.006), STYLE.door, { p: [0, 0.013, r] }),
-  ]);
-}
-
 /** Round tribal hut: log wall, layered faceted thatch, door frame and a painted band in the owner's colour. */
 export function tribalHut(rng: Rng, team: string): BufferGeometry {
   const r = rng.float(0.05, 0.06);
@@ -127,25 +116,6 @@ export function tent(color: string): BufferGeometry {
   return merge([part(cone(0.045, 0.07, 6), color, { p: [0, 0.035, 0] }), part(cylinder(0.002, 0.002, 0.09, 3), STYLE.timber, { p: [0, 0.045, 0] })]);
 }
 
-export function longhouse(rng: Rng, roof: string, team = '#e85a3a'): BufferGeometry {
-  const parts: Parts = [
-    part(box(0.2, 0.055, 0.1), '#9a6a40', { p: [0, 0.0275, 0] }),
-    gradient(xf(gable(0.2, 0.1, 0.1, 0.025), { p: [0, 0.055, 0] }), '#a8803a', roof),
-    part(box(0.03, 0.042, 0.006), STYLE.door, { p: [0, 0.021, 0.051] }),
-    part(box(0.24, 0.01, 0.01), '#6b4a2e', { p: [0, 0.155, 0] }),
-  ];
-  // carved posts with the people's colours
-  for (const x of [-0.11, 0.11]) {
-    parts.push(part(cylinder(0.008, 0.01, 0.1, 6), '#7a5232', { p: [x, 0.05, 0.06] }));
-    parts.push(part(sphere(0.012, 6, 5), team, { p: [x, 0.105, 0.06] }));
-  }
-  // a totem pole
-  for (let k = 0; k < 3; k++) parts.push(part(cylinder(0.016, 0.018, 0.04, 8), k % 2 ? team : '#b8844a', { p: [0.15, 0.02 + k * 0.04, 0.09] }));
-  parts.push(part(box(0.06, 0.012, 0.012), team, { p: [0.15, 0.1, 0.09] }));
-  void rng;
-  return merge(parts);
-}
-
 export function campfire(): BufferGeometry {
   return merge([
     part(cylinder(0.03, 0.032, 0.008, 8), '#6b6b6b', { p: [0, 0.004, 0] }),
@@ -186,20 +156,6 @@ export function keep(rng: Rng, roof: string): BufferGeometry {
   return merge(parts);
 }
 
-export function wallSegment(len: number, h = 0.06, stone = STYLE.stone): BufferGeometry {
-  const parts: Parts = [gradient(xf(box(len, h, 0.03), { p: [0, h / 2, 0] }), STYLE.stoneDark, stone)];
-  const n = Math.max(2, Math.round(len / 0.03));
-  for (let k = 0; k < n; k++) if (k % 2 === 0) parts.push(part(box(0.016, 0.014, 0.034), stone, { p: [-len / 2 + (k + 0.5) * (len / n), h + 0.007, 0] }));
-  return merge(parts);
-}
-
-export function wallTower(roof: string, stone = STYLE.stone): BufferGeometry {
-  return merge([
-    gradient(xf(cylinder(0.032, 0.036, 0.1, 9), { p: [0, 0.05, 0] }), STYLE.stoneDark, stone),
-    part(cone(0.045, 0.07, 9), roof, { p: [0, 0.135, 0] }),
-  ]);
-}
-
 export function palisade(len: number): BufferGeometry {
   const parts: Parts = [];
   const n = Math.max(2, Math.round(len / 0.018));
@@ -207,38 +163,6 @@ export function palisade(len: number): BufferGeometry {
     const x = -len / 2 + (k + 0.5) * (len / n);
     const h = 0.05 + ((k * 7) % 3) * 0.006;
     parts.push(part(cylinder(0.007, 0.008, h, 5), '#8a6440', { p: [x, h / 2, 0] }), part(cone(0.007, 0.012, 5), '#a07650', { p: [x, h + 0.006, 0] }));
-  }
-  return merge(parts);
-}
-
-export function gatehouse(roof: string, stone = STYLE.stone): BufferGeometry {
-  return merge([
-    gradient(xf(box(0.1, 0.09, 0.05), { p: [0, 0.045, 0] }), STYLE.stoneDark, stone),
-    part(box(0.035, 0.05, 0.054), '#4a3424', { p: [0, 0.025, 0] }),
-    part(gable(0.1, 0.05, 0.04, 0.008), roof, { p: [0, 0.09, 0] }),
-  ]);
-}
-
-export function windmillBody(): BufferGeometry {
-  return merge([
-    gradient(xf(cylinder(0.026, 0.04, 0.13, 8), { p: [0, 0.065, 0] }), '#d8ccb4', '#f2e8d4'),
-    part(cone(0.034, 0.05, 8), '#8a5a36', { p: [0, 0.155, 0] }),
-    part(box(0.016, 0.026, 0.004), STYLE.door, { p: [0, 0.013, 0.038] }),
-  ]);
-}
-
-/** Four sails; spun around the z axis by the city animator. */
-export function windmillSails(): BufferGeometry {
-  const parts: Parts = [part(cylinder(0.006, 0.006, 0.02, 6), STYLE.timber, { r: [Math.PI / 2, 0, 0] })];
-  for (let k = 0; k < 4; k++) {
-    const a = (k * Math.PI) / 2;
-    const arm = box(0.008, 0.12, 0.003);
-    arm.translate(0, 0.06, 0);
-    const sail = box(0.03, 0.08, 0.002);
-    sail.translate(0.016, 0.07, 0.002);
-    const g = merge([prep(arm, STYLE.timber), prep(sail, '#f6efe0')]);
-    g.rotateZ(a);
-    parts.push(g);
   }
   return merge(parts);
 }
@@ -254,19 +178,6 @@ export function temple(roof: string, marble = '#f2ede2'): BufferGeometry {
   return merge(parts);
 }
 
-/** A church or shrine with a bell tower and spire. */
-export function chapel(roof: string, rng: Rng): BufferGeometry {
-  const wall = rng.pick(STYLE.plaster);
-  return merge([
-    part(box(0.13, 0.07, 0.07), wall, { p: [0, 0.035, 0] }),
-    part(gable(0.13, 0.07, 0.05, 0.01), roof, { p: [0, 0.07, 0] }),
-    part(box(0.045, 0.16, 0.045), wall, { p: [0.07, 0.08, 0] }),
-    part(pyramid(0.05, 0.05, 0.09), roof, { p: [0.07, 0.16, 0] }),
-    part(box(0.016, 0.02, 0.004), '#2a3a5a', { p: [0.07, 0.12, 0.024] }),
-    part(box(0.02, 0.035, 0.004), STYLE.door, { p: [-0.02, 0.0175, 0.036] }),
-  ]);
-}
-
 /** A domed hall (library, university, observatory, bank). */
 export function domeHall(dome: string, wall = '#efe6d4'): BufferGeometry {
   const parts: Parts = [part(box(0.15, 0.07, 0.11), wall, { p: [0, 0.035, 0] })];
@@ -274,19 +185,6 @@ export function domeHall(dome: string, wall = '#efe6d4'): BufferGeometry {
   parts.push(part(cylinder(0.045, 0.045, 0.02, 12), wall, { p: [0, 0.08, 0] }));
   parts.push(part(hemisphere(0.046, 14, 7), dome, { p: [0, 0.09, 0] }));
   parts.push(part(sphere(0.008, 6, 4), STYLE.gold, { p: [0, 0.14, 0] }));
-  return merge(parts);
-}
-
-export function marketStalls(rng: Rng): BufferGeometry {
-  const parts: Parts = [];
-  const cols = ['#e8553a', '#3a8fe8', '#f2c14e', '#5bbf5a', '#c06ae0'];
-  for (let k = 0; k < 3; k++) {
-    const x = -0.06 + k * 0.06;
-    const c = rng.pick(cols);
-    parts.push(part(box(0.045, 0.025, 0.035), '#c9a06a', { p: [x, 0.0125, 0] }));
-    parts.push(part(gable(0.05, 0.04, 0.02, 0.004), c, { p: [x, 0.045, 0] }));
-    for (const dx of [-0.02, 0.02]) parts.push(part(cylinder(0.002, 0.002, 0.045, 3), STYLE.timber, { p: [x + dx, 0.0225, 0.018] }));
-  }
   return merge(parts);
 }
 
@@ -305,59 +203,11 @@ export function factory(roof = '#5a5f66'): BufferGeometry {
   return merge(parts);
 }
 
-export function brickBlock(rng: Rng, roof: string, floors = 2): BufferGeometry {
-  const w = rng.float(0.08, 0.1);
-  const d = rng.float(0.07, 0.085);
-  const h = 0.055 * floors;
-  const parts: Parts = [part(box(w, h, d), rng.pick(STYLE.brick), { p: [0, h / 2, 0] })];
-  windows(parts, w * 0.85, h - 0.02, d, 0.012, floors, 3, true, '#2f4a66');
-  parts.push(part(box(w + 0.006, 0.008, d + 0.006), '#e8dccb', { p: [0, h, 0] }));
-  parts.push(part(gable(w, d, d * 0.45, 0.006), roof, { p: [0, h + 0.004, 0] }));
-  return merge(parts);
-}
-
-/** Glass and steel towers for the modern ages. */
-export function skyscraper(rng: Rng, h: number, accent: string): BufferGeometry {
-  const w = rng.float(0.06, 0.085);
-  const parts: Parts = [];
-  const bands = Math.max(3, Math.round(h / 0.03));
-  for (let k = 0; k < bands; k++) {
-    const y = (k + 0.5) * (h / bands);
-    parts.push(part(box(w, h / bands, w), k % 2 ? STYLE.glass : STYLE.glassDark, { p: [0, y, 0] }));
-  }
-  parts.push(part(box(w * 1.04, 0.01, w * 1.04), '#e8eef4', { p: [0, h * 0.5, 0] }));
-  parts.push(part(box(w * 0.8, 0.02, w * 0.8), accent, { p: [0, h + 0.01, 0] }));
-  if (rng.chance(0.5)) parts.push(part(cylinder(0.002, 0.003, 0.06, 4), '#d8dde4', { p: [0, h + 0.05, 0] }));
-  return merge(parts);
-}
-
-export function futureDome(accent: string): BufferGeometry {
-  return merge([
-    part(cylinder(0.08, 0.085, 0.015, 16), '#dfe7ef', { p: [0, 0.0075, 0] }),
-    part(hemisphere(0.075, 18, 9), '#a8e4ff', { p: [0, 0.015, 0] }),
-    part(torus(0.076, 0.006, 6, 24), accent, { r: [Math.PI / 2, 0, 0], p: [0, 0.02, 0] }),
-    part(cylinder(0.004, 0.006, 0.12, 5), '#e8eef4', { p: [0, 0.12, 0] }),
-    part(sphere(0.01, 8, 6), accent, { p: [0, 0.185, 0] }),
-  ]);
-}
-
 export function harbor(): BufferGeometry {
   const parts: Parts = [part(box(0.22, 0.012, 0.06), '#a8774a', { p: [0, 0.02, 0] })];
   for (let k = 0; k < 4; k++) parts.push(part(cylinder(0.006, 0.006, 0.08, 5), '#6b4a2e', { p: [-0.1 + k * 0.066, -0.01, 0.03] }));
   parts.push(part(box(0.05, 0.035, 0.035), '#c9b08a', { p: [-0.07, 0.04, -0.01] }));
   return merge(parts);
-}
-
-export function boatHull(sail: string): BufferGeometry {
-  const hull = lathe([[0.001, -0.02], [0.035, -0.012], [0.045, 0.01], [0.047, 0.02]], 10);
-  hull.scale(1, 1, 2.4);
-  hull.rotateY(Math.PI / 2);
-  hull.translate(0, 0.02, 0);
-  return merge([
-    prep(hull, '#7a4a2a'),
-    part(cylinder(0.004, 0.004, 0.15, 4), '#5a3b22', { p: [0, 0.1, 0] }),
-    prep(xf(cone(0.06, 0.12, 3), { s: [0.07, 1, 1], p: [0, 0.11, 0] }), sail),
-  ]);
 }
 
 export function obelisk(): BufferGeometry {
@@ -436,19 +286,8 @@ export function flagCloth(): BufferGeometry {
   return prep(g, '#ffffff', 1);
 }
 
-/** Trees inside a city's gardens. */
-export function gardenTree(rng: Rng): BufferGeometry {
-  const c = sphere(0.035, 8, 6);
-  c.scale(1, 0.9, 1);
-  return merge([part(cylinder(0.006, 0.008, 0.04, 5), '#7a5232', { p: [0, 0.02, 0] }), part(c, rng.pick(['#5fae3c', '#79c04a', '#4f9a32']), { p: [0, 0.06, 0] })]);
-}
-
 export function plaza(r: number, color = '#d9cdb4'): BufferGeometry {
   return part(cylinder(r, r, 0.008, 6), color, { p: [0, 0.004, 0], r: [0, Math.PI / 6, 0] });
-}
-
-export function pathStrip(len: number, color = '#cdb894'): BufferGeometry {
-  return part(box(len, 0.004, 0.035), color, { p: [len / 2, 0.002, 0] });
 }
 
 export type { V3 };

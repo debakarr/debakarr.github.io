@@ -29,7 +29,7 @@ import type { Game } from '../sim/game';
 import type { Camera, EffectKind, MapView, Overlay } from '../render/view';
 import { Cities } from './cities';
 import { Labels } from './labels';
-import { Props } from './props';
+import { LOD_ZOOM, Props } from './props';
 import { Rivers } from './rivers';
 import { LAND_Y, Shape } from './shape';
 import type { Stage, StageScene } from './stage';
@@ -459,7 +459,9 @@ export class Map3D implements MapView, StageScene {
     }
     this.tiles.uniforms.uTime.value = time;
     this.props?.tick(time, this.cam.zoom);
+    this.cities?.setFar(this.cam.zoom < LOD_ZOOM);
     this.cities?.tick(dt, time);
+    if (this.units) this.units.lowQuality = this.stage.quality === 'low';
     this.units?.tick(dt, time, this.cam.zoom);
     for (const f of this.fx) {
       const t = (now - f.start) / f.dur;
@@ -527,7 +529,12 @@ export class Map3D implements MapView, StageScene {
     this.labels.hidden = true;
     const badges = this.props?.badgeMesh;
     if (badges) badges.visible = false;
+    // portraits are close-ups: full detail whatever the map's zoom
+    this.props?.forceFull(true);
+    this.cities?.setFar(false);
     const out = this.stage.snapshot(this.scene, cam, w, h);
+    this.props?.forceFull(false);
+    this.cities?.setFar(this.cam.zoom < LOD_ZOOM);
     if (badges) badges.visible = true;
     this.labels.hidden = false;
     return out;

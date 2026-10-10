@@ -1,7 +1,7 @@
 // The title vista: a young founder in a blue cape and their fox companion
 // stand on a rise at dawn, looking over a valley with a lake, a waterfall,
-// forests and a castle town on the far hill. Everything is built from the
-// same procedural pieces as the map, at a larger scale.
+// forests and a castle town on the far hill, built from the same KayKit
+// (CC0) models and faceted trees as the map, at a larger scale.
 
 import {
   AdditiveBlending,
@@ -29,8 +29,10 @@ import {
 import { Noise2D } from '../../shared/noise';
 import { Rng } from '../../shared/rng';
 import { capsule, cone, ellipsoid, merge, part, sphere, xf } from './geo';
+import { kitGeo, kitPart } from './kit';
+import { liveFigure, teamMaterial, type LiveFigure } from './live';
 import * as B from './models/buildings';
-import { LOOKS, soldierRig } from './models/figures';
+import * as K from './models/kitnature';
 import * as N from './models/nature';
 import type { StageScene } from './stage';
 
@@ -75,13 +77,13 @@ export class TitleScene implements StageScene {
   private t = 0;
   private noise = new Noise2D(new Rng(2024));
   private hero: Object3D;
-  private heroParts: { head: Object3D; armL: Object3D; armR: Object3D } | null = null;
+  private heroFig: LiveFigure;
   private tail: Mesh;
   private foxRoot: Object3D;
   private birds: Object3D[] = [];
+  private fan: Mesh | null = null;
   private water: ShaderMaterial;
   private aspect = 1;
-  private cape: Mesh;
   private fallTex: CanvasTexture | null = null;
 
   constructor(shadows: boolean) {
@@ -130,50 +132,13 @@ export class TitleScene implements StageScene {
     this.buildLand();
     this.water = this.buildWater();
     this.buildTown();
-    N.setCanopyDetail(2);
     this.buildNature();
-    N.setCanopyDetail(1);
-    // the hero
-    const rig = soldierRig({ ...LOOKS.explorer, helmet: 'none', torso: 'team', cape: false, backpack: false, weapon: 'staff', hair: '#4a2e1c' }, 7);
-    const mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.6 });
-    mat.customProgramCacheKey = () => 'yz-title-hero';
-    mat.onBeforeCompile = (shader) => {
-      shader.vertexShader = `attribute float team;\n${shader.vertexShader}`.replace('#include <color_vertex>', `
-        vColor = vec4(1.0);
-        vColor.xyz *= color.xyz;
-        if (team > 1.5) vColor.xyz *= vec3(0.98, 0.84, 0.72);
-        else vColor.xyz = mix(vColor.xyz, vColor.xyz * vec3(0.32, 0.5, 0.9), clamp(team, 0.0, 1.0));`);
-    };
+    // the hero: a young founder in a blue cape (a dressed KayKit character)
+    const heroMat = teamMaterial(HERO, '#ffffff');
+    this.heroFig = liveFigure({ char: 'mage', show: ['Mage_Cape'], props: [], clips: { idle: 'Idle' } }, heroMat);
     this.hero = new Object3D();
-    const body = new Mesh(rig.body, mat);
-    body.castShadow = true;
-    this.hero.add(body);
-    const mk = (g: BufferGeometry, p: [number, number, number]) => {
-      const o = new Object3D();
-      o.position.set(...p);
-      const m = new Mesh(g, mat);
-      m.castShadow = true;
-      o.add(m);
-      this.hero.add(o);
-      return o;
-    };
-    const pv = rig.pivots;
-    this.heroParts = { head: mk(rig.head, pv.head), armL: mk(rig.armL, pv.armL), armR: mk(rig.armR, pv.armR) };
-    mk(rig.legL, pv.legL);
-    mk(rig.legR, pv.legR);
-    // a flowing blue cape
-    const capeGeo = new PlaneGeometry(0.08, 0.11, 6, 8);
-    capeGeo.translate(0, -0.055, 0);
-    {
-      // narrower at the shoulders, flaring toward the hem
-      const p = capeGeo.attributes.position;
-      for (let k = 0; k < p.count; k++) p.setX(k, p.getX(k) * (0.55 + 0.45 * Math.min(1, -p.getY(k) / 0.11)));
-    }
-    this.cape = new Mesh(capeGeo, new MeshStandardMaterial({ color: '#2f5cc4', side: 2, roughness: 0.55 }));
-    this.cape.position.set(0, 0.104, -0.032);
-    this.cape.castShadow = true;
-    this.hero.add(this.cape);
-    this.hero.scale.setScalar(10);
+    this.hero.add(this.heroFig.root);
+    this.hero.scale.setScalar(1.25);
     this.hero.position.set(2.4, this.heightAt(2.4, 8.2), 8.2);
     this.hero.rotation.y = 3.03;
     this.scene.add(this.hero);
@@ -300,24 +265,57 @@ export class TitleScene implements StageScene {
     const parts: BufferGeometry[] = [];
     const hx = 7;
     const hz = -34;
-    const base = this.heightAt(hx, hz);
-    const S = 13;
-    parts.push(B.place(B.keep(rng, HERO), hx, base - 0.2, hz, 0.4, S));
-    for (let k = 0; k < 6; k++) {
-      const a = (k / 6) * Math.PI * 2;
-      const x = hx + Math.cos(a) * 5.2;
-      const z = hz + Math.sin(a) * 4;
-      parts.push(B.place(B.wallTower(HERO), x, this.heightAt(x, z) - 0.3, z, 0, S * 0.9));
+    const S = 2.3;
+    const blue = new Color(HERO);
+    const put = (name: string, x: number, z: number, rot: number, s = S, paint: Color = blue) => {
+      const g = kitGeo(name).clone();
+      const tm = g.attributes.team;
+      const col = g.attributes.color;
+      for (let i = 0; i < tm.count; i++) {
+        const v = tm.getX(i);
+        if (v > 0 && v <= 1.5) col.setXYZ(i, col.getX(i) * (1 - v + paint.r * v), col.getY(i) * (1 - v + paint.g * v), col.getZ(i) * (1 - v + paint.b * v));
+      }
+      parts.push(B.place(g, x, this.heightAt(x, z) - 0.15, z, rot, s));
+    };
+    put('building_castle', hx, hz, 0.3, S * 1.25);
+    // a ring of walls with towers
+    const R = 6.2;
+    for (let k = 0; k < 8; k++) {
+      const a0 = (k / 8) * Math.PI * 2;
+      const a1 = ((k + 1) / 8) * Math.PI * 2;
+      const x0 = hx + Math.cos(a0) * R, z0 = hz + Math.sin(a0) * R * 0.75;
+      const x1 = hx + Math.cos(a1) * R, z1 = hz + Math.sin(a1) * R * 0.75;
+      const len = Math.hypot(x1 - x0, z1 - z0);
+      const g = kitGeo(k === 2 ? 'wall_straight_gate' : 'wall_straight').clone();
+      g.scale(len / 2, 1, 1);
+      parts.push(B.place(g, (x0 + x1) / 2, this.heightAt((x0 + x1) / 2, (z0 + z1) / 2) - 0.2, (z0 + z1) / 2, -Math.atan2(z1 - z0, x1 - x0), S * 0.8));
+      put(k % 2 ? 'building_tower_A' : 'building_tower_B', x0, z0, rng.next() * 6, S * 0.85);
     }
-    for (let k = 0; k < 26; k++) {
+    const homes = ['building_home_A', 'building_home_B', 'building_home_A', 'building_tavern', 'building_market', 'building_blacksmith'];
+    const roofs = ['#c8553d', '#b5653a', '#7a8fa6'].map((c) => new Color(c));
+    for (let k = 0; k < 30; k++) {
       const a = rng.next() * Math.PI * 2;
-      const r = rng.float(3.5, 9);
+      const r = k < 14 ? rng.float(2.8, 5.2) : rng.float(7, 11);
       const x = hx + Math.cos(a) * r;
-      const z = hz + Math.sin(a) * r * 0.7;
-      parts.push(B.place(B.house(rng, rng.chance(0.65) ? HERO : rng.pick(B.STYLE.roofs), { floors: rng.chance(0.3) ? 2 : 1 }), x, this.heightAt(x, z) - 0.2, z, rng.next() * 6, S * 0.85));
+      const z = hz + Math.sin(a) * r * 0.72;
+      put(rng.pick(homes), x, z, Math.atan2(hx - x, hz - z) + rng.float(-0.4, 0.4), S * rng.float(0.85, 1.0), rng.chance(0.65) ? blue : rng.pick(roofs));
     }
-    parts.push(B.place(B.chapel(HERO, rng), hx - 4, this.heightAt(hx - 4, hz + 3) - 0.2, hz + 3, 0.6, S * 0.9));
-    parts.push(B.place(B.windmillBody(), hx + 9, this.heightAt(hx + 9, hz + 4) - 0.2, hz + 4, -0.4, S * 0.9));
+    put('building_church', hx - 4.5, hz + 3.2, 0.6, S);
+    put('building_windmill', hx + 11, hz + 4, -0.4, S);
+    const fan = kitPart('building_windmill', 'windmill_top_fan');
+    if (fan) {
+      const m = new Mesh(fan.geo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.75 }));
+      const x = hx + 11;
+      const z = hz + 4;
+      const v = new Vector3(...fan.pivot).multiplyScalar(S).applyAxisAngle(new Vector3(0, 1, 0), -0.4);
+      m.position.set(x + v.x, this.heightAt(x, z) - 0.15 + v.y, z + v.z);
+      m.rotation.order = 'YXZ';
+      m.rotation.y = -0.4;
+      m.scale.setScalar(S);
+      this.fan = m;
+      this.scene.add(m);
+    }
+    for (let k = 0; k < 4; k++) put(rng.pick(['barrel', 'crate_A_big', 'sack', 'wheelbarrow']), hx + rng.float(-3, 3), hz + 5 + rng.float(0, 2), rng.next() * 6, S * 0.9);
     const m = new Mesh(merge(parts), new MeshStandardMaterial({ vertexColors: true, roughness: 0.75 }));
     m.castShadow = true;
     m.receiveShadow = true;
@@ -337,22 +335,26 @@ export class TitleScene implements StageScene {
       this.scene.add(m);
     };
     // mountains on the horizon
-    for (let k = 0; k < 9; k++) put(N.mountain(500 + k, true, 1), -70 + k * 18 + rng.float(-5, 5), -95 + rng.float(-10, 6), rng.float(22, 36), false);
+    for (let k = 0; k < 9; k++) put(K.peak(500 + k, 'temperate', 0.5), -70 + k * 18 + rng.float(-5, 5), -95 + rng.float(-10, 6), rng.float(34, 52), false);
     // forests on the valley sides
     for (let k = 0; k < 140; k++) {
       const x = rng.float(-50, 50);
       const z = rng.float(-60, 2);
       if (Math.abs(x) < 14 && z > -22 && z < -2) continue;
       if (Math.hypot(x - 7, (z + 34) / 0.7) < 10) continue;
-      const geo = rng.chance(0.5) ? N.roundTree(rng.int(50)) : N.pineTree(rng.int(50));
-      put(geo, x, z, rng.float(9, 15), z > -30);
+      const geo = rng.chance(0.55) ? K.broadleaf(rng.int(50), rng.pick(['green', 'fresh', 'deep'] as const)) : K.conifer(rng.chance(0.5) ? 'A' : 'B', 'temperate');
+      put(geo, x, z, rng.float(12, 18), z > -30);
     }
     // the foreground: flowers, rocks and a few trees close by
-    put(N.roundTree(3), -8.5, 5, 16);
-    put(N.pineTree(5), 10.5, 4.5, 15);
-    put(N.roundTree(9, ['#4f9a2a', '#c4dc52']), 12, 7, 13);
-    put(N.rock(11), -0.6, 9.8, 6);
-    put(N.rock(12), 6.4, 10.2, 5);
+    put(K.broadleaf(3, 'green'), -8.5, 5, 19);
+    put(K.conifer('B', 'temperate'), 10.5, 4.5, 17);
+    put(K.broadleaf(9, 'blossom'), 12, 7, 15);
+    put(K.forestClump('B', 'large', 'temperate'), -18, -6, 14);
+    put(K.forestClump('A', 'medium', 'temperate'), 22, -10, 14);
+    put(K.rockKit('E', 'temperate'), -2.6, 10.6, 4.2);
+    put(K.rockKit('C', 'temperate'), 6.4, 10.2, 6);
+    put(K.shrub(4, 'fresh', true), -3.5, 9, 9);
+    put(K.shrub(6, 'green'), 9, 8.6, 9);
     const fl = N.flowers(3);
     const tuft = N.tuft(4);
     for (let k = 0; k < 220; k++) {
@@ -378,25 +380,15 @@ export class TitleScene implements StageScene {
     const t = this.t;
     const narrow = this.aspect < 1;
     // a slow drift over the hero's shoulder toward the town
-    const cx = (narrow ? 2.0 : -2.0) + Math.sin(t * 0.05) * 0.5;
+    const cx = (narrow ? -0.6 : -2.0) + Math.sin(t * 0.05) * 0.5;
     this.camera.position.set(cx, (narrow ? 4.8 : 5.0) + Math.sin(t * 0.07) * 0.12, narrow ? 17 : 18);
-    this.camera.lookAt(narrow ? 4.2 : 5.2, narrow ? 2.0 : 2.0, -22);
+    this.camera.lookAt(narrow ? 5.6 : 5.2, narrow ? 2.6 : 2.0, -22);
     this.water.uniforms.uTime.value = t;
     if (this.fallTex) this.fallTex.offset.y = -t * 0.6;
-    if (this.heroParts) {
-      this.heroParts.head.rotation.y = Math.sin(t * 0.4) * 0.25 + 0.15;
-      this.heroParts.head.rotation.x = 0.05 + Math.sin(t * 0.6) * 0.03;
-      this.heroParts.armR.rotation.x = -0.3 + Math.sin(t * 1.2) * 0.03;
-      this.heroParts.armL.rotation.x = -0.2;
-      this.heroParts.armL.rotation.z = -0.2;
-    }
-    const pos = this.cape.geometry.attributes.position;
-    for (let k = 0; k < pos.count; k++) {
-      const y = pos.getY(k);
-      const x = pos.getX(k);
-      pos.setZ(k, -Math.max(0, -y) * 0.6 + Math.sin(t * 3 + y * 60 + x * 40) * 0.006 * -y * 10);
-    }
-    pos.needsUpdate = true;
+    this.heroFig.mixer.update(dt);
+    const head = this.heroFig.bones.get('head');
+    if (head) head.rotation.y = Math.sin(t * 0.4) * 0.3 + 0.1;
+    if (this.fan) this.fan.rotation.z += dt * 0.6;
     this.tail.rotation.y = Math.sin(t * 3) * 0.35;
     this.foxRoot.rotation.z = Math.sin(t * 1.5) * 0.02;
     for (const [i, b] of this.birds.entries()) {
@@ -410,7 +402,7 @@ export class TitleScene implements StageScene {
   dispose(): void {
     this.scene.traverse((o) => {
       if (o instanceof Mesh) {
-        o.geometry.dispose();
+        if (!o.userData.keep) o.geometry.dispose();
         (o.material as MeshStandardMaterial).dispose();
       }
     });

@@ -7,7 +7,7 @@
 import { BufferAttribute, BufferGeometry, Color } from 'three';
 import { Noise2D } from '../../../shared/noise';
 import { Rng } from '../../../shared/rng';
-import { CELL, kitGeo, type Recolor } from '../kit';
+import { CELL, hasModel, kitGeo, type Recolor } from '../kit';
 import { cylinder, faceted, gradient, ico, lumpy, merge, part, prep, xf } from '../geo';
 
 export const HEXK = 1 / 1.155;
@@ -60,14 +60,16 @@ export function snowCap(geo: BufferGeometry, from: number, color = '#f4f8fb'): B
 // --- trees -----------------------------------------------------------------------------------------
 
 /** KayKit conifer (A: slim and pointed, B: round tiers), sized for the map. */
-export function conifer(kind: 'A' | 'B', biome: Biome, snow = false): BufferGeometry {
-  const g = kit(`tree_single_${kind}`, biome, { s: 0.36 });
+export function conifer(kind: 'A' | 'B', biome: Biome, snow = false, lod = false): BufferGeometry {
+  const name = `tree_single_${kind}`;
+  const g = kit(lod && hasModel(`${name}@lod`) ? `${name}@lod` : name, biome, { s: 0.36 });
   return snow ? snowCap(g, 0.45) : g;
 }
 
 /** A whole-hex KayKit forest clump. */
-export function forestClump(kind: 'A' | 'B', size: 'small' | 'medium' | 'large', biome: Biome, snow = false): BufferGeometry {
-  const g = kit(`trees_${kind}_${size}`, biome, { s: HEXK * 0.62 });
+export function forestClump(kind: 'A' | 'B', size: 'small' | 'medium' | 'large', biome: Biome, snow = false, lod = false): BufferGeometry {
+  const name = `trees_${kind}_${size}`;
+  const g = kit(lod && hasModel(`${name}@lod`) ? `${name}@lod` : name, biome, { s: HEXK * 0.62 });
   return snow ? snowCap(g, 0.5) : g;
 }
 
@@ -83,7 +85,7 @@ const LEAF: Record<string, [string, string]> = {
 };
 
 /** Faceted broadleaf tree: a short trunk with a crown of three to five low-poly lobes. */
-export function broadleaf(seed: number, leaf: keyof typeof LEAF = 'green', tall = false): BufferGeometry {
+export function broadleaf(seed: number, leaf: keyof typeof LEAF = 'green', tall = false, lod = false): BufferGeometry {
   const rng = new Rng(seed);
   const trunkH = tall ? 0.16 : rng.float(0.09, 0.12);
   const parts: BufferGeometry[] = [part(cylinder(0.016, 0.026, trunkH + 0.06, 6), '#7a5232', { p: [0, (trunkH + 0.06) / 2, 0] })];
@@ -100,7 +102,7 @@ export function broadleaf(seed: number, leaf: keyof typeof LEAF = 'green', tall 
     const r = main ? (tall ? 0.085 : 0.11) : rng.float(0.06, 0.085);
     const a = (k / lobes) * Math.PI * 2 + rng.float(-0.4, 0.4);
     const off = main ? 0 : rng.float(0.06, 0.09);
-    let g = ico(r, 1);
+    let g = ico(r, lod || !main ? 0 : 1);
     g.scale(1, tall ? 1.9 : rng.float(0.82, 0.95), 1);
     g = lumpy(g, r * 0.18, 9, seed * 7 + k);
     g = faceted(g);
@@ -118,7 +120,7 @@ export function shrub(seed: number, leaf: keyof typeof LEAF = 'green', berries =
   const [low, high] = LEAF[leaf];
   for (let k = 0; k < n; k++) {
     const r = rng.float(0.035, 0.055);
-    let g = ico(r, 1);
+    let g = ico(r, 0);
     g.scale(1, 0.78, 1);
     g = faceted(lumpy(g, r * 0.2, 12, seed + k));
     const a = rng.float(0, Math.PI * 2);
@@ -139,9 +141,9 @@ export function rockKit(letter: 'A' | 'B' | 'C' | 'D' | 'E', biome: Biome, s = 0
 }
 
 /** KayKit mountain (A: spires, B: mesa, C: stepped), grassy or bare, sized to fill most of a hex. */
-export function mountainKit(letter: 'A' | 'B' | 'C', biome: Biome, opts: { grass?: boolean; trees?: boolean; snow?: number } = {}): BufferGeometry {
+export function mountainKit(letter: 'A' | 'B' | 'C', biome: Biome, opts: { grass?: boolean; trees?: boolean; snow?: number; lod?: boolean } = {}): BufferGeometry {
   const name = `mountain_${letter}${opts.grass ? '_grass' : ''}${opts.grass && opts.trees ? '_trees' : ''}`;
-  const g = kit(name, biome, { s: HEXK * 0.98 });
+  const g = kit(opts.lod && hasModel(`${name}@lod`) ? `${name}@lod` : name, biome, { s: HEXK * 0.98 });
   g.scale(1, 0.86, 1);
   return opts.snow !== undefined ? snowCap(g, opts.snow) : g;
 }
@@ -251,16 +253,18 @@ export function hillKit(name: 'hill_single_A' | 'hill_single_B' | 'hill_single_C
 // --- improvements and props -----------------------------------------------------------------------
 
 /** A patch of the KayKit wheat field. */
-export function grainPatch(): BufferGeometry {
-  return kit('building_grain', 'plains', { s: HEXK * 0.34 });
+const lodName = (name: string, lod: boolean) => (lod && hasModel(`${name}@lod`) ? `${name}@lod` : name);
+
+export function grainPatch(lod = false): BufferGeometry {
+  return kit(lodName('building_grain', lod), 'plains', { s: HEXK * 0.34 });
 }
 
-export function fenceKit(gate = false): BufferGeometry {
-  return kit(gate ? 'fence_wood_straight_gate' : 'fence_wood_straight', 'temperate', { s: HEXK * 0.32 });
+export function fenceKit(gate = false, lod = false): BufferGeometry {
+  return kit(lodName(gate ? 'fence_wood_straight_gate' : 'fence_wood_straight', lod), 'temperate', { s: HEXK * 0.32 });
 }
 
-export function mineKit(): BufferGeometry {
-  return kit('building_mine', 'temperate', { s: HEXK * 0.5 });
+export function mineKit(lod = false): BufferGeometry {
+  return kit(lodName('building_mine', lod), 'temperate', { s: HEXK * 0.5 });
 }
 
 export function ruinsKit(): BufferGeometry {

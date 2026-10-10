@@ -1475,3 +1475,8 @@ button.yz-buildcard:hover {
   background: linear-gradient(90deg, #e9b949, #ffe08a);
   transition: width 0.15s ease;
 }
+
+/* while the title vista's models load: a painted dawn sky */
+.yz-title.is-3d.is-loading {
+  background: linear-gradient(180deg, #8cc3f2 0%, #cfe6f7 45%, #f6e2b8 70%, #9fcf6a 71%, #5f9e3c 100%);
+}

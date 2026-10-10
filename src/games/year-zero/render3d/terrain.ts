@@ -223,6 +223,17 @@ export class Terrain {
         float yzDn = yzFbm(vWPos.xz * 3.3);
         float yzFine = yzNoise(vWPos.xz * 21.0);
         diffuseColor.rgb *= 0.9 + 0.16 * yzDn + 0.06 * (yzFine - 0.5);
+        if (vKind < 0.5) {
+          // painterly grass: short strokes along a lazy wind direction, darker clumps
+          vec2 yzS = vec2(vWPos.x * 34.0 + vWPos.z * 11.0, vWPos.z * 34.0 - vWPos.x * 6.0);
+          float yzStroke = yzNoise(vec2(yzS.x, yzS.y * 0.25));
+          float yzClump = smoothstep(0.55, 0.85, yzFbm(vWPos.xz * 1.6 + 17.0));
+          diffuseColor.rgb *= 0.94 + 0.12 * yzStroke;
+          diffuseColor.rgb *= 1.0 - 0.08 * yzClump;
+          // a soft darker rim inside every hex reads like the reference's tiles
+          float yzRim = smoothstep(0.8, 1.0, yzHexDist(vLocal / ${TOP_R.toFixed(3)}));
+          diffuseColor.rgb *= 1.0 - 0.11 * yzRim;
+        }
         if (vKind > 1.5) diffuseColor.rgb *= 0.92 + 0.12 * yzNoise(vec2(vWPos.x + vWPos.z, vWPos.y * 9.0) * 6.0);
         if (yzT.g > 0.0 && vKind < 1.5) diffuseColor.rgb = mix(diffuseColor.rgb, yzOwnerColor(yzT.g), 0.08);`,
       out: `

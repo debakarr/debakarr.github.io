@@ -43,40 +43,42 @@ interface KindDef {
   shadow?: boolean;
   /** Small details hidden at strategic zoom. */
   detail?: boolean;
+  /** A lighter version drawn from further away. */
+  lod?: () => BufferGeometry;
 }
 
 const SW = { sway: 0.6, shadow: true };
 const KINDS: Record<string, KindDef> = {
   // KayKit conifers, singly and in whole-hex clumps, per biome
-  pineA: { build: () => K.conifer('A', 'temperate'), ...SW },
-  pineB: { build: () => K.conifer('B', 'temperate'), ...SW },
-  pineA_p: { build: () => K.conifer('A', 'plains'), ...SW },
-  pineB_p: { build: () => K.conifer('B', 'plains'), ...SW },
-  pineA_t: { build: () => K.conifer('A', 'tundra'), ...SW },
-  pineB_t: { build: () => K.conifer('B', 'tundra'), ...SW },
-  pineA_s: { build: () => K.conifer('A', 'snow', true), ...SW },
-  pineB_s: { build: () => K.conifer('B', 'snow', true), ...SW },
-  clumpA_m: { build: () => K.forestClump('A', 'medium', 'temperate'), sway: 0.3, shadow: true },
-  clumpB_m: { build: () => K.forestClump('B', 'medium', 'temperate'), sway: 0.3, shadow: true },
-  clumpB_l: { build: () => K.forestClump('B', 'large', 'temperate'), sway: 0.3, shadow: true },
-  clumpA_l: { build: () => K.forestClump('A', 'large', 'temperate'), sway: 0.3, shadow: true },
-  clumpA_t: { build: () => K.forestClump('A', 'medium', 'tundra'), sway: 0.3, shadow: true },
-  clumpB_t: { build: () => K.forestClump('B', 'large', 'tundra'), sway: 0.3, shadow: true },
-  clumpA_s: { build: () => K.forestClump('A', 'large', 'snow', true), sway: 0.2, shadow: true },
-  clumpB_s: { build: () => K.forestClump('B', 'medium', 'snow', true), sway: 0.2, shadow: true },
-  clumpB_p: { build: () => K.forestClump('B', 'small', 'plains'), sway: 0.3, shadow: true },
+  pineA: { build: () => K.conifer('A', 'temperate'), lod: () => K.conifer('A', 'temperate', false, true), ...SW },
+  pineB: { build: () => K.conifer('B', 'temperate'), lod: () => K.conifer('B', 'temperate', false, true), ...SW },
+  pineA_p: { build: () => K.conifer('A', 'plains'), lod: () => K.conifer('A', 'plains', false, true), ...SW },
+  pineB_p: { build: () => K.conifer('B', 'plains'), lod: () => K.conifer('B', 'plains', false, true), ...SW },
+  pineA_t: { build: () => K.conifer('A', 'tundra'), lod: () => K.conifer('A', 'tundra', false, true), ...SW },
+  pineB_t: { build: () => K.conifer('B', 'tundra'), lod: () => K.conifer('B', 'tundra', false, true), ...SW },
+  pineA_s: { build: () => K.conifer('A', 'snow', true), lod: () => K.conifer('A', 'snow', true, true), ...SW },
+  pineB_s: { build: () => K.conifer('B', 'snow', true), lod: () => K.conifer('B', 'snow', true, true), ...SW },
+  clumpA_m: { build: () => K.forestClump('A', 'medium', 'temperate'), lod: () => K.forestClump('A', 'medium', 'temperate', false, true), sway: 0.3, shadow: true },
+  clumpB_m: { build: () => K.forestClump('B', 'medium', 'temperate'), lod: () => K.forestClump('B', 'medium', 'temperate', false, true), sway: 0.3, shadow: true },
+  clumpB_l: { build: () => K.forestClump('B', 'large', 'temperate'), lod: () => K.forestClump('B', 'large', 'temperate', false, true), sway: 0.3, shadow: true },
+  clumpA_l: { build: () => K.forestClump('A', 'large', 'temperate'), lod: () => K.forestClump('A', 'large', 'temperate', false, true), sway: 0.3, shadow: true },
+  clumpA_t: { build: () => K.forestClump('A', 'medium', 'tundra'), lod: () => K.forestClump('A', 'medium', 'tundra', false, true), sway: 0.3, shadow: true },
+  clumpB_t: { build: () => K.forestClump('B', 'large', 'tundra'), lod: () => K.forestClump('B', 'large', 'tundra', false, true), sway: 0.3, shadow: true },
+  clumpA_s: { build: () => K.forestClump('A', 'large', 'snow', true), lod: () => K.forestClump('A', 'large', 'snow', true, true), sway: 0.2, shadow: true },
+  clumpB_s: { build: () => K.forestClump('B', 'medium', 'snow', true), lod: () => K.forestClump('B', 'medium', 'snow', true, true), sway: 0.2, shadow: true },
+  clumpB_p: { build: () => K.forestClump('B', 'small', 'plains'), lod: () => K.forestClump('B', 'small', 'plains', false, true), sway: 0.3, shadow: true },
   // faceted broadleaf trees in the same style
-  oak0: { build: () => K.broadleaf(11, 'green'), ...SW },
-  oak1: { build: () => K.broadleaf(12, 'fresh'), ...SW },
-  oak2: { build: () => K.broadleaf(13, 'deep'), ...SW },
-  oak3: { build: () => K.broadleaf(14, 'green'), ...SW },
-  poplar: { build: () => K.broadleaf(15, 'fresh', true), ...SW },
-  olive0: { build: () => K.broadleaf(16, 'olive'), ...SW },
-  autumn: { build: () => K.broadleaf(17, 'autumn'), ...SW },
-  gold: { build: () => K.broadleaf(18, 'gold'), ...SW },
-  blossom: { build: () => K.broadleaf(19, 'blossom'), ...SW },
-  jungle0: { build: () => K.broadleaf(31, 'jungle'), ...SW },
-  jungle1: { build: () => K.broadleaf(32, 'jungle', true), ...SW },
+  oak0: { build: () => K.broadleaf(11, 'green'), lod: () => K.broadleaf(11, 'green', false, true), ...SW },
+  oak1: { build: () => K.broadleaf(12, 'fresh'), lod: () => K.broadleaf(12, 'fresh', false, true), ...SW },
+  oak2: { build: () => K.broadleaf(13, 'deep'), lod: () => K.broadleaf(13, 'deep', false, true), ...SW },
+  oak3: { build: () => K.broadleaf(14, 'green'), lod: () => K.broadleaf(14, 'green', false, true), ...SW },
+  poplar: { build: () => K.broadleaf(15, 'fresh', true), lod: () => K.broadleaf(15, 'fresh', true, true), ...SW },
+  olive0: { build: () => K.broadleaf(16, 'olive'), lod: () => K.broadleaf(16, 'olive', false, true), ...SW },
+  autumn: { build: () => K.broadleaf(17, 'autumn'), lod: () => K.broadleaf(17, 'autumn', false, true), ...SW },
+  gold: { build: () => K.broadleaf(18, 'gold'), lod: () => K.broadleaf(18, 'gold', false, true), ...SW },
+  blossom: { build: () => K.broadleaf(19, 'blossom'), lod: () => K.broadleaf(19, 'blossom', false, true), ...SW },
+  jungle0: { build: () => K.broadleaf(31, 'jungle'), lod: () => K.broadleaf(31, 'jungle', false, true), ...SW },
+  jungle1: { build: () => K.broadleaf(32, 'jungle', true), lod: () => K.broadleaf(32, 'jungle', true, true), ...SW },
   jungle2: { build: () => M.jungleTree(33), sway: 0.5, shadow: true },
   palm0: { build: () => K.palmKit('long'), sway: 1, shadow: true },
   palm1: { build: () => K.palmKit('short'), sway: 1, shadow: true },
@@ -103,7 +105,7 @@ const KINDS: Record<string, KindDef> = {
   mtnB: { build: () => K.peak(72, 'temperate', 0.6), shadow: true },
   mtnC: { build: () => K.peak(73, 'temperate', null), shadow: true },
   mtnD: { build: () => K.peak(74, 'plains', 0.62), shadow: true },
-  mtnCrag: { build: () => K.mountainKit('C', 'temperate', { grass: true, trees: true }), shadow: true },
+  mtnCrag: { build: () => K.mountainKit('C', 'temperate', { grass: true, trees: true }), shadow: true, lod: () => K.mountainKit('C', 'temperate', { grass: true, trees: true, lod: true }) },
   mtnSnowA: { build: () => K.peak(75, 'snow', 0.25), shadow: true },
   mtnSnowB: { build: () => K.peak(76, 'tundra', 0.35), shadow: true },
   mtnDesertB: { build: () => K.mountainKit('B', 'desert'), shadow: true },
@@ -118,13 +120,13 @@ const KINDS: Record<string, KindDef> = {
   lily: { build: () => K.lilyKit('B'), detail: true },
   puddle: { build: () => M.puddle(102) },
   ice: { build: () => M.iceChunk(111) },
-  wheat: { build: () => K.grainPatch() },
+  wheat: { build: () => K.grainPatch(), lod: () => K.grainPatch(true) },
   hay: { build: () => M.hayBale(), detail: true },
-  fence: { build: () => K.fenceKit() },
+  fence: { build: () => K.fenceKit(), lod: () => K.fenceKit(false, true) },
   sheep: { build: () => M.sheep(), detail: true },
   cow: { build: () => M.cow(), detail: true },
   horse: { build: () => M.horse(), detail: true },
-  mine: { build: () => K.mineKit(), shadow: true },
+  mine: { build: () => K.mineKit(), lod: () => K.mineKit(true), shadow: true },
   stone: { build: () => K.stoneKit(), shadow: true },
   logs: { build: () => K.lumberKit(), shadow: true },
   derrick: { build: () => M.oilDerrick(), shadow: true },
@@ -153,6 +155,8 @@ interface Inst {
 }
 
 const REGION = 16;
+/** Below this zoom forests and towns switch to their lighter versions. */
+export const LOD_ZOOM = 1.6;
 const WHITE = new Color(1, 1, 1);
 
 export class Props {
@@ -202,12 +206,13 @@ export class Props {
     this.group.add(this.badges.mesh);
   }
 
-  private geo(kind: string): BufferGeometry {
-    let g = this.geos.get(kind);
+  private geo(kind: string, lod = false): BufferGeometry {
+    const key = lod ? `${kind}@lod` : kind;
+    let g = this.geos.get(key);
     if (!g) {
-      g = KINDS[kind].build();
+      g = lod ? KINDS[kind].lod!() : KINDS[kind].build();
       g.computeBoundingSphere();
-      this.geos.set(kind, g);
+      this.geos.set(key, g);
     }
     return g;
   }
@@ -320,6 +325,28 @@ export class Props {
       mesh.matrixAutoUpdate = false;
       meshes.push(mesh);
       this.group.add(mesh);
+      if (def.lod) {
+        // a lighter twin sharing the instances, shown from further away
+        const lb = this.geo(kind, true);
+        const lg = new InstancedBufferGeometry();
+        for (const [name, attr] of Object.entries(lb.attributes)) lg.setAttribute(name, attr);
+        lg.setIndex(lb.index);
+        lg.setAttribute('aTile', geo.attributes.aTile);
+        const twin = new InstancedMesh(lg, mat, list.length);
+        twin.instanceMatrix = mesh.instanceMatrix;
+        twin.instanceColor = mesh.instanceColor;
+        twin.boundingSphere = mesh.boundingSphere;
+        twin.castShadow = mesh.castShadow;
+        twin.receiveShadow = mesh.receiveShadow;
+        twin.customDepthMaterial = mesh.customDepthMaterial;
+        twin.matrixAutoUpdate = false;
+        mesh.userData.full = true;
+        twin.userData.lod = true;
+        mesh.visible = !this.mid;
+        twin.visible = this.mid;
+        meshes.push(twin);
+        this.group.add(twin);
+      }
     }
   }
 
@@ -590,11 +617,35 @@ export class Props {
   /** Natural wonder kinds by id (set from the game state). */
   wonders: string[] | null = null;
 
+  /** Zoomed out enough for the lighter tree clumps and crowns. */
+  private mid = false;
+
+  /** Full detail regardless of zoom (portraits), or back to the zoom rule. */
+  forceFull(on: boolean): void {
+    this.forced = on;
+    this.applyLod();
+  }
+
+  private forced = false;
+
+  private applyLod(): void {
+    const mid = this.mid && !this.forced;
+    for (const list of this.regionMeshes.values()) {
+      for (const m of list) {
+        if (m.userData.full) m.visible = !mid;
+        else if (m.userData.lod) m.visible = mid;
+        else if (m.userData.detail) m.visible = !this.far || this.forced;
+      }
+    }
+  }
+
   tick(_time: number, zoom = 1): void {
-    const far = zoom < 0.55;
-    if (far !== this.far) {
+    const far = zoom < 0.8;
+    const mid = zoom < LOD_ZOOM;
+    if (far !== this.far || mid !== this.mid) {
       this.far = far;
-      for (const list of this.regionMeshes.values()) for (const m of list) if (m.userData.detail) m.visible = !far;
+      this.mid = mid;
+      this.applyLod();
     }
     this.badges.setZoom(zoom);
   }

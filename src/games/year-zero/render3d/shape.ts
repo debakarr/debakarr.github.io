@@ -234,6 +234,8 @@ export class Shape {
       case T.Snow: out.copy(BIOME.snow).offsetHSL(0, 0, n * 0.03); break;
       default: out.copy(BIOME.grass);
     }
+    // every hex a slightly different patch, like a quilt of fields
+    if (t === T.Grass || t === T.Plains) out.offsetHSL((tileHash(i, 71) - 0.5) * 0.035, (tileHash(i, 72) - 0.5) * 0.08, (tileHash(i, 73) - 0.5) * 0.05);
     if (f === F.Forest && t !== T.Snow) out.lerp(t === T.Tundra ? BIOME.tundra : BIOME.forest, 0.55);
     else if (f === F.Jungle) out.lerp(BIOME.jungle, 0.75);
     else if (f === F.Marsh) out.lerp(BIOME.marsh, 0.7);

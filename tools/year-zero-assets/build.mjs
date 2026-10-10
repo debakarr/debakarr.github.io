@@ -22,7 +22,7 @@ import { Document, NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, EXTMeshoptCompression } from '@gltf-transform/extensions';
 import { dedup, prune, quantize, reorder, resample, weld } from '@gltf-transform/functions';
 import draco3d from 'draco3dgltf';
-import { MeshoptEncoder } from 'meshoptimizer';
+import { MeshoptEncoder, MeshoptSimplifier } from 'meshoptimizer';
 import { PNG } from 'pngjs';
 
 const argSrc = process.argv.indexOf('--src');
@@ -35,6 +35,7 @@ const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies(
   'meshopt.encoder': MeshoptEncoder,
 });
 await MeshoptEncoder.ready;
+await MeshoptSimplifier.ready;
 
 const HEX = `${SRC}/kaykit-medieval-hexagon-pack-1.0/addons/kaykit_medieval_hexagon_pack/Assets/gltf`;
 const ADV = `${SRC}/adv/addons/kaykit_character_pack_adventures`;
@@ -181,6 +182,64 @@ async function bakeStatic(file, ctx = {}) {
   return buckets;
 }
 
+/**
+ * A far-away version of a baked bucket: vertices welded by position (flat
+ * shading splits them, which stops the simplifier), simplified, then written
+ * back flat-shaded with each face taking its corners' most common colour.
+ */
+function lodOf(b, ratio = 0.3) {
+  const n = b.pos.length / 3;
+  const key = new Map();
+  const remap = new Uint32Array(n);
+  const wpos = [];
+  const votes = [];
+  for (let i = 0; i < n; i++) {
+    const k = `${Math.round(b.pos[i * 3] * 2000)},${Math.round(b.pos[i * 3 + 1] * 2000)},${Math.round(b.pos[i * 3 + 2] * 2000)}`;
+    let r = key.get(k);
+    if (r === undefined) {
+      r = wpos.length / 3;
+      key.set(k, r);
+      wpos.push(b.pos[i * 3], b.pos[i * 3 + 1], b.pos[i * 3 + 2]);
+      votes.push(new Map());
+    }
+    remap[i] = r;
+    const ck = `${b.col[i * 3].toFixed(3)},${b.col[i * 3 + 1].toFixed(3)},${b.col[i * 3 + 2].toFixed(3)}|${b.team[i]}|${b.cell[i]}`;
+    votes[r].set(ck, (votes[r].get(ck) ?? 0) + 1);
+  }
+  const idx = new Uint32Array(b.idx.length);
+  for (let i = 0; i < idx.length; i++) idx[i] = remap[b.idx[i]];
+  const target = Math.floor((idx.length / 3) * ratio) * 3;
+  const [out] = MeshoptSimplifier.simplify(idx, new Float32Array(wpos), 3, target, 0.025, []);
+  const best = votes.map((v) => [...v.entries()].sort((a, c) => c[1] - a[1])[0][0]);
+  const o = { pivot: b.pivot, pos: [], nor: [], col: [], team: [], cell: [], idx: [] };
+  for (let t = 0; t < out.length; t += 3) {
+    const [a, c, d] = [out[t], out[t + 1], out[t + 2]];
+    const pa = wpos.slice(a * 3, a * 3 + 3), pb = wpos.slice(c * 3, c * 3 + 3), pc = wpos.slice(d * 3, d * 3 + 3);
+    const ux = pb[0] - pa[0], uy = pb[1] - pa[1], uz = pb[2] - pa[2];
+    const vx = pc[0] - pa[0], vy = pc[1] - pa[1], vz = pc[2] - pa[2];
+    let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    const l = Math.hypot(nx, ny, nz) || 1;
+    nx /= l; ny /= l; nz /= l;
+    // the face colour: the commonest among its corners
+    const cs = [best[a], best[c], best[d]];
+    const pick = cs[0] === cs[2] || cs[0] === cs[1] ? cs[0] : cs[1] === cs[2] ? cs[1] : cs[0];
+    const [rgb, team, cell] = pick.split('|');
+    const col = rgb.split(',').map(Number);
+    for (const p of [pa, pb, pc]) {
+      o.idx.push(o.pos.length / 3);
+      o.pos.push(...p);
+      o.nor.push(nx, ny, nz);
+      o.col.push(...col);
+      o.team.push(Number(team));
+      o.cell.push(Number(cell));
+    }
+  }
+  return o;
+}
+
+/** Models with a far-away version (towns and whole-hex clumps are what the map draws most). */
+const LOD = /^(building_|wall_|fence_|c_building|s_basemodule|s_structure|trees_[AB]_(large|medium|small)|tree_single_B|hills_|mountain_)/;
+
 /** Writes baked models into one output document. */
 function writeModels(models, file) {
   const doc = new Document();
@@ -207,6 +266,12 @@ function writeModels(models, file) {
       tris += main.idx.length / 3;
     }
     scene.addChild(root);
+    if (main && LOD.test(name) && main.idx.length / 3 > 200) {
+      const lod = lodOf(main);
+      const node = doc.createNode(`${name}@lod`).setMesh(doc.createMesh(`${name}@lod`).addPrimitive(prim(lod)));
+      tris += lod.idx.length / 3;
+      scene.addChild(node);
+    }
     // moving parts are separate top-level nodes (quantisation owns node transforms); the pivot rides in extras
     for (const [key, b] of buckets) {
       if (!key) continue;
@@ -301,7 +366,7 @@ function charRule(name) {
     if (h >= 19 && h <= 27 && s > 0.3 && s < 0.48 && v > 0.93) return 2;
     if (name === 'knight') return (h < 12 || h > 340) && s > 0.45 && v > 0.3 ? 1 : 0;
     if (name === 'barbarian') return h > 195 && h < 225 && s > 0.25 && v > 0.25 ? 1 : 0;
-    if (name === 'mage') return h > 235 && h < 290 && s > 0.25 && v > 0.15 ? 1 : 0;
+    if (name === 'mage') return ((h > 235 && h < 290) || (h > 300 && h < 345)) && s > 0.25 && v > 0.15 ? 1 : 0;
     if (name === 'rogue') return h > 140 && h < 175 && s > 0.45 && v > 0.25 ? 1 : 0;
     return 0;
   };

@@ -11,6 +11,7 @@ import { clear, download, h, pickFile, svg } from '../dom';
 import { ICON } from '../icons';
 import { closeModal, openModal } from '../modal';
 import { TitleScene } from '../../render3d/title';
+import { kitReady, loadKit } from '../../render3d/kit';
 import type { Stage } from '../../render3d/stage';
 
 export interface MenuHost {
@@ -111,8 +112,19 @@ export function showTitle(host: MenuHost, container: HTMLElement): void {
   const screen = h('div', { class: `yz-title${stage ? ' is-3d' : ''}` }, menu);
   if (stage) {
     titleScene?.dispose();
-    titleScene = new TitleScene(stage.quality !== 'low');
-    stage.show(titleScene);
+    titleScene = null;
+    // the vista is built from the model kit: it fades in once the models arrive
+    const build = () => {
+      if (!screen.isConnected || titleScene) return;
+      titleScene = new TitleScene(stage.quality !== 'low');
+      stage.show(titleScene);
+      screen.classList.remove('is-loading');
+    };
+    if (kitReady()) build();
+    else {
+      screen.classList.add('is-loading');
+      loadKit().then(build, () => screen.classList.remove('is-loading'));
+    }
   } else {
     const bg = h('canvas', { class: 'yz-title-bg' });
     screen.prepend(bg);
