@@ -29,6 +29,7 @@ import { CAVE, HILL, INTERACTABLES, LOCATION_BY_ID, OUTPOST, PATHS, PLAY_HALF, R
 import { capsule, cone, cylinder, ellipsoid, gradient, lumpy, merge, prep, rockGeo, teardrop, xf } from '../engine/geometry';
 import type { CollisionWorld } from '../engine/physics';
 import { groundDetail } from '../engine/textures';
+import { voxelize } from '../../shared/chibi/voxel';
 import { polyDistance, smoothstep, type Terrain } from './terrain';
 import { windPatch } from './wind';
 
@@ -195,7 +196,9 @@ function buildKits(): Record<Kind, Kit> {
     return gradient(merge(blades), '#3f7a3a', '#a6c860');
   };
 
-  return {
+  // everything drawn in voxels like the characters: big trees in 0.16 m blocks, small plants finer
+  const V = (g: BufferGeometry, size: number) => prep(voxelize(g, size));
+  const raw: Record<Kind, Kit> = {
     oak: { hi: oak(2), lo: oak(1), mat: leafWind, collide: 0.36, height: 4, shadow: true },
     oak2: { hi: oak2(2), lo: oak2(1), mat: leafWind, collide: 0.3, height: 3.5, shadow: true },
     pine: { hi: pine(1), lo: pine(0), mat: leafWind, collide: 0.3, height: 5, shadow: true },
@@ -214,6 +217,34 @@ function buildKits(): Record<Kind, Kit> {
     stump: { hi: stump(), lo: stump(), mat: solid, collide: 0.5, height: 0.6, shadow: true },
     reed: { hi: reed(), lo: reed(), mat: plantWind, collide: 0, height: 1.6, shadow: false },
   };
+  const SIZE: Record<Kind, number> = {
+    oak: 0.2, oak2: 0.2, pine: 0.2, birch: 0.18, blossom: 0.2, elder: 0.32, bush: 0.12, berry: 0.12, fern: 0.07,
+    rock: 0.14, rock2: 0.14, boulder: 0.16, mushroom: 0.05, glowshroom: 0.05, log: 0.12, stump: 0.1, reed: 0.07,
+  };
+  for (const k of Object.keys(raw) as Kind[]) {
+    const kit = raw[k];
+    const hi = V(kit.hi, SIZE[k]);
+    const lo = kit.lo === kit.hi ? hi : V(kit.lo, SIZE[k] * 1.6);
+    raw[k] = { ...kit, hi, lo, mat: plain(kit.mat) };
+  }
+  return raw;
+}
+
+/** Voxel art carries its colour in the blocks: drop the painted detail map. */
+const plainCache = new Map<Material, Material>();
+function plain(m: Material): Material {
+  const std = m as MeshStandardMaterial;
+  if (!std.map) return m;
+  let out = plainCache.get(m);
+  if (!out) {
+    out = std.clone();
+    (out as MeshStandardMaterial).map = null;
+    (out as MeshStandardMaterial).needsUpdate = true;
+    out.onBeforeCompile = std.onBeforeCompile;
+    out.customProgramCacheKey = std.customProgramCacheKey;
+    plainCache.set(m, out);
+  }
+  return out;
 }
 
 

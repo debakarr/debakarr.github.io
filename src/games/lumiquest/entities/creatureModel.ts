@@ -20,6 +20,7 @@ import { paletteFor, SPECIES_BY_ID, type Palette, type SpeciesDef, type SpeciesI
 import { Animator, bakeSkin, cos, makeClip, restOffsets, sin, skinMeshes, type ClipSpec, type PoseFrame, type Rot, type SkinnedBatch } from '../engine/animation';
 import { capsule, cone, ellipsoid, lumpy, prep, teardrop, torus, xf, cylinder } from '../engine/geometry';
 import { eyeTexture } from '../engine/textures';
+import { voxelize } from '../../shared/chibi/voxel';
 
 type MatKey = 'base' | 'glow' | 'fin' | 'eye' | 'gloss';
 
@@ -359,6 +360,46 @@ const clipCache = new Map<string, Record<string, ClipSpec>>();
 
 // ---------------------------------------------------------------------------
 
+/** Creatures are voxel art like everything else (about 20 blocks tall); translucent fins stay smooth. */
+const CREATURE_VOX = 0.028;
+function voxelPiece(geo: BufferGeometry, key: MatKey, pal: Palette): BufferGeometry {
+  if (key === 'fin') return geo;
+  let texture: ((u: number, v: number, out: Color) => boolean) | undefined;
+  if (key === 'eye') texture = eyeReader(pal.eye);
+  return prep(voxelize(prep(geo), key === 'eye' ? CREATURE_VOX * 0.6 : CREATURE_VOX, { texture }));
+}
+
+const eyeReaders = new Map<string, (u: number, v: number, out: Color) => boolean>();
+function eyeReader(color: string): (u: number, v: number, out: Color) => boolean {
+  let r = eyeReaders.get(color);
+  if (r) return r;
+  const tex = eyeTexture(color);
+  const img = tex.image as HTMLCanvasElement;
+  const c = document.createElement('canvas');
+  c.width = img.width;
+  c.height = img.height;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(img, 0, 0);
+  const d = ctx.getImageData(0, 0, c.width, c.height).data;
+  const W = c.width;
+  const H = c.height;
+  r = (u, v, out) => {
+    const x = Math.min(W - 1, Math.max(0, Math.floor((((u % 1) + 1) % 1) * W)));
+    const y = Math.min(H - 1, Math.max(0, Math.floor((1 - (((v % 1) + 1) % 1)) * H)));
+    const i = (y * W + x) * 4;
+    out.setRGB(d[i] / 255, d[i + 1] / 255, d[i + 2] / 255);
+    return true;
+  };
+  eyeReaders.set(color, r);
+  return r;
+}
+
+/** The voxel versions keep each material's character, minus textures (the colour is in the blocks). */
+function voxelMaterial(key: MatKey, pal: Palette): Material {
+  if (key === 'eye') return material('base', pal, pal.glow);
+  return material(key, pal, pal.glow);
+}
+
 const matCache = new Map<string, Material>();
 function material(key: MatKey, pal: Palette, glowColor: string): Material {
   const id = `${key}|${key === 'fin' ? pal.accent : key === 'glow' || key === 'gloss' ? glowColor : key === 'eye' ? pal.eye : ''}`;
@@ -408,7 +449,7 @@ export function buildCreature(species: SpeciesId, variant: string | null = null,
     const order = Object.keys(rig.bones);
     const offsets = restOffsets(rig.bones, rig.parents);
     const batches = bakeSkin(
-      rig.pieces.map((p) => ({ bone: p.bone, geo: p.geo, mat: material(p.mat, pal, pal.glow), cast: p.mat !== 'fin' })),
+      rig.pieces.map((p) => ({ bone: p.bone, geo: voxelPiece(p.geo, p.mat, pal), mat: voxelMaterial(p.mat, pal), cast: p.mat !== 'fin' })),
       order,
       offsets,
     );

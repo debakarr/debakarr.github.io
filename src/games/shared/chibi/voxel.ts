@@ -311,11 +311,33 @@ export function meshGrid(g: VoxelGrid, opts: MeshOptions = {}): { main: BufferGe
  * triangle is sampled into cells of `size`, keeping colour and team. The
  * result is meshed with AO and greedy merging, in the source's coordinates.
  */
-export function voxelize(src: BufferGeometry, size: number): BufferGeometry {
-  const g = new VoxelGrid();
+export interface VoxelizeOptions {
+  /** Texture colour at a UV (sRGB 0–1, multiplied in); return false to leave the point empty (alpha cut). */
+  texture?: (u: number, v: number, out: Color) => boolean;
+  /** Colour multiplier (a material's colour). */
+  tint?: Color;
+  /** Snap colours to this many levels per channel, so flat areas merge into larger quads. */
+  levels?: number;
+  /** Corner ambient occlusion (default on; off merges more faces on big pieces). */
+  ao?: boolean;
+}
+
+export function voxelize(src: BufferGeometry, size: number, vopts: VoxelizeOptions = {}): BufferGeometry {
+  // cells are counted from the mesh's own corner (grid keys hold ±256 cells),
+  // on the world-aligned lattice of `size`, so neighbouring meshes line up
+  src.computeBoundingBox();
+  const bmin = src.boundingBox!.min;
+  const bmax = src.boundingBox!.max;
+  size = Math.max(size, (Math.max(bmax.x - bmin.x, bmax.y - bmin.y, bmax.z - bmin.z) + 1e-6) / 480);
+  const o0 = Math.floor(bmin.x / size);
+  const o1 = Math.floor(bmin.y / size);
+  const o2 = Math.floor(bmin.z / size);
+  const g = new VoxelGrid([o0 - 200, o1 - 200, o2 - 200]);
   const pos = src.attributes.position;
   const col = src.attributes.color;
   const team = src.attributes.team;
+  const uvs = vopts.texture ? src.attributes.uv : undefined;
+  const T = new Color();
   const idx = src.index;
   const tri = idx ? idx.count / 3 : pos.count / 3;
   const A = new Color();
@@ -349,15 +371,34 @@ export function voxelize(src: BufferGeometry, size: number): BufferGeometry {
         const u = i / n;
         const v = j / n;
         const w = 1 - u - v;
-        const x = Math.floor((pa[0] * w + pb[0] * u + pc[0] * v) / size);
-        const y = Math.floor((pa[1] * w + pb[1] * u + pc[1] * v) / size);
-        const z = Math.floor((pa[2] * w + pb[2] * u + pc[2] * v) / size);
-        const r = A.r * w + B.r * u + C.r * v;
-        const gg = A.g * w + B.g * u + C.g * v;
-        const bb = A.b * w + B.b * u + C.b * v;
+        const x = Math.floor((pa[0] * w + pb[0] * u + pc[0] * v) / size) - o0 + 200;
+        const y = Math.floor((pa[1] * w + pb[1] * u + pc[1] * v) / size) - o1 + 200;
+        const z = Math.floor((pa[2] * w + pb[2] * u + pc[2] * v) / size) - o2 + 200;
+        let r = A.r * w + B.r * u + C.r * v;
+        let gg = A.g * w + B.g * u + C.g * v;
+        let bb = A.b * w + B.b * u + C.b * v;
         const tm = ta * w + tb * u + tc * v;
+        if (uvs && vopts.texture) {
+          const tu = uvs.getX(ia) * w + uvs.getX(ib) * u + uvs.getX(ic) * v;
+          const tv = uvs.getY(ia) * w + uvs.getY(ib) * u + uvs.getY(ic) * v;
+          if (!vopts.texture(tu, tv, T)) continue;
+          T.convertSRGBToLinear();
+          r *= T.r;
+          gg *= T.g;
+          bb *= T.b;
+        }
+        if (vopts.tint) {
+          r *= vopts.tint.r;
+          gg *= vopts.tint.g;
+          bb *= vopts.tint.b;
+        }
         // vertex colours are linear; voxel values are sRGB hex like every other colour here
-        const rgb = mix.setRGB(Math.min(1, r), Math.min(1, gg), Math.min(1, bb)).getHex();
+        let rgb = mix.setRGB(Math.min(1, r), Math.min(1, gg), Math.min(1, bb)).getHex();
+        if (vopts.levels) {
+          const L = vopts.levels - 1;
+          const q = (c: number) => Math.round((Math.round((c / 255) * L) / L) * 255);
+          rgb = (q((rgb >> 16) & 255) << 16) | (q((rgb >> 8) & 255) << 8) | q(rgb & 255);
+        }
         const value = withTeam(rgb, tm);
         // vote: the colour covering most of the cell's surface wins (bricks over mortar)
         const ck = VoxelGrid.key(x, y, z);
@@ -374,7 +415,7 @@ export function voxelize(src: BufferGeometry, size: number): BufferGeometry {
     for (const t of tally.values()) if (!best || t[0] > best[0]) best = t;
     g.cells.set(ck, best![1]);
   }
-  return meshGrid(g, { jitter: 0, scale: size / VOX, greedy: true }).main;
+  return meshGrid(g, { jitter: 0, scale: size / VOX, greedy: true, ao: vopts.ao }).main;
 }
 
 interface Buf {
