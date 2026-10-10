@@ -126,9 +126,12 @@ export class AudienceScene implements StageScene {
     // our envoy, from behind
     const em = teamMaterial(info.envoy.color, info.envoy.skin);
     this.disposables.push(em);
-    this.envoy = buildKitLeader({ ...info.envoy, title: info.envoy.title.replace(/King|Queen|Emperor|Empress/, 'Consul') }, em);
-    this.envoy.root.position.set(-2.2, 0, 3.4);
-    this.envoy.root.rotation.y = Math.PI * 0.84;
+    // a plain diplomat in a sash of our colours, not a second monarch
+    this.envoy = buildKitLeader({ ...info.envoy, title: 'Envoy' }, em, true);
+    // standing before the dais, three-quarters from behind, facing the leader
+    const lz = this.leader.root.position.z;
+    this.envoy.root.position.set(-0.6, 0, lz + 1.95);
+    this.envoy.root.rotation.y = Math.atan2(0.6, -1.95);
     this.scene.add(this.envoy.root);
   }
 

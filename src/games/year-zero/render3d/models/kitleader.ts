@@ -66,24 +66,32 @@ function regaliaGeo(r: Regalia, team: string): BufferGeometry | null {
       return merge([g, part(faceted(ellipsoid(0.12, 0.12, 0.12, 6, 4)), '#e2384a', { p: [0, 1.32, 0.36] })]);
     }
     case 'tiara': {
-      const parts = [part(torus(0.5, 0.04, 5, 20, Math.PI), '#f2c14e', { r: [0, 0, 0], p: [0, 0.84, 0.05] })];
-      for (let k = 0; k < 5; k++) {
-        const a = (k / 4) * Math.PI;
-        parts.push(part(faceted(cone(0.05, 0.14 + (k === 2 ? 0.08 : 0), 4)), '#f2c14e', { p: [Math.cos(a) * 0.5, 0.84 + Math.sin(a) * 0.5 + 0.08, 0.05] }));
+      // a slim gold band with a peaked, jewelled front
+      const parts = [part(cylinder(0.55, 0.57, 0.07, 18, true), '#f2c14e', { p: [0, 0.84, 0] })];
+      for (let k = -3; k <= 3; k++) {
+        const a = k * 0.3;
+        const h = [0.26, 0.15, 0.1, 0.07][Math.abs(k)];
+        parts.push(part(faceted(cone(0.05, h, 4)), '#f2c14e', { p: [Math.sin(a) * 0.56, 0.87 + h / 2, Math.cos(a) * 0.56] }));
+        if (k % 2 === 0) parts.push(part(faceted(ellipsoid(0.045, 0.045, 0.045, 6, 4)), k ? '#e2384a' : '#3ad0e2', { p: [Math.sin(a) * 0.585, 0.85, Math.cos(a) * 0.585] }));
       }
-      parts.push(part(faceted(ellipsoid(0.07, 0.07, 0.07, 6, 4)), '#3ad0e2', { p: [0, 1.36, 0.06] }));
-      const g = merge(parts);
-      g.rotateX(-0.32);
-      g.translate(0, 0.12, 0.12);
-      return g;
+      return merge(parts);
     }
     case 'feathers': {
-      const parts = [part(cylinder(0.5, 0.52, 0.12, 14, true), team, { p: [0, 0.95, 0] })];
+      // a beaded band with a fan of feathers standing at the back
+      const parts = [part(cylinder(0.55, 0.57, 0.12, 16, true), team, { p: [0, 0.82, 0] })];
+      for (let k = 0; k < 7; k++) parts.push(part(faceted(ellipsoid(0.04, 0.04, 0.04, 5, 4)), k % 2 ? '#f2c14e' : '#e2384a', { p: [Math.cos((k / 7) * Math.PI) * 0.56, 0.82, Math.sin((k / 7) * Math.PI) * 0.56] }));
       for (let k = 0; k < 7; k++) {
-        const a = Math.PI * (0.15 + (k / 6) * 0.7);
-        const p: [number, number, number] = [Math.cos(a) * 0.48, 1.12, -Math.sin(a) * 0.18 - 0.08];
-        parts.push(part(faceted(xf(ellipsoid(0.06, 0.32, 0.02, 6, 4), { r: [0, 0, (Math.PI / 2 - a) * 0.8] })), k % 2 ? '#f4ecd8' : '#e8a040', { p }));
-        parts.push(part(faceted(xf(ellipsoid(0.045, 0.1, 0.022, 6, 4), { r: [0, 0, (Math.PI / 2 - a) * 0.8] })), team, { p: [p[0] + Math.cos(a) * 0.22, p[1] + 0.24, p[2]] }));
+        const a = (k - 3) * 0.34;
+        const g = faceted(ellipsoid(0.075, 0.36, 0.025, 6, 4));
+        g.translate(0, 0.34, 0);
+        g.rotateX(0.12);
+        g.rotateZ(-a);
+        parts.push(part(g, k % 2 ? '#f4ecd8' : '#e8a040', { p: [Math.sin(a) * 0.18, 0.95, -0.28] }));
+        const tip = faceted(ellipsoid(0.06, 0.1, 0.028, 6, 4));
+        tip.translate(0, 0.66, 0);
+        tip.rotateX(0.12);
+        tip.rotateZ(-a);
+        parts.push(part(tip, team, { p: [Math.sin(a) * 0.18, 0.95, -0.28] }));
       }
       return merge(parts);
     }
@@ -143,10 +151,11 @@ export interface KitLeader {
   dispose(): void;
 }
 
-/** A leader about 2.4 units tall (feet at the origin, facing +z). */
-export function buildKitLeader(look: LeaderLook, material: MeshStandardMaterial): KitLeader {
+/** A leader about 2.4 units tall (feet at the origin, facing +z); `stand` keeps them on their feet. */
+export function buildKitLeader(look: LeaderLook, material: MeshStandardMaterial, stand = false): KitLeader {
   const rng = new Rng(look.seed);
   const p = plan(look, rng);
+  if (stand) p.seated = false;
   const hair = new Color(look.age > 0.72 ? '#c9c4c0' : rng.pick(HAIRS));
   const props: FigureSpec['props'] = [];
   const reg = regaliaGeo(p.regalia, look.color);
