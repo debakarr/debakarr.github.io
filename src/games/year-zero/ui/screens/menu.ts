@@ -341,6 +341,8 @@ export function showCredits(root: HTMLElement): void {
         section('Game', h('p', { style: { margin: 0 } }, 'Year Zero — designed and built by Debakar Roy. Worlds, names, histories and sounds are generated procedurally in your browser.')),
         section('3D world',
           h('p', { style: { margin: 0 } }, 'The terrain, water, forests, cities, soldiers, leaders, battlefields and royal halls are modelled and painted in code for this game, rendered with ', link('https://threejs.org', 'three.js'), ' (MIT).')),
+        section('Characters',
+          h('p', { style: { margin: 0 } }, 'The Scout, Swordsman and Queen are sculpted characters made for this game, painted and rigged in ', link('https://www.blender.org', 'Blender'), '; everyone else is built in code from the same art direction.')),
         section('Classic map art',
           h('p', { style: { margin: '0 0 6px' } }, 'When a browser cannot show 3D, the 2D map uses terrain tiles, cities, trees, rocks and improvements from ', link('https://kenney.nl/assets/hexagon-pack', 'Hexagon Pack'), ' by ', link('https://kenney.nl', 'Kenney'), '.'),
           h('p', { class: 'yz-sub', style: { margin: 0 } }, 'License: ', link('https://creativecommons.org/publicdomain/zero/1.0/', 'Creative Commons Zero (CC0)'), '. Thank you, Kenney!')),

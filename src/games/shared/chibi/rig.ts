@@ -53,7 +53,7 @@ const ease = (t: number) => t * t * (3 - 2 * t);
 const env = (p: number, a: number, b: number, c: number, d: number) => (p < a ? 0 : p < b ? ease((p - a) / (b - a)) : p < c ? 1 : p < d ? 1 - ease((p - c) / (d - c)) : 0);
 
 // Arms hang slightly away from the body; hands are big, so elbows bend a touch.
-const ARMS_REST: Pose = { armL: [0.05, 0, 0.16], armR: [0.05, 0, -0.16], foreL: [-0.22, 0, 0], foreR: [-0.22, 0, 0] };
+export const ARMS_REST: Pose = { armL: [0.05, 0, 0.16], armR: [0.05, 0, -0.16], foreL: [-0.22, 0, 0], foreR: [-0.22, 0, 0] };
 
 export function idlePose(p: number): PoseFrame {
   const b = sin(p);

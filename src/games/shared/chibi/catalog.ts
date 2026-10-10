@@ -33,6 +33,8 @@ export function scout(f: Faction = FACTIONS.blue): ChibiSpec {
   return {
     id: `scout-${f === FACTIONS.blue ? 'blue' : 'red'}`,
     name: 'Scout',
+    vrmKey: 'scout',
+    tint: f.main,
     face: face(SKIN.light, { brows: '#5a2e1a' }),
     hair: { style: 'tousled', color: '#7a3a22', seed: 11 },
     outfit: [
@@ -200,6 +202,11 @@ export const EASTERN_PRINCE = easternPrince();
 
 // --- Military (sheet 03) -----------------------------------------------------------
 
+/** A spec that wears a sculpted model when the manifest has one, recoloured to the faction. */
+function sculpted(key: string, f: Faction, spec: ChibiSpec): ChibiSpec {
+  return { ...spec, vrmKey: key, tint: f.main };
+}
+
 function soldierBase(f: Faction, id: string, name: string, hair: ChibiSpec['hair'], extra: Piece[]): ChibiSpec {
   return {
     id,
@@ -220,7 +227,7 @@ function soldierBase(f: Faction, id: string, name: string, hair: ChibiSpec['hair
 }
 
 export function swordsman(f: Faction): ChibiSpec {
-  return soldierBase(f, `swordsman-${tag(f)}`, 'Swordsman', { style: 'short', color: '#7a3a22', seed: 21 }, [
+  return sculpted('swordsman', f, soldierBase(f, `swordsman-${tag(f)}`, 'Swordsman', { style: 'short', color: '#7a3a22', seed: 21 }, [
     { k: 'tabard', color: f.main, trim: f.trim, length: 0.14 },
     { k: 'breastplate', color: '#c8ccd4', trim: f.trim, emblem: f.emblem, emblemColor: f.trim },
     { k: 'pauldrons', color: '#c8ccd4', trim: f.trim },
@@ -229,7 +236,7 @@ export function swordsman(f: Faction): ChibiSpec {
     { k: 'shield', style: 'heater', color: f.main, trim: f.trim, emblem: f.emblem, emblemColor: f.trim },
     { k: 'item', item: 'sword', hand: 'R' },
     { k: 'cape', color: f.main, length: 0.3, inner: f.dark },
-  ]);
+  ]));
 }
 
 export function archer(f: Faction): ChibiSpec {

@@ -41,7 +41,8 @@ const GESTURE: Record<Gesture, ClipName | null> = {
 
 export function buildChibiLeader(look: LeaderLook, stand = false): ChibiLeader {
   const spec = leaderSpec(look);
-  const seated = !stand && look.tier < 7 && !/Envoy/.test(look.title);
+  // sculpted leaders stand: their gowns are sculpted for standing
+  const seated = !stand && !spec.vrmKey && look.tier < 7 && !/Envoy/.test(look.title);
   const model = new ChibiModel(spec, { clip: seated ? 'sit' : 'idle' });
   model.root.scale.setScalar(LEADER_SCALE);
   const root = new Object3D();

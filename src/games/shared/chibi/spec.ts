@@ -87,4 +87,6 @@ export interface ChibiSpec {
   vrmKey?: string;
   /** A VRM to wear, overriding the manifest. */
   vrm?: string;
+  /** Faction colour for a sculpted model (its blue cloth is recoloured to this). */
+  tint?: string;
 }

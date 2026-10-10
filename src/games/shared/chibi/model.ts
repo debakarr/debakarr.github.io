@@ -10,23 +10,33 @@ import { NO_INK, outlineMaterial, surface, toonRamp, type Surface } from './mats
 import { buildParts, headGeometry } from './parts';
 import { BONES, chibiClips, PARENT, REST, type BoneName, type ClipName } from './rig';
 import type { ChibiSpec } from './spec';
+import type { SculptEntry, SculptRig } from './sculpt';
 import type { VrmRig } from './vrm';
 import type { Rot } from './anim';
 
-let manifest: Promise<Record<string, string>> | null = null;
+export type ModelEntry = string | SculptEntry;
+let manifest: Promise<Record<string, ModelEntry>> | null = null;
 
-/** public/models/chibi/manifest.json: character key → .vrm URL (empty unless VRMs are shipped). */
-export function vrmManifest(): Promise<Record<string, string>> {
+/**
+ * public/models/chibi/manifest.json: character key → a .vrm URL or a sculpt
+ * ({ url, height, tint }). Characters without an entry stay code-built.
+ */
+export function modelManifest(): Promise<Record<string, ModelEntry>> {
   return (manifest ??= fetch('/models/chibi/manifest.json')
-    .then((r) => (r.ok ? (r.json() as Promise<Record<string, string>>) : {}))
+    .then((r) => (r.ok ? (r.json() as Promise<Record<string, ModelEntry>>) : {}))
     .catch(() => ({})));
 }
 
-/** The VRM a character should wear, if any. */
-export async function vrmFor(spec: ChibiSpec): Promise<string | null> {
-  if (spec.vrm) return spec.vrm;
-  const m = await vrmManifest();
-  return m[spec.vrmKey ?? spec.id] ?? null;
+/** The model a character should wear, if any. */
+export async function modelFor(spec: ChibiSpec): Promise<SculptEntry | null> {
+  if (spec.vrm) return { url: spec.vrm };
+  const m = await modelManifest();
+  const e = m[spec.vrmKey ?? spec.id];
+  if (!e) return null;
+  const entry = typeof e === 'string' ? { url: e } : { ...e };
+  // the TEAM marker colour means "not dressed for a side yet": keep the model's own colours
+  if (spec.tint && spec.tint.toLowerCase() !== '#fe02fe') entry.tint = spec.tint;
+  return entry;
 }
 
 const OFFSETS = restOffsets(REST as Record<string, Rot>, PARENT as Record<string, string | null>);
@@ -70,6 +80,8 @@ export class ChibiModel {
   private outlines: SkinnedMesh[] = [];
   /** A VRM wearing this character's pose, once loaded. */
   vrm: VrmRig | null = null;
+  /** A sculpted GLB wearing this character's pose, once loaded. */
+  sculpt: SculptRig | null = null;
   /** Settles once any VRM has been swapped in (or found missing). */
   readonly ready: Promise<void>;
   private disposed = false;
@@ -115,25 +127,36 @@ export class ChibiModel {
     this.root.scale.setScalar(s);
     this.animator = new Animator(this.root, chibiClips());
     this.animator.play(opts.clip ?? 'idle', 0);
-    this.ready = opts.vrm !== false ? this.attachVrm() : Promise.resolve();
+    this.ready = opts.vrm !== false ? this.attachModel() : Promise.resolve();
   }
 
-  /** Swaps in a VRM when the manifest (or the spec) names one; the chibi shows until then. */
-  private async attachVrm(): Promise<void> {
+  /** Swaps in a VRM or a sculpt when the manifest (or the spec) names one; the chibi shows until then. */
+  private async attachModel(): Promise<void> {
     try {
-      const url = await vrmFor(this.spec);
-      if (!url || this.disposed) return;
-      const { loadVrm, VrmRig } = await import('./vrm');
-      const vrm = await loadVrm(url);
-      if (this.disposed) return;
-      this.vrm = new VrmRig(vrm, this.bones, 1.26);
-      this.root.add(this.vrm.holder);
+      const entry = await modelFor(this.spec);
+      if (!entry || this.disposed) return;
+      let holder: Object3D;
+      if (entry.url.endsWith('.vrm')) {
+        const { loadVrm, VrmRig } = await import('./vrm');
+        const vrm = await loadVrm(entry.url);
+        if (this.disposed) return;
+        this.vrm = new VrmRig(vrm, this.bones, entry.height ?? 1.26);
+        holder = this.vrm.holder;
+        this.vrm.setExpression(this.mood);
+        this.vrm.update(0);
+      } else {
+        const { loadSculpt, SculptRig } = await import('./sculpt');
+        const scene = await loadSculpt(entry.url);
+        if (this.disposed) return;
+        this.sculpt = new SculptRig(scene, this.bones, entry);
+        holder = this.sculpt.holder;
+        this.sculpt.update();
+      }
+      this.root.add(holder);
       for (const m of [...this.meshes, ...this.outlines]) m.visible = false;
       this.setLayer(this.layer);
-      this.vrm.setExpression(this.mood);
-      this.vrm.update(0);
     } catch (err) {
-      console.warn('VRM not loaded; keeping the chibi', err);
+      console.warn('Character model not loaded; keeping the chibi', err);
     }
   }
 
@@ -145,6 +168,7 @@ export class ChibiModel {
     for (const m of this.meshes) m.layers.set(layer);
     for (const m of this.outlines) m.layers.set(layer === 0 ? 0 : 2);
     this.vrm?.holder.traverse((o) => o.layers.set(layer));
+    this.sculpt?.holder.traverse((o) => o.layers.set(layer));
   }
 
   play(clip: ClipName, fade = 0.22, speed = 1): void {
@@ -179,6 +203,7 @@ export class ChibiModel {
   update(dt: number): void {
     this.animator.update(dt);
     this.vrm?.update(dt);
+    this.sculpt?.update();
     this.blink -= dt;
     if (this.blink <= 0) {
       if (!this.blinking && this.mood !== 'laugh' && this.mood !== 'blink') {
@@ -200,6 +225,7 @@ export class ChibiModel {
   dispose(): void {
     this.disposed = true;
     this.vrm?.dispose();
+    this.sculpt?.dispose();
     this.animator.dispose();
     for (const m of this.meshes) {
       m.geometry.dispose();

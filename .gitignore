@@ -20,3 +20,6 @@ resume/*.fdb_latexmk
 resume/*.xdv
 resume/*.out
 public/resume/*.pdf
+
+# raw sculpts (sources live outside the repo)
+/*.glb

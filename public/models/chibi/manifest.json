@@ -1,1 +1,5 @@
-{}
+{
+  "scout": { "url": "/models/chibi/scout.glb", "height": 1.4 },
+  "swordsman": { "url": "/models/chibi/swordsman.glb", "height": 1.3 },
+  "queen": { "url": "/models/chibi/queen.glb", "height": 1.45 }
+}

@@ -18,6 +18,8 @@ export async function startScene(host: HTMLElement, q: URLSearchParams): Promise
   renderer.shadowMap.type = PCFSoftShadowMap;
   host.appendChild(renderer.domElement);
   await loadKit();
+  // sculpted models load asynchronously: ?wait=ms gives them time before the still
+  const settle = () => new Promise((r) => setTimeout(r, Number(q.get('wait') ?? 0)));
   if (q.get('scene') === 'battle') {
     const side = (type: string, color: string, skin: string, civ: string) => ({ civName: civ, adj: civ, color, skin, type, label: type, hpBefore: 100, hpAfter: 60, max: 100, lost: false, tier: 2 });
     const b = new BattleScene({
@@ -35,6 +37,7 @@ export async function startScene(host: HTMLElement, q: URLSearchParams): Promise
       seed: 7,
     }, true);
     b.resize(W, H);
+    await settle();
     const steps = Number(q.get('steps') ?? 30);
     for (let i = 0; i < steps; i++) b.update(0.05, i * 0.05);
     renderer.render(b.scene, b.camera);
@@ -58,6 +61,7 @@ export async function startScene(host: HTMLElement, q: URLSearchParams): Promise
   scene.resize(W, H);
   const mood = (q.get('mood') ?? 'happy') as Expression;
   scene.setMood(mood);
+  await settle();
   for (let i = 0; i < 40; i++) scene.update(0.05);
   renderer.render(scene.scene, scene.camera);
   (window as unknown as { labReady: boolean }).labReady = true;
