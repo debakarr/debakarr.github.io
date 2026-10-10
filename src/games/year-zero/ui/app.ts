@@ -6,6 +6,7 @@ import { MapRenderer } from '../render/renderer';
 import type { MapView } from '../render/view';
 import { Map3D } from '../render3d/map3d';
 import { Stage, webglAvailable, type QualitySetting } from '../render3d/stage';
+import { kitReady, loadKit } from '../render3d/kit';
 import { civPopulation } from '../sim/cities';
 import { availableTechs, civTotals, techCostFor } from '../sim/civs';
 import { chronicle } from '../sim/chronicle';
@@ -73,6 +74,9 @@ export class App implements PanelHost {
   private r: MapView | null = null;
   /** The WebGL stage (null when the browser cannot run 3D: the canvas map is used instead). */
   stage: Stage | null = null;
+  /** Resolves true once the 3D model kit is loaded (false if it failed: the classic map takes over). */
+  private kitLoad: Promise<boolean> | null = null;
+  private kitProgress = 0;
   private labelsEl: HTMLElement;
   private mini: Minimap | null = null;
   private sel: Selection = { tile: -1, unitId: -1, cityId: -1 };
@@ -125,6 +129,15 @@ export class App implements PanelHost {
         console.warn('3D unavailable, using the classic map', err);
         this.stage = null;
       }
+    }
+    if (this.stage) {
+      this.kitLoad = loadKit((f) => (this.kitProgress = f)).then(
+        () => true,
+        (err) => {
+          console.warn('3D models failed to load, using the classic map', err);
+          return false;
+        },
+      );
     }
     root.classList.toggle('yz-3d', !!this.stage);
     root.append(
@@ -180,6 +193,21 @@ export class App implements PanelHost {
     };
   }
 
+  /** Falls back to the classic 2D map on a fresh canvas (a WebGL canvas cannot give a 2D context). */
+  private drop3D(): void {
+    if (!this.stage) return;
+    this.stage.dispose();
+    this.stage = null;
+    const fresh = h('canvas', { class: 'yz-map', 'aria-label': 'World map' });
+    this.canvas.replaceWith(fresh);
+    this.canvas = fresh;
+    new ResizeObserver(() => {
+      this.r?.resize();
+      this.mini?.draw();
+    }).observe(fresh);
+    this.root.classList.remove('yz-3d');
+  }
+
   toTitle(): void {
     this.setAuto(false);
     this.root.classList.remove('yz-ingame');
@@ -193,6 +221,23 @@ export class App implements PanelHost {
   }
 
   attach(g: Game): void {
+    if (this.stage && !kitReady() && this.kitLoad) {
+      // the world's models are still on their way: wait behind a small loading card
+      const card = h('div', { class: 'yz-loading yz-panel', role: 'status' }, h('b', {}, 'Preparing the world'), h('span', {}, '…'));
+      const bar = h('i');
+      card.append(h('div', { class: 'yz-loading-bar' }, bar));
+      this.modalRoot.append(card);
+      const timer = window.setInterval(() => (bar.style.width = `${Math.round(this.kitProgress * 100)}%`), 100);
+      const load = this.kitLoad;
+      this.kitLoad = null;
+      void load.then((ok) => {
+        window.clearInterval(timer);
+        card.remove();
+        if (!ok) this.drop3D();
+        this.attach(g);
+      });
+      return;
+    }
     this.setAuto(false);
     this.unsub?.();
     this.g = g;

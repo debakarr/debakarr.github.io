@@ -31,6 +31,7 @@ import type { Game } from '../sim/game';
 import { resourceVisible } from '../sim/tiles';
 import { HEX_GLSL } from './hexgl';
 import * as M from './models/nature';
+import * as K from './models/kitnature';
 import { hexDist, tileHash, type Shape } from './shape';
 import { depthKey, hexPatch, type SharedUniforms } from './terrain';
 
@@ -44,53 +45,94 @@ interface KindDef {
   detail?: boolean;
 }
 
+const SW = { sway: 0.6, shadow: true };
 const KINDS: Record<string, KindDef> = {
-  pine0: { build: () => M.pineTree(1), sway: 0.6, shadow: true },
-  pine1: { build: () => M.pineTree(2), sway: 0.6, shadow: true },
-  pine2: { build: () => M.pineTree(3), sway: 0.6, shadow: true },
-  snowpine0: { build: () => M.pineTree(4, true), sway: 0.4, shadow: true },
-  snowpine1: { build: () => M.pineTree(5, true), sway: 0.4, shadow: true },
-  round0: { build: () => M.roundTree(11), sway: 0.8, shadow: true },
-  round1: { build: () => M.roundTree(12), sway: 0.8, shadow: true },
-  round2: { build: () => M.roundTree(13, ['#4f9a2a', '#c4dc52']), sway: 0.8, shadow: true },
-  autumn: { build: () => M.roundTree(14, ['#c46a2a', '#f2b544']), sway: 0.8, shadow: true },
-  poplar: { build: () => M.poplar(15), sway: 0.9, shadow: true },
-  palm0: { build: () => M.palm(21), sway: 1, shadow: true },
-  palm1: { build: () => M.palm(22), sway: 1, shadow: true },
-  jungle0: { build: () => M.jungleTree(31), sway: 0.5, shadow: true },
-  jungle1: { build: () => M.jungleTree(32), sway: 0.5, shadow: true },
+  // KayKit conifers, singly and in whole-hex clumps, per biome
+  pineA: { build: () => K.conifer('A', 'temperate'), ...SW },
+  pineB: { build: () => K.conifer('B', 'temperate'), ...SW },
+  pineA_p: { build: () => K.conifer('A', 'plains'), ...SW },
+  pineB_p: { build: () => K.conifer('B', 'plains'), ...SW },
+  pineA_t: { build: () => K.conifer('A', 'tundra'), ...SW },
+  pineB_t: { build: () => K.conifer('B', 'tundra'), ...SW },
+  pineA_s: { build: () => K.conifer('A', 'snow', true), ...SW },
+  pineB_s: { build: () => K.conifer('B', 'snow', true), ...SW },
+  clumpA_m: { build: () => K.forestClump('A', 'medium', 'temperate'), sway: 0.3, shadow: true },
+  clumpB_m: { build: () => K.forestClump('B', 'medium', 'temperate'), sway: 0.3, shadow: true },
+  clumpB_l: { build: () => K.forestClump('B', 'large', 'temperate'), sway: 0.3, shadow: true },
+  clumpA_l: { build: () => K.forestClump('A', 'large', 'temperate'), sway: 0.3, shadow: true },
+  clumpA_t: { build: () => K.forestClump('A', 'medium', 'tundra'), sway: 0.3, shadow: true },
+  clumpB_t: { build: () => K.forestClump('B', 'large', 'tundra'), sway: 0.3, shadow: true },
+  clumpA_s: { build: () => K.forestClump('A', 'large', 'snow', true), sway: 0.2, shadow: true },
+  clumpB_s: { build: () => K.forestClump('B', 'medium', 'snow', true), sway: 0.2, shadow: true },
+  clumpB_p: { build: () => K.forestClump('B', 'small', 'plains'), sway: 0.3, shadow: true },
+  // faceted broadleaf trees in the same style
+  oak0: { build: () => K.broadleaf(11, 'green'), ...SW },
+  oak1: { build: () => K.broadleaf(12, 'fresh'), ...SW },
+  oak2: { build: () => K.broadleaf(13, 'deep'), ...SW },
+  oak3: { build: () => K.broadleaf(14, 'green'), ...SW },
+  poplar: { build: () => K.broadleaf(15, 'fresh', true), ...SW },
+  olive0: { build: () => K.broadleaf(16, 'olive'), ...SW },
+  autumn: { build: () => K.broadleaf(17, 'autumn'), ...SW },
+  gold: { build: () => K.broadleaf(18, 'gold'), ...SW },
+  blossom: { build: () => K.broadleaf(19, 'blossom'), ...SW },
+  jungle0: { build: () => K.broadleaf(31, 'jungle'), ...SW },
+  jungle1: { build: () => K.broadleaf(32, 'jungle', true), ...SW },
+  jungle2: { build: () => M.jungleTree(33), sway: 0.5, shadow: true },
+  palm0: { build: () => K.palmKit('long'), sway: 1, shadow: true },
+  palm1: { build: () => K.palmKit('short'), sway: 1, shadow: true },
+  palm2: { build: () => K.palmKit('detailed-long'), sway: 1, shadow: true },
   dead: { build: () => M.deadTree(41), shadow: true },
-  bush: { build: () => M.bush(51), sway: 0.5, detail: true },
+  bush: { build: () => K.shrub(51, 'green'), sway: 0.5, detail: true },
+  bush1: { build: () => K.shrub(52, 'fresh', true), sway: 0.5, detail: true },
+  bushJ: { build: () => K.shrub(53, 'jungle'), sway: 0.5, detail: true },
   flowers: { build: () => M.flowers(52), sway: 0.6, detail: true },
   tuft: { build: () => M.tuft(53), sway: 1.4, detail: true },
-  rock0: { build: () => M.rock(61), detail: true, shadow: true },
-  rock1: { build: () => M.rock(62), detail: true, shadow: true },
-  rockDark: { build: () => M.rock(63, '#5d524c', '#6d5a50'), detail: true },
-  snowrock: { build: () => M.rock(64, '#b9c2cc', '#f4f8fb'), detail: true },
-  sandrock: { build: () => M.rock(65, '#e2c48e', '#f0d9a8'), detail: true },
-  mtn0: { build: () => M.mountainRange(71, true), shadow: true },
-  mtn1: { build: () => M.mountainRange(72, true), shadow: true },
-  mtnBare0: { build: () => M.mountainRange(73, false), shadow: true },
-  mtnBare1: { build: () => M.mountainRange(74, false), shadow: true },
+  // KayKit rocks, knolls and mountains
+  rockA: { build: () => K.rockKit('A', 'temperate'), detail: true, shadow: true },
+  rockC: { build: () => K.rockKit('C', 'temperate'), detail: true, shadow: true },
+  rockE: { build: () => K.rockKit('E', 'temperate'), detail: true, shadow: true },
+  rockDark: { build: () => K.rockKit('E', 'temperate', 0.8), detail: true },
+  snowrock: { build: () => K.snowCap(K.rockKit('C', 'snow', 0.9), 0.3), detail: true },
+  sandrock: { build: () => K.rockKit('E', 'desert', 0.9), detail: true },
+  knollA: { build: () => K.hillKit('hill_single_A', 'temperate', 0.55), shadow: true },
+  knollB: { build: () => K.hillKit('hill_single_C', 'temperate', 0.5), shadow: true },
+  knollP: { build: () => K.hillKit('hill_single_B', 'plains', 0.5), shadow: true },
+  knollD: { build: () => K.hillKit('hill_single_A', 'desert', 0.5), shadow: true },
+  knollT: { build: () => K.hillKit('hill_single_C', 'tundra', 0.5), shadow: true },
+  mtnA: { build: () => K.peak(71, 'temperate', 0.55), shadow: true },
+  mtnB: { build: () => K.peak(72, 'temperate', 0.6), shadow: true },
+  mtnC: { build: () => K.peak(73, 'temperate', null), shadow: true },
+  mtnD: { build: () => K.peak(74, 'plains', 0.62), shadow: true },
+  mtnCrag: { build: () => K.mountainKit('C', 'temperate', { grass: true, trees: true }), shadow: true },
+  mtnSnowA: { build: () => K.peak(75, 'snow', 0.25), shadow: true },
+  mtnSnowB: { build: () => K.peak(76, 'tundra', 0.35), shadow: true },
+  mtnDesertB: { build: () => K.mountainKit('B', 'desert'), shadow: true },
+  mtnDesertC: { build: () => K.mountainKit('C', 'desert'), shadow: true },
+  mtnDesertP: { build: () => K.peak(77, 'desert', null), shadow: true },
   volcano: { build: () => M.volcano(81), shadow: true },
   lava: { build: () => M.lava(), glow: true },
   cactus0: { build: () => M.cactus(91), shadow: true },
   cactus1: { build: () => M.cactus(92), shadow: true },
-  reeds: { build: () => M.reeds(101), sway: 1.2, detail: true },
+  reeds: { build: () => K.waterPlantKit('B'), sway: 1.2, detail: true },
+  reeds1: { build: () => K.waterPlantKit('C'), sway: 1.2, detail: true },
+  lily: { build: () => K.lilyKit('B'), detail: true },
   puddle: { build: () => M.puddle(102) },
   ice: { build: () => M.iceChunk(111) },
-  wheat: { build: () => M.wheatField(121) },
+  wheat: { build: () => K.grainPatch() },
   hay: { build: () => M.hayBale(), detail: true },
-  fence: { build: () => M.fence(0.34) },
+  fence: { build: () => K.fenceKit() },
   sheep: { build: () => M.sheep(), detail: true },
   cow: { build: () => M.cow(), detail: true },
   horse: { build: () => M.horse(), detail: true },
-  mine: { build: () => M.mineEntrance(), shadow: true },
-  logs: { build: () => M.logPile(), shadow: true },
+  mine: { build: () => K.mineKit(), shadow: true },
+  stone: { build: () => K.stoneKit(), shadow: true },
+  logs: { build: () => K.lumberKit(), shadow: true },
   derrick: { build: () => M.oilDerrick(), shadow: true },
-  boat: { build: () => M.fishingBoat() },
+  boat: { build: () => K.boatKit() },
   plantation: { build: () => M.plantationRow(131), sway: 0.3 },
-  ruins: { build: () => M.ruins(141), shadow: true },
+  ruins: { build: () => K.ruinsKit(), shadow: true },
+  tent: { build: () => K.tentKit(), shadow: true },
+  pile: { build: () => K.propPile(7), detail: true },
   pillars: { build: () => M.pillars(151), shadow: true },
   giant: { build: () => M.giantTree(), sway: 0.3, shadow: true },
   crystals: { build: () => M.crystals(161), glow: true },
@@ -199,6 +241,10 @@ export class Props {
             mix(map.feature[i]);
             mix(map.improvement[i]);
             mix(map.cityAt[i] >= 0 ? 1 : 0);
+            for (let d = 0; d < 6; d++) {
+              const nb = g.grid.neighbor(i, d);
+              if (nb >= 0 && map.cityAt[nb] >= 0) mix(7 + d);
+            }
             mix(map.road[i]);
           }
         }
@@ -325,21 +371,27 @@ export class Props {
         add(kind, i, p[0], p[1], s0 + rnd() * (s1 - s0), rnd() * 6.28, opts.tint?.() ?? WHITE);
       }
     };
-    const leafTint = () => new Color().setHSL(0.27 + (rnd() - 0.5) * 0.05, 0.55 + rnd() * 0.2, 0.42 + rnd() * 0.12).multiplyScalar(2.1);
+    const leafTint = () => new Color().setHSL(0.25 + (rnd() - 0.5) * 0.08, 0.35, 0.9 + rnd() * 0.12);
     const grassTint = t === T.Plains ? '#d8c25a' : t === T.Tundra ? '#a9b48c' : t === T.Desert ? '#d9c070' : '#7dc443';
     const tuftTint = () => new Color(grassTint).offsetHSL((rnd() - 0.5) * 0.04, 0, (rnd() - 0.5) * 0.08);
     const flowerTint = () => new Color(['#ff8fb8', '#ffd84a', '#ffffff', '#c59bff', '#ff7a6a'][Math.floor(rnd() * 5)]);
+    const pick = <K extends string>(arr: K[]): K => arr[Math.floor(rnd() * arr.length)];
 
     if (shape.isWater(i)) {
       if (shape.isIce(i)) scatter(['ice'], 2 + Math.floor(rnd() * 3), { max: 0.75, gap: 0.2, s: [0.8, 1.6], center: 0 });
-      if (imp === Imp.Boats) add('boat', i, cx + 0.25, cz + 0.2, 1.4, rnd() * 6.28, WHITE, 0.0);
+      if (imp === Imp.Boats) add('boat', i, cx + 0.25, cz + 0.2, 1.1, rnd() * 6.28, WHITE, 0.005);
+      if (t === T.Lake && rnd() < 0.7) for (let k = 0; k < 3; k++) {
+        const a = rnd() * 6.28;
+        const r = 0.45 + rnd() * 0.3;
+        add('lily', i, cx + Math.cos(a) * r, cz + Math.sin(a) * r, 0.8 + rnd() * 0.6, rnd() * 6, WHITE, 0.004);
+      }
       const w = map.wonder[i];
       if (w >= 0) {
         const kind = this.wonderKind(i);
         if (kind === 'reef') add('coral', i, cx, cz, 1.4, 0, WHITE, -0.015);
         if (kind === 'crater') for (let k = 0; k < 9; k++) {
           const a = (k / 9) * Math.PI * 2;
-          add('rock0', i, cx + Math.cos(a) * 0.75, cz + Math.sin(a) * 0.75, 1.6 + rnd(), rnd() * 6, WHITE, 0.02);
+          add('rockC', i, cx + Math.cos(a) * 0.75, cz + Math.sin(a) * 0.75, 1.6 + rnd(), rnd() * 6, WHITE, 0.02);
         }
       }
       return;
@@ -355,43 +407,52 @@ export class Props {
     if (wk && wk !== 'volcano') taken.push([cx, cz, 0.45]);
 
     if (map.ruinAt[i] >= 0) {
-      add('ruins', i, cx + 0.05, cz + 0.05, 1.3, rnd() * 6);
+      add('ruins', i, cx + 0.05, cz + 0.05, 1, rnd() * 6);
       taken.push([cx, cz, 0.42]);
     }
 
     // Improvements claim part of the tile first.
+    const at = (a: number, r: number): [number, number] => [cx + Math.cos(a) * r, cz + Math.sin(a) * r];
     if (imp === Imp.Farm) {
       const a = rnd() * 6.28;
-      add('wheat', i, cx + Math.cos(a) * 0.32, cz + Math.sin(a) * 0.32, 1.1, a);
-      add('wheat', i, cx + Math.cos(a + 2.2) * 0.38, cz + Math.sin(a + 2.2) * 0.38, 1, a + 2.2);
-      add('hay', i, cx + Math.cos(a + 1.1) * 0.3, cz + Math.sin(a + 1.1) * 0.3, 1.1, rnd() * 6);
-      taken.push([cx + Math.cos(a) * 0.32, cz + Math.sin(a) * 0.32, 0.3], [cx + Math.cos(a + 2.2) * 0.38, cz + Math.sin(a + 2.2) * 0.38, 0.3]);
+      for (const [da, r] of [[0, 0.34], [2.1, 0.4], [4.2, 0.36]] as [number, number][]) {
+        const [x, z] = at(a + da, r);
+        add('wheat', i, x, z, 0.95 + rnd() * 0.15, a + da);
+        taken.push([x, z, 0.26]);
+      }
+      const [hx, hz] = at(a + 1.05, 0.28);
+      add('hay', i, hx, hz, 1.1, rnd() * 6);
+      const [fx, fz] = at(a + 3.15, 0.5);
+      add('fence', i, fx, fz, 1, a + 3.15 + Math.PI / 2);
     } else if (imp === Imp.Pasture) {
       const a = rnd() * 6.28;
-      const px = cx + Math.cos(a) * 0.32;
-      const pz = cz + Math.sin(a) * 0.32;
+      const [px, pz] = at(a, 0.32);
       for (let k = 0; k < 4; k++) {
         const fa = (k * Math.PI) / 2;
-        add('fence', i, px + Math.cos(fa) * 0.17, pz + Math.sin(fa) * 0.17, 1, fa + Math.PI / 2);
+        add('fence', i, px + Math.cos(fa) * 0.19, pz + Math.sin(fa) * 0.19, 1, fa + Math.PI / 2);
       }
       for (let k = 0; k < 3; k++) add('sheep', i, px + (rnd() - 0.5) * 0.18, pz + (rnd() - 0.5) * 0.18, 1.1, rnd() * 6);
-      taken.push([px, pz, 0.3]);
+      taken.push([px, pz, 0.32]);
     } else if (imp === Imp.Mine) {
       const a = rnd() * 6.28;
-      add('mine', i, cx + Math.cos(a) * 0.35, cz + Math.sin(a) * 0.35, 1.3, -a + Math.PI / 2);
-      taken.push([cx + Math.cos(a) * 0.35, cz + Math.sin(a) * 0.35, 0.25]);
+      const [x, z] = at(a, 0.32);
+      add('mine', i, x, z, 1, -a + Math.PI / 2);
+      taken.push([x, z, 0.3]);
     } else if (imp === Imp.Plantation) {
       const a = rnd() * 6.28;
-      add('plantation', i, cx + Math.cos(a) * 0.34, cz + Math.sin(a) * 0.34, 1.1, a);
-      taken.push([cx + Math.cos(a) * 0.34, cz + Math.sin(a) * 0.34, 0.3]);
+      const [x, z] = at(a, 0.34);
+      add('plantation', i, x, z, 1.1, a);
+      taken.push([x, z, 0.3]);
     } else if (imp === Imp.Lumber) {
       const a = rnd() * 6.28;
-      add('logs', i, cx + Math.cos(a) * 0.32, cz + Math.sin(a) * 0.32, 1.2, rnd() * 6);
-      taken.push([cx + Math.cos(a) * 0.32, cz + Math.sin(a) * 0.32, 0.25]);
+      const [x, z] = at(a, 0.32);
+      add('logs', i, x, z, 1, rnd() * 6);
+      taken.push([x, z, 0.25]);
     } else if (imp === Imp.OilWell) {
       const a = rnd() * 6.28;
-      add('derrick', i, cx + Math.cos(a) * 0.32, cz + Math.sin(a) * 0.32, 1.2, rnd() * 6);
-      taken.push([cx + Math.cos(a) * 0.32, cz + Math.sin(a) * 0.32, 0.25]);
+      const [x, z] = at(a, 0.32);
+      add('derrick', i, x, z, 1.2, rnd() * 6);
+      taken.push([x, z, 0.25]);
     }
 
     // Small 3D hints of the resource next to its badge.
@@ -404,55 +465,81 @@ export class Props {
         else if (key === 'horses') add('horse', i, p[0], p[1], 1.2, rnd() * 6);
         else if (key === 'gems' || key === 'minerals') add('gems', i, p[0], p[1], 0.6, rnd() * 6);
         else if (key === 'uranium') add('uranium', i, p[0], p[1], 0.55, rnd() * 6);
-        else if (key === 'iron' || key === 'coal') add('rockDark', i, p[0], p[1], 1.4, rnd() * 6);
+        else if (key === 'iron' || key === 'coal') add('stone', i, p[0], p[1], 1, rnd() * 6);
         else if (key === 'grain') add('hay', i, p[0], p[1], 1.2, rnd() * 6);
       }
     }
 
     if (relief === Relief.Mountain) {
-      const snow = t === T.Snow || t === T.Tundra || map.elevation[i] > 190 || tileHash(i, 9) < 0.7;
+      const cold = t === T.Snow || t === T.Tundra;
       if (f === F.Volcano) {
         add('volcano', i, cx, cz, 1.05, rnd() * 6, WHITE, shape.height(i, cx, cz) - 0.02);
         add('lava', i, cx, cz, 1.05, 0, WHITE, shape.height(i, cx, cz) - 0.02);
       } else {
-        const big = snow ? (rnd() < 0.5 ? 'mtn0' : 'mtn1') : rnd() < 0.5 ? 'mtnBare0' : 'mtnBare1';
-        add(big, i, cx + (rnd() - 0.5) * 0.1, cz + (rnd() - 0.5) * 0.08, 0.82 + rnd() * 0.16, rnd() * 6.28, WHITE, LAND_BASE);
+        const big = t === T.Desert ? pick(['mtnDesertB', 'mtnDesertC', 'mtnDesertP']) : cold ? pick(['mtnSnowA', 'mtnSnowB']) : map.elevation[i] > 185 ? pick(['mtnA', 'mtnB', 'mtnD']) : pick(['mtnA', 'mtnB', 'mtnC', 'mtnD', 'mtnCrag']);
+        add(big, i, cx + (rnd() - 0.5) * 0.06, cz + (rnd() - 0.5) * 0.06, 0.92 + rnd() * 0.12, big.startsWith('mtnDesert') && big !== 'mtnDesertP' || big === 'mtnCrag' ? Math.floor(rnd() * 6) * (Math.PI / 3) : rnd() * 6.28, WHITE, LAND_BASE);
+        if (!big.startsWith('mtnDesert') && t !== T.Snow) scatter(cold ? ['pineA_t', 'pineB_t'] : ['pineA', 'pineB'], 2, { min: 0.62, max: 0.84, center: 0.6, s: [0.8, 1.0] });
       }
-      scatter(['rock0', 'rock1'], 2, { min: 0.55, max: 0.8, center: 0.5 });
-      if (t !== T.Snow && t !== T.Desert) scatter(['pine0', 'pine1'], 2, { min: 0.55, max: 0.8, center: 0.5, s: [0.7, 0.9] });
       return;
     }
 
+    // town suburbs spill into the tiles around a city: keep the near side clear
+    let nearCity = false;
+    for (let d = 0; d < 6; d++) {
+      const nb = shape.grid.neighbor(i, d);
+      if (nb >= 0 && map.cityAt[nb] >= 0) {
+        taken.push([shape.cx(nb), shape.cz(nb), 1.3]);
+        nearCity = true;
+      }
+    }
     const forest = f === F.Forest;
+    const hills = relief === Relief.Hills;
+    const clear = !map.road[i] && !shape.hasRiver(i) && !imp && map.ruinAt[i] < 0 && !wk && !nearCity;
+    if (hills && !forest && rnd() < 0.75) {
+      const p = spot(0.25, 0.55, 0.3, 0);
+      if (p) add(t === T.Desert ? 'knollD' : t === T.Tundra || t === T.Snow ? 'knollT' : t === T.Plains ? 'knollP' : pick(['knollA', 'knollB']), i, p[0], p[1], 0.9 + rnd() * 0.3, rnd() * 6);
+    }
     if (t === T.Snow) {
-      if (forest) scatter(['snowpine0', 'snowpine1'], 9, { gap: 0.16, s: [1.1, 1.45], center: 0.2 });
-      else scatter(['snowrock'], 2 + Math.floor(rnd() * 2), { gap: 0.2 });
-      if (!forest && rnd() < 0.15) scatter(['snowpine0'], 1);
+      if (forest) {
+        if (clear) {
+          add(pick(['clumpA_s', 'clumpB_s']), i, cx, cz, 0.95 + rnd() * 0.1, Math.floor(rnd() * 6) * 1.047);
+          taken.push([cx, cz, 0.52]);
+          scatter(['pineA_s', 'pineB_s'], 4, { min: 0.55, gap: 0.16, s: [0.85, 1.15], center: 0.5 });
+        } else scatter(['pineA_s', 'pineB_s'], 9, { gap: 0.15, s: [0.85, 1.2], center: 0.2 });
+      } else scatter(['snowrock'], 2 + Math.floor(rnd() * 2), { gap: 0.2 });
+      if (!forest && rnd() < 0.15) scatter(['pineA_s'], 1);
       return;
     }
     if (f === F.Jungle) {
-      scatter(['jungle0', 'jungle1'], 5, { gap: 0.24, s: [1.1, 1.4] });
-      scatter(['palm0', 'palm1'], 3, { gap: 0.18, s: [1.1, 1.3] });
-      scatter(['bush'], 3, { gap: 0.1, tint: leafTint, center: 0.15 });
+      scatter(['jungle0', 'jungle1', 'jungle2'], 7, { gap: 0.2, s: [1.1, 1.45] });
+      scatter(['palm0', 'palm2'], 3, { gap: 0.16, s: [0.9, 1.15] });
+      scatter(['bushJ'], 4, { gap: 0.1, tint: leafTint, center: 0.12 });
       return;
     }
     if (forest) {
-      const kinds = t === T.Tundra ? ['pine0', 'pine1', 'pine2', 'snowpine0'] : t === T.Plains ? ['pine0', 'pine1', 'round2', 'poplar', 'autumn'] : ['round0', 'round1', 'pine0', 'round2', 'poplar'];
-      scatter(kinds, relief === Relief.Hills ? 8 : 10, { gap: 0.16, s: [1.15, 1.5], center: 0.2 });
-      scatter(['bush'], 2, { gap: 0.1, tint: leafTint, center: 0.12 });
+      const tundra = t === T.Tundra;
+      const plains = t === T.Plains;
+      if (clear) {
+        const clump = tundra ? pick(['clumpA_t', 'clumpB_t']) : plains ? pick(['clumpB_p', 'clumpA_m']) : pick(['clumpA_m', 'clumpB_m', 'clumpB_l', 'clumpA_l']);
+        add(clump, i, cx + (rnd() - 0.5) * 0.08, cz + (rnd() - 0.5) * 0.08, 0.95 + rnd() * 0.12, Math.floor(rnd() * 6) * 1.047);
+        taken.push([cx, cz, plains ? 0.42 : 0.5]);
+      }
+      const singles = tundra ? ['pineA_t', 'pineB_t'] : plains ? ['olive0', 'autumn', 'pineA_p', 'gold', 'poplar'] : ['oak0', 'oak1', 'oak2', 'oak3', 'poplar', 'pineB', 'pineA'];
+      scatter(singles, clear ? (plains ? 6 : 5) : 10, { min: clear ? 0.5 : 0, gap: 0.15, s: [1.0, 1.35], center: clear ? 0.45 : 0.18 });
+      scatter(['bush', 'bush1'], 2, { gap: 0.1, tint: leafTint, center: 0.12 });
       return;
     }
     if (f === F.Marsh) {
       scatter(['puddle'], 2 + Math.floor(rnd() * 2), { gap: 0.28, s: [0.8, 1.3] });
-      scatter(['reeds'], 5, { gap: 0.1, center: 0.1 });
+      scatter(['reeds', 'reeds1'], 6, { gap: 0.1, center: 0.1 });
       scatter(['tuft'], 3, { gap: 0.08, tint: tuftTint, center: 0.1 });
       return;
     }
     if (f === F.Oasis) {
       add('puddle', i, cx + 0.25, cz + 0.15, 1.6, rnd() * 6);
       taken.push([cx + 0.25, cz + 0.15, 0.3]);
-      scatter(['palm0', 'palm1'], 3, { gap: 0.15, min: 0.3 });
-      scatter(['bush'], 2, { gap: 0.1, tint: leafTint });
+      scatter(['palm0', 'palm1', 'palm2'], 4, { gap: 0.15, min: 0.3 });
+      scatter(['bushJ'], 2, { gap: 0.1, tint: leafTint });
       return;
     }
     if (f === F.Ash || f === F.Volcano) {
@@ -462,22 +549,24 @@ export class Props {
     }
     if (t === T.Desert) {
       scatter(['cactus0', 'cactus1'], Math.floor(rnd() * 2.4), { gap: 0.2, s: [1.1, 1.4] });
-      scatter(['sandrock'], Math.floor(rnd() * 2), { gap: 0.2 });
+      scatter(['sandrock'], Math.floor(rnd() * 2.5), { gap: 0.2 });
       return;
     }
     if (t === T.Tundra) {
-      scatter(['rock0', 'rock1'], 1 + Math.floor(rnd() * 2), { gap: 0.2 });
+      scatter(['rockA', 'rockC'], 1 + Math.floor(rnd() * 2), { gap: 0.2 });
       scatter(['tuft'], 3, { gap: 0.1, tint: tuftTint });
-      if (rnd() < 0.3) scatter(['pine1', 'snowpine1'], 1 + Math.floor(rnd() * 2));
+      if (rnd() < 0.4) scatter(['pineA_t', 'pineB_t'], 1 + Math.floor(rnd() * 2));
       return;
     }
     // Grassland, plains, floodplains (and hills over them)
-    if (relief === Relief.Hills) scatter(['rock0', 'rock1'], 1 + Math.floor(rnd() * 2), { gap: 0.2, min: 0.25 });
-    scatter(['tuft'], f === F.Floodplain ? 6 : 4, { gap: 0.09, tint: tuftTint, center: 0.12 });
+    if (hills) scatter(['rockA', 'rockE'], 1 + Math.floor(rnd() * 2), { gap: 0.2, min: 0.25 });
+    else if (rnd() < 0.3) scatter(['rockA', 'rockC'], 1, { gap: 0.2, min: 0.3 });
+    scatter(['tuft'], f === F.Floodplain ? 6 : 5, { gap: 0.09, tint: tuftTint, center: 0.12 });
     if (t === T.Grass || f === F.Floodplain) scatter(['flowers'], 1 + Math.floor(rnd() * 3), { gap: 0.1, tint: flowerTint, center: 0.12 });
-    scatter(['bush'], Math.floor(rnd() * 3), { gap: 0.12, tint: leafTint });
+    scatter(['bush', 'bush1'], Math.floor(rnd() * 3), { gap: 0.12, tint: leafTint });
     if (f === F.Floodplain) scatter(['reeds'], 2, { gap: 0.1 });
-    if (rnd() < (t === T.Grass ? 0.35 : 0.22)) scatter(t === T.Plains ? ['pine0', 'poplar', 'autumn'] : ['round0', 'round1', 'poplar'], 1 + Math.floor(rnd() * 2), { s: [1.0, 1.3] });
+    const grove = rnd() < (t === T.Grass ? 0.55 : 0.4);
+    if (grove) scatter(t === T.Plains ? ['olive0', 'pineA_p', 'autumn', 'gold'] : ['oak0', 'oak1', 'oak3', 'poplar', 'pineB', 'blossom'], 1 + Math.floor(rnd() * 3), { s: [0.95, 1.25] });
   }
 
   private nearRoad(i: number, lx: number, lz: number): boolean {

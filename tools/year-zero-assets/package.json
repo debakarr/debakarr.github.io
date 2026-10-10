@@ -1,0 +1,15 @@
+{
+  "name": "year-zero-assets",
+  "private": true,
+  "type": "module",
+  "description": "Packs the CC0 KayKit and Kenney models used by Year Zero into optimised GLB bundles (run by hand, output is committed).",
+  "scripts": { "build": "node build.mjs" },
+  "dependencies": {
+    "@gltf-transform/core": "^4.1.1",
+    "@gltf-transform/extensions": "^4.1.1",
+    "@gltf-transform/functions": "^4.1.1",
+    "draco3dgltf": "^1.5.7",
+    "meshoptimizer": "^0.22.0",
+    "pngjs": "^7.0.0"
+  }
+}

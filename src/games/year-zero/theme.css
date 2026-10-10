@@ -1438,3 +1438,40 @@ button.yz-buildcard:hover {
   font: 900 11px/16px var(--yz-ui);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
+
+/* --- model loading card ------------------------------------------------------------------------ */
+.yz-loading {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 60;
+  display: grid;
+  gap: 10px;
+  min-width: 260px;
+  padding: 18px 22px;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  color: #f6e7c1;
+}
+.yz-loading b {
+  font-size: 18px;
+  letter-spacing: 0.04em;
+}
+.yz-loading span {
+  display: none;
+}
+.yz-loading-bar {
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+.yz-loading-bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e9b949, #ffe08a);
+  transition: width 0.15s ease;
+}

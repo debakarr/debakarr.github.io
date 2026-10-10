@@ -194,6 +194,10 @@ export class Shape {
     return [nx / l, 1 / l, nz / l];
   }
 
+  hasRiver(i: number): boolean {
+    return this.riverSegs.has(i);
+  }
+
   /** Distance from (x, z) to the nearest river centre line in tile i (Infinity if none). */
   riverDistance(i: number, x: number, z: number): number {
     const segs = this.riverSegs.get(i);

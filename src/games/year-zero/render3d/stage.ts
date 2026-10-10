@@ -207,6 +207,13 @@ export class Stage {
     this.raf = 0;
   }
 
+  dispose(): void {
+    this.stop();
+    this.current = null;
+    this.composer?.dispose();
+    this.renderer.dispose();
+  }
+
   /** Renders one frame right away (used by tests and snapshots). */
   frame(dt = 0): void {
     const s = this.current;

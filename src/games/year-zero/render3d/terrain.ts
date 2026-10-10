@@ -124,7 +124,7 @@ export class TileState {
 }
 
 /** Adds the shared hex GLSL and uniforms to a built-in material. */
-export function hexPatch(mat: MeshStandardMaterial, uniforms: SharedUniforms, vertex: { head?: string; begin?: string; team?: boolean | 'skin' }, fragment: { head?: string; color?: string; out?: string }): void {
+export function hexPatch(mat: MeshStandardMaterial, uniforms: SharedUniforms, vertex: { head?: string; begin?: string; normal?: string; team?: boolean | 'skin' }, fragment: { head?: string; color?: string; out?: string }): void {
   // three caches programs by onBeforeCompile's source, which is the same for every patch: key each one by its content
   const key = patchKey(JSON.stringify([vertex, fragment]));
   mat.customProgramCacheKey = () => key;
@@ -132,6 +132,7 @@ export function hexPatch(mat: MeshStandardMaterial, uniforms: SharedUniforms, ve
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = `${HEX_GLSL}\n${vertex.head ?? ''}\n${shader.vertexShader}`;
     if (vertex.begin) shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>\n${vertex.begin}`);
+    if (vertex.normal) shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>', `#include <beginnormal_vertex>\n${vertex.normal}`);
     // Owner colour: the per-instance colour only tints vertices marked `team`.
     if (vertex.team) {
       const skin = vertex.team === 'skin';

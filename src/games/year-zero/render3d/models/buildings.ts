@@ -5,7 +5,7 @@
 import { BufferGeometry } from 'three';
 import { Rng } from '../../../shared/rng';
 import {
-  box, cone, cylinder, gable, gradient, hemisphere, lathe, merge, part, prep, pyramid, sphere, torus, xf, type V3,
+  box, cone, cylinder, faceted, gable, gradient, hemisphere, lathe, merge, part, prep, pyramid, sphere, torus, xf, type V3,
 } from '../geo';
 
 export const STYLE = {
@@ -74,6 +74,53 @@ export function hut(rng: Rng, roof = STYLE.thatch): BufferGeometry {
     gradient(xf(cone(r * 1.45, r * 1.5, 10), { p: [0, h + r * 0.72, 0] }), '#b48a3c', roof),
     part(box(0.016, 0.026, 0.006), STYLE.door, { p: [0, 0.013, r] }),
   ]);
+}
+
+/** Round tribal hut: log wall, layered faceted thatch, door frame and a painted band in the owner's colour. */
+export function tribalHut(rng: Rng, team: string): BufferGeometry {
+  const r = rng.float(0.05, 0.06);
+  const h = rng.float(0.042, 0.05);
+  const parts: Parts = [
+    gradient(faceted(cylinder(r, r * 1.06, h, 9)), '#7a5232', '#b07a4a', { jitter: 0.06, seed: rng.int(999) }),
+    part(cylinder(r * 1.08, r * 1.08, 0.008, 9), team, { p: [0, h * 0.62, 0] }),
+  ];
+  xf(parts[0], { p: [0, h / 2, 0] });
+  // two layers of thatch, the lower one wider
+  parts.push(xf(gradient(faceted(cone(r * 1.55, r * 0.95, 9)), '#a07a32', '#e2bf62', { jitter: 0.05, seed: rng.int(999) }), { p: [0, h + r * 0.4, 0], r: [0, 0.2, 0] }));
+  parts.push(xf(gradient(faceted(cone(r * 1.05, r * 0.9, 9)), '#b58a3c', '#f0d077', { jitter: 0.05, seed: rng.int(999) }), { p: [0, h + r * 1.0, 0], r: [0, 0.5, 0] }));
+  parts.push(part(cylinder(0.003, 0.004, r * 0.6, 5), '#6a4529', { p: [0, h + r * 1.6, 0] }));
+  parts.push(part(box(0.02, 0.03, 0.006), STYLE.door, { p: [0, 0.015, r * 1.02] }));
+  parts.push(part(box(0.026, 0.004, 0.008), '#6a4529', { p: [0, 0.031, r * 1.03] }));
+  return merge(parts);
+}
+
+/** Painted hide teepee with poles poking out of the top. */
+export function teepee(rng: Rng, team: string): BufferGeometry {
+  const r = rng.float(0.04, 0.05);
+  const h = r * 2.1;
+  const parts: Parts = [
+    xf(gradient(faceted(cone(r, h, 7)), '#c9a77a', '#f2e1c0', { jitter: 0.04, seed: rng.int(999) }), { p: [0, h / 2, 0] }),
+    part(cylinder(r * 0.62, r * 0.78, h * 0.14, 7, true), team, { p: [0, h * 0.28, 0] }),
+    part(cylinder(r * 0.36, r * 0.45, h * 0.08, 7, true), team, { p: [0, h * 0.58, 0] }),
+    part(box(0.012, 0.03, 0.004), '#5a3a24', { p: [0, 0.015, r * 0.86], r: [-0.42, 0, 0] }),
+  ];
+  for (let k = 0; k < 4; k++) {
+    const a = (k / 4) * Math.PI * 2 + 0.3;
+    parts.push(part(cylinder(0.0018, 0.0018, h * 0.4, 4), '#6a4529', { p: [Math.cos(a) * 0.006, h * 1.02, Math.sin(a) * 0.006], r: [Math.sin(a) * 0.3, 0, -Math.cos(a) * 0.3] }));
+  }
+  return merge(parts);
+}
+
+/** Furrowed field with ripe rows (for the edge of town and for farms). */
+export function cropField(rng: Rng, w = 0.16, d = 0.12): BufferGeometry {
+  const parts: Parts = [part(box(w, 0.006, d), '#9a6b3c', { p: [0, 0.003, 0] })];
+  const rows = Math.round(d / 0.022);
+  const crop = rng.pick(['#e9c25a', '#d8b04a', '#9fcf4f', '#c8d860']);
+  for (let k = 0; k < rows; k++) {
+    const z = -d / 2 + (k + 0.5) * (d / rows);
+    parts.push(xf(gradient(box(w * 0.94, 0.016, 0.012), '#b88a34', crop), { p: [0, 0.012, z] }));
+  }
+  return merge(parts);
 }
 
 export function tent(color: string): BufferGeometry {

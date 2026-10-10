@@ -39,7 +39,9 @@ import { Water } from './water';
 
 export const HEX = 32;
 const FOV = 30;
-const MAX_ZOOM = 3.6;
+const MAX_ZOOM = 6.5;
+/** Zoom where the tilt reaches its usual low angle; beyond it the close-up tilts a little further. */
+const TILT_ZOOM = 3.6;
 
 
 interface Fx {
@@ -203,8 +205,9 @@ export class Map3D implements MapView, StageScene {
 
   /** Camera tilt (radians above the horizon) for a zoom level: steep overview, low close-up. */
   pitch(zoom = this.cam.zoom): number {
-    const t = Math.max(0, Math.min(1, (Math.log(zoom) - Math.log(0.4)) / (Math.log(MAX_ZOOM) - Math.log(0.4))));
-    return ((66 - 32 * Math.pow(t, 1.1)) * Math.PI) / 180;
+    const t = Math.max(0, Math.min(1, (Math.log(zoom) - Math.log(0.4)) / (Math.log(TILT_ZOOM) - Math.log(0.4))));
+    const close = Math.max(0, Math.min(1, (Math.log(zoom) - Math.log(TILT_ZOOM)) / (Math.log(MAX_ZOOM) - Math.log(TILT_ZOOM))));
+    return ((66 - 32 * Math.pow(t, 1.1) - 7 * close) * Math.PI) / 180;
   }
 
   /** Distance from the camera to its target. */
