@@ -27,6 +27,9 @@ import {
   type Bone,
 } from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { crowdInstance } from '../../shared/chibi/crowd';
+import { chibiClips, type ClipName } from '../../shared/chibi/rig';
+import type { ChibiSpec } from '../../shared/chibi/spec';
 import { charInstance, clip, hasClip, type CharName } from './kit';
 
 export type AnimState = 'idle' | 'walk' | 'attack' | 'hit' | 'death';
@@ -50,6 +53,10 @@ export interface Prop {
 
 export interface FigureSpec {
   char: CharName;
+  /** A chibi from the shared art kit instead of a KayKit character (dressed in crowd.TEAM colours). */
+  chibi?: ChibiSpec;
+  /** Chibi clip per state (defaults: idle, walk, attack, hit, death). */
+  chibiClips?: Partial<Record<AnimState | 'run' | 'cheer' | 'aim', ClipName>>;
   /** Accessory meshes to keep (weapons, shields, hats, capes); the body is always shown. */
   show: string[];
   props?: Prop[];
@@ -105,6 +112,20 @@ const tmpB = new Matrix4();
 const tmpQ = new Quaternion();
 const tmpV = new Vector3();
 const tmpS = new Vector3();
+
+const chibiCache = new Map<string, ChibiSpec>();
+/** A crowd chibi (cached geometry is rebuilt per instance: bones must be unique). */
+function chibiInstance(spec: ChibiSpec) {
+  chibiCache.set(spec.id, spec);
+  return crowdInstance(spec);
+}
+
+const CHIBI_DEFAULT: Record<AnimState | 'run' | 'cheer' | 'aim', ClipName> = { idle: 'idle', walk: 'walk', attack: 'attack', hit: 'hit', death: 'death', run: 'run', cheer: 'cheer', aim: 'idle' };
+
+/** The chibi clip a figure plays in a state. */
+export function chibiClip(f: FigureSpec, s: AnimState | 'run' | 'cheer' | 'aim') {
+  return chibiClips()[f.chibiClips?.[s] ?? CHIBI_DEFAULT[s]].clip;
+}
 
 /** GLTFLoader strips characters such as '.' from node names ('handslot.r' → 'handslotr'). */
 export const boneName = (n: string): string => n.replace(/[[\]./:\s]/g, '');
@@ -195,7 +216,7 @@ export function bakeLook(spec: LookSpec): BakedLook {
   }
   const figs: Fig[] = [];
   for (const f of spec.figures) {
-    const root = charInstance(f.char);
+    const root = f.chibi ? chibiInstance(f.chibi) : charInstance(f.char);
     const bones = new Map<string, Bone>();
     root.traverse((o) => {
       if ((o as Bone).isBone) bones.set(o.name, o as Bone);
@@ -291,8 +312,9 @@ export function bakeLook(spec: LookSpec): BakedLook {
     const name = f.clips?.[s] ?? DEFAULT_CLIPS[s];
     return hasClip(name) ? name : DEFAULT_CLIPS[s];
   };
+  const clipOf = (f: FigureSpec, s: AnimState) => (f.chibi ? chibiClip(f, s) : clip(clipName(f, s)));
   for (const s of STATES) {
-    const dur = figs.length ? clip(clipName(figs[0].spec, s)).duration : spec.durations?.[s] ?? (LOOPS[s] ? 1.2 : 0.8);
+    const dur = figs.length ? clipOf(figs[0].spec, s).duration : spec.durations?.[s] ?? (LOOPS[s] ? 1.2 : 0.8);
     const frames = Math.max(2, Math.round(dur * FPS) + (LOOPS[s] ? 0 : 1));
     clips[s] = { row, frames, loop: LOOPS[s], duration: dur };
     row += frames;
@@ -304,7 +326,7 @@ export function bakeLook(spec: LookSpec): BakedLook {
     // set up each figure's action for this state
     const actions = figs.map((f) => {
       f.mixer.stopAllAction();
-      const a = f.mixer.clipAction(clip(clipName(f.spec, s)));
+      const a = f.mixer.clipAction(clipOf(f.spec, s));
       a.setLoop(c.loop ? LoopRepeat : LoopOnce, Infinity);
       a.clampWhenFinished = true;
       a.reset().play();

@@ -1,15 +1,18 @@
-// What every unit type looks like on the map and in battle: squads of KayKit
-// Adventurers (CC0) with the right gear, riders on a hand-made horse, crews
+// What every unit type looks like on the map and in battle: squads of chibis
+// from the shared art kit (and KayKit for late-era crews), riders on a hand-made horse, crews
 // beside their machines, and Kenney ships (CC0). Each look is baked by rig.ts
 // into one instanced, skeletally animated mesh.
 
-import { AnimationClip, BufferGeometry, Color, Matrix4, Quaternion, Vector3, type Bone } from 'three';
+import { BufferGeometry, Color, Matrix4, Quaternion, Vector3, type Bone } from 'three';
 import { Rng } from '../../shared/rng';
 import { UNIT } from '../data/units';
 import { cone, cylinder, ellipsoid, faceted, gradient, hemisphere, merge, part, prep, torus, xf, box } from './geo';
-import { clip, hasClip, kitGeo, registerClip, type CharName } from './kit';
+import { kitGeo, type CharName } from './kit';
 import { aircraft, cannon, cart, catapult, fort, gatlingGun, rocketTruck, ship, tank } from './models/figures';
 import type { AnimState, FigureSpec, LookSpec, RigidSpec } from './rig';
+import { archer, BUILDER, cavalry as chibiCavalry, engineer, FARMER, gunner, scout as chibiScout, spearGuard, swordsman, warrior, withOutfit } from '../../shared/chibi/catalog';
+import { TEAM } from '../../shared/chibi/crowd';
+import type { ChibiSpec } from '../../shared/chibi/spec';
 
 /** Skin tone multipliers over the KayKit peach (linear RGB), one per people. */
 export const SKIN_TONES: [number, number, number][] = [[1, 1, 1], [0.93, 0.84, 0.76], [0.78, 0.62, 0.5], [0.58, 0.42, 0.32], [0.42, 0.29, 0.22], [1, 0.95, 0.92]];
@@ -210,21 +213,7 @@ function squad(spots: [number, number, number][], make: (k: number) => [CharName
 // --- riders and horses -----------------------------------------------------------------------------
 
 
-/** Rotates a bone about a world-space axis (used to pose riders astride). */
-function turnWorld(bone: Bone | undefined, axis: Vector3, angle: number): void {
-  if (!bone) return;
-  bone.updateWorldMatrix(true, false);
-  const parentQ = new Quaternion();
-  bone.parent?.getWorldQuaternion(parentQ);
-  const worldQ = new Quaternion().setFromRotationMatrix(new Matrix4().extractRotation(bone.matrixWorld));
-  const turned = new Quaternion().setFromAxisAngle(axis, angle).multiply(worldQ);
-  bone.quaternion.copy(parentQ.invert().multiply(turned));
-  bone.updateMatrixWorld(true);
-}
-
-const X = new Vector3(1, 0, 0);
 const Y = new Vector3(0, 1, 0);
-const Z = new Vector3(0, 0, 1);
 
 /** Turns a bone so one of its local axes points along a world direction. */
 function aim(bone: Bone | undefined, local: Vector3, target: Vector3): void {
@@ -247,27 +236,6 @@ function upright(slot: 'handslot.r' | 'handslot.l', tilt = 0.12): FigureSpec['po
     if (state === 'attack' || state === 'death') return;
     aim(bone(slot), Y, dir);
   };
-}
-
-/** Legs astride the saddle on top of a sitting clip. */
-function astride(bone: (n: string) => Bone | undefined): void {
-  turnWorld(bone('upperleg.l'), Z, -0.55);
-  turnWorld(bone('upperleg.r'), Z, 0.55);
-  turnWorld(bone('upperleg.l'), X, 0.55);
-  turnWorld(bone('upperleg.r'), X, 0.55);
-}
-
-const UPPER = /^(spine|chest|upperarm|lowerarm|wrist|hand|handslot|head|elbowIK|handIK)/;
-
-/** An attack clip on the upper body over a sitting lower body (made once). */
-function riderClip(attack: string): string {
-  const name = `Ride_${attack}`;
-  if (hasClip(name)) return name;
-  const up = clip(attack);
-  const low = clip('Sit_Chair_Idle');
-  const tracks = [...up.tracks.filter((t) => UPPER.test(t.name)), ...low.tracks.filter((t) => !UPPER.test(t.name))];
-  registerClip(new AnimationClip(name, up.duration, tracks));
-  return name;
 }
 
 function horseParts(coat: string, mane: string, barding: boolean): Record<string, BufferGeometry> {
@@ -344,28 +312,6 @@ function horse(coat: string, mane: string, barding: boolean, at: [number, number
   ];
 }
 
-function cavalry(char: CharName, o: FigOpts, coats: [string, string][], barding: boolean): LookSpec {
-  const rigid: RigidSpec[] = [];
-  const figures: FigureSpec[] = [];
-  PAIR.forEach(([x, z, yaw], k) => {
-    const [coat, mane] = coats[k % coats.length];
-    const parts = horse(coat, mane, barding, [x * 1.45, z * 1.3], yaw * 0.4);
-    for (const r of parts) r.name += k;
-    rigid.push(...parts);
-    const f = figure(char, o, { p: [0, 0.112, -0.02], s: FIG * 0.88 }, k * 0.3);
-    const attack = f.clips?.attack ?? '1H_Melee_Attack_Chop';
-    f.clips = { idle: 'Sit_Chair_Idle', walk: 'Sit_Chair_Idle', run: 'Sit_Chair_Idle', attack: riderClip(attack), hit: 'Sit_Chair_Idle', death: 'Sit_Chair_Idle', cheer: riderClip('Cheer'), aim: 'Sit_Chair_Idle' };
-    f.mount = `horse${k}`;
-    const carry = f.pose;
-    f.pose = (bone, state, t) => {
-      astride(bone);
-      carry?.(bone, state, t);
-    };
-    figures.push(f);
-  });
-  return { figures, rigid };
-}
-
 // --- machines, ships, aircraft ------------------------------------------------------------------
 
 /** Old procedural vehicle models are sized for a 2x scale. */
@@ -410,9 +356,55 @@ function crew(chars: CharName[], hat: Hat): FigureSpec[] {
   ];
 }
 
+function chibiCrew(spec: ChibiSpec): FigureSpec[] {
+  return [
+    chibiFigure(spec, { p: [-0.15, 0, -0.1], r: [0, 0.5, 0], s: CHIBI }, 0.2, WORK),
+    chibiFigure(spec, { p: [0.15, 0, -0.12], r: [0, -0.4, 0], s: CHIBI }, 0.6, WORK),
+  ];
+}
+
 function kenneyShip(name: string, s: number): BufferGeometry {
   return xf(kitGeo(name).clone(), { s, r: [0, Math.PI, 0] });
 }
+
+// --- chibi squads (the shared art kit, dressed in the TEAM marker colours) --------------------------
+
+/** World scale of a chibi figure (≈ the height of the old KayKit squads; chibis are 1.26 tall). */
+export const CHIBI = 0.3;
+
+type ChibiClips = FigureSpec['chibiClips'];
+
+function chibiFigure(spec: ChibiSpec, t: FigureSpec['t'], phase: number, clips?: ChibiClips): FigureSpec {
+  return { char: 'knight', show: [], chibi: spec, chibiClips: clips, t, phase };
+}
+
+function chibiSquad(spots: [number, number, number][], make: (k: number) => ChibiSpec, clips?: ChibiClips): FigureSpec[] {
+  return spots.map(([x, z, yaw], k) => chibiFigure(make(k), { p: [x, 0, z], r: [0, yaw, 0], s: CHIBI }, k * 0.37, clips));
+}
+
+const MELEE: ChibiClips = { attack: 'attack' };
+const THRUST: ChibiClips = { attack: 'thrust' };
+const SHOOT: ChibiClips = { attack: 'shoot' };
+const FIRE: ChibiClips = { attack: 'fire' };
+const WORK: ChibiClips = { idle: 'idle', attack: 'work' };
+
+/** Chibi riders astride KayKit-era horses. */
+function chibiRiders(spec: ChibiSpec, coats: [string, string][], barding: boolean, clips: ChibiClips = MELEE): LookSpec {
+  const rigid: RigidSpec[] = [];
+  const figures: FigureSpec[] = [];
+  PAIR.forEach(([x, z, yaw], k) => {
+    const [coat, mane] = coats[k % coats.length];
+    const parts = horse(coat, mane, barding, [x * 1.45, z * 1.3], yaw * 0.4);
+    for (const r of parts) r.name += k;
+    rigid.push(...parts);
+    const f = chibiFigure(spec, { p: [0, 0.1, -0.03], s: CHIBI * 0.82 }, k * 0.3, { idle: 'ride', walk: 'ride', run: 'ride', attack: clips?.attack ?? 'attack', hit: 'ride', death: 'ride', cheer: 'ride', aim: 'ride' });
+    f.mount = `horse${k}`;
+    figures.push(f);
+  });
+  return { figures, rigid };
+}
+
+const T = TEAM;
 
 // --- the catalogue -------------------------------------------------------------------------------
 
@@ -433,54 +425,52 @@ function makeLook(type: string): LookSpec {
   switch (type) {
     case 'settler':
       return {
-        figures: [figure('barbarian', { gear: 'none', hat: 'straw', pack: true }, { p: [-0.13, 0, 0.05], r: [0, 0.2, 0], s: FIG }, 0), figure('mage', { gear: 'staff', hat: 'none', cape: true }, { p: [0.12, 0, 0.04], r: [0, -0.2, 0], s: FIG }, 0.5)],
+        figures: [chibiFigure(FARMER, { p: [-0.13, 0, 0.05], r: [0, 0.2, 0], s: CHIBI }, 0), chibiFigure(BUILDER, { p: [0.12, 0, 0.04], r: [0, -0.2, 0], s: CHIBI }, 0.5, WORK)],
         rigid: [{ name: 'cart', geo: rigidGeo(cart(), 1.9, [0.0, 0, -0.16], 0.3), motion: recoil(0) }],
       };
     case 'scout':
-      return { figures: squad(PAIR, (k) => (k ? ['rogue', { gear: 'knife', cape: true }] : ['hooded', { gear: 'bow' }])) };
+      return { figures: chibiSquad(PAIR, (k) => (k ? chibiScout(T) : withOutfit(chibiScout(T), [{ k: 'item', item: 'spyglass', hand: 'R' }], 'scout-glass'))) };
     case 'explorer':
-      return { figures: squad(PAIR, (k) => (k ? ['rogue', { gear: 'knife', hat: 'pith', pack: true }] : ['hooded', { gear: 'crossbow', pack: true }])) };
+      return { figures: chibiSquad(PAIR, (k) => withOutfit(chibiScout(T), [{ k: 'hat', style: 'fisher', color: '#e8dcb8', band: T.main }], `explorer-${k}`)) };
     case 'warband':
-      return { figures: squad(WEDGE, (k) => ['barbarian', k === 2 ? { gear: 'axe2', hat: 'bear' } : { gear: 'axe', shield: 'barbarian', hat: 'bear' }]) };
+      return { figures: chibiSquad(WEDGE, () => warrior(T), MELEE) };
     case 'spearmen':
-      return { figures: squad(WEDGE, () => ['barbarian', { gear: 'spear', shield: 'barbarian' }]) };
-    case 'swordsmen':
-      return { figures: squad(WEDGE, (k) => ['knight', { gear: 'sword', shield: k === 2 ? 'round' : 'badge', hat: 'helmet', cape: k !== 1 }]) };
     case 'pikemen':
-      return { figures: squad(WEDGE, () => ['knight', { gear: 'pike', shield: 'rect', hat: 'helmet' }]) };
+      return { figures: chibiSquad(WEDGE, () => spearGuard(T), THRUST) };
+    case 'swordsmen':
+      return { figures: chibiSquad(WEDGE, () => swordsman(T), MELEE) };
     case 'musketeers':
-      return { figures: squad(WEDGE, () => ['rogue', { gear: 'musket', hat: 'tricorn', cape: true }]) };
+      return { figures: chibiSquad(WEDGE, () => gunner(T, 'musket'), FIRE) };
     case 'riflemen':
-      return { figures: squad(WEDGE, () => ['rogue', { gear: 'rifle', hat: 'kepi' }]) };
+      return { figures: chibiSquad(WEDGE, () => gunner(T, 'rifle'), FIRE) };
     case 'infantry':
-      return { figures: squad(WEDGE, () => ['hooded', { gear: 'rifle', hat: 'steel' }]) };
+      return { figures: chibiSquad(WEDGE, () => gunner(T, 'modern'), FIRE) };
     case 'mechinf':
       return { figures: squad(PAIR, () => ['knight', { gear: 'rifle', shield: 'rect', hat: 'helmet' }]), rigid: [{ name: 'apc', geo: rigidGeo(tank('modern'), 1.5, [0, 0, -0.2]), motion: recoil(0.01) }] };
     case 'exolegion':
       return { figures: squad(WEDGE, () => ['knight', { gear: 'plasma', shield: 'spike', hat: 'helmet', cape: true }]) };
     case 'archers':
-      return { figures: squad(WEDGE, () => ['hooded', { gear: 'bow' }]) };
     case 'crossbow':
-      return { figures: squad(WEDGE, (k) => [k === 2 ? 'hooded' : 'rogue', { gear: 'crossbow', cape: true }]) };
+      return { figures: chibiSquad(WEDGE, () => archer(T), SHOOT) };
     case 'gatling': case 'machinegun':
       return { figures: crew(['rogue', 'hooded'], type === 'gatling' ? 'kepi' : 'steel'), rigid: [{ name: 'gun', geo: rigidGeo(gatlingGun(type === 'machinegun'), 1.9, [0.02, 0, 0.08]), motion: recoil(0.015) }] };
     case 'horsemen':
-      return cavalry('barbarian', { gear: 'spear', hat: 'bear' }, [['#8a5a34', '#3a2618'], ['#c9a06a', '#6b4a2e']], false);
+      return chibiRiders(withOutfit(warrior(T), [], 'horseman'), [['#8a5a34', '#3a2618'], ['#c9a06a', '#6b4a2e']], false);
     case 'knights':
-      return cavalry('knight', { gear: 'lance', shield: 'badge', hat: 'helmet', cape: true }, [['#e8e2d6', '#9a8f80'], ['#5a3a26', '#2a1a12']], true);
+      return chibiRiders(chibiCavalry(T), [['#e8e2d6', '#9a8f80'], ['#5a3a26', '#2a1a12']], true);
     case 'cavalry':
-      return cavalry('rogue', { gear: 'saber', hat: 'kepi', cape: true }, [['#5a3a26', '#1e140e'], ['#8a5a34', '#3a2618']], false);
+      return chibiRiders(withOutfit(gunner(T, 'rifle'), [{ k: 'cape', color: T.main, length: 0.3, inner: T.dark }], 'dragoon'), [['#5a3a26', '#1e140e'], ['#8a5a34', '#3a2618']], false);
     case 'tanks': case 'modarmor': case 'hovertank': {
       const k = type === 'tanks' ? 'tank' : type === 'modarmor' ? 'modern' : 'hover';
       const hover = k === 'hover';
       return { figures: [], rigid: [{ name: 'tank', geo: rigidGeo(tank(k), 2.6, [0.02, 0, 0.02]), motion: hover ? bobbing(0.012, 1.6, 0.02) : recoil(0.03) }], durations: { attack: 0.9 } };
     }
     case 'catapult': case 'trebuchet':
-      return { figures: crew(['barbarian', 'knight'], 'none'), rigid: [{ name: 'engine', geo: rigidGeo(catapult(type === 'trebuchet'), 2.6, [0.02, 0, 0.06]), motion: recoil(0.02) }] };
+      return { figures: chibiCrew(engineer(T)), rigid: [{ name: 'engine', geo: rigidGeo(catapult(type === 'trebuchet'), 2.6, [0.02, 0, 0.06]), motion: recoil(0.02) }] };
     case 'cannon':
-      return { figures: crew(['rogue', 'rogue'], 'tricorn'), rigid: [{ name: 'engine', geo: rigidGeo(kitGeo('k_cannon-mobile').clone(), 0.32, [0.02, 0, 0.08]), motion: recoil(0.04) }] };
+      return { figures: chibiCrew(gunner(T, 'musket')), rigid: [{ name: 'engine', geo: rigidGeo(kitGeo('k_cannon-mobile').clone(), 0.32, [0.02, 0, 0.08]), motion: recoil(0.04) }] };
     case 'artillery':
-      return { figures: crew(['hooded', 'rogue'], 'steel'), rigid: [{ name: 'engine', geo: rigidGeo(cannon(true), 2.8, [0.02, 0, 0.06]), motion: recoil(0.04) }] };
+      return { figures: chibiCrew(gunner(T, 'modern')), rigid: [{ name: 'engine', geo: rigidGeo(cannon(true), 2.8, [0.02, 0, 0.06]), motion: recoil(0.04) }] };
     case 'rocketart':
       return { figures: [], rigid: [{ name: 'engine', geo: rigidGeo(rocketTruck(), 2.6, [0.02, 0, 0.04]), motion: recoil(0.02) }], durations: { attack: 1.0 } };
     case 'galley':

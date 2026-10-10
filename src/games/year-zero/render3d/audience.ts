@@ -25,8 +25,8 @@ import {
 import { Rng } from '../../shared/rng';
 import { box, cylinder, ellipsoid, faceted, gradient, merge, part, softBox, torus, xf } from './geo';
 import { kitGeo } from './kit';
-import { teamMaterial } from './live';
-import { buildKitLeader, type Expression, type Gesture, type KitLeader, type LeaderLook } from './models/kitleader';
+import { buildChibiLeader, type ChibiLeader } from './models/chibileader';
+import type { Expression, Gesture, LeaderLook } from './models/kitleader';
 import type { StageScene } from './stage';
 
 export type { Expression, LeaderLook };
@@ -83,8 +83,8 @@ export class AudienceScene implements StageScene {
   readonly scene = new Scene();
   readonly camera = new PerspectiveCamera(32, 1, 0.1, 200);
   readonly bloom = 0.45;
-  private leader: KitLeader;
-  private envoy: KitLeader;
+  private leader: ChibiLeader;
+  private envoy: ChibiLeader;
   private flames: Mesh[] = [];
   private lights: PointLight[] = [];
   private t = 0;
@@ -117,17 +117,14 @@ export class AudienceScene implements StageScene {
     if (modern) this.buildOffice(info);
     else this.buildHall(info);
     // the leader
-    const lm = teamMaterial(info.leader.color, info.leader.skin);
-    this.disposables.push(lm);
-    this.leader = buildKitLeader(info.leader, lm);
-    if (this.leader.seated && !modern) this.leader.root.position.set(0, 0.62, -1.45);
+    // (a chibi from the shared art kit, dressed in the people's colours)
+    this.leader = buildChibiLeader(info.leader, modern);
+    // seated: hips on the throne's cushion (seat top at y 1.25)
+    if (this.leader.seated) this.leader.root.position.set(0, 1.2, -1.58);
     else this.leader.root.position.set(0, modern ? 0 : 0.62, modern ? -0.6 : -0.9);
     this.scene.add(this.leader.root);
-    // our envoy, from behind
-    const em = teamMaterial(info.envoy.color, info.envoy.skin);
-    this.disposables.push(em);
-    // a plain diplomat in a sash of our colours, not a second monarch
-    this.envoy = buildKitLeader({ ...info.envoy, title: 'Envoy' }, em, true);
+    // our envoy, from behind: a plain diplomat in a sash of our colours, not a second monarch
+    this.envoy = buildChibiLeader({ ...info.envoy, title: 'Envoy' }, true);
     // standing before the dais, three-quarters from behind, facing the leader
     const lz = this.leader.root.position.z;
     this.envoy.root.position.set(-0.6, 0, lz + 1.95);

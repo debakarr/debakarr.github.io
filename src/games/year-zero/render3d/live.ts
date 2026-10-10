@@ -17,8 +17,11 @@ import {
   SkinnedMesh,
   type Bone,
 } from 'three';
+import { TEAM } from '../../shared/chibi/crowd';
+import { ChibiModel } from '../../shared/chibi/model';
+import type { ChibiSpec } from '../../shared/chibi/spec';
 import { charInstance, clip, hasClip } from './kit';
-import { boneName, compose, type AnimState, type FigureSpec, type LookSpec, type RigidSpec } from './rig';
+import { boneName, chibiClip, compose, type AnimState, type FigureSpec, type LookSpec, type RigidSpec } from './rig';
 
 export type LiveState = AnimState | 'run' | 'cheer' | 'aim';
 
@@ -38,6 +41,8 @@ export interface LiveFigure {
   root: Object3D;
   mixer: AnimationMixer;
   spec: FigureSpec;
+  /** Full-quality chibi (face textures, per-surface materials) when the spec is one. */
+  chibi?: ChibiModel;
   bones: Map<string, Bone>;
   actions: Map<string, AnimationAction>;
   current: AnimationAction | null;
@@ -62,8 +67,36 @@ export function teamMaterial(color: string, skin: string): MeshStandardMaterial 
   return m;
 }
 
-/** A KayKit figure dressed as in its spec (accessories, props), with its own mixer. */
+/** A chibi costume in the TEAM marker colours, re-dressed in a side's colour and skin tone. */
+export function dressChibi(spec: ChibiSpec, team: Color | undefined, skin: Color | undefined): ChibiSpec {
+  if (!team && !skin) return spec;
+  let json = JSON.stringify(spec);
+  if (team) {
+    const hex = (c: Color) => `#${c.getHexString()}`;
+    json = json
+      .replaceAll(TEAM.main, hex(team))
+      .replaceAll(TEAM.dark, hex(team.clone().multiplyScalar(0.68)))
+      .replaceAll(TEAM.light, hex(team.clone().lerp(new Color(1, 1, 1), 0.25)));
+  }
+  const out = JSON.parse(json) as ChibiSpec;
+  if (skin) out.face = { ...out.face, skin: `#${new Color(out.face.skin).multiply(skin).getHexString()}` };
+  out.id = `${spec.id}-${team?.getHexString() ?? ''}-${skin?.getHexString() ?? ''}`;
+  return out;
+}
+
+/** A figure dressed as in its spec (KayKit accessories and props, or a chibi), with its own mixer. */
 export function liveFigure(spec: FigureSpec, material?: MeshStandardMaterial): LiveFigure {
+  if (spec.chibi) {
+    const u = material?.userData.uniforms as { uTeam?: { value: Color }; uSkin?: { value: Color } } | undefined;
+    const model = new ChibiModel(dressChibi(spec.chibi, u?.uTeam?.value, u?.uSkin?.value));
+    for (const m of model.meshes) {
+      m.castShadow = true;
+      m.receiveShadow = true;
+    }
+    const f: LiveFigure = { root: model.root, mixer: model.animator.mixer, spec, chibi: model, bones: new Map(), actions: new Map(), current: null, state: 'idle' };
+    play(f, 'idle', 0);
+    return f;
+  }
   const root = charInstance(spec.char);
   const bones = new Map<string, Bone>();
   root.traverse((o) => {
@@ -94,6 +127,11 @@ export function liveFigure(spec: FigureSpec, material?: MeshStandardMaterial): L
   return f;
 }
 
+function clipFor(f: LiveFigure, s: LiveState, override?: string) {
+  if (f.spec.chibi && !override) return chibiClip(f.spec, s);
+  return clip(override ?? clipName(f, s));
+}
+
 function clipName(f: LiveFigure, s: LiveState): string {
   const fromSpec = f.spec.clips?.[s];
   const name = fromSpec ?? DEFAULTS[s];
@@ -102,10 +140,11 @@ function clipName(f: LiveFigure, s: LiveState): string {
 
 /** Cross-fades a figure into a state (one-shots restart; loops keep running). */
 export function play(f: LiveFigure, s: LiveState, fade = 0.18, clipOverride?: string): void {
-  const name = clipOverride ?? clipName(f, s);
+  const c = clipFor(f, s, f.spec.chibi ? undefined : clipOverride);
+  const name = c.name;
   let a = f.actions.get(name);
   if (!a) {
-    a = f.mixer.clipAction(clip(name));
+    a = f.mixer.clipAction(c);
     f.actions.set(name, a);
   }
   const once = ONCE[s] ?? false;
@@ -124,6 +163,10 @@ export function play(f: LiveFigure, s: LiveState, fade = 0.18, clipOverride?: st
 
 /** Advances a figure's clip and re-applies its pose tweaks. */
 export function tickFigure(f: LiveFigure, dt: number, t: number): void {
+  if (f.chibi) {
+    f.chibi.update(dt);
+    return;
+  }
   f.mixer.update(dt);
   const s: AnimState = f.state === 'run' ? 'walk' : f.state === 'cheer' || f.state === 'aim' ? 'idle' : f.state;
   if (f.spec.pose) {

@@ -1,0 +1,24 @@
+---
+// Character lab: the shared chibi cast laid out like the art reference sheets.
+// Not linked from the site; used to compare models against the art pack.
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>Character lab</title>
+    <style>
+      html, body, #lab { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #f4e8d6; }
+    </style>
+  </head>
+  <body data-pagefind-ignore="all">
+    <div id="lab"></div>
+    <script>
+      import { startLab } from '../../games/shared/chibi/lab';
+      startLab(document.getElementById('lab')!);
+    </script>
+  </body>
+</html>
