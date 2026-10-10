@@ -36,9 +36,14 @@ import { cone, cylinder, merge, part } from './geo';
 import { kitGeo } from './kit';
 import { liveLook, playLook, splitLook, teamMaterial, tickLook, type LiveLook, type LiveState } from './live';
 import { lookSpec } from './looks';
-import * as B from './models/buildings';
-import * as K from './models/kitnature';
-import * as N from './models/nature';
+import { B, K } from './models/voxel';
+import type { Biome } from './models/kitnature';
+
+import { N } from './models/voxel';
+import { meshGrid, VOX, VoxelGrid } from '../../shared/chibi/voxel';
+
+/** Size of one block of battlefield ground. */
+const GROUND_VOX = 0.4;
 import type { StageScene } from './stage';
 
 export interface Side {
@@ -213,7 +218,13 @@ export class BattleScene implements StageScene {
     return out;
   }
 
+  /** Ground height: whole voxel blocks (smooth under water). */
   private heightAt(x: number, z: number): number {
+    const h = this.smoothHeight(x, z);
+    return this.info.water ? h : Math.round(h / GROUND_VOX) * GROUND_VOX;
+  }
+
+  private smoothHeight(x: number, z: number): number {
     const i = this.info;
     let y = this.noise.fbm(x * 0.15, z * 0.15, 3) * 0.25;
     // hills rise behind the field
@@ -226,6 +237,11 @@ export class BattleScene implements StageScene {
   }
 
   private buildGround(): void {
+    if (!this.info.water) {
+      this.buildVoxelGround();
+      if (this.info.river) this.buildWater();
+      return;
+    }
     const geo = new PlaneGeometry(90, 60, 120, 80);
     geo.rotateX(-Math.PI / 2);
     const pos = geo.attributes.position;
@@ -244,6 +260,37 @@ export class BattleScene implements StageScene {
     m.receiveShadow = true;
     this.scene.add(m);
     if (this.info.water || this.info.river) this.buildWater();
+  }
+
+  /** The field as voxel columns: grass (or sand, snow…) on top, earth down the steps. */
+  private buildVoxelGround(): void {
+    const C = GROUND_VOX;
+    const g = new VoxelGrid();
+    const nx = Math.round(45 / C);
+    const nz = Math.round(30 / C);
+    const top = (i: number, k: number) => Math.round(this.smoothHeight((i + 0.5) * C, (k + 0.5) * C) / C);
+    const tops = new Map<number, number>();
+    const at = (i: number, k: number) => {
+      const key = (i + 4096) * 8192 + (k + 4096);
+      let t = tops.get(key);
+      if (t === undefined) tops.set(key, (t = top(i, k)));
+      return t;
+    };
+    const c = new Color();
+    const earth = this.info.terrain === T.Desert ? '#d9b27a' : this.info.terrain === T.Snow ? '#cfd8e0' : '#9a7048';
+    const earthDark = new Color(earth).offsetHSL(0, 0, -0.08).getHex();
+    for (let i = -nx; i < nx; i++)
+      for (let k = -nz; k < nz; k++) {
+        const t = at(i, k);
+        const low = Math.min(at(i - 1, k), at(i + 1, k), at(i, k - 1), at(i, k + 1), t - 1);
+        this.groundColor((i + 0.5) * C, (k + 0.5) * C, c);
+        for (let y = Math.min(low, t - 1); y < t; y++) g.cells.set(VoxelGrid.key(i, y, k), y === t - 1 ? c.getHex() : (y + i + k) % 3 === 0 ? earthDark : new Color(earth).getHex());
+        if (t - 1 > low) g.cells.set(VoxelGrid.key(i, t - 1, k), c.getHex());
+      }
+    const geo = meshGrid(g, { scale: C / VOX, jitter: 0.05 }).main;
+    const m = new Mesh(geo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }));
+    m.receiveShadow = true;
+    this.scene.add(m);
   }
 
   private buildWater(): void {
@@ -302,7 +349,7 @@ export class BattleScene implements StageScene {
       return;
     }
     const t = i.terrain;
-    const biome: K.Biome = t === T.Snow ? 'snow' : t === T.Tundra ? 'tundra' : t === T.Desert ? 'desert' : t === T.Plains ? 'plains' : i.feature === F.Jungle ? 'jungle' : 'temperate';
+    const biome: Biome = t === T.Snow ? 'snow' : t === T.Tundra ? 'tundra' : t === T.Desert ? 'desert' : t === T.Plains ? 'plains' : i.feature === F.Jungle ? 'jungle' : 'temperate';
     const kinds: (() => BufferGeometry)[] = [];
     const lone: (() => BufferGeometry)[] = [];
     if (t === T.Snow) kinds.push(() => K.conifer(rng.chance(0.5) ? 'A' : 'B', 'snow', true));
@@ -316,7 +363,8 @@ export class BattleScene implements StageScene {
     for (let k = 0; k < dense; k++) {
       const x = rng.float(-22, 22);
       const z = rng.chance(0.6) ? rng.float(-16, -3.2) : rng.float(4.5, 9);
-      if (Math.abs(z) < 3 || (z > 0 && Math.abs(x) < 9 && z < 6)) continue;
+      // the camera's shots run along the near-left side: keep near trees to the right
+      if (Math.abs(z) < 3 || (z > 0 && x < 9)) continue;
       if (kinds.length) this.prop(rng.pick(kinds)(), x, z, rng.float(5.5, 8));
     }
     // a couple of whole KayKit groves behind the field

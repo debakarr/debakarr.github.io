@@ -27,6 +27,7 @@ import mageUrl from '../assets/models/char_mage.glb?url';
 import rogueUrl from '../assets/models/char_rogue.glb?url';
 import hoodedUrl from '../assets/models/char_hooded.glb?url';
 import { prep } from './geo';
+import { voxelize } from '../../shared/chibi/voxel';
 
 export type CharName = 'knight' | 'barbarian' | 'mage' | 'rogue' | 'hooded';
 const CHAR_URLS: Record<CharName, string> = { knight: knightUrl, barbarian: barbarianUrl, mage: mageUrl, rogue: rogueUrl, hooded: hoodedUrl };
@@ -105,6 +106,12 @@ function index(root: Object3D): Map<string, Object3D> {
   return m;
 }
 
+/** Every model name in the bundles (debugging and tools). */
+export function kitNames(): string[] {
+  const k = need();
+  return [...k.world.keys(), ...k.hall.keys()];
+}
+
 export function hasModel(name: string): boolean {
   return !!kit && (kit.world.has(name) || kit.hall.has(name));
 }
@@ -131,7 +138,7 @@ export function kitGeo(name: string, recolor?: Recolor, key = ''): BufferGeometr
     const k = need();
     const root = k.world.get(name) ?? k.hall.get(name);
     if (!root) throw new Error(`no model ${name}`);
-    g = extract(root as Mesh, recolor);
+    g = voxelModel(name, extract(root as Mesh, recolor), k.hall.has(name) && !k.world.has(name));
     g.computeBoundingBox();
     g.computeBoundingSphere();
     geoCache.set(ck, g);
@@ -146,11 +153,29 @@ export function kitPart(name: string, part: string, recolor?: Recolor): { geo: B
   const ck = `${name}~${part}`;
   let g = geoCache.get(ck);
   if (!g) {
-    g = extract(node, recolor);
+    g = voxelModel(name, extract(node, recolor), false);
     geoCache.set(ck, g);
   }
   const p = (node.userData.pivot as [number, number, number] | undefined) ?? [0, 0, 0];
   return { geo: g, pivot: [p[0], p[1], p[2]] };
+}
+
+/**
+ * Every model is drawn as voxel art, to match the voxel characters: the
+ * extracted mesh is resampled into voxels of one size per bundle (map pieces
+ * 0.05, hall pieces 0.125), coarser for LOD stand-ins, capped so the largest
+ * models stay around 48 voxels long.
+ */
+function voxelModel(name: string, g: BufferGeometry, hall: boolean): BufferGeometry {
+  g.computeBoundingBox();
+  const bb = g.boundingBox!;
+  const span = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
+  let size = hall ? 0.125 : 0.05;
+  if (name.endsWith('@lod')) size *= 2;
+  size = Math.max(size, span / 48);
+  const v = voxelize(g, size);
+  g.dispose();
+  return prep(v);
 }
 
 /** The model's bounding box (static part). */

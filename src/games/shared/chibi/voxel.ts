@@ -179,6 +179,16 @@ export interface MeshOptions {
   split?: (color: number) => boolean;
   /** Extra world scale on top of VOX. */
   scale?: number;
+  /** Merge flat, evenly lit faces of one colour into larger quads (fewer triangles). */
+  greedy?: boolean;
+}
+
+/**
+ * Voxel values may carry a team weight above the colour: value = rgb | (round(team × 100) << 24).
+ * Meshes always get a `team` attribute (0 when there is none).
+ */
+export function withTeam(rgb: number, team: number): number {
+  return (rgb & 0xffffff) + Math.round(Math.max(0, Math.min(1, team)) * 100) * 0x1000000;
 }
 
 /** Meshes a grid: one quad per exposed face, AO and colour baked into vertices. */
@@ -189,14 +199,43 @@ export function meshGrid(g: VoxelGrid, opts: MeshOptions = {}): { main: BufferGe
   const out = [newBuf(), newBuf()];
   const solid = (x: number, y: number, z: number) => g.cells.has(VoxelGrid.key(x, y, z));
   const c = new Color();
-  for (const [k, col] of g.cells) {
+  // flat faces waiting to be merged: per buffer, direction and slice
+  const flat = new Map<string, Map<string, number>>();
+  const emit = (buf: Buf, f: Face, origin: number[], du: number, dv: number, rgb: number, team: number, ao: number[]) => {
+    c.setHex(rgb);
+    const base = buf.pos.length / 3;
+    for (let i = 0; i < 4; i++) {
+      const corner = f.corners[i];
+      const q = [origin[0] + corner[0], origin[1] + corner[1], origin[2] + corner[2]];
+      q[f.u] = origin[f.u] + corner[f.u] * du;
+      q[f.v] = origin[f.v] + corner[f.v] * dv;
+      buf.pos.push((q[0] + g.offset[0]) * S, (q[1] + g.offset[1]) * S, (q[2] + g.offset[2]) * S);
+      buf.nor.push(f.n[0], f.n[1], f.n[2]);
+      const l = AO[ao[i]];
+      buf.col.push(c.r * l, c.g * l, c.b * l);
+      buf.team.push(team);
+    }
+    if (ao[0] + ao[2] > ao[1] + ao[3]) buf.idx.push(base + 1, base + 2, base + 3, base + 1, base + 3, base);
+    else buf.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+  };
+  for (const [k, value] of g.cells) {
     const z = (k % 512) - 256;
     const y = (Math.floor(k / 512) % 512) - 256;
     const x = Math.floor(k / (512 * 512)) - 256;
-    const p = [x, y, z];
-    const plain = opts.plain?.(col) ?? false;
-    const buf = out[opts.split?.(col) ? 1 : 0];
-    for (const f of FACES) {
+    const col = value & 0xffffff;
+    const team = Math.floor(value / 0x1000000) / 100;
+    const plain = opts.plain?.(value) ?? false;
+    const bi = opts.split?.(value) ? 1 : 0;
+    const buf = out[bi];
+    let rgb = col;
+    if (!plain && jitter) {
+      c.setHex(col);
+      const j = 1 + (hash(x, y, z) - 0.5) * jitter;
+      c.setRGB(Math.min(1, c.r * j), Math.min(1, c.g * j), Math.min(1, c.b * j));
+      rgb = c.getHex();
+    }
+    for (let fi = 0; fi < 6; fi++) {
+      const f = FACES[fi];
       const nx = x + f.n[0];
       const ny = y + f.n[1];
       const nz = z + f.n[2];
@@ -222,38 +261,132 @@ export function meshGrid(g: VoxelGrid, opts: MeshOptions = {}): { main: BufferGe
         const d = solid(cc[0], cc[1], cc[2]) ? 1 : 0;
         ao.push(a && b ? 0 : 3 - (a + b + d));
       }
-      c.setHex(col);
-      if (!plain && jitter) {
-        const j = 1 + (hash(x, y, z) - 0.5) * jitter;
-        c.r = Math.min(1, c.r * j);
-        c.g = Math.min(1, c.g * j);
-        c.b = Math.min(1, c.b * j);
+      const p = [x, y, z];
+      if (opts.greedy && ao[0] === 3 && ao[1] === 3 && ao[2] === 3 && ao[3] === 3) {
+        const axis = f.n[0] ? 0 : f.n[1] ? 1 : 2;
+        const key = `${bi}|${fi}|${p[axis]}`;
+        let m = flat.get(key);
+        if (!m) flat.set(key, (m = new Map()));
+        m.set(`${p[f.u]},${p[f.v]}`, rgb + team * 100 * 0x1000000);
+        continue;
       }
-      const base = buf.pos.length / 3;
-      for (let i = 0; i < 4; i++) {
-        const corner = f.corners[i];
-        buf.pos.push((p[0] + corner[0] + g.offset[0]) * S, (p[1] + corner[1] + g.offset[1]) * S, (p[2] + corner[2] + g.offset[2]) * S);
-        buf.nor.push(f.n[0], f.n[1], f.n[2]);
-        const l = AO[ao[i]];
-        buf.col.push(c.r * l, c.g * l, c.b * l);
+      emit(buf, f, p, 1, 1, rgb, team, ao);
+    }
+  }
+  // greedy merge: grow rectangles of equal colour over each slice
+  for (const [key, m] of flat) {
+    const [bs, fs, ss] = key.split('|');
+    const f = FACES[Number(fs)];
+    const axis = f.n[0] ? 0 : f.n[1] ? 1 : 2;
+    const slice = Number(ss);
+    const cells = [...m.keys()].map((k2) => k2.split(',').map(Number) as [number, number]).sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+    const done = new Set<string>();
+    for (const [u0, v0] of cells) {
+      const k0 = `${u0},${v0}`;
+      if (done.has(k0)) continue;
+      const val = m.get(k0)!;
+      let w = 1;
+      while (m.get(`${u0 + w},${v0}`) === val && !done.has(`${u0 + w},${v0}`)) w++;
+      let h = 1;
+      grow: for (;;) {
+        for (let du = 0; du < w; du++) {
+          const k2 = `${u0 + du},${v0 + h}`;
+          if (m.get(k2) !== val || done.has(k2)) break grow;
+        }
+        h++;
       }
-      // flip the diagonal so AO gradients don't crease
-      if (ao[0] + ao[2] > ao[1] + ao[3]) buf.idx.push(base + 1, base + 2, base + 3, base + 1, base + 3, base);
-      else buf.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      for (let dv = 0; dv < h; dv++) for (let du = 0; du < w; du++) done.add(`${u0 + du},${v0 + dv}`);
+      const origin = [0, 0, 0];
+      origin[axis] = slice;
+      origin[f.u] = u0;
+      origin[f.v] = v0;
+      emit(out[Number(bs)], f, origin, w, h, val & 0xffffff, Math.floor(val / 0x1000000) / 100, [3, 3, 3, 3]);
     }
   }
   return { main: toGeo(out[0]), split: out[1].pos.length ? toGeo(out[1]) : null };
+}
+
+/**
+ * Voxelises a vertex-coloured mesh (with an optional `team` attribute): every
+ * triangle is sampled into cells of `size`, keeping colour and team. The
+ * result is meshed with AO and greedy merging, in the source's coordinates.
+ */
+export function voxelize(src: BufferGeometry, size: number): BufferGeometry {
+  const g = new VoxelGrid();
+  const pos = src.attributes.position;
+  const col = src.attributes.color;
+  const team = src.attributes.team;
+  const idx = src.index;
+  const tri = idx ? idx.count / 3 : pos.count / 3;
+  const A = new Color();
+  const B = new Color();
+  const C = new Color();
+  const at = (i: number) => (idx ? idx.getX(i) : i);
+  const pa = [0, 0, 0];
+  const pb = [0, 0, 0];
+  const pc = [0, 0, 0];
+  const votes = new Map<number, Map<number, [number, number]>>();
+  const mix = new Color();
+  for (let t = 0; t < tri; t++) {
+    const ia = at(t * 3);
+    const ib = at(t * 3 + 1);
+    const ic = at(t * 3 + 2);
+    pa[0] = pos.getX(ia); pa[1] = pos.getY(ia); pa[2] = pos.getZ(ia);
+    pb[0] = pos.getX(ib); pb[1] = pos.getY(ib); pb[2] = pos.getZ(ib);
+    pc[0] = pos.getX(ic); pc[1] = pos.getY(ic); pc[2] = pos.getZ(ic);
+    if (col) {
+      A.setRGB(col.getX(ia), col.getY(ia), col.getZ(ia));
+      B.setRGB(col.getX(ib), col.getY(ib), col.getZ(ib));
+      C.setRGB(col.getX(ic), col.getY(ic), col.getZ(ic));
+    } else A.setRGB(1, 1, 1), B.setRGB(1, 1, 1), C.setRGB(1, 1, 1);
+    const ta = team ? team.getX(ia) : 0;
+    const tb = team ? team.getX(ib) : 0;
+    const tc = team ? team.getX(ic) : 0;
+    const e = Math.max(Math.hypot(pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]), Math.hypot(pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]), Math.hypot(pc[0] - pb[0], pc[1] - pb[1], pc[2] - pb[2]));
+    const n = Math.max(1, Math.ceil(e / (size * 0.45)));
+    for (let i = 0; i <= n; i++)
+      for (let j = 0; j <= n - i; j++) {
+        const u = i / n;
+        const v = j / n;
+        const w = 1 - u - v;
+        const x = Math.floor((pa[0] * w + pb[0] * u + pc[0] * v) / size);
+        const y = Math.floor((pa[1] * w + pb[1] * u + pc[1] * v) / size);
+        const z = Math.floor((pa[2] * w + pb[2] * u + pc[2] * v) / size);
+        const r = A.r * w + B.r * u + C.r * v;
+        const gg = A.g * w + B.g * u + C.g * v;
+        const bb = A.b * w + B.b * u + C.b * v;
+        const tm = ta * w + tb * u + tc * v;
+        // vertex colours are linear; voxel values are sRGB hex like every other colour here
+        const rgb = mix.setRGB(Math.min(1, r), Math.min(1, gg), Math.min(1, bb)).getHex();
+        const value = withTeam(rgb, tm);
+        // vote: the colour covering most of the cell's surface wins (bricks over mortar)
+        const ck = VoxelGrid.key(x, y, z);
+        let tally = votes.get(ck);
+        if (!tally) votes.set(ck, (tally = new Map()));
+        const q = ((rgb >> 3) & 0x1f1f1f) + Math.round(tm * 4) * 0x1000000;
+        const t0 = tally.get(q);
+        if (t0) t0[0]++;
+        else tally.set(q, [1, value]);
+      }
+  }
+  for (const [ck, tally] of votes) {
+    let best: [number, number] | null = null;
+    for (const t of tally.values()) if (!best || t[0] > best[0]) best = t;
+    g.cells.set(ck, best![1]);
+  }
+  return meshGrid(g, { jitter: 0, scale: size / VOX, greedy: true }).main;
 }
 
 interface Buf {
   pos: number[];
   nor: number[];
   col: number[];
+  team: number[];
   idx: number[];
 }
 
 function newBuf(): Buf {
-  return { pos: [], nor: [], col: [], idx: [] };
+  return { pos: [], nor: [], col: [], team: [], idx: [] };
 }
 
 function toGeo(b: Buf): BufferGeometry {
@@ -262,6 +395,7 @@ function toGeo(b: Buf): BufferGeometry {
   g.setAttribute('normal', new BufferAttribute(new Float32Array(b.nor), 3));
   g.setAttribute('color', new BufferAttribute(new Float32Array(b.col), 3));
   g.setAttribute('uv', new BufferAttribute(new Float32Array((b.pos.length / 3) * 2), 2));
+  g.setAttribute('team', new BufferAttribute(new Float32Array(b.team.length ? b.team : new Array(b.pos.length / 3).fill(0)), 1));
   g.setIndex(b.idx);
   return g;
 }
@@ -279,6 +413,7 @@ export function decalGeometry(pixels: [number, number, number, string][], scale 
     for (let i = 0; i < 4; i++) {
       buf.nor.push(0, 0, 1);
       buf.col.push(c.r, c.g, c.b);
+      buf.team.push(0);
     }
     buf.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
   }

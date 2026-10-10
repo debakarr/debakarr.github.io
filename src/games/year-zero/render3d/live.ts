@@ -93,7 +93,7 @@ export function liveFigure(spec: FigureSpec, material?: MeshStandardMaterial): L
       m.castShadow = true;
       m.receiveShadow = true;
     }
-    const f: LiveFigure = { root: model.root, mixer: model.animator.mixer, spec, chibi: model, bones: new Map(), actions: new Map(), current: null, state: 'idle' };
+    const f: LiveFigure = { root: model.root, mixer: model.animator.mixer, spec, chibi: model, bones: new Map(Object.entries(model.bones)), actions: new Map(), current: null, state: 'idle' };
     play(f, 'idle', 0);
     return f;
   }

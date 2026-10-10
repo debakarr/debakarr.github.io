@@ -30,8 +30,8 @@ import { F, Imp, RESOURCES, Relief, T } from '../data/terrain';
 import type { Game } from '../sim/game';
 import { resourceVisible } from '../sim/tiles';
 import { HEX_GLSL } from './hexgl';
-import * as M from './models/nature';
-import * as K from './models/kitnature';
+import { K, N as M } from './models/voxel';
+
 import { hexDist, tileHash, type Shape } from './shape';
 import { depthKey, hexPatch, type SharedUniforms } from './terrain';
 

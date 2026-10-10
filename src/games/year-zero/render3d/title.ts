@@ -31,9 +31,10 @@ import { Rng } from '../../shared/rng';
 import { capsule, cone, ellipsoid, merge, part, sphere, xf } from './geo';
 import { kitGeo, kitPart } from './kit';
 import { liveFigure, teamMaterial, type LiveFigure } from './live';
-import * as B from './models/buildings';
-import * as K from './models/kitnature';
-import * as N from './models/nature';
+import { B, K } from './models/voxel';
+import { FACTIONS, scout, withOutfit } from '../../shared/chibi/catalog';
+
+import { N } from './models/voxel';
 import type { StageScene } from './stage';
 
 const HERO = '#3f6fd8';
@@ -133,9 +134,10 @@ export class TitleScene implements StageScene {
     this.water = this.buildWater();
     this.buildTown();
     this.buildNature();
-    // the hero: a young founder in a blue cape (a dressed KayKit character)
+    // the hero: a young founder in a blue cape
     const heroMat = teamMaterial(HERO, '#ffffff');
-    this.heroFig = liveFigure({ char: 'mage', show: ['Mage_Cape'], props: [], clips: { idle: 'Idle' } }, heroMat);
+    const founder = withOutfit(scout(FACTIONS.blue), [{ k: 'cape', color: '#2f58b8', length: 0.36, inner: '#22407e', emblem: 'fleur', emblemColor: '#e2b04a' }], 'founder');
+    this.heroFig = liveFigure({ char: 'knight', show: [], chibi: founder }, heroMat);
     this.hero = new Object3D();
     this.hero.add(this.heroFig.root);
     this.hero.scale.setScalar(1.25);

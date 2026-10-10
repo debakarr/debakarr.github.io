@@ -220,15 +220,14 @@ export class Terrain {
         vec4 yzT = texelFetch(uTiles, yzTileCoord(vTileF), 0);
         int yzF = yzFlags(yzT);
         float yzVis = (yzF & 2) != 0 ? 1.0 : 0.0;
-        float yzDn = yzFbm(vWPos.xz * 3.3);
-        float yzFine = yzNoise(vWPos.xz * 21.0);
-        diffuseColor.rgb *= 0.9 + 0.16 * yzDn + 0.06 * (yzFine - 0.5);
+        // voxel ground: colour varies in crisp blocks the size of the trees' voxels
+        vec2 yzCell = floor(vWPos.xz * 12.0) / 12.0;
+        float yzDn = yzFbm(yzCell * 3.3);
+        float yzFine = yzNoise(yzCell * 37.0);
+        diffuseColor.rgb *= 0.9 + 0.16 * yzDn + 0.1 * (yzFine - 0.5);
         if (vKind < 0.5) {
-          // painterly grass: short strokes along a lazy wind direction, darker clumps
-          vec2 yzS = vec2(vWPos.x * 34.0 + vWPos.z * 11.0, vWPos.z * 34.0 - vWPos.x * 6.0);
-          float yzStroke = yzNoise(vec2(yzS.x, yzS.y * 0.25));
-          float yzClump = smoothstep(0.55, 0.85, yzFbm(vWPos.xz * 1.6 + 17.0));
-          diffuseColor.rgb *= 0.94 + 0.12 * yzStroke;
+          // grass in blocks: lighter and darker patches, a few clumps
+          float yzClump = smoothstep(0.55, 0.85, yzFbm(yzCell * 1.6 + 17.0));
           diffuseColor.rgb *= 1.0 - 0.08 * yzClump;
           // a soft darker rim inside every hex reads like the reference's tiles
           float yzRim = smoothstep(0.8, 1.0, yzHexDist(vLocal / ${TOP_R.toFixed(3)}));

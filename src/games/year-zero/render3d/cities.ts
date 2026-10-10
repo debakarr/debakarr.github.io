@@ -29,9 +29,11 @@ import type { City, Civ } from '../sim/state';
 import { Relief } from '../data/terrain';
 import { merge, xf } from './geo';
 import { CELL, hasModel, kitGeo, kitPart } from './kit';
-import { broadleaf } from './models/kitnature';
+
 import { HEX_GLSL } from './hexgl';
-import * as B from './models/buildings';
+import { B, K as KN } from './models/voxel';
+
+const { broadleaf } = KN;
 import { EDGE_N, hexDist, type Shape } from './shape';
 import { depthKey, hexPatch, type SharedUniforms } from './terrain';
 
