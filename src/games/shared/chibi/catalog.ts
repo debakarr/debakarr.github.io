@@ -491,3 +491,6 @@ export const CAST: Record<string, ChibiSpec> = {
 export function withOutfit(spec: ChibiSpec, add: Piece[], id = spec.id): ChibiSpec {
   return { ...spec, id, outfit: [...spec.outfit, ...add] };
 }
+
+// VRM manifest keys are the cast names (scout, queen, swordsman-red…).
+for (const [key, spec] of Object.entries(CAST)) spec.vrmKey ??= key;

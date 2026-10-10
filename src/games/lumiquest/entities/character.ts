@@ -91,6 +91,7 @@ export function appearanceSpec(a: Appearance): ChibiSpec {
   return {
     id: `lq-${a.preset}-${a.hair}-${a.outfit}-${a.outfitMain}-${a.outfitAccent}-${a.skin}-${a.hairColor}-${a.eye}-${a.face}-${a.accessories.join('.')}`,
     name: a.name,
+    vrmKey: `lq-${a.preset}`,
     face: {
       skin: a.skin,
       eyes: a.eye,

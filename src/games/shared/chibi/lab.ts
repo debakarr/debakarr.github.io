@@ -118,9 +118,11 @@ export function startLab(host: HTMLElement): void {
   cam.lookAt(0, lookY, 0);
 
   const render = () => renderer.render(scene, cam);
-  for (const m of models) m.update(0);
-  render();
-  (window as unknown as { labReady: boolean }).labReady = true;
+  void Promise.all(models.map((m) => m.ready)).then(() => {
+    for (const m of models) m.update(0);
+    render();
+    (window as unknown as { labReady: boolean }).labReady = true;
+  });
   if (anim) {
     let last = performance.now();
     const loop = (now: number) => {

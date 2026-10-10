@@ -70,6 +70,8 @@ export class ChibiModel {
   private outlines: SkinnedMesh[] = [];
   /** A VRM wearing this character's pose, once loaded. */
   vrm: VrmRig | null = null;
+  /** Settles once any VRM has been swapped in (or found missing). */
+  readonly ready: Promise<void>;
   private disposed = false;
   private mood: Expression;
   private blink = 2 + Math.random() * 3;
@@ -113,7 +115,7 @@ export class ChibiModel {
     this.root.scale.setScalar(s);
     this.animator = new Animator(this.root, chibiClips());
     this.animator.play(opts.clip ?? 'idle', 0);
-    if (opts.vrm !== false) void this.attachVrm();
+    this.ready = opts.vrm !== false ? this.attachVrm() : Promise.resolve();
   }
 
   /** Swaps in a VRM when the manifest (or the spec) names one; the chibi shows until then. */
