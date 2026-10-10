@@ -3,13 +3,22 @@
 // beside their machines, and Kenney ships (CC0). Each look is baked by rig.ts
 // into one instanced, skeletally animated mesh.
 
-import { AnimationClip, BufferGeometry, Matrix4, Quaternion, Vector3, type Bone } from 'three';
+import { AnimationClip, BufferGeometry, Color, Matrix4, Quaternion, Vector3, type Bone } from 'three';
 import { Rng } from '../../shared/rng';
 import { UNIT } from '../data/units';
 import { cone, cylinder, ellipsoid, faceted, gradient, hemisphere, merge, part, prep, torus, xf, box } from './geo';
 import { clip, hasClip, kitGeo, registerClip, type CharName } from './kit';
 import { aircraft, cannon, cart, catapult, fort, gatlingGun, rocketTruck, ship, tank } from './models/figures';
 import type { AnimState, FigureSpec, LookSpec, RigidSpec } from './rig';
+
+/** Skin tone multipliers over the KayKit peach (linear RGB), one per people. */
+export const SKIN_TONES: [number, number, number][] = [[1, 1, 1], [0.93, 0.84, 0.76], [0.78, 0.62, 0.5], [0.58, 0.42, 0.32], [0.42, 0.29, 0.22], [1, 0.95, 0.92]];
+
+/** A people's skin tone as a hex colour (sRGB) for materials that take a Color. */
+export function skinHex(id: number): string {
+  const [r, g, b] = SKIN_TONES[((id % SKIN_TONES.length) + SKIN_TONES.length) % SKIN_TONES.length];
+  return `#${new Color(r, g, b).getHexString()}`;
+}
 
 /** World height of a figure (KayKit characters are ~2.4 units tall). */
 export const FIG = 0.165;
@@ -123,7 +132,7 @@ interface FigOpts {
 }
 
 /** Which clips a figure plays for its gear. */
-function clipsFor(gear: Gear, shield: Shield): Partial<Record<AnimState, string>> {
+function clipsFor(gear: Gear, shield: Shield): FigureSpec['clips'] {
   const block = shield !== 'none';
   switch (gear) {
     case 'none': return { idle: 'Unarmed_Idle', attack: 'Interact', hit: 'Hit_A' };
@@ -345,7 +354,7 @@ function cavalry(char: CharName, o: FigOpts, coats: [string, string][], barding:
     rigid.push(...parts);
     const f = figure(char, o, { p: [0, 0.112, -0.02], s: FIG * 0.88 }, k * 0.3);
     const attack = f.clips?.attack ?? '1H_Melee_Attack_Chop';
-    f.clips = { idle: 'Sit_Chair_Idle', walk: 'Sit_Chair_Idle', attack: riderClip(attack), hit: 'Sit_Chair_Idle', death: 'Sit_Chair_Idle' };
+    f.clips = { idle: 'Sit_Chair_Idle', walk: 'Sit_Chair_Idle', run: 'Sit_Chair_Idle', attack: riderClip(attack), hit: 'Sit_Chair_Idle', death: 'Sit_Chair_Idle', cheer: riderClip('Cheer'), aim: 'Sit_Chair_Idle' };
     f.mount = `horse${k}`;
     const carry = f.pose;
     f.pose = (bone, state, t) => {

@@ -32,9 +32,12 @@ import { Noise2D } from '../../shared/noise';
 import { Rng } from '../../shared/rng';
 import { F, Relief, T } from '../data/terrain';
 import { UNIT } from '../data/units';
-import { cone, cylinder, merge, part, xf } from './geo';
+import { cone, cylinder, merge, part } from './geo';
+import { kitGeo } from './kit';
+import { liveLook, playLook, splitLook, teamMaterial, tickLook, type LiveLook, type LiveState } from './live';
+import { lookSpec } from './looks';
 import * as B from './models/buildings';
-import { LOOKS, aircraft, cannon, catapult, gatlingGun, horseGeo, poseRig, rocketTruck, ship, soldierRig, tank, type Look, type Rig } from './models/figures';
+import * as K from './models/kitnature';
 import * as N from './models/nature';
 import type { StageScene } from './stage';
 
@@ -76,8 +79,7 @@ const SKY_TOP = new Color('#7fbdf5');
 const SKY_HORIZON = new Color('#fff1d2');
 
 interface Actor {
-  root: Object3D;
-  rig: { head: Object3D; armL: Object3D; armR: Object3D; legL: Object3D; legR: Object3D } | null;
+  look: LiveLook;
   side: -1 | 1;
   home: Vector3;
   pos: Vector3;
@@ -91,7 +93,12 @@ interface Actor {
   hitAt: number[];
   phase: number;
   facing: number;
+  /** A one-shot clip that must finish before the actor changes state. */
+  lock: { state: LiveState; until: number } | null;
 }
+
+/** Battle figures are the map's squads scaled up. */
+const LOOK_SCALE = 3.3;
 
 interface Projectile {
   mesh: Object3D;
@@ -108,24 +115,6 @@ interface Puff {
   start: number;
   dur: number;
   grow: number;
-}
-
-/** A material that paints `team` vertices in a side's colour and `team = 2` in skin, with a hit flash. */
-function teamMaterial(color: string, skin: string): MeshStandardMaterial {
-  const m = new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, metalness: 0.05 });
-  const uniforms = { uTeam: { value: new Color(color) }, uSkin: { value: new Color(skin) }, uFlash: { value: 0 } };
-  m.userData.uniforms = uniforms;
-  m.customProgramCacheKey = () => 'yz-battle-team';
-  m.onBeforeCompile = (shader) => {
-    Object.assign(shader.uniforms, uniforms);
-    shader.vertexShader = `attribute float team;\nuniform vec3 uTeam;\nuniform vec3 uSkin;\n${shader.vertexShader}`.replace('#include <color_vertex>', `
-      vColor = vec4(1.0);
-      vColor.xyz *= color.xyz;
-      if (team > 1.5) vColor.xyz *= uSkin;
-      else vColor.xyz = mix(vColor.xyz, vColor.xyz * uTeam, clamp(team, 0.0, 1.0));`);
-    shader.fragmentShader = `uniform float uFlash;\n${shader.fragmentShader}`.replace('#include <opaque_fragment>', '#include <opaque_fragment>\ngl_FragColor.rgb = mix(gl_FragColor.rgb, vec3(1.0, 0.35, 0.28), uFlash);');
-  };
-  return m;
 }
 
 function sky(): Mesh {
@@ -193,9 +182,7 @@ export class BattleScene implements StageScene {
     this.sun.shadow.normalBias = 0.03;
     this.scene.add(this.sun);
     this.buildGround();
-    N.setCanopyDetail(2);
     this.buildScenery();
-    N.setCanopyDetail(1);
     if (info.city) this.buildCity();
     this.buildArmies();
     this.length = info.ranged ? 6.6 : 7.2;
@@ -311,34 +298,44 @@ export class BattleScene implements StageScene {
     const rng = this.rng;
     if (i.water) {
       // a distant coast
-      for (let k = 0; k < 7; k++) this.prop(N.mountain(200 + k, k % 2 === 0, 1), -30 + k * 10 + rng.float(-3, 3), -38 + rng.float(-4, 4), rng.float(6, 10), undefined, false);
+      for (let k = 0; k < 7; k++) this.prop(K.peak(200 + k, 'temperate', k % 2 === 0 ? 0.55 : null), -30 + k * 10 + rng.float(-3, 3), -38 + rng.float(-4, 4), rng.float(9, 13), undefined, false);
       return;
     }
+    const t = i.terrain;
+    const biome: K.Biome = t === T.Snow ? 'snow' : t === T.Tundra ? 'tundra' : t === T.Desert ? 'desert' : t === T.Plains ? 'plains' : i.feature === F.Jungle ? 'jungle' : 'temperate';
     const kinds: (() => BufferGeometry)[] = [];
     const lone: (() => BufferGeometry)[] = [];
-    const t = i.terrain;
-    if (t === T.Snow) kinds.push(() => N.pineTree(rng.int(99), true));
-    else if (i.feature === F.Jungle) kinds.push(() => N.jungleTree(rng.int(99)), () => N.palm(rng.int(99)));
-    else if (t === T.Desert) lone.push(() => N.cactus(rng.int(99)), () => N.rock(rng.int(99), '#e2c48e', '#f0d9a8'));
-    else if (t === T.Tundra) kinds.push(() => N.pineTree(rng.int(99), rng.chance(0.4)));
-    else kinds.push(() => N.roundTree(rng.int(99)), () => N.pineTree(rng.int(99)), () => N.roundTree(rng.int(99), ['#4f9a2a', '#c4dc52']));
-    const dense = i.feature === F.Forest || i.feature === F.Jungle ? 70 : t === T.Desert ? 0 : 30;
+    if (t === T.Snow) kinds.push(() => K.conifer(rng.chance(0.5) ? 'A' : 'B', 'snow', true));
+    else if (i.feature === F.Jungle) kinds.push(() => K.broadleaf(rng.int(99), 'jungle'), () => K.palmKit(rng.chance(0.5) ? 'long' : 'detailed-long'));
+    else if (t === T.Desert) lone.push(() => N.cactus(rng.int(99)), () => K.rockKit(rng.pick(['A', 'C', 'E'] as const), 'desert'));
+    else if (t === T.Tundra) kinds.push(() => K.conifer(rng.chance(0.5) ? 'A' : 'B', 'tundra', rng.chance(0.3)));
+    else if (t === T.Plains) kinds.push(() => K.broadleaf(rng.int(99), rng.pick(['olive', 'autumn', 'gold'] as const)), () => K.conifer('A', 'plains'));
+    else kinds.push(() => K.broadleaf(rng.int(99), rng.pick(['green', 'fresh', 'deep'] as const)), () => K.conifer(rng.chance(0.5) ? 'A' : 'B', 'temperate'), () => K.broadleaf(rng.int(99), 'fresh', true));
+    const dense = i.feature === F.Forest || i.feature === F.Jungle ? 80 : t === T.Desert ? 0 : 36;
     // trees frame the field without blocking the fighting lane
     for (let k = 0; k < dense; k++) {
       const x = rng.float(-22, 22);
       const z = rng.chance(0.6) ? rng.float(-16, -3.2) : rng.float(4.5, 9);
       if (Math.abs(z) < 3 || (z > 0 && Math.abs(x) < 9 && z < 6)) continue;
-      if (kinds.length) this.prop(rng.pick(kinds)(), x, z, rng.float(5, 7.5));
+      if (kinds.length) this.prop(rng.pick(kinds)(), x, z, rng.float(5.5, 8));
     }
+    // a couple of whole KayKit groves behind the field
+    if (kinds.length && t !== T.Desert) for (let k = 0; k < 4; k++) this.prop(K.forestClump(rng.chance(0.5) ? 'A' : 'B', 'large', biome === 'jungle' ? 'temperate' : biome, t === T.Snow), -18 + k * 12 + rng.float(-3, 3), -11 + rng.float(-3, 2), rng.float(5, 6.5));
     for (let k = 0; k < (t === T.Desert ? 26 : 18); k++) {
       const x = rng.float(-16, 16);
       const z = rng.float(-10, 7);
       if (Math.abs(z) < 2.2 && Math.abs(x) < 6) continue;
       if (lone.length) this.prop(rng.pick(lone)(), x, z, rng.float(4, 6));
-      else this.prop(N.rock(rng.int(99)), x, z, rng.float(3, 6));
+      else this.prop(K.rockKit(rng.pick(['A', 'B', 'C', 'D', 'E'] as const), biome), x, z, rng.float(3, 5.5));
     }
-    // grass tufts and flowers everywhere but the snow and sand
+    // shrubs, grass tufts and flowers everywhere but the snow and sand
     if (t !== T.Snow && t !== T.Desert) {
+      for (let k = 0; k < 26; k++) {
+        const x = rng.float(-16, 16);
+        const z = rng.float(-8, 7);
+        if (Math.abs(z) < 2.4 && Math.abs(x) < 7) continue;
+        this.prop(K.shrub(rng.int(99), rng.pick(['green', 'fresh', 'olive'] as const), rng.chance(0.3)), x, z, rng.float(5, 7));
+      }
       const tuft = N.tuft(5);
       const fl = N.flowers(6);
       const tuftCol = new Color(t === T.Plains ? '#d8c25a' : '#7dc443');
@@ -355,9 +352,14 @@ export class BattleScene implements StageScene {
     }
     // mountains on the horizon for rugged land
     const peaks = i.relief === Relief.Mountain || t === T.Snow || t === T.Tundra ? 6 : i.relief === Relief.Hills ? 3 : 2;
-    for (let k = 0; k < peaks; k++) this.prop(N.mountain(300 + k, true, 1), -34 + k * (68 / Math.max(1, peaks - 1)) + rng.float(-4, 4), -34 + rng.float(-5, 3), rng.float(8, 13), undefined, false);
-    // a few fence posts along the path, like the reference battle meadow
-    if (t === T.Grass || t === T.Plains) for (let k = 0; k < 8; k++) this.prop(N.fence(0.34), -12 + k * 1.8, -2.9 + Math.sin(k) * 0.2, 5, 0.05, true);
+    for (let k = 0; k < peaks; k++) this.prop(K.peak(300 + k, biome === 'jungle' ? 'temperate' : biome, t === T.Desert ? null : 0.5), -34 + k * (68 / Math.max(1, peaks - 1)) + rng.float(-4, 4), -34 + rng.float(-5, 3), rng.float(12, 18), undefined, false);
+    // a fence along the path, like the reference battle meadow
+    if (t === T.Grass || t === T.Plains) for (let k = 0; k < 9; k++) this.prop(K.fenceKit(k === 4), -12 + k * 2.2, -3.1 + Math.sin(k) * 0.12, 6.5, Math.PI / 2 + 0.03, true);
+    // the camp of each side: a tent and supplies far behind the lines
+    if (!this.info.city) {
+      this.prop(kitGeo('tent').clone(), -14, 4.5, 3.2, 0.4);
+      this.prop(K.propPile(3), -13, 6, 5);
+    }
   }
 
   private buildCity(): void {
@@ -367,33 +369,45 @@ export class BattleScene implements StageScene {
     const parts: BufferGeometry[] = [];
     const walls = i.city!.walls || d.tier >= 2;
     const tier = d.tier;
-    const roof = d.color;
-    const wx = 3.4;
-    if (walls) {
-      for (let k = -3; k <= 3; k++) {
-        if (k === 0) continue;
-        const seg = tier <= 1 ? B.palisade(0.3) : B.wallSegment(0.3, 0.08);
-        parts.push(B.place(seg, wx, 0, k * 0.3 * SCALE * 0.62, Math.PI / 2, SCALE * 0.62));
+    const team = new Color(d.color);
+    const paint = (name: string, c: Color = team) => {
+      const g = kitGeo(name).clone();
+      const tm = g.attributes.team;
+      const col = g.attributes.color;
+      for (let k = 0; k < tm.count; k++) {
+        const v = tm.getX(k);
+        if (v > 0 && v <= 1.5) col.setXYZ(k, col.getX(k) * (1 - v + c.r * v), col.getY(k) * (1 - v + c.g * v), col.getZ(k) * (1 - v + c.b * v));
       }
-      if (tier > 1) for (const k of [-3.5, -1, 1, 3.5]) parts.push(B.place(B.wallTower(roof), wx, 0, k * 0.3 * SCALE * 0.62, 0, SCALE * 0.62));
-      parts.push(B.place(B.gatehouse(roof), wx, 0, 0, Math.PI / 2, SCALE * 0.62));
+      return g;
+    };
+    const wx = 3.4;
+    const W = 1.5;
+    if (walls) {
+      if (tier <= 1) {
+        for (let k = -3; k <= 3; k++) if (k !== 0) parts.push(B.place(B.palisade(0.3), wx, 0, k * 0.3 * SCALE * 0.62, Math.PI / 2, SCALE * 0.62));
+      } else {
+        for (let k = -3; k <= 3; k++) parts.push(B.place(kitGeo(k === 0 ? 'wall_straight_gate' : 'wall_straight').clone(), wx, this.heightAt(wx, k * 2 * W) - 0.05, k * 2 * W, Math.PI / 2, W));
+        for (const k of [-3.5, -1.5, 1.5, 3.5]) parts.push(B.place(paint('building_tower_A'), wx + 0.1, this.heightAt(wx, k * 2 * W) - 0.05, k * 2 * W, 0, W * 1.05));
+      }
     }
+    const homes = tier <= 1 ? ['tent', 'building_home_A'] : tier <= 6 ? ['building_home_A', 'building_home_B', 'building_tavern', 'building_home_B'] : ['c_building_A', 'c_building_C', 'c_building_E'];
     for (let k = 0; k < 14; k++) {
-      const x = wx + rng.float(1.2, 6);
-      const z = rng.float(-6, 6);
-      const geo = tier <= 1 ? B.hut(rng) : tier <= 4 ? B.house(rng, rng.chance(0.6) ? roof : rng.pick(B.STYLE.roofs)) : tier <= 6 ? B.brickBlock(rng, roof, 2) : B.skyscraper(rng, rng.float(0.15, 0.3), roof);
-      parts.push(B.place(geo, x, this.heightAt(x, z), z, -Math.PI / 2 + rng.float(-0.3, 0.3), SCALE * 0.8));
+      const x = wx + rng.float(1.6, 7);
+      const z = rng.float(-7, 7);
+      const name = rng.pick(homes);
+      const sc = name.startsWith('c_') ? 0.7 : 1.7;
+      parts.push(B.place(paint(name, rng.chance(0.6) ? team : new Color(rng.pick(['#c8553d', '#b5653a', '#7a8fa6']))), x, this.heightAt(x, z) - 0.04, z, -Math.PI / 2 + rng.float(-0.4, 0.4), sc));
     }
-    if (tier >= 2 && tier <= 6) parts.push(B.place(B.keep(rng, roof), wx + 4.2, this.heightAt(wx + 4.2, 0), 0, -Math.PI / 2, SCALE * 0.75));
+    if (tier >= 2 && tier <= 6) parts.push(B.place(paint('building_castle'), wx + 6, this.heightAt(wx + 6, 0) - 0.05, 0, -Math.PI / 2, 1.6));
     const m = new Mesh(merge(parts), this.propMat);
     m.castShadow = true;
     m.receiveShadow = true;
     this.scene.add(m);
     // the city's banner over the gate; it changes colour if the city falls
-    const pole = new Mesh(merge([part(cylinder(0.02, 0.02, 2.2, 6), '#e8e0d0', { p: [0, 1.1, 0] })]), this.propMat);
-    pole.position.set(wx + 0.2, walls ? 0.6 : 0, 0);
-    const cloth = new Mesh(new PlaneGeometry(0.9, 0.55, 8, 2), new MeshStandardMaterial({ color: d.color, side: 2, roughness: 0.7 }));
-    cloth.position.set(0.45, 1.9, 0);
+    const pole = new Mesh(merge([part(cylinder(0.03, 0.03, 2.6, 6), '#e8e0d0', { p: [0, 1.3, 0] })]), this.propMat);
+    pole.position.set(wx + 0.2, walls ? 1.55 : 0, 0);
+    const cloth = new Mesh(new PlaneGeometry(1.0, 0.62, 8, 2), new MeshStandardMaterial({ color: d.color, side: 2, roughness: 0.7 }));
+    cloth.position.set(0.5, 2.25, 0);
     pole.add(cloth);
     this.flagCloth = cloth;
     this.scene.add(pole);
@@ -401,67 +415,25 @@ export class BattleScene implements StageScene {
 
   // --- The armies --------------------------------------------------------------------------------
 
-  private rigObject(rig: Rig, mat: MeshStandardMaterial): { root: Object3D; parts: Actor['rig'] } {
-    const root = new Object3D();
-    const body = new Mesh(rig.body, mat);
-    body.castShadow = true;
-    root.add(body);
-    const mk = (g: BufferGeometry, p: [number, number, number]) => {
-      const o = new Object3D();
-      o.position.set(p[0], p[1], p[2]);
-      const m = new Mesh(g, mat);
-      m.castShadow = true;
-      o.add(m);
-      root.add(o);
-      return o;
-    };
-    const pv = rig.pivots;
-    return {
-      root,
-      parts: { head: mk(rig.head, pv.head), armL: mk(rig.armL, pv.armL), armR: mk(rig.armR, pv.armR), legL: mk(rig.legL, pv.legL), legR: mk(rig.legR, pv.legR) },
-    };
+  /** The type a side fields (a city with no garrison sends its townsfolk with the era's ranged arms). */
+  private sideType(side: Side): string {
+    if (side.type) return side.type;
+    return side.tier >= 6 ? 'infantry' : side.tier >= 5 ? 'riflemen' : side.tier >= 4 ? 'musketeers' : side.tier >= 3 ? 'crossbow' : 'archers';
   }
 
-  private armySpec(side: Side): { kind: Actor['kind']; build: (mat: MeshStandardMaterial, k: number) => { root: Object3D; parts: Actor['rig'] }; count: number; ranged: boolean } {
-    const type = side.type;
-    const def = type ? UNIT[type] : null;
+  private armySpec(side: Side): { kind: Actor['kind']; actors: ReturnType<typeof splitLook>; count: number; ranged: boolean } {
+    const type = this.sideType(side);
+    const def = UNIT[type];
     const cls = def?.cls ?? 'infantry';
-    const look: Look = type && LOOKS[type] ? LOOKS[type] : side.tier >= 5 ? LOOKS.riflemen : side.tier >= 3 ? LOOKS.crossbow : LOOKS.archers;
-    const ranged = !!def && def.rng > 0;
-    const rigid = (g: BufferGeometry) => (mat: MeshStandardMaterial) => {
-      const root = new Object3D();
-      const m = new Mesh(g, mat);
-      m.castShadow = true;
-      root.add(m);
-      return { root, parts: null };
-    };
-    if (cls === 'naval' && type) return { kind: 'ship', build: rigid(ship(type)), count: 2, ranged };
-    if (cls === 'air' && type) return { kind: 'air', build: rigid(aircraft(type === 'biplane' ? 'biplane' : type === 'jet' ? 'jet' : 'drones')), count: 2, ranged: true };
-    if (type === 'tanks' || type === 'modarmor' || type === 'hovertank') return { kind: 'machine', build: rigid(tank(type === 'tanks' ? 'tank' : type === 'modarmor' ? 'modern' : 'hover')), count: 2, ranged: false };
-    if (cls === 'cavalry' && type) {
-      return {
-        kind: 'rider',
-        count: 3,
-        ranged: false,
-        build: (mat, k) => {
-          const rider = poseRig(soldierRig({ ...look, banner: k === 0 }, 40 + k), 'ride');
-          rider.translate(0, 0.075, 0);
-          return rigid(merge([horseGeo(k % 2 ? '#5a3a26' : '#8a5a34', '#2a1a12', type === 'knights'), rider]))(mat);
-        },
-      };
-    }
-    if (cls === 'siege' && type) {
-      const machine = type === 'catapult' ? catapult(false) : type === 'trebuchet' ? catapult(true) : type === 'cannon' ? cannon(false) : type === 'artillery' ? cannon(true) : rocketTruck();
-      return { kind: 'machine', build: rigid(xf(machine, { s: 1.4 })), count: 1, ranged: true };
-    }
-    if (type === 'gatling' || type === 'machinegun') return { kind: 'machine', build: rigid(xf(gatlingGun(type === 'machinegun'), { s: 1.4 })), count: 1, ranged: true };
-    const count = def?.cls === 'civilian' || def?.cls === 'recon' ? 2 : 5;
-    return {
-      kind: 'foot',
-      count,
-      ranged: ranged || (!type && side.tier >= 1),
-      build: (mat, k) => this.rigObject(soldierRig({ ...look, banner: k === 0 && count > 2 }, 60 + k * 7 + (side === this.info.attacker ? 0 : 3)), mat),
-    };
+    const ranged = (!!def && def.rng > 0) || !side.type;
+    const parts = splitLook(lookSpec(type));
+    if (cls === 'naval') return { kind: 'ship', actors: parts, count: 2, ranged };
+    if (cls === 'air') return { kind: 'air', actors: parts, count: 2, ranged: true };
+    if (type === 'tanks' || type === 'modarmor' || type === 'hovertank') return { kind: 'machine', actors: parts, count: 2, ranged: false };
+    if (cls === 'cavalry') return { kind: 'rider', actors: parts, count: 3, ranged: false };
+    if (cls === 'siege' || type === 'gatling' || type === 'machinegun') return { kind: 'machine', actors: parts, count: 1, ranged: true };
+    const count = cls === 'civilian' || cls === 'recon' ? 2 : 5;
+    return { kind: 'foot', actors: parts, count, ranged };
   }
 
   private buildArmies(): void {
@@ -469,41 +441,30 @@ export class BattleScene implements StageScene {
     const place = (side: Side, s: -1 | 1) => {
       const spec = this.armySpec(side);
       const n = spec.count;
-      const extraCrew = spec.kind === 'machine' && side.type && UNIT[side.type].cls === 'siege';
       for (let k = 0; k < n; k++) {
         const mat = teamMaterial(side.color, side.skin);
-        const { root, parts } = spec.build(mat, k);
+        const look = liveLook(spec.actors[k % spec.actors.length], mat);
+        const root = look.root;
         const row = spec.kind === 'foot' ? (k < 3 ? 0 : 1) : 0;
         const col = spec.kind === 'foot' ? (k < 3 ? k - 1 : k - 3.5) : k - (n - 1) / 2;
-        const spacing = spec.kind === 'foot' ? 1.15 : spec.kind === 'ship' ? 4 : 2.2;
+        const spacing = spec.kind === 'foot' ? 1.2 : spec.kind === 'ship' ? 4 : spec.kind === 'rider' ? 1.9 : 2.4;
         let x = s * (3.4 + row * 1.2) + (this.rng.next() - 0.5) * 0.3;
-        let z = col * spacing + (this.rng.next() - 0.5) * 0.3;
+        const z = col * spacing + (this.rng.next() - 0.5) * 0.3;
         if (spec.kind === 'ship') x = s * 5;
         if (s === 1 && i.city) x = Math.min(x, 2.6);
-        const y = spec.kind === 'air' ? 3.2 + k * 0.5 : spec.kind === 'ship' ? -0.05 : this.heightAt(x, z);
+        const y = spec.kind === 'air' ? 1.8 + k * 0.5 : spec.kind === 'ship' ? -0.05 : this.heightAt(x, z);
         root.position.set(x, y, z);
         const facing = s === -1 ? Math.PI / 2 : -Math.PI / 2;
         root.rotation.y = facing;
-        root.scale.setScalar(SCALE * (spec.kind === 'ship' ? 1.6 : spec.kind === 'air' ? 1.4 : spec.kind === 'machine' ? 1.1 : 1));
+        root.scale.setScalar(LOOK_SCALE * (spec.kind === 'ship' ? 1.6 : spec.kind === 'air' ? 1.2 : 1));
         this.scene.add(root);
+        // each actor starts its idle at a different moment
+        for (const f of look.figures) f.mixer.update(this.rng.next() * 1.2);
         this.actors.push({
-          root, rig: parts, side: s, home: root.position.clone(), pos: root.position.clone(), kind: spec.kind, ranged: spec.ranged,
+          look, side: s, home: root.position.clone(), pos: root.position.clone(), kind: spec.kind, ranged: spec.ranged,
           mats: [mat.userData as { uniforms: Record<string, IUniform> }], fallAt: -1, cheerAt: -1, strikeAt: [], shootAt: [], hitAt: [],
-          phase: this.rng.next() * 6.28, facing,
+          phase: this.rng.next() * 6.28, facing, lock: null,
         });
-      }
-      if (extraCrew) {
-        for (let k = 0; k < 2; k++) {
-          const mat = teamMaterial(side.color, side.skin);
-          const { root, parts } = this.rigObject(soldierRig({ ...LOOKS.crew, helmet: side.tier >= 5 ? 'steel' : 'iron' }, 90 + k), mat);
-          const x = s * 4.6;
-          const z = k ? 1.2 : -1.2;
-          root.position.set(x, this.heightAt(x, z), z);
-          root.rotation.y = s === -1 ? Math.PI / 2 : -Math.PI / 2;
-          root.scale.setScalar(SCALE);
-          this.scene.add(root);
-          this.actors.push({ root, rig: parts, side: s, home: root.position.clone(), pos: root.position.clone(), kind: 'foot', ranged: false, mats: [mat.userData as { uniforms: Record<string, IUniform> }], fallAt: -1, cheerAt: -1, strikeAt: [], shootAt: [], hitAt: [], phase: k * 2, facing: root.rotation.y });
-        }
       }
     };
     place(i.attacker, -1);
@@ -600,7 +561,7 @@ export class BattleScene implements StageScene {
     const t = this.time;
     if (this.waterMat) this.waterMat.uniforms.uTime.value = t;
     this.updateCamera(t);
-    for (const a of this.actors) this.animate(a, t, prev);
+    for (const a of this.actors) this.animate(a, t, prev, dt);
     // projectiles
     this.projectiles = this.projectiles.filter((p) => {
       const k = (t - p.start) / p.dur;
@@ -651,7 +612,7 @@ export class BattleScene implements StageScene {
     }
   }
 
-  private animate(a: Actor, t: number, prev: number): void {
+  private animate(a: Actor, t: number, prev: number, dt: number): void {
     const i = this.info;
     const melee = !i.ranged;
     let x = a.home.x;
@@ -662,7 +623,7 @@ export class BattleScene implements StageScene {
     if (melee && a.side === -1 && a.kind !== 'air') {
       const k = smooth(clamp01((t - 1.3) / 1.4));
       // close the gap to the defenders' front line, keeping formation
-      const reach = (i.city ? 4.4 : 4.6) - (a.kind === 'rider' || a.kind === 'machine' ? 0.6 : 0);
+      const reach = (i.city ? 4.4 : 4.6) - (a.kind === 'rider' || a.kind === 'machine' ? 0.7 : 0);
       x = a.home.x + k * reach * (a.kind === 'ship' ? 0.55 : 1);
       walk = t > 1.3 && t < 2.7 ? 1 : 0;
       if (t > 4.8 && !i.defender.lost && a.fallAt < 0) {
@@ -682,94 +643,70 @@ export class BattleScene implements StageScene {
       x = a.home.x + Math.sin(t * 0.8 + a.phase) * 0.6 + (a.side === -1 ? smooth(clamp01((t - 1) / 3)) * 4 : 0);
       y = a.home.y + Math.sin(t * 1.6 + a.phase) * 0.25;
     }
-    if (a.kind === 'ship') y = -0.05 + Math.sin(t * 1.4 + a.phase) * 0.06;
-    if (a.kind === 'rider' && walk) y += Math.abs(Math.sin(t * 9 + a.phase)) * 0.18;
-    if (a.kind !== 'air' && a.kind !== 'ship') y = this.heightAt(x, z) + (y - a.home.y > 0 ? y - this.heightAt(x, z) : 0);
+    if (a.kind === 'ship') y = -0.05;
+    if (a.kind !== 'air' && a.kind !== 'ship') y = this.heightAt(x, z);
     // shots and blows
-    for (const s of a.shootAt) if (prev < s && t >= s && (a.fallAt < 0 || t < a.fallAt)) this.shoot(a, t);
-    let swing = 0;
+    for (const s of a.shootAt) if (prev < s && t >= s && (a.fallAt < 0 || t < a.fallAt)) {
+      this.oneShot(a, 'attack', t);
+      this.shoot(a, t);
+    }
     for (const s of a.strikeAt) {
-      const k = (t - s) / 0.35;
-      if (k >= 0 && k <= 1) swing = Math.sin(k * Math.PI);
-      if (prev < s + 0.17 && t >= s + 0.17 && (a.fallAt < 0 || t < a.fallAt)) {
-        const tip = a.pos.clone().add(new Vector3(-a.side * 0.9, 0.9, 0));
+      if (prev < s && t >= s && (a.fallAt < 0 || t < a.fallAt)) this.oneShot(a, 'attack', t);
+      if (prev < s + 0.3 && t >= s + 0.3 && (a.fallAt < 0 || t < a.fallAt)) {
+        const tip = a.pos.clone().add(new Vector3(-a.side * 1.0, 1.0, 0));
         this.puff(tip, 0.16, '#fff3b0', 0.25, true);
+        this.puff(a.pos.clone().add(new Vector3(-a.side * 0.6, 0.1, 0)), 0.25, '#d8c8a8', 0.6, false);
       }
     }
     let flash = 0;
     let recoil = 0;
     for (const h of a.hitAt) {
+      if (prev < h && t >= h && (a.fallAt < 0 || t < a.fallAt)) this.oneShot(a, 'hit', t);
       const k = (t - h) / 0.4;
       if (k >= 0 && k <= 1) {
         flash = Math.max(flash, 1 - k);
         recoil = Math.max(recoil, Math.sin(k * Math.PI));
       }
     }
-    x += a.side * recoil * 0.25;
+    x += a.side * recoil * 0.2;
     a.pos.set(x, y, z);
-    a.root.position.copy(a.pos);
-    for (const m of a.mats) m.uniforms.uFlash.value = flash * flash * 0.5;
-    // falling
-    let fall = 0;
-    if (a.fallAt >= 0 && t > a.fallAt) fall = smooth(clamp01((t - a.fallAt) / 0.55));
-    // cheering
-    let cheer = 0;
-    if (a.cheerAt >= 0 && t > a.cheerAt && a.fallAt < 0) cheer = 1;
-    const ph = t * 10 + a.phase;
-    if (a.kind === 'foot' || a.kind === 'rider') {
-      a.root.rotation.set(0, a.facing, 0);
-      if (fall > 0) {
-        a.root.rotation.z = a.side * fall * 1.45;
-        a.root.position.y -= fall * 0.15;
+    a.look.root.position.copy(a.pos);
+    a.look.root.rotation.set(0, a.facing, 0);
+    for (const m of a.mats) m.uniforms.uFlash.value = flash * flash * 0.22;
+    // what the actor is doing now
+    if (a.fallAt >= 0 && prev < a.fallAt && t >= a.fallAt) {
+      a.lock = { state: 'death', until: Infinity };
+      playLook(a.look, 'death', t, 0.12);
+    }
+    if (!a.lock || t >= a.lock.until) {
+      a.lock = null;
+      const cheer = a.cheerAt >= 0 && t > a.cheerAt && a.fallAt < 0;
+      const want: LiveState = cheer ? 'cheer' : walk ? (a.kind === 'foot' ? 'run' : 'walk') : 'idle';
+      if (a.look.state !== want) playLook(a.look, want, t, 0.25);
+    }
+    tickLook(a.look, dt, t);
+    // wrecks and sinking hulls
+    if (a.fallAt >= 0 && t > a.fallAt) {
+      const fall = smooth(clamp01((t - a.fallAt) / 0.8));
+      if (a.kind === 'machine' && fall > 0.2 && (a.look.root.userData.smoke ?? 0) < t - 0.2) {
+        a.look.root.userData.smoke = t;
+        this.puff(a.pos.clone().add(new Vector3(0, 0.8, 0)), 0.4, '#555555', 1.2, false);
       }
-      if (cheer) a.root.position.y += Math.abs(Math.sin((t - a.cheerAt) * 7 + a.phase)) * 0.4;
-    } else if (a.kind === 'machine') {
-      a.root.rotation.set(0, a.facing, 0);
-      const firing = a.shootAt.some((s) => t >= s && t < s + 0.25);
-      if (firing) a.root.position.x += a.side * 0.12;
-      if (fall > 0) {
-        a.root.rotation.z = a.side * fall * 0.35;
-        if (fall > 0.2 && (a.root.userData.smoke ?? 0) < t - 0.2) {
-          a.root.userData.smoke = t;
-          this.puff(a.pos.clone().add(new Vector3(0, 0.8, 0)), 0.4, '#555555', 1.2, false);
-        }
+      if (a.kind === 'ship') a.look.root.position.y -= fall * 0.8;
+      if (a.kind === 'air') {
+        a.look.root.position.y -= fall * 2.2;
+        a.look.root.rotation.z = fall * 1.2;
       }
-    } else if (a.kind === 'ship' && fall > 0) {
-      a.root.rotation.z = a.side * fall * 0.4;
-      a.root.position.y -= fall * 0.8;
-    } else if (a.kind === 'air' && fall > 0) {
-      a.root.position.y -= fall * 3.3;
-      a.root.rotation.z = fall * 1.2;
     }
-    const r = a.rig;
-    if (!r) return;
-    const breathe = Math.sin(t * 2.4 + a.phase);
-    r.head.rotation.x = 0.05 + breathe * 0.03;
-    if (walk) {
-      r.legL.rotation.x = Math.sin(ph) * 0.7;
-      r.legR.rotation.x = -Math.sin(ph) * 0.7;
-      r.armL.rotation.x = -Math.sin(ph) * 0.5 - 0.3;
-      r.armR.rotation.x = Math.sin(ph) * 0.5 - 0.6;
-    } else {
-      r.legL.rotation.x = 0.1;
-      r.legR.rotation.x = -0.1;
-      r.armL.rotation.x = -0.65 + breathe * 0.04;
-      r.armR.rotation.x = -0.45 + breathe * 0.04;
-    }
-    if (a.ranged && a.shootAt.length && t > 1.2 && t < 4.4) {
-      // aim
-      r.armR.rotation.x = -1.35;
-      r.armL.rotation.x = -1.45;
-    }
-    if (swing) r.armR.rotation.x = -2.6 + swing * 2.9;
-    if (cheer) {
-      r.armR.rotation.x = -2.8 + Math.sin(t * 9) * 0.2;
-      r.armL.rotation.x = -2.6;
-    }
-    if (fall > 0) {
-      r.armL.rotation.x = -1.6 * fall;
-      r.armR.rotation.x = -1.4 * fall;
-    }
+  }
+
+  /** Starts a one-shot clip; the actor keeps it until it ends. */
+  private oneShot(a: Actor, s: LiveState, t: number): void {
+    if (a.lock?.state === 'death') return;
+    playLook(a.look, s, t, 0.1);
+    const f = a.look.figures[0];
+    const len = f?.current ? f.current.getClip().duration : 0.8;
+    a.lock = { state: s, until: t + Math.min(len, s === 'hit' ? 0.6 : 1.0) };
   }
 
   private updateCamera(t: number): void {
@@ -812,7 +749,7 @@ export class BattleScene implements StageScene {
   dispose(): void {
     this.scene.traverse((o) => {
       if (o instanceof Mesh) {
-        o.geometry.dispose();
+        if (!o.userData.keep) o.geometry.dispose();
         const m = o.material as MeshStandardMaterial | MeshStandardMaterial[];
         if (Array.isArray(m)) m.forEach((x) => x.dispose());
         else m.dispose();

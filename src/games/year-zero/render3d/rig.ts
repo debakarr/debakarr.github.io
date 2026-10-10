@@ -53,7 +53,8 @@ export interface FigureSpec {
   /** Accessory meshes to keep (weapons, shields, hats, capes); the body is always shown. */
   show: string[];
   props?: Prop[];
-  clips?: Partial<Record<AnimState, string>>;
+  /** Clip per state; live scenes also read 'run', 'cheer' and 'aim'. */
+  clips?: Partial<Record<AnimState | 'run' | 'cheer' | 'aim', string>>;
   /** Placement in the squad (look space, figure feet at y = 0). */
   t?: Transform;
   /** Seconds of offset so a squad does not breathe in lockstep. */

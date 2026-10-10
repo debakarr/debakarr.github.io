@@ -29,14 +29,13 @@ import type { Overlay } from '../render/view';
 import type { Game } from '../sim/game';
 import { HEX_GLSL } from './hexgl';
 import type { Map3D } from './map3d';
-import { lookSpec } from './looks';
+import { lookSpec, SKIN_TONES } from './looks';
 import { bakeLook, RIG_GLSL, type AnimState, type BakedLook } from './rig';
 import { LAND_Y, tileHash, type Shape } from './shape';
 import { depthKey, hexPatch, type SharedUniforms } from './terrain';
 
 const BASE_SCALE = 2.0;
-/** Skin tone multipliers over the KayKit peach (linear RGB). */
-const SKINS = [[1, 1, 1], [0.93, 0.84, 0.76], [0.78, 0.62, 0.5], [0.58, 0.42, 0.32], [0.42, 0.29, 0.22], [1, 0.95, 0.92]].map(([r, g, b]) => new Color(r, g, b));
+const SKINS = SKIN_TONES.map(([r, g, b]) => new Color(r, g, b));
 const HEX = 32;
 
 interface Slot {

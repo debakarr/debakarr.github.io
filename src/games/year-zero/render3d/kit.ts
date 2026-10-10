@@ -68,6 +68,15 @@ export function loadKit(progress?: (f: number) => void): Promise<Kit> {
   };
   loading = Promise.all(urls.map((u, k) => loader.loadAsync(u, (e) => e.total && tick(k, e.loaded / e.total)).then((g) => (tick(k, 1), g)))).then(([world, hall, ...chars]) => {
     const names = Object.keys(CHAR_URLS) as CharName[];
+    // live figures (battles, audiences) read a float `team` like the procedural art
+    for (const c of chars) c.scene.traverse((o) => {
+      const g = (o as Mesh).geometry;
+      if (!g || g.attributes.team) return;
+      const src = g.attributes._team;
+      const t = new Float32Array(g.attributes.position.count);
+      if (src) for (let i = 0; i < t.length; i++) t[i] = src.getX(i) / 100;
+      g.setAttribute('team', new BufferAttribute(t, 1));
+    });
     const k: Kit = {
       world: index(world.scene),
       hall: index(hall.scene),

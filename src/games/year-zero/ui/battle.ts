@@ -4,6 +4,7 @@
 // battle scenes are on) staged as a short film with a skippable HUD.
 
 import { Vector3 } from 'three';
+import { skinHex } from '../render3d/looks';
 import { FEATURE_NAME, Relief, TERRAIN } from '../data/terrain';
 import { UNIT } from '../data/units';
 import type { Game } from '../sim/game';
@@ -16,7 +17,8 @@ import type { Stage } from '../render3d/stage';
 import { clear, gi, h, svg } from './dom';
 import { ICON } from './icons';
 
-export const SKINS = ['#f6d3b3', '#efc39c', '#d9a57a', '#b97f55', '#8e5c3c', '#f3d0b0'];
+/** Skin tones per people (shared with the map squads and audiences). */
+export const SKINS = [0, 1, 2, 3, 4, 5].map(skinHex);
 
 export function placeName(g: Game, tile: number): string {
   const map = g.s.map;

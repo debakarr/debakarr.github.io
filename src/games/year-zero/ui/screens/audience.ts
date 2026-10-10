@@ -12,7 +12,7 @@ import type { Game } from '../../sim/game';
 import { chooseEpithet, currentLeader } from '../../sim/leaders';
 import type { Civ } from '../../sim/state';
 import { AudienceScene } from '../../render3d/audience';
-import type { Expression, LeaderLook } from '../../render3d/models/leader';
+import type { Expression, LeaderLook } from '../../render3d/audience';
 import type { Stage } from '../../render3d/stage';
 import { SKINS } from '../battle';
 import { clear, gi, h, svg } from '../dom';
