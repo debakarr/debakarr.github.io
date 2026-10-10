@@ -35,11 +35,6 @@ export function leaderSpec(d: LeaderDescription): ChibiSpec {
     cape: !envoy && d.tier < 7,
   };
   const pick = (h >> 4) % 2;
-  if (d.gender === 'f') {
-    if (pick) return islandMatriarch(opts);
-    const queen = sunlandQueen(opts);
-    // crowned queens wear the sculpted queen (when shipped), in their people's colour
-    return opts.regalia === 'crown' ? { ...queen, vrmKey: 'queen', tint: d.color } : queen;
-  }
+  if (d.gender === 'f') return pick ? islandMatriarch(opts) : sunlandQueen(opts);
   return pick ? easternPrince(opts) : highlandKing(opts);
 }

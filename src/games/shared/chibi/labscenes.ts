@@ -18,7 +18,7 @@ export async function startScene(host: HTMLElement, q: URLSearchParams): Promise
   renderer.shadowMap.type = PCFSoftShadowMap;
   host.appendChild(renderer.domElement);
   await loadKit();
-  // sculpted models load asynchronously: ?wait=ms gives them time before the still
+  // ?wait=ms: let anything that loads asynchronously settle before the still
   const settle = () => new Promise((r) => setTimeout(r, Number(q.get('wait') ?? 0)));
   if (q.get('scene') === 'battle') {
     const side = (type: string, color: string, skin: string, civ: string) => ({ civName: civ, adj: civ, color, skin, type, label: type, hpBefore: 100, hpAfter: 60, max: 100, lost: false, tier: 2 });

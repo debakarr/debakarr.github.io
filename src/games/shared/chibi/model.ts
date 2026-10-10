@@ -1,69 +1,48 @@
-// A chibi character instance: a bone hierarchy driven by the shared clip
-// library, the costume baked into one skinned mesh per surface type, and a
-// painted face whose texture swaps for expressions and blinks.
+// A character instance: the shared skeleton driven by the clip library, the
+// voxel body baked into one skinned mesh, and a pixel-art face (a decal on
+// the head bone) that swaps for expressions and blinks.
 
-import { Bone, Group, MeshToonMaterial, SkinnedMesh, type Material, type Object3D } from 'three';
-import { Animator, bakeSkin, restOffsets, skinMeshes, type SkinPart } from './anim';
-import { faceTexture, type Expression } from './face';
-import { buildHair } from './hair';
-import { NO_INK, outlineMaterial, surface, toonRamp, type Surface } from './mats';
-import { buildParts, headGeometry } from './parts';
+import { Bone, Group, Mesh, MeshStandardMaterial, type BufferGeometry, type Object3D, type SkinnedMesh } from 'three';
+import { Animator, bakeSkin, restOffsets, skinMeshes, type Rot, type SkinPart } from './anim';
+import type { Expression } from './face';
 import { BONES, chibiClips, PARENT, REST, type BoneName, type ClipName } from './rig';
 import type { ChibiSpec } from './spec';
-import type { SculptEntry, SculptRig } from './sculpt';
-import type { VrmRig } from './vrm';
-import type { Rot } from './anim';
-
-export type ModelEntry = string | SculptEntry;
-let manifest: Promise<Record<string, ModelEntry>> | null = null;
-
-/**
- * public/models/chibi/manifest.json: character key → a .vrm URL or a sculpt
- * ({ url, height, tint }). Characters without an entry stay code-built.
- */
-export function modelManifest(): Promise<Record<string, ModelEntry>> {
-  return (manifest ??= fetch('/models/chibi/manifest.json')
-    .then((r) => (r.ok ? (r.json() as Promise<Record<string, ModelEntry>>) : {}))
-    .catch(() => ({})));
-}
-
-/** The model a character should wear, if any. */
-export async function modelFor(spec: ChibiSpec): Promise<SculptEntry | null> {
-  if (spec.vrm) return { url: spec.vrm };
-  const m = await modelManifest();
-  const e = m[spec.vrmKey ?? spec.id];
-  if (!e) return null;
-  const entry = typeof e === 'string' ? { url: e } : { ...e };
-  // the TEAM marker colour means "not dressed for a side yet": keep the model's own colours
-  if (spec.tint && spec.tint.toLowerCase() !== '#fe02fe') entry.tint = spec.tint;
-  return entry;
-}
+import { buildBody, facePixels } from './vbody';
+import { decalGeometry, meshGrid } from './voxel';
 
 const OFFSETS = restOffsets(REST as Record<string, Rot>, PARENT as Record<string, string | null>);
 
-/**
- * Skirt vertices (hips space) blend toward the thigh on their side: more so
- * toward the hem and the front, so a seated or striding figure's skirt
- * follows the legs instead of cutting through them.
- */
-function drapeWeights(x: number, y: number, z: number): [string, number, string, number] {
-  const t = Math.min(1, Math.max(0, (0.03 - y) / 0.3));
-  const front = Math.min(1, Math.max(0, z / 0.16 + 0.35));
-  const side = Math.min(1, Math.abs(x) / 0.06);
-  const w = t * front * 0.85;
-  const near = x >= 0 ? 'thighL' : 'thighR';
-  const far = x >= 0 ? 'thighR' : 'thighL';
-  const share = 0.5 + 0.5 * side;
-  return [near, w * share, far, w * (1 - share)];
+/** One material for every voxel figure: colour lives in the vertices. */
+export const voxelMaterial = new MeshStandardMaterial({ vertexColors: true, roughness: 0.82, metalness: 0 });
+const faceMaterial = new MeshStandardMaterial({ vertexColors: true, roughness: 0.7, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 });
+
+/** Every part of a spec as skinnable voxel meshes (geometry is cached per spec). */
+const partCache = new Map<string, SkinPart[]>();
+export function voxelParts(spec: ChibiSpec): SkinPart[] {
+  const key = JSON.stringify(spec);
+  let parts = partCache.get(key);
+  if (!parts) {
+    const { parts: grids } = buildBody(spec);
+    parts = [];
+    for (const [bone, g] of Object.entries(grids)) {
+      if (!g || !g.size) continue;
+      parts.push({ bone, geo: meshGrid(g).main, mat: voxelMaterial });
+    }
+    if (partCache.size > 400) partCache.clear();
+    partCache.set(key, parts);
+  }
+  return parts.map((p) => ({ ...p, geo: p.geo.clone() }));
 }
 
-/** All the meshes for a spec, ready to skin (cache per spec when spawning crowds). */
-export function chibiParts(spec: ChibiSpec, faceMat: Material): SkinPart[] {
-  const hidden = spec.outfit.some((p) => p.k === 'helmet') ? 'helmet' : spec.outfit.some((p) => p.k === 'hat' && p.style !== 'cap') ? 'hat' : spec.outfit.some((p) => p.k === 'hat') ? 'cap' : undefined;
-  const parts: SkinPart[] = buildParts(spec).map((p) => ({ bone: p.bone, geo: p.geo, mat: p.mat, weights: p.drape ? drapeWeights : undefined }));
-  for (const h of buildHair(spec.hair, { hidden })) parts.push({ bone: h.bone, geo: h.geo, mat: surface('hair') });
-  parts.push({ bone: 'head', geo: headGeometry(), mat: faceMat });
-  return parts;
+const faceCache = new Map<string, BufferGeometry>();
+function faceGeometry(spec: ChibiSpec, e: Expression): BufferGeometry {
+  const key = `${JSON.stringify(spec.face)}|${spec.hair.beard ?? ''}|${e}`;
+  let g = faceCache.get(key);
+  if (!g) {
+    g = decalGeometry(facePixels(spec, e));
+    faceCache.set(key, g);
+  }
+  return g;
 }
 
 export class ChibiModel {
@@ -72,24 +51,15 @@ export class ChibiModel {
   readonly animator: Animator;
   readonly spec: ChibiSpec;
   readonly meshes: SkinnedMesh[];
-  /** Outline hulls (share the meshes' geometry; hide them with the body). */
-  get inkMeshes(): SkinnedMesh[] {
-    return this.outlines;
-  }
-  private faceMat: MeshToonMaterial;
-  private outlines: SkinnedMesh[] = [];
-  /** A VRM wearing this character's pose, once loaded. */
-  vrm: VrmRig | null = null;
-  /** A sculpted GLB wearing this character's pose, once loaded. */
-  sculpt: SculptRig | null = null;
-  /** Settles once any VRM has been swapped in (or found missing). */
-  readonly ready: Promise<void>;
-  private disposed = false;
+  /** Settles once the figure is ready to show (it is built synchronously). */
+  readonly ready: Promise<void> = Promise.resolve();
+  private face: Mesh;
   private mood: Expression;
   private blink = 2 + Math.random() * 3;
   private blinking = false;
+  private layer = 0;
 
-  constructor(spec: ChibiSpec, opts: { shadows?: boolean; clip?: ClipName; outline?: boolean; vrm?: boolean } = {}) {
+  constructor(spec: ChibiSpec, opts: { shadows?: boolean; clip?: ClipName } = {}) {
     this.spec = spec;
     this.mood = spec.mood ?? 'neutral';
     const bones = {} as Record<BoneName, Bone>;
@@ -105,70 +75,28 @@ export class ChibiModel {
       else this.root.add(bones[name]);
     }
     this.bones = bones;
-    this.faceMat = new MeshToonMaterial({ map: faceTexture(spec.face, this.mood), gradientMap: toonRamp(), emissive: 0x2a1008, emissiveIntensity: 0.35 });
-    const batches = bakeSkin(chibiParts(spec, this.faceMat).map((p) => ({ ...p, cast: opts.shadows !== false })), BONES as unknown as string[], OFFSETS);
+    const batches = bakeSkin(voxelParts(spec).map((p) => ({ ...p, cast: opts.shadows !== false })), BONES as unknown as string[], OFFSETS);
     this.meshes = skinMeshes(this.root, BONES.map((n) => bones[n]), OFFSETS, batches);
-    for (const m of this.meshes) m.receiveShadow = true;
-    // ink outlines: back-face hulls sharing each mesh's geometry and skeleton
-    if (opts.outline !== false) {
-      const ink = outlineMaterial(0.0048);
-      for (const m of this.meshes) {
-        const mat = m.material as MeshToonMaterial;
-        if (!mat.isMeshToonMaterial || NO_INK.includes(mat.userData.surface as Surface)) continue;
-        const o = new SkinnedMesh(m.geometry, ink);
-        o.castShadow = false;
-        o.bind(m.skeleton, m.bindMatrix);
-        o.frustumCulled = false;
-        this.root.add(o);
-        this.outlines.push(o);
-      }
+    for (const m of this.meshes) {
+      m.receiveShadow = true;
+      m.frustumCulled = false;
     }
-    const s = spec.body?.scale ?? 1;
-    this.root.scale.setScalar(s);
+    this.face = new Mesh(faceGeometry(spec, this.mood), faceMaterial);
+    bones.head.add(this.face);
+    this.root.scale.setScalar(spec.body?.scale ?? 1);
     this.animator = new Animator(this.root, chibiClips());
     this.animator.play(opts.clip ?? 'idle', 0);
-    this.ready = opts.vrm !== false ? this.attachModel() : Promise.resolve();
   }
 
-  /** Swaps in a VRM or a sculpt when the manifest (or the spec) names one; the chibi shows until then. */
-  private async attachModel(): Promise<void> {
-    try {
-      const entry = await modelFor(this.spec);
-      if (!entry || this.disposed) return;
-      let holder: Object3D;
-      if (entry.url.endsWith('.vrm')) {
-        const { loadVrm, VrmRig } = await import('./vrm');
-        const vrm = await loadVrm(entry.url);
-        if (this.disposed) return;
-        this.vrm = new VrmRig(vrm, this.bones, entry.height ?? 1.26);
-        holder = this.vrm.holder;
-        this.vrm.setExpression(this.mood);
-        this.vrm.update(0);
-      } else {
-        const { loadSculpt, SculptRig } = await import('./sculpt');
-        const scene = await loadSculpt(entry.url);
-        if (this.disposed) return;
-        this.sculpt = new SculptRig(scene, this.bones, entry);
-        holder = this.sculpt.holder;
-        this.sculpt.update();
-      }
-      this.root.add(holder);
-      for (const m of [...this.meshes, ...this.outlines]) m.visible = false;
-      this.setLayer(this.layer);
-    } catch (err) {
-      console.warn('Character model not loaded; keeping the chibi', err);
-    }
-  }
-
-  private layer = 0;
-
-  /** Render layer for the body (1 = shadow pass only, for first person); outlines show only on layer 0. */
+  /** Render layer for the body (1 = shadow pass only, for first person). */
   setLayer(layer: number): void {
     this.layer = layer;
     for (const m of this.meshes) m.layers.set(layer);
-    for (const m of this.outlines) m.layers.set(layer === 0 ? 0 : 2);
-    this.vrm?.holder.traverse((o) => o.layers.set(layer));
-    this.sculpt?.holder.traverse((o) => o.layers.set(layer));
+    this.face.layers.set(layer === 0 ? 0 : 2);
+  }
+
+  get currentLayer(): number {
+    return this.layer;
   }
 
   play(clip: ClipName, fade = 0.22, speed = 1): void {
@@ -189,9 +117,7 @@ export class ChibiModel {
   }
 
   private applyFace(e: Expression): void {
-    this.faceMat.map = faceTexture(this.spec.face, e);
-    this.faceMat.needsUpdate = true;
-    this.vrm?.setExpression(e);
+    this.face.geometry = faceGeometry(this.spec, e);
   }
 
   /** Jump the animation to time `t` (for posed stills). */
@@ -202,8 +128,6 @@ export class ChibiModel {
 
   update(dt: number): void {
     this.animator.update(dt);
-    this.vrm?.update(dt);
-    this.sculpt?.update();
     this.blink -= dt;
     if (this.blink <= 0) {
       if (!this.blinking && this.mood !== 'laugh' && this.mood !== 'blink') {
@@ -223,15 +147,11 @@ export class ChibiModel {
   }
 
   dispose(): void {
-    this.disposed = true;
-    this.vrm?.dispose();
-    this.sculpt?.dispose();
     this.animator.dispose();
     for (const m of this.meshes) {
       m.geometry.dispose();
       m.skeleton.dispose();
     }
-    this.faceMat.dispose();
     this.root.removeFromParent();
   }
 }

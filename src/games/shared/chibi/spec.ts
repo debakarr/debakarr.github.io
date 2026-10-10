@@ -2,7 +2,10 @@
 // pieces. Every leader, soldier and villager in the games is one of these.
 
 import type { Expression, FaceSpec } from './face';
-import type { Emblem } from './mats';
+
+
+/** Heraldic emblems painted as pixel art on tabards, shields and capes. */
+export type Emblem = 'fleur' | 'swords' | 'sun' | 'knot' | 'wave' | 'blossom' | 'mountain' | 'leaf';
 
 export type HairStyle =
   | 'tousled' | 'curlyBun' | 'mane' | 'longWavy' | 'topknot' | 'braids' | 'shaggy' | 'tiedBack' | 'ponytail'
@@ -83,10 +86,4 @@ export interface ChibiSpec {
   outfit: Piece[];
   /** Default expression. */
   mood?: Expression;
-  /** Key in public/models/chibi/manifest.json for a VRM that replaces this character (defaults to id). */
-  vrmKey?: string;
-  /** A VRM to wear, overriding the manifest. */
-  vrm?: string;
-  /** Faction colour for a sculpted model (its blue cloth is recoloured to this). */
-  tint?: string;
 }

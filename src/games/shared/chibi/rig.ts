@@ -1,10 +1,11 @@
-// The shared chibi skeleton and its animation library. Every character in
-// Year Zero and LumiQuest uses these proportions (head ≈ a third of the
-// height, short sturdy legs, big hands and boots) and these clips, so a
-// costume or a clip made for one game works in the other.
+// The shared character skeleton and its animation library. Every character
+// in Year Zero and LumiQuest is a voxel figure on this skeleton (see vbody.ts
+// for the layout) and plays these clips, so a costume or a clip made for one
+// game works in the other.
 
 import type { AnimationClip } from 'three';
 import { cos, makeClip, sin, type ClipSpec, type PoseFrame, type Rot } from './anim';
+import { VOX } from './voxel';
 
 export const BONES = [
   'hips', 'spine', 'chest', 'neck', 'head', 'cape',
@@ -13,27 +14,32 @@ export const BONES = [
 ] as const;
 export type BoneName = (typeof BONES)[number];
 
-/** Rest offsets from the parent bone (model units: the figure is ~1.36 tall). */
+const v = (x: number, y: number, z: number): Rot => [x * VOX, y * VOX, z * VOX];
+
+/** Rest offsets from the parent bone, in voxels × VOX (the figure is 30 voxels, 1.26 tall). */
 export const REST: Record<BoneName, Rot> = {
-  hips: [0, 0.47, 0],
-  spine: [0, 0.05, 0],
-  chest: [0, 0.12, 0],
-  neck: [0, 0.135, 0],
-  head: [0, 0.035, 0],
-  cape: [0, 0.11, -0.1],
-  armL: [0.15, 0.1, 0],
-  foreL: [0, -0.135, 0],
-  handL: [0, -0.125, 0],
-  armR: [-0.15, 0.1, 0],
-  foreR: [0, -0.135, 0],
-  handR: [0, -0.125, 0],
-  thighL: [0.075, -0.04, 0],
-  shinL: [0, -0.19, 0],
-  footL: [0, -0.19, 0],
-  thighR: [-0.075, -0.04, 0],
-  shinR: [0, -0.19, 0],
-  footR: [0, -0.19, 0],
+  hips: v(0, 9, 0),
+  spine: v(0, 2, 0),
+  chest: v(0, 3, 0),
+  neck: v(0, 4, 0),
+  head: v(0, 0, 0),
+  cape: v(0, 3.5, -3.5),
+  armL: v(5.5, 3, 0),
+  foreL: v(0, -4, 0),
+  handL: v(0, -4, 0),
+  armR: v(-5.5, 3, 0),
+  foreR: v(0, -4, 0),
+  handR: v(0, -4, 0),
+  thighL: v(2, -1, 0),
+  shinL: v(0, -4, 0),
+  footL: v(0, -3, 0),
+  thighR: v(-2, -1, 0),
+  shinR: v(0, -4, 0),
+  footR: v(0, -3, 0),
 };
+
+/** The clips' hip offsets were authored for hips 0.47 high; scaled to this skeleton. */
+const HIP_SCALE = REST.hips[1] / 0.47;
 
 export const PARENT: Record<BoneName, BoneName | null> = {
   hips: null, spine: 'hips', chest: 'spine', neck: 'chest', head: 'neck', cape: 'chest',
@@ -41,9 +47,9 @@ export const PARENT: Record<BoneName, BoneName | null> = {
   thighL: 'hips', shinL: 'thighL', footL: 'shinL', thighR: 'hips', shinR: 'thighR', footR: 'shinR',
 };
 
-/** Head sphere centre relative to the head bone, and its radius. */
-export const HEAD_Y = 0.21;
-export const HEAD_R = 0.255;
+/** Head centre relative to the head bone, and its half size (the head is a 10-voxel cube). */
+export const HEAD_Y = 5 * VOX;
+export const HEAD_R = 5 * VOX;
 
 type Pose = Partial<Record<BoneName, Rot>>;
 const P = (rot: Pose, hipsDy = 0, hipsDz = 0): PoseFrame => ({ rot, pos: { hips: [0, hipsDy, hipsDz] } });
@@ -458,7 +464,13 @@ export function chibiClips(): Record<ClipName, ClipSpec> {
   const out = {} as Record<ClipName, ClipSpec>;
   for (const name of Object.keys(POSES) as ClipName[]) {
     const [loop, dur] = LOOPING[name];
-    const clip: AnimationClip = makeClip(name, dur, POSES[name], bones, rest, loop ? 24 : 20, loop);
+    const pose = POSES[name];
+    const scaled = (p: number): PoseFrame => {
+      const f = pose(p);
+      const h = f.pos?.hips;
+      return h ? { ...f, pos: { ...f.pos, hips: [h[0] * HIP_SCALE, h[1] * HIP_SCALE, h[2] * HIP_SCALE] } } : f;
+    };
+    const clip: AnimationClip = makeClip(name, dur, scaled, bones, rest, loop ? 24 : 20, loop);
     out[name] = { clip, loop };
   }
   return (cache = out);
