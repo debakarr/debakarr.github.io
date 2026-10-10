@@ -6,6 +6,7 @@ import { alive, ERA_INDEX } from '../sim/civ';
 import { kindOf, PLANET_STRIDE, type Kind } from '../sim/planets';
 import { Phase, tempRgb } from '../sim/stars';
 import { GRID, RADIUS, SPAN, type Fx, type Universe } from '../sim/universe';
+import { PIXEL_DPR, pixelate } from '../../shared/pixel';
 
 export type View = 'galaxy' | 'system';
 
@@ -99,11 +100,12 @@ export class Renderer {
 
   resize(): void {
     const r = this.cv.getBoundingClientRect();
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.dpr = PIXEL_DPR;
     this.w = Math.max(1, r.width);
     this.h = Math.max(1, r.height);
     this.cv.width = Math.round(this.w * this.dpr);
     this.cv.height = Math.round(this.h * this.dpr);
+    pixelate(this.cv);
     this.makeBackground();
   }
 

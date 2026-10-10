@@ -1,5 +1,6 @@
 import { G, GENES } from '../sim/genes';
 import { CAP, CELL, GH, GW, H, W, type World } from '../sim/world';
+import { PIXEL_DPR, pixelate } from '../../shared/pixel';
 
 // Draws the primordial sea: a soft plant field, temperature tint, effects,
 // and every creature as a little organism whose look follows its genes.
@@ -43,9 +44,10 @@ export class Renderer {
     const r = this.canvas.getBoundingClientRect();
     this.W = Math.max(1, r.width);
     this.H = Math.max(1, r.height);
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.dpr = PIXEL_DPR;
     this.canvas.width = Math.round(this.W * this.dpr);
     this.canvas.height = Math.round(this.H * this.dpr);
+    pixelate(this.canvas);
     this.clamp();
   }
 
@@ -151,7 +153,7 @@ export class Renderer {
     ctx.fillStyle = '#020a14';
     ctx.fillRect(0, 0, this.W, this.H);
     ctx.setTransform(dpr * z, 0, 0, dpr * z, dpr * (this.W / 2 - this.cx * z + sx), dpr * (this.H / 2 - this.cy * z + sy));
-    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingEnabled = false;
     ctx.drawImage(this.field, 0, 0, W, H);
     // Depth: the water darkens away from the light.
     const deep = ctx.createLinearGradient(0, 0, 0, H);

@@ -4,6 +4,7 @@ import { floodReach } from '../sim/events';
 import { FLAG_ABANDONED, FLAG_FIRE, FLAG_FLOODED, FLAG_POWER, FLAG_WATER } from '../sim/state';
 import { drawService, drawZoneBuilding, type DrawOpts } from './buildings';
 import { diamond, hash, HH, HW, iso, mix, shade, tree, UNIT } from './paint';
+import { PIXEL_DPR, pixelate } from '../../shared/pixel';
 
 export type Overlay =
   | 'land' | 'air' | 'noise' | 'crime' | 'happy' | 'traffic' | 'power' | 'water'
@@ -136,9 +137,10 @@ export class Renderer {
     const r = this.canvas.getBoundingClientRect();
     this.W = Math.max(1, r.width);
     this.H = Math.max(1, r.height);
-    this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    this.dpr = PIXEL_DPR;
     this.canvas.width = Math.round(this.W * this.dpr);
     this.canvas.height = Math.round(this.H * this.dpr);
+    pixelate(this.canvas);
     this.view.valid = false;
   }
 

@@ -1,6 +1,7 @@
 import { Noise2D } from '../../shared/noise';
 import { Rng } from '../../shared/rng';
 import { captureRadius, positions, type Level, type Probe, type Trajectory } from '../sim/physics';
+import { PIXEL_DPR, pixelate } from '../../shared/pixel';
 
 // Draws a star system: starfield, orbits, shaded planets, the probe and its
 // trail, the aiming band and the predicted path.
@@ -139,9 +140,10 @@ export class Renderer {
     const r = this.canvas.getBoundingClientRect();
     this.W = Math.max(1, r.width);
     this.H = Math.max(1, r.height);
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    this.dpr = PIXEL_DPR;
     this.canvas.width = Math.round(this.W * this.dpr);
     this.canvas.height = Math.round(this.H * this.dpr);
+    pixelate(this.canvas);
     this.fit();
   }
 

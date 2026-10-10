@@ -8,6 +8,15 @@ Browser games that ship as part of the site. Everything runs client-side; no bac
 2. Add a page at `src/pages/games/<slug>.astro`. Use a standalone HTML shell (not `BaseLayout`) for full-screen games, add `data-pagefind-ignore="all"` to `<body>`, and load the entry with `<script>import '../../games/<slug>/main';</script>`.
 3. Register it in `src/data/games.ts` so it appears on `/games`. Card links use `data-astro-reload` so the site's view transitions don't try to swap into a full-screen game.
 
+## Shared art direction
+
+All games share one blocky look. The 3D games (Year Zero, LumiQuest) draw
+everything as voxel art: characters come from `shared/chibi/` (see its README),
+and `shared/chibi/voxel.ts` resamples any vertex-coloured mesh into voxels
+(`voxelize`), which both games apply to their models, nature and buildings.
+The 2D canvas games render as pixel art through `shared/pixel.ts`
+(`PIXEL_DPR` canvas pixels per CSS pixel, scaled up without smoothing).
+
 ## Year Zero
 
 A turn-based civilization game where the history is generated from what actually happens.

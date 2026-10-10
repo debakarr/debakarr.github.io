@@ -1,4 +1,5 @@
 import type { Game } from '../sim/game';
+import { PIXEL_DPR, pixelate } from '../../shared/pixel';
 
 // The observatory view: Earth, the Moon and the three visiting ships. Ships
 // drift closer as trust grows and the Wardens close in when they turn hostile.
@@ -25,10 +26,11 @@ export function spaceView(game: Game): HTMLCanvasElement {
     last = now;
     const game = state.game;
     const r = cv.getBoundingClientRect();
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const dpr = PIXEL_DPR;
     if (cv.width !== Math.round(r.width * dpr) || cv.height !== Math.round(r.height * dpr)) {
       cv.width = Math.round(r.width * dpr);
       cv.height = Math.round(r.height * dpr);
+      pixelate(cv);
     }
     const ctx = cv.getContext('2d')!;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
