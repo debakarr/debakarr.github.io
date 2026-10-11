@@ -256,6 +256,13 @@ export class Game implements InteractHost, DialogueHost {
     this.player.onStep = (surf) => this.audio.step(surf);
     this.player.onJump = () => this.audio.jump();
     this.player.onLand = () => this.audio.land();
+    let edgeNote = 0;
+    this.player.onEdge = () => {
+      const now = performance.now();
+      if (now - edgeNote < 6000) return;
+      edgeNote = now;
+      this.toast('The mists of the vale grow too thick to go further.', 'info');
+    };
     this.player.onSplash = () => {
       this.audio.splash();
       this.fx.splash(this.player.pos.clone().add(new Vector3(0, 1, 0)));

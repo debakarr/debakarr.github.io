@@ -10,6 +10,7 @@ import type { CameraRig } from '../engine/camera';
 import { capsule, cylinder, ellipsoid, prep, torus, xf } from '../engine/geometry';
 import type { CollisionWorld } from '../engine/physics';
 import type { Terrain } from '../world/terrain';
+import { PLAY_HALF } from '../data/world';
 import { CharacterModel } from './character';
 
 export interface MoveInput {
@@ -30,6 +31,8 @@ export type MoveState = 'idle' | 'walk' | 'run' | 'sneak' | 'crouch' | 'air' | '
 
 const RADIUS = 0.3;
 const HEIGHT = 1.45;
+/** Highest built step (plank, stair, ledge) a walker climbs without jumping. */
+const STEP_UP = 0.42;
 const GRAVITY = 19;
 
 export class Player {
@@ -61,6 +64,8 @@ export class Player {
   onJump: (() => void) | null = null;
   onLand: (() => void) | null = null;
   onSplash: (() => void) | null = null;
+  /** Pressed against the edge of the play area. */
+  onEdge: (() => void) | null = null;
   /** First-person hand with the resonance device. */
   readonly hand = new Group();
   private handPulse = 0;
@@ -230,8 +235,14 @@ export class Player {
         const gOld = this.physics.ground(ox, oz, this.pos.y);
         const rise = gNew - Math.max(gOld, this.pos.y - 0.05);
         const run = Math.hypot(dx, dz);
-        // terrain steeper than ~50° stops you unless you are above it
-        if (this.grounded && rise > 0.05 && rise > run * 1.25 + 0.03 && gNew - this.pos.y > 0.12) return false;
+        const built = gNew > this.terrain.height(nx, nz) + 0.01;
+        if (built) {
+          // bridge planks, stairs and platforms: anything up to a step's height is climbable
+          if (this.grounded && gNew - this.pos.y > STEP_UP) return false;
+        } else if (this.grounded && rise > 0.05 && rise > run * 1.25 + 0.03 && gNew - this.pos.y > 0.12) {
+          // terrain steeper than ~50° stops you unless you are above it
+          return false;
+        }
         if (!this.grounded && gNew > this.pos.y + 0.6) return false;
         this.pos.x = nx;
         this.pos.z = nz;
@@ -288,6 +299,22 @@ export class Player {
           this.onStep?.(this.terrain.surfaceAt(this.pos.x, this.pos.z));
         }
       }
+    }
+
+    // the edge of the vale: a soft wall where the mist begins
+    const lim = PLAY_HALF - 2;
+    if (Math.abs(this.pos.x) > lim || Math.abs(this.pos.z) > lim) {
+      if (Math.abs(this.pos.x) > lim) {
+        this.pos.x = Math.sign(this.pos.x) * lim;
+        this.vel.x = 0;
+      }
+      if (Math.abs(this.pos.z) > lim) {
+        this.pos.z = Math.sign(this.pos.z) * lim;
+        this.vel.z = 0;
+      }
+      const g = this.physics.ground(this.pos.x, this.pos.z, this.pos.y + 1);
+      if (this.pos.y < g) this.pos.y = g;
+      this.onEdge?.();
     }
 
     // facing: first person follows the camera, third person turns toward motion

@@ -481,7 +481,7 @@ export class Props {
       }
     }
     // colliders: walkable deck segments following the curve, plus rails
-    const segs = 18;
+    const segs = 40;
     for (let k = 0; k < segs; k++) {
       const t = (k + 0.5) / segs;
       const lx = (t - 0.5) * len;
