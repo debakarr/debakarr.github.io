@@ -226,18 +226,19 @@ export function validate(raw: unknown, onBad?: (fatal: boolean) => void): LoadRe
 export type Quality = 'auto' | 'low' | 'medium' | 'high';
 export type Action =
   | 'forward' | 'back' | 'left' | 'right' | 'sprint' | 'jump' | 'crouch' | 'interact' | 'observe'
-  | 'view' | 'companion' | 'ability' | 'map' | 'collection' | 'journal' | 'inventory';
+  | 'view' | 'companion' | 'ability' | 'map' | 'collection' | 'journal' | 'inventory' | 'dodge' | 'pulse';
 
 export const DEFAULT_BINDINGS: Record<Action, string> = {
   forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', sprint: 'ShiftLeft', jump: 'Space',
   crouch: 'ControlLeft', interact: 'KeyE', observe: 'KeyF', view: 'KeyV', companion: 'KeyR', ability: 'KeyQ',
-  map: 'KeyM', collection: 'Tab', journal: 'KeyJ', inventory: 'KeyI',
+  map: 'KeyM', collection: 'Tab', journal: 'KeyJ', inventory: 'KeyI', dodge: 'KeyZ', pulse: 'KeyX',
 };
 
 export const ACTION_LABELS: Record<Action, string> = {
   forward: 'Move forward', back: 'Move back', left: 'Move left', right: 'Move right', sprint: 'Sprint', jump: 'Jump / glide',
   crouch: 'Crouch / sneak / dive', interact: 'Interact', observe: 'Observe', view: 'Switch camera', companion: 'Call / dismiss companion',
   ability: 'Companion ability', map: 'World map', collection: 'Creature collection', journal: 'Quest journal', inventory: 'Inventory',
+  dodge: 'Dodge roll', pulse: 'Light pulse (push back gloom)',
 };
 
 export interface Settings {

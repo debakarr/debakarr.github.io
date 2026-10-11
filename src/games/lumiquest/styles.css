@@ -2777,3 +2777,79 @@ html.lq-page body {
     top: 48px;
   }
 }
+
+/* Adventure: Light pips, Star Notes and ranger level, under the clock */
+.lq-adv {
+  position: absolute;
+  right: 16px;
+  top: 252px;
+  width: 168px;
+  display: grid;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: rgba(14, 23, 42, 0.7);
+  border: 1px solid var(--lq-line);
+  font-weight: 800;
+  font-size: 0.85em;
+  pointer-events: none;
+}
+
+.lq-adv-light {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.lq-adv-light i {
+  width: 11px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+.lq-adv-light i.on {
+  background: #ffe08a;
+  box-shadow: 0 0 6px rgba(255, 224, 138, 0.8);
+}
+
+.lq-adv-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.lq-adv-notes {
+  color: var(--lq-gold-2);
+}
+
+.lq-adv-lvl {
+  position: relative;
+  padding-bottom: 4px;
+}
+
+.lq-adv-lvl b {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  border-radius: 2px;
+  background: #8fd8ff;
+}
+
+@media (max-width: 820px) {
+  .lq-adv {
+    width: 104px;
+    right: 10px;
+    top: 166px;
+    font-size: 0.74em;
+    padding: 4px 6px;
+  }
+
+  .lq-adv-light i {
+    width: 8px;
+    height: 8px;
+  }
+}

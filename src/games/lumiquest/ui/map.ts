@@ -161,6 +161,22 @@ export class MapView {
       ctx.arc(x * k, y * k, 2.5 * k + 1, 0, Math.PI * 2);
       ctx.fill();
     }
+    // Star Notes still waiting: small gold diamonds (a nudge to go and look)
+    for (const n of g.adventure?.openNotes ?? []) {
+      const [x, y] = this.px(n.x, n.z);
+      const r = 3 * k + 1.5;
+      ctx.fillStyle = 'rgba(255, 214, 106, 0.85)';
+      ctx.strokeStyle = 'rgba(14,22,40,0.8)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(x * k, y * k - r);
+      ctx.lineTo(x * k + r, y * k);
+      ctx.lineTo(x * k, y * k + r);
+      ctx.lineTo(x * k - r, y * k);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+    }
     if (qt) {
       const [x, y] = this.px(qt[0], qt[1]);
       star(ctx, x * k, y * k, 9 * k + 3, '#f2c35a');

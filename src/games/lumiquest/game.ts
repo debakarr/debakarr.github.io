@@ -25,6 +25,10 @@ import { deleteSave, loadGame, loadSettings, saveGame, saveSettings, type Settin
 import { day, hourOfDay, isNight, newState, type GameState, type WeatherKind } from './systems/state';
 import { Fx } from './world/fx';
 import { Interactables, type Entry, type InteractHost } from './world/interactables';
+import { Adventure } from './systems/adventure';
+
+/** Colour of each companion ability's strike against the gloom. */
+const ABILITY_COLOR: Record<string, string> = { ember: '#ff8a3a', tide: '#6ad2ff', quake: '#c89a5a', glide: '#c8ffe8', glow: '#fff2a0', forage: '#7ee07e' };
 import { World } from './world/world';
 import { Studio } from './ui/studio';
 import { UI } from './ui/ui';
@@ -50,6 +54,7 @@ export class Game implements InteractHost, DialogueHost {
   npcs: Npc[] = [];
   interact!: Interactables;
   readonly fx = new Fx();
+  adventure: Adventure | null = null;
   readonly studio = new Studio();
   readonly ui: UI;
   readonly post: Post;
@@ -273,6 +278,24 @@ export class Game implements InteractHost, DialogueHost {
     this.interact.attachBeacon(this.world.props.beacon);
     this.world.scene.add(this.interact.group);
     this.interact.sync();
+    this.adventure = new Adventure({
+      scene: this.world.scene,
+      terrain: this.world.terrain,
+      physics: this.world.physics,
+      fx: this.fx,
+      audio: this.audio,
+      player: this.player,
+      state: () => this.state,
+      hud: this.ui.hudEl,
+      toast: (m, k) => this.toast(m, k),
+      companion: () => {
+        const c = this.creatures.companion;
+        const def = this.companionDef();
+        if (!c || c.dismissed || !def) return null;
+        return { pos: c.pos, color: ABILITY_COLOR[def.ability] ?? '#bff4ff' };
+      },
+      isCave: (x, z) => this.world.isCave(x, z),
+    });
     this.creatures.setCompanion(s.active, s.companionOut, this.player.pos);
     this.rig.mode = s.player.camera;
     this.rig.yaw = s.player.yaw + Math.PI;
@@ -299,6 +322,8 @@ export class Game implements InteractHost, DialogueHost {
       this.interact?.group.removeFromParent();
     }
     this.player = undefined as unknown as Player;
+    this.adventure?.dispose();
+    this.adventure = null;
     this.auto = null;
     this.observing = null;
     this.target = null;
@@ -393,7 +418,9 @@ export class Game implements InteractHost, DialogueHost {
   private play(dt: number): void {
     const s = this.state;
     const frozen = this.paused || !!this.modal || this.phase === 'intro' || !!this.cinematic;
-    const simDt = this.paused ? 0 : dt;
+    // a perfect dodge slows the whole world for a moment
+    const simDt = this.paused ? 0 : dt * (this.adventure?.timeScale ?? 1);
+    this.adventure?.update(this.paused ? 0 : dt, hourOfDay(s), !frozen && this.phase === 'play');
     // input → player
     const move = this.input.move();
     if (!frozen) {
@@ -567,6 +594,13 @@ export class Game implements InteractHost, DialogueHost {
     if (i.pressed('interact')) this.doInteract();
     if (i.pressed('observe')) this.doObserve();
     if (i.pressed('ability')) this.doAbility();
+    if (i.pressed('dodge') && this.adventure) {
+      const m = i.move();
+      const fwd = this.rig.forward(new Vector3());
+      const right = new Vector3(-fwd.z, 0, fwd.x);
+      this.adventure.dodge(fwd.multiplyScalar(m.y).addScaledVector(right, m.x));
+    }
+    if (i.pressed('pulse')) this.adventure?.pulse();
   }
 
   // -------------------------------------------------------------------------

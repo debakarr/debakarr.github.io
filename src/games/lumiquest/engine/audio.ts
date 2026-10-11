@@ -195,6 +195,42 @@ export class Audio {
     [0, 2, 4, 5, 7, 9].forEach((n, k) => this.tone(this.note(n, 1), 0.7, { type: 'triangle', gain: 0.1, delay: k * 0.09 }));
     this.tone(this.note(0, 0), 1.6, { type: 'sine', gain: 0.12, delay: 0.5 });
   }
+  /** One note of the vale's song (Star Notes play it in order). */
+  starNote(i: number): void {
+    const SONG = [0, 2, 4, 2, 5, 4, 2, 0, 4, 5, 7, 5, 4, 2, 0, 2, 4, 7, 9, 7, 5, 4, 2, 0];
+    const n = SONG[((i % SONG.length) + SONG.length) % SONG.length];
+    this.tone(this.note(n, 1), 0.9, { type: 'triangle', gain: 0.13 });
+    this.tone(this.note(n, 2), 0.6, { type: 'sine', gain: 0.05, delay: 0.04 });
+  }
+  /** The whole song, when every note is found. */
+  song(): void {
+    const SONG = [0, 2, 4, 2, 5, 4, 2, 0, 4, 5, 7, 5, 4, 2, 0, 2, 4, 7, 9, 7, 5, 4, 2, 0];
+    SONG.forEach((n, k) => this.tone(this.note(n, 1), 0.5, { type: 'triangle', gain: 0.1, delay: k * 0.16 }));
+  }
+  dodge(perfect: boolean): void {
+    this.burst(0.22, 1800, { gain: 0.12, sweep: 0.4 });
+    if (perfect) this.tone(1760, 0.5, { type: 'sine', gain: 0.1, slide: 0.5 });
+  }
+  lightPulse(): void {
+    this.tone(660, 0.3, { type: 'sine', gain: 0.12, slide: 1.8 });
+    this.burst(0.3, 3000, { gain: 0.06, sweep: 0.3 });
+  }
+  gloomWindup(): void {
+    this.tone(110, 0.6, { type: 'sawtooth', gain: 0.04, slide: 2.2 });
+  }
+  gloomHit(): void {
+    this.tone(180, 0.18, { type: 'square', gain: 0.06, slide: 0.5 });
+  }
+  gloomGone(): void {
+    [7, 9, 12].forEach((n, k) => this.tone(this.note(n, 0), 0.35, { type: 'triangle', gain: 0.08, delay: k * 0.05 }));
+  }
+  hurt(): void {
+    this.tone(220, 0.3, { type: 'sawtooth', gain: 0.07, slide: 0.5 });
+    this.burst(0.2, 400, { gain: 0.15 });
+  }
+  levelUp(): void {
+    [0, 4, 7, 12, 16].forEach((s2, k) => this.tone(392 * Math.pow(2, s2 / 12), 0.7, { type: 'triangle', gain: 0.1, delay: k * 0.09 }));
+  }
   quest(): void {
     [0, 4, 7, 12].forEach((s, k) => this.tone(392 * Math.pow(2, s / 12), 0.6, { type: 'triangle', gain: 0.1, delay: k * 0.11 }));
   }

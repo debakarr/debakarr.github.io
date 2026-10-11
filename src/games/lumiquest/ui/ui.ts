@@ -406,7 +406,7 @@ export class UI {
     const b = g.settings.bindings;
     const hint = g.input.touch
       ? 'Left stick to move • drag to look • buttons to jump, interact and observe'
-      : `${keyLabel(b.forward)}${keyLabel(b.left)}${keyLabel(b.back)}${keyLabel(b.right)} move • Mouse look (click to lock) • ${keyLabel(b.sprint)} sprint • ${keyLabel(b.crouch)}/C sneak • ${keyLabel(b.jump)} jump • ${keyLabel(b.interact)} interact • ${keyLabel(b.observe)} observe • ${keyLabel(b.view)} camera`;
+      : `${keyLabel(b.forward)}${keyLabel(b.left)}${keyLabel(b.back)}${keyLabel(b.right)} move • Mouse look (click to lock) • ${keyLabel(b.sprint)} sprint • ${keyLabel(b.crouch)}/C sneak • ${keyLabel(b.jump)} jump • ${keyLabel(b.interact)} interact • ${keyLabel(b.observe)} observe • ${keyLabel(b.dodge)} dodge • ${keyLabel(b.pulse)} pulse • ${keyLabel(b.view)} camera`;
     const e = html('lq-controls-hint', escapeHtml(hint));
     this.hudEl.append(e);
     setTimeout(() => e.classList.add('is-out'), 9000);

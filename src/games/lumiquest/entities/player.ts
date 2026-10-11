@@ -60,6 +60,23 @@ export class Player {
   calmFor = 0;
   /** Disables control (dialogue, cutscenes, menus). */
   frozen = false;
+  /** A dodge roll in progress: seconds left, and its direction. */
+  dashTime = 0;
+  private dashDir = new Vector3();
+  /** Seconds of invulnerability left (dodges, after a hit). */
+  invuln = 0;
+
+  /** Rolls a short way along `dir` (ground plane); returns false while one is under way. */
+  dodge(dir: Vector3): boolean {
+    if (this.dashTime > 0 || this.swimming || this.frozen) return false;
+    this.dashDir.set(dir.x, 0, dir.z);
+    if (this.dashDir.lengthSq() < 1e-4) this.dashDir.set(Math.sin(this.yaw), 0, Math.cos(this.yaw));
+    this.dashDir.normalize();
+    this.dashTime = 0.32;
+    this.invuln = Math.max(this.invuln, 0.4);
+    this.model.animator.once('jump', 0.05, 2);
+    return true;
+  }
   onStep: ((surface: string) => void) | null = null;
   onJump: (() => void) | null = null;
   onLand: (() => void) | null = null;
@@ -204,6 +221,12 @@ export class Player {
       const speed = this.crouching ? 1.8 : this.sprinting ? 6.8 : 3.8;
       const accel = this.grounded ? 16 : this.gliding ? 2.5 : 4;
       const target = wish.clone().multiplyScalar(speed);
+      if (this.dashTime > 0) {
+        this.dashTime -= dt;
+        target.copy(this.dashDir).multiplyScalar(13);
+        this.vel.x = target.x;
+        this.vel.z = target.z;
+      }
       if (this.gliding) {
         const f = moving ? wish : new Vector3(Math.sin(this.yaw), 0, Math.cos(this.yaw));
         target.copy(f).normalize().multiplyScalar(7.5);
@@ -301,6 +324,7 @@ export class Player {
       }
     }
 
+    if (this.invuln > 0) this.invuln -= dt;
     // the edge of the vale: a soft wall where the mist begins
     const lim = PLAY_HALF - 2;
     if (Math.abs(this.pos.x) > lim || Math.abs(this.pos.z) > lim) {
