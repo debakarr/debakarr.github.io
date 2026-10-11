@@ -1,5 +1,5 @@
-// Baked animation for instanced crowds. A "look" (a squad of KayKit figures
-// with their weapons, plus any rigid parts such as a horse or a cart) is
+// Baked animation for instanced crowds. A "look" (a squad of voxel figures,
+// plus any rigid parts such as a horse or a cart) is
 // flattened into one geometry whose vertices are bound to a handful of bone
 // slots, and every animation state is sampled into a float texture of slot
 // matrices (one row per frame). The map then draws every squad of a type in
@@ -30,13 +30,11 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { crowdInstance } from '../../shared/chibi/crowd';
 import { chibiClips, type ClipName } from '../../shared/chibi/rig';
 import type { ChibiSpec } from '../../shared/chibi/spec';
-import { charInstance, clip, hasClip, type CharName } from './kit';
 
 export type AnimState = 'idle' | 'walk' | 'attack' | 'hit' | 'death';
 export const STATES: AnimState[] = ['idle', 'walk', 'attack', 'hit', 'death'];
 export const FPS = 24;
 const LOOPS: Record<AnimState, boolean> = { idle: true, walk: true, attack: false, hit: false, death: false };
-const DEFAULT_CLIPS: Record<AnimState, string> = { idle: 'Idle', walk: 'Walking_A', attack: '1H_Melee_Attack_Chop', hit: 'Hit_A', death: 'Death_A' };
 
 export interface Transform {
   p?: [number, number, number];
@@ -44,24 +42,11 @@ export interface Transform {
   s?: number;
 }
 
-/** A hand-made accessory (spear, bow, rifle…) carried on a bone. */
-export interface Prop {
-  geo: BufferGeometry;
-  bone: string;
-  t?: Transform;
-}
-
 export interface FigureSpec {
-  char: CharName;
-  /** A chibi from the shared art kit instead of a KayKit character (dressed in crowd.TEAM colours). */
-  chibi?: ChibiSpec;
-  /** Chibi clip per state (defaults: idle, walk, attack, hit, death). */
+  /** The character, from the shared voxel kit (dressed in crowd.TEAM colours). */
+  chibi: ChibiSpec;
+  /** Clip per state (defaults: idle, walk, attack, hit, death); live scenes also read 'run', 'cheer' and 'aim'. */
   chibiClips?: Partial<Record<AnimState | 'run' | 'cheer' | 'aim', ClipName>>;
-  /** Accessory meshes to keep (weapons, shields, hats, capes); the body is always shown. */
-  show: string[];
-  props?: Prop[];
-  /** Clip per state; live scenes also read 'run', 'cheer' and 'aim'. */
-  clips?: Partial<Record<AnimState | 'run' | 'cheer' | 'aim', string>>;
   /** Placement in the squad (look space, figure feet at y = 0). */
   t?: Transform;
   /** Seconds of offset so a squad does not breathe in lockstep. */
@@ -216,27 +201,15 @@ export function bakeLook(spec: LookSpec): BakedLook {
   }
   const figs: Fig[] = [];
   for (const f of spec.figures) {
-    const root = f.chibi ? chibiInstance(f.chibi) : charInstance(f.char);
+    const root = chibiInstance(f.chibi);
     const bones = new Map<string, Bone>();
     root.traverse((o) => {
       if ((o as Bone).isBone) bones.set(o.name, o as Bone);
     });
-    // accessories: keep the requested ones, attach props
     const meshes: Mesh[] = [];
     root.traverse((o) => {
       if ((o as Mesh).isMesh) meshes.push(o as Mesh);
     });
-    for (const m of meshes) if (!(m as SkinnedMesh).isSkinnedMesh) m.visible = f.show.includes(m.name);
-    const propObjs: { obj: Object3D; geo: BufferGeometry }[] = [];
-    for (const p of f.props ?? []) {
-      const host = bones.get(boneName(p.bone));
-      if (!host) throw new Error(`no bone ${p.bone}`);
-      const o = new Object3D();
-      compose(p.t, o.matrix);
-      o.matrix.decompose(o.position, o.quaternion, o.scale);
-      host.add(o);
-      propObjs.push({ obj: o, geo: p.geo });
-    }
     root.updateMatrixWorld(true);
     const place = compose(f.t);
     const fig: Fig = { spec: f, root, mixer: new AnimationMixer(root), place, bones };
@@ -292,7 +265,6 @@ export function bakeLook(spec: LookSpec): BakedLook {
         rigidPiece(m, m.geometry);
       }
     }
-    for (const p of propObjs) rigidPiece(p.obj, p.geo);
 
     function rigidPiece(obj: Object3D, geo: BufferGeometry) {
       const rest = obj.matrixWorld.clone();
@@ -308,11 +280,7 @@ export function bakeLook(spec: LookSpec): BakedLook {
   // --- clips: frame counts come from the first figure (or the given durations) ---
   const clips = {} as Record<AnimState, ClipRange>;
   let row = 0;
-  const clipName = (f: FigureSpec, s: AnimState) => {
-    const name = f.clips?.[s] ?? DEFAULT_CLIPS[s];
-    return hasClip(name) ? name : DEFAULT_CLIPS[s];
-  };
-  const clipOf = (f: FigureSpec, s: AnimState) => (f.chibi ? chibiClip(f, s) : clip(clipName(f, s)));
+  const clipOf = (f: FigureSpec, s: AnimState) => chibiClip(f, s);
   for (const s of STATES) {
     const dur = figs.length ? clipOf(figs[0].spec, s).duration : spec.durations?.[s] ?? (LOOPS[s] ? 1.2 : 0.8);
     const frames = Math.max(2, Math.round(dur * FPS) + (LOOPS[s] ? 0 : 1));

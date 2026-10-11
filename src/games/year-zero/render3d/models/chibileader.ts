@@ -7,7 +7,20 @@ import type { Expression as Face } from '../../../shared/chibi/face';
 import { leaderSpec } from '../../../shared/chibi/leaders';
 import { ChibiModel } from '../../../shared/chibi/model';
 import type { ClipName } from '../../../shared/chibi/rig';
-import type { Expression, Gesture, LeaderLook } from './kitleader';
+
+export type Expression = 'neutral' | 'happy' | 'angry' | 'sad' | 'surprised';
+export type Gesture = 'open' | 'welcome' | 'refuse' | 'point' | 'none';
+
+export interface LeaderLook {
+  gender: 'f' | 'm';
+  title: string;
+  tier: number;
+  color: string;
+  skin: string;
+  seed: number;
+  /** 0 young .. 1 old */
+  age: number;
+}
 
 export interface ChibiLeader {
   root: Object3D;

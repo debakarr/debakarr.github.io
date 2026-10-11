@@ -137,7 +137,7 @@ export class TitleScene implements StageScene {
     // the hero: a young founder in a blue cape
     const heroMat = teamMaterial(HERO, '#ffffff');
     const founder = withOutfit(scout(FACTIONS.blue), [{ k: 'cape', color: '#2f58b8', length: 0.36, inner: '#22407e', emblem: 'fleur', emblemColor: '#e2b04a' }], 'founder');
-    this.heroFig = liveFigure({ char: 'knight', show: [], chibi: founder }, heroMat);
+    this.heroFig = liveFigure({ chibi: founder }, heroMat);
     this.hero = new Object3D();
     this.hero.add(this.heroFig.root);
     this.hero.scale.setScalar(1.25);

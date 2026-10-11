@@ -14,35 +14,23 @@ import {
   Mesh,
   MeshStandardMaterial,
   Object3D,
-  SkinnedMesh,
   type Bone,
 } from 'three';
 import { TEAM } from '../../shared/chibi/crowd';
 import { ChibiModel } from '../../shared/chibi/model';
 import type { ChibiSpec } from '../../shared/chibi/spec';
-import { charInstance, clip, hasClip } from './kit';
-import { boneName, chibiClip, compose, type AnimState, type FigureSpec, type LookSpec, type RigidSpec } from './rig';
+import { chibiClip, compose, type AnimState, type FigureSpec, type LookSpec, type RigidSpec } from './rig';
 
 export type LiveState = AnimState | 'run' | 'cheer' | 'aim';
 
-const DEFAULTS: Record<LiveState, string> = {
-  idle: 'Idle',
-  walk: 'Walking_A',
-  run: 'Running_A',
-  attack: '1H_Melee_Attack_Chop',
-  hit: 'Hit_A',
-  death: 'Death_A',
-  cheer: 'Cheer',
-  aim: '2H_Ranged_Aiming',
-};
 const ONCE: Partial<Record<LiveState, boolean>> = { attack: true, hit: true, death: true };
 
 export interface LiveFigure {
   root: Object3D;
   mixer: AnimationMixer;
   spec: FigureSpec;
-  /** Full-quality chibi (face textures, per-surface materials) when the spec is one. */
-  chibi?: ChibiModel;
+  /** The full-quality figure (pixel faces, expressions). */
+  chibi: ChibiModel;
   bones: Map<string, Bone>;
   actions: Map<string, AnimationAction>;
   current: AnimationAction | null;
@@ -84,63 +72,22 @@ export function dressChibi(spec: ChibiSpec, team: Color | undefined, skin: Color
   return out;
 }
 
-/** A figure dressed as in its spec (KayKit accessories and props, or a chibi), with its own mixer. */
+/** A figure dressed as in its spec, in its side's colours, with its own mixer. */
 export function liveFigure(spec: FigureSpec, material?: MeshStandardMaterial): LiveFigure {
-  if (spec.chibi) {
-    const u = material?.userData.uniforms as { uTeam?: { value: Color }; uSkin?: { value: Color } } | undefined;
-    const model = new ChibiModel(dressChibi(spec.chibi, u?.uTeam?.value, u?.uSkin?.value));
-    for (const m of model.meshes) {
-      m.castShadow = true;
-      m.receiveShadow = true;
-    }
-    const f: LiveFigure = { root: model.root, mixer: model.animator.mixer, spec, chibi: model, bones: new Map(Object.entries(model.bones)), actions: new Map(), current: null, state: 'idle' };
-    play(f, 'idle', 0);
-    return f;
-  }
-  const root = charInstance(spec.char);
-  const bones = new Map<string, Bone>();
-  root.traverse((o) => {
-    if ((o as Bone).isBone) bones.set(o.name, o as Bone);
-    const m = o as Mesh;
-    if (m.isMesh) {
-      // geometry is shared with the kit: scenes must not dispose it
-      m.userData.keep = true;
-      if (!(m as SkinnedMesh).isSkinnedMesh) m.visible = spec.show.includes(m.name);
-      m.castShadow = true;
-      m.receiveShadow = true;
-      if (material) m.material = material;
-    }
-  });
-  for (const p of spec.props ?? []) {
-    const host = bones.get(boneName(p.bone));
-    if (!host) continue;
-    const m = new Mesh(p.geo, material ?? new MeshStandardMaterial({ vertexColors: true, roughness: 0.7 }));
-    m.userData.keep = true;
-    compose(p.t, m.matrix);
-    m.matrix.decompose(m.position, m.quaternion, m.scale);
+  const u = material?.userData.uniforms as { uTeam?: { value: Color }; uSkin?: { value: Color } } | undefined;
+  const model = new ChibiModel(dressChibi(spec.chibi, u?.uTeam?.value, u?.uSkin?.value));
+  for (const m of model.meshes) {
     m.castShadow = true;
-    host.add(m);
+    m.receiveShadow = true;
   }
-  const mixer = new AnimationMixer(root);
-  const f: LiveFigure = { root, mixer, spec, bones, actions: new Map(), current: null, state: 'idle' };
+  const f: LiveFigure = { root: model.root, mixer: model.animator.mixer, spec, chibi: model, bones: new Map(Object.entries(model.bones)), actions: new Map(), current: null, state: 'idle' };
   play(f, 'idle', 0);
   return f;
 }
 
-function clipFor(f: LiveFigure, s: LiveState, override?: string) {
-  if (f.spec.chibi && !override) return chibiClip(f.spec, s);
-  return clip(override ?? clipName(f, s));
-}
-
-function clipName(f: LiveFigure, s: LiveState): string {
-  const fromSpec = f.spec.clips?.[s];
-  const name = fromSpec ?? DEFAULTS[s];
-  return hasClip(name) ? name : DEFAULTS[s === 'run' ? 'walk' : 'idle'];
-}
-
 /** Cross-fades a figure into a state (one-shots restart; loops keep running). */
-export function play(f: LiveFigure, s: LiveState, fade = 0.18, clipOverride?: string): void {
-  const c = clipFor(f, s, f.spec.chibi ? undefined : clipOverride);
+export function play(f: LiveFigure, s: LiveState, fade = 0.18): void {
+  const c = chibiClip(f.spec, s);
   const name = c.name;
   let a = f.actions.get(name);
   if (!a) {
@@ -163,16 +110,8 @@ export function play(f: LiveFigure, s: LiveState, fade = 0.18, clipOverride?: st
 
 /** Advances a figure's clip and re-applies its pose tweaks. */
 export function tickFigure(f: LiveFigure, dt: number, t: number): void {
-  if (f.chibi) {
-    f.chibi.update(dt);
-    return;
-  }
-  f.mixer.update(dt);
-  const s: AnimState = f.state === 'run' ? 'walk' : f.state === 'cheer' || f.state === 'aim' ? 'idle' : f.state;
-  if (f.spec.pose) {
-    f.root.updateMatrixWorld(true);
-    f.spec.pose((n) => f.bones.get(boneName(n)), s, t);
-  }
+  void t;
+  f.chibi.update(dt);
 }
 
 // --- whole looks -------------------------------------------------------------------------------------

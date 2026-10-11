@@ -182,7 +182,7 @@ export const CHIBI = 0.3;
 type ChibiClips = FigureSpec['chibiClips'];
 
 function chibiFigure(spec: ChibiSpec, t: FigureSpec['t'], phase: number, clips?: ChibiClips): FigureSpec {
-  return { char: 'knight', show: [], chibi: spec, chibiClips: clips, t, phase };
+  return { chibi: spec, chibiClips: clips, t, phase };
 }
 
 function chibiSquad(spots: [number, number, number][], make: (k: number) => ChibiSpec, clips?: ChibiClips): FigureSpec[] {

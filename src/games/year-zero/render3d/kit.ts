@@ -1,36 +1,18 @@
 // The model kit: CC0 KayKit and Kenney models (packed by tools/year-zero-assets)
-// loaded once and handed out as geometry in the same vertex-coloured format
-// the procedural art uses (position, normal, colour, `team`), so trees,
-// buildings and soldiers all go through the same instanced, fog-aware shaders.
+// loaded once and handed out as voxelised geometry in the same vertex-coloured
+// format the procedural art uses (position, normal, colour, `team`), so trees
+// and buildings go through the same instanced, fog-aware shaders.
 //
 // World models keep the palette cell of every vertex, which lets one model
 // serve several biomes: grass, leaves and rock are recoloured on extraction.
 
-import {
-  AnimationClip,
-  BufferAttribute,
-  BufferGeometry,
-  Color,
-  Group,
-  Mesh,
-  Object3D,
-  SkinnedMesh,
-} from 'three';
-import { GLTFLoader, type GLTF } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { BufferAttribute, BufferGeometry, Color, Mesh, Object3D } from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
-import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import worldUrl from '../assets/models/world.glb?url';
 import hallUrl from '../assets/models/hall.glb?url';
-import knightUrl from '../assets/models/char_knight.glb?url';
-import barbarianUrl from '../assets/models/char_barbarian.glb?url';
-import mageUrl from '../assets/models/char_mage.glb?url';
-import rogueUrl from '../assets/models/char_rogue.glb?url';
-import hoodedUrl from '../assets/models/char_hooded.glb?url';
 import { prep } from './geo';
 import { voxelize } from '../../shared/chibi/voxel';
-
-export type CharName = 'knight' | 'barbarian' | 'mage' | 'rogue' | 'hooded';
-const CHAR_URLS: Record<CharName, string> = { knight: knightUrl, barbarian: barbarianUrl, mage: mageUrl, rogue: rogueUrl, hooded: hoodedUrl };
 
 /** KayKit hexagon palette cells (column + row * 8) worth recolouring. */
 export const CELL = {
@@ -48,8 +30,6 @@ export const CELL = {
 interface Kit {
   world: Map<string, Object3D>;
   hall: Map<string, Object3D>;
-  chars: Record<CharName, GLTF>;
-  clips: Map<string, AnimationClip>;
 }
 
 let kit: Kit | null = null;
@@ -61,29 +41,14 @@ export function loadKit(progress?: (f: number) => void): Promise<Kit> {
   if (loading) return loading;
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
-  const urls = [worldUrl, hallUrl, ...Object.values(CHAR_URLS)];
+  const urls = [worldUrl, hallUrl];
   const done = new Array(urls.length).fill(0);
   const tick = (k: number, f: number) => {
     done[k] = f;
     progress?.(done.reduce((a, b) => a + b, 0) / urls.length);
   };
-  loading = Promise.all(urls.map((u, k) => loader.loadAsync(u, (e) => e.total && tick(k, e.loaded / e.total)).then((g) => (tick(k, 1), g)))).then(([world, hall, ...chars]) => {
-    const names = Object.keys(CHAR_URLS) as CharName[];
-    // live figures (battles, audiences) read a float `team` like the procedural art
-    for (const c of chars) c.scene.traverse((o) => {
-      const g = (o as Mesh).geometry;
-      if (!g || g.attributes.team) return;
-      const src = g.attributes._team;
-      const t = new Float32Array(g.attributes.position.count);
-      if (src) for (let i = 0; i < t.length; i++) t[i] = src.getX(i) / 100;
-      g.setAttribute('team', new BufferAttribute(t, 1));
-    });
-    const k: Kit = {
-      world: index(world.scene),
-      hall: index(hall.scene),
-      chars: Object.fromEntries(names.map((n, i) => [n, chars[i]])) as Record<CharName, GLTF>,
-      clips: new Map(chars[0].animations.map((c) => [c.name, c])),
-    };
+  loading = Promise.all(urls.map((u, k) => loader.loadAsync(u, (e) => e.total && tick(k, e.loaded / e.total)).then((g) => (tick(k, 1), g)))).then(([world, hall]) => {
+    const k: Kit = { world: index(world.scene), hall: index(hall.scene) };
     kit = k;
     return k;
   });
@@ -248,51 +213,3 @@ function extract(mesh: Mesh, recolor?: Recolor): BufferGeometry {
 function lumOf(c: Color): number {
   return c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722;
 }
-
-// --- characters ---------------------------------------------------------------------------------
-
-/** A fresh, independently animatable copy of a character (all accessories visible). */
-export function charInstance(name: CharName): Group {
-  const src = need().chars[name].scene;
-  const g = cloneSkinned(src) as Group;
-  g.name = name;
-  return g;
-}
-
-/** The source scene of a character (for baking; do not mutate). */
-export function charSource(name: CharName): Object3D {
-  return need().chars[name].scene;
-}
-
-export function clip(name: string): AnimationClip {
-  const c = need().clips.get(name);
-  if (!c) throw new Error(`no clip ${name}`);
-  return c;
-}
-
-/** Adds a derived clip (e.g. an attack over a sitting lower body). */
-export function registerClip(c: AnimationClip): void {
-  need().clips.set(c.name, c);
-}
-
-export function hasClip(name: string): boolean {
-  return !!kit?.clips.has(name);
-}
-
-/** Every skinned and rigid mesh of a character, for visibility toggles. */
-export function charMeshes(root: Object3D): Mesh[] {
-  const out: Mesh[] = [];
-  root.traverse((o) => {
-    if ((o as Mesh).isMesh || (o as SkinnedMesh).isSkinnedMesh) out.push(o as Mesh);
-  });
-  return out;
-}
-
-/** Accessories (weapons, shields, hats, capes) that can be shown or hidden. */
-export const ACCESSORIES: Record<CharName, string[]> = {
-  knight: ['1H_Sword_Offhand', 'Badge_Shield', 'Rectangle_Shield', 'Round_Shield', 'Spike_Shield', '1H_Sword', '2H_Sword', 'Knight_Helmet', 'Knight_Cape'],
-  barbarian: ['1H_Axe_Offhand', 'Barbarian_Round_Shield', '1H_Axe', '2H_Axe', 'Mug', 'Barbarian_Hat', 'Barbarian_Cape'],
-  mage: ['Spellbook', 'Spellbook_open', '1H_Wand', '2H_Staff', 'Mage_Hat', 'Mage_Cape'],
-  rogue: ['Knife_Offhand', '1H_Crossbow', '2H_Crossbow', 'Knife', 'Throwable', 'Rogue_Cape'],
-  hooded: ['Knife_Offhand', '1H_Crossbow', '2H_Crossbow', 'Knife', 'Throwable', 'Rogue_Cape'],
-};

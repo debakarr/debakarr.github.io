@@ -3,7 +3,7 @@
 import { ACESFilmicToneMapping, PCFSoftShadowMap, SRGBColorSpace, WebGLRenderer } from 'three';
 import { AudienceScene } from '../../year-zero/render3d/audience';
 import { BattleScene } from '../../year-zero/render3d/battle';
-import type { Expression } from '../../year-zero/render3d/models/kitleader';
+import type { Expression } from '../../year-zero/render3d/models/chibileader';
 import { loadKit } from '../../year-zero/render3d/kit';
 
 export async function startScene(host: HTMLElement, q: URLSearchParams): Promise<void> {

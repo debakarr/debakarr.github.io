@@ -26,7 +26,7 @@ import { Rng } from '../../shared/rng';
 import { box, cylinder, ellipsoid, faceted, gradient, merge, part, softBox, torus, xf } from './geo';
 import { kitGeo } from './kit';
 import { buildChibiLeader, type ChibiLeader } from './models/chibileader';
-import type { Expression, Gesture, LeaderLook } from './models/kitleader';
+import type { Expression, Gesture, LeaderLook } from './models/chibileader';
 import type { StageScene } from './stage';
 
 export type { Expression, LeaderLook };

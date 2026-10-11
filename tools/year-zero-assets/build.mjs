@@ -1,7 +1,7 @@
 // Packs the CC0 models Year Zero uses into a few optimised GLB bundles.
 //
 // Sources (clone them next to this repository, see README.md):
-//   KayKit Medieval Hexagon Pack 1.0, KayKit Adventurers 1.0, KayKit Dungeon
+//   KayKit Medieval Hexagon Pack 1.0, KayKit Adventurers 1.0 (weapons), KayKit Dungeon
 //   Remastered 1.0, KayKit Furniture Bits 1.0, KayKit City Builder Bits 1.0,
 //   KayKit Space Base Bits 1.0 (all CC0, Kay Lousberg) and Kenney pirate,
 //   nature and vehicle models from pmndrs/market-assets (CC0, Kenney).
@@ -357,20 +357,6 @@ const hexTeam = (_srgb, ctx) => (ctx.cell === 24 ? 1 : 0);
 /** Kenney sails take a light wash of the owner's colour. */
 const kenney = (_srgb, ctx) => (/textile|sail|flag/i.test(ctx.material) ? 0.45 : 0);
 
-/** Adventurers: each character's signature cloth carries the owner's colour; peach tones are skin. */
-function charRule(name) {
-  return (srgb, ctx) => {
-    const [h, s, v] = hsv(srgb);
-    if (ctx.weapon) return 0;
-    // skin: warm, light, moderately saturated
-    if (h >= 19 && h <= 27 && s > 0.3 && s < 0.48 && v > 0.93) return 2;
-    if (name === 'knight') return (h < 12 || h > 340) && s > 0.45 && v > 0.3 ? 1 : 0;
-    if (name === 'barbarian') return h > 195 && h < 225 && s > 0.25 && v > 0.25 ? 1 : 0;
-    if (name === 'mage') return ((h > 235 && h < 290) || (h > 300 && h < 345)) && s > 0.25 && v > 0.15 ? 1 : 0;
-    if (name === 'rogue') return h > 140 && h < 175 && s > 0.45 && v > 0.25 ? 1 : 0;
-    return 0;
-  };
-}
 
 // --- bundles --------------------------------------------------------------------------------------
 
@@ -418,48 +404,6 @@ async function buildHall() {
   await finish(writeModels(models, 'hall.glb'));
 }
 
-const KEEP_CLIPS = [
-  'Idle', 'Unarmed_Idle', '2H_Melee_Idle', 'Walking_A', 'Walking_B', 'Running_A', 'Running_B',
-  '1H_Melee_Attack_Chop', '1H_Melee_Attack_Slice_Diagonal', '1H_Melee_Attack_Slice_Horizontal', '1H_Melee_Attack_Stab',
-  '2H_Melee_Attack_Chop', '2H_Melee_Attack_Slice', '2H_Melee_Attack_Stab', '2H_Melee_Attack_Spin',
-  '1H_Ranged_Shoot', '2H_Ranged_Shoot', '2H_Ranged_Aiming', '1H_Ranged_Aiming', 'Spellcast_Shoot', 'Spellcast_Raise', 'Spellcasting', 'Spellcast_Long',
-  'Block', 'Blocking', 'Block_Hit', 'Hit_A', 'Hit_B', 'Death_A', 'Death_A_Pose', 'Death_B', 'Death_B_Pose', 'Cheer', 'Interact', 'Use_Item', 'PickUp', 'Throw',
-  'Sit_Chair_Idle', 'Sit_Chair_Pose', 'Sit_Floor_Pose', 'Dodge_Backward', 'Jump_Idle', 'Unarmed_Pose',
-];
-
-async function buildChar(file, name, ruleName, withAnims) {
-  const doc = await io.read(`${ADV}/Characters/gltf/${file}`);
-  const root = doc.getRoot();
-  const mat = doc.createMaterial('char').setBaseColorFactor([1, 1, 1, 1]).setRoughnessFactor(0.75).setMetallicFactor(0);
-  const rule = charRule(ruleName);
-  for (const node of root.listNodes()) {
-    const mesh = node.getMesh();
-    if (!mesh) continue;
-    const weapon = !node.getSkin() && !/Helmet|Hat|Cape|Head|Shield/.test(node.getName());
-    for (const prim of mesh.listPrimitives()) {
-      const baked = bakePrimitive(prim, { classify: rule, weapon });
-      const buf = root.listBuffers()[0];
-      prim.setAttribute('COLOR_0', doc.createAccessor().setType('VEC3').setArray(baked.colors).setBuffer(buf));
-      if (baked.team.some((v) => v)) prim.setAttribute('_TEAM', doc.createAccessor().setType('SCALAR').setArray(baked.team).setBuffer(buf));
-      prim.setAttribute('TEXCOORD_0', null);
-      prim.setMaterial(mat);
-    }
-  }
-  for (const a of root.listAnimations()) {
-    if (withAnims && KEEP_CLIPS.includes(a.getName())) continue;
-    for (const c of a.listChannels()) c.dispose();
-    for (const s of a.listSamplers()) s.dispose();
-    a.dispose();
-  }
-  for (const m of root.listMaterials()) if (m !== mat) m.dispose();
-  for (const t of root.listTextures()) t.dispose();
-  await finish({ doc, file: `char_${name}.glb` }, { resample: true });
-}
 
 await buildWorld();
 await buildHall();
-await buildChar('Knight.glb', 'knight', 'knight', true);
-await buildChar('Barbarian.glb', 'barbarian', 'barbarian', false);
-await buildChar('Mage.glb', 'mage', 'mage', false);
-await buildChar('Rogue.glb', 'rogue', 'rogue', false);
-await buildChar('Rogue_Hooded.glb', 'hooded', 'rogue', false);
