@@ -135,12 +135,15 @@ function voxelModel(name: string, g: BufferGeometry, hall: boolean): BufferGeome
   g.computeBoundingBox();
   const bb = g.boundingBox!;
   const span = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
-  let size = hall ? 0.125 : 0.05;
-  if (name.endsWith('@lod')) size *= 2;
-  size = Math.max(size, span / 48);
-  const v = voxelize(g, size);
+  // map pieces are seen small and in thousands: coarse blocks, few shades, no undersides
+  let size = hall ? 0.125 : 0.075;
+  if (name.endsWith('@lod')) size *= 1.8;
+  size = Math.max(size, span / (hall ? 40 : 26));
+  const v = voxelize(g, size, { levels: hall ? 20 : 12, noBottom: !hall });
   g.dispose();
-  return prep(v);
+  const out = prep(v);
+  out.name = name;
+  return out;
 }
 
 /** The model's bounding box (static part). */

@@ -306,6 +306,7 @@ export class Props {
       geo.setAttribute('aTile', new InstancedBufferAttribute(tiles, 1));
       const mat = def.glow ? this.mats.glow : def.sway ? this.mats.sway : this.mats.plain;
       const mesh = new InstancedMesh(geo, mat, list.length);
+      mesh.name = kind;
       list.forEach((it, k) => {
         q.setFromAxisAngle(up, it.rot);
         pos.set(it.x, it.y, it.z);

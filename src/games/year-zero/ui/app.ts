@@ -1140,22 +1140,40 @@ export class App implements PanelHost {
   }
 
   private portraits = new Map<string, string>();
+  /** The last picture made of each tile, shown while a newer one waits to be drawn. */
+  private lastPortrait = new Map<string, string>();
+  private portraitQueue = new Set<string>();
 
-  /** A small 3D picture of a tile or city for the panels (cached per year). */
+  /**
+   * A small 3D picture of a tile or city for the panels. Drawing one reads
+   * pixels back from the GPU (a stall), so pictures are cached for ten years
+   * (or until the tile changes) and new ones are drawn after the current
+   * frame; the panel shows the previous picture, then refreshes once.
+   */
   portraitOf(tile: number, kind: 'tile' | 'city'): string | null {
     if (tile < 0 || !(this.r instanceof Map3D) || !this.stage) return null;
-    const key = `${tile}|${kind}|${this.g.turn}|${this.g.s.map.cityAt[tile]}|${this.g.s.map.improvement[tile]}`;
-    let url = this.portraits.get(key);
-    if (!url) {
-      if (this.portraits.size > 60) this.portraits.clear();
-      try {
-        url = this.r.portrait(tile, 360, 200, kind === 'city' ? 1.05 : 1.25).toDataURL('image/jpeg', 0.85);
-      } catch {
-        return null;
-      }
-      this.portraits.set(key, url);
+    const map = this.g.s.map;
+    const base = `${tile}|${kind}`;
+    const key = `${base}|${Math.floor(this.g.turn / 10)}|${map.cityAt[tile]}|${map.improvement[tile]}`;
+    const url = this.portraits.get(key);
+    if (url) return url;
+    if (!this.portraitQueue.has(key)) {
+      this.portraitQueue.add(key);
+      requestAnimationFrame(() => setTimeout(() => {
+        this.portraitQueue.delete(key);
+        if (!this.hasGame || !(this.r instanceof Map3D)) return;
+        try {
+          const made = this.r.portrait(tile, 360, 200, kind === 'city' ? 1.05 : 1.25).toDataURL('image/jpeg', 0.85);
+          if (this.portraits.size > 60) this.portraits.clear();
+          this.portraits.set(key, made);
+          this.lastPortrait.set(base, made);
+          if (!this.busy) this.refresh();
+        } catch {
+          /* no picture this time */
+        }
+      }, 0));
     }
-    return url;
+    return this.lastPortrait.get(base) ?? null;
   }
 
   private openLog(): void {

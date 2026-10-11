@@ -94,6 +94,7 @@ export function detectQuality(renderer: WebGLRenderer): Quality {
 
 export class Stage {
   readonly renderer: WebGLRenderer;
+  private snapTarget: WebGLRenderTarget | null = null;
   readonly canvas: HTMLCanvasElement;
   quality: Quality = 'high';
   private composer: EffectComposer | null = null;
@@ -251,19 +252,27 @@ export class Stage {
     out.width = w;
     out.height = h;
     const r = this.renderer;
-    const pr = r.getPixelRatio();
-    const cw = Math.min(w, Math.floor(this.w * pr * 0.95));
-    const ch = Math.min(h, Math.floor(this.h * pr * 0.95));
-    r.setRenderTarget(null);
-    r.setScissorTest(true);
-    r.setScissor(0, 0, cw / pr, ch / pr);
-    r.setViewport(0, 0, cw / pr, ch / pr);
+    // an offscreen target the size of the picture: the visible canvas is untouched
+    if (!this.snapTarget || this.snapTarget.width !== w || this.snapTarget.height !== h) {
+      this.snapTarget?.dispose();
+      this.snapTarget = new WebGLRenderTarget(w, h, { colorSpace: SRGBColorSpace, samples: 4 });
+    }
+    const prev = r.getRenderTarget();
+    // reuse the frame's shadow map: a portrait is not worth a second shadow pass
+    const auto = r.shadowMap.autoUpdate;
+    r.shadowMap.autoUpdate = false;
+    r.setRenderTarget(this.snapTarget);
+    r.clear();
     r.render(scene, camera);
-    out.getContext('2d')!.drawImage(this.canvas, 0, this.canvas.height - ch, cw, ch, 0, 0, w, h);
-    r.setScissorTest(false);
-    r.setViewport(0, 0, this.w, this.h);
-    const s = this.current;
-    if (s) this.draw(s.scene, s.camera, s.bloom ?? 0.25);
+    r.shadowMap.autoUpdate = auto;
+    const px = new Uint8Array(w * h * 4);
+    r.readRenderTargetPixels(this.snapTarget, 0, 0, w, h, px);
+    r.setRenderTarget(prev);
+    // WebGL rows run bottom to top
+    const img = new ImageData(w, h);
+    for (let y = 0; y < h; y++) img.data.set(px.subarray((h - 1 - y) * w * 4, (h - y) * w * 4), y * w * 4);
+    out.getContext('2d')!.putImageData(img, 0, 0);
     return out;
   }
+
 }

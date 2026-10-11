@@ -181,6 +181,8 @@ export interface MeshOptions {
   scale?: number;
   /** Merge flat, evenly lit faces of one colour into larger quads (fewer triangles). */
   greedy?: boolean;
+  /** Skip faces pointing straight down (props standing on the ground never show them). */
+  noBottom?: boolean;
 }
 
 /**
@@ -262,9 +264,10 @@ export function meshGrid(g: VoxelGrid, opts: MeshOptions = {}): { main: BufferGe
         ao.push(a && b ? 0 : 3 - (a + b + d));
       }
       const p = [x, y, z];
-      if (opts.greedy && ao[0] === 3 && ao[1] === 3 && ao[2] === 3 && ao[3] === 3) {
+      if (opts.noBottom && fi === 3) continue;
+      if (opts.greedy && ao[0] === ao[1] && ao[1] === ao[2] && ao[2] === ao[3]) {
         const axis = f.n[0] ? 0 : f.n[1] ? 1 : 2;
-        const key = `${bi}|${fi}|${p[axis]}`;
+        const key = `${bi}|${fi}|${p[axis]}|${ao[0]}`;
         let m = flat.get(key);
         if (!m) flat.set(key, (m = new Map()));
         m.set(`${p[f.u]},${p[f.v]}`, rgb + team * 100 * 0x1000000);
@@ -275,7 +278,8 @@ export function meshGrid(g: VoxelGrid, opts: MeshOptions = {}): { main: BufferGe
   }
   // greedy merge: grow rectangles of equal colour over each slice
   for (const [key, m] of flat) {
-    const [bs, fs, ss] = key.split('|');
+    const [bs, fs, ss, as] = key.split('|');
+    const lvl = Number(as);
     const f = FACES[Number(fs)];
     const axis = f.n[0] ? 0 : f.n[1] ? 1 : 2;
     const slice = Number(ss);
@@ -300,7 +304,7 @@ export function meshGrid(g: VoxelGrid, opts: MeshOptions = {}): { main: BufferGe
       origin[axis] = slice;
       origin[f.u] = u0;
       origin[f.v] = v0;
-      emit(out[Number(bs)], f, origin, w, h, val & 0xffffff, Math.floor(val / 0x1000000) / 100, [3, 3, 3, 3]);
+      emit(out[Number(bs)], f, origin, w, h, val & 0xffffff, Math.floor(val / 0x1000000) / 100, [lvl, lvl, lvl, lvl]);
     }
   }
   return { main: toGeo(out[0]), split: out[1].pos.length ? toGeo(out[1]) : null };
@@ -320,6 +324,8 @@ export interface VoxelizeOptions {
   levels?: number;
   /** Corner ambient occlusion (default on; off merges more faces on big pieces). */
   ao?: boolean;
+  /** Skip downward faces. */
+  noBottom?: boolean;
 }
 
 export function voxelize(src: BufferGeometry, size: number, vopts: VoxelizeOptions = {}): BufferGeometry {
@@ -415,7 +421,7 @@ export function voxelize(src: BufferGeometry, size: number, vopts: VoxelizeOptio
     for (const t of tally.values()) if (!best || t[0] > best[0]) best = t;
     g.cells.set(ck, best![1]);
   }
-  return meshGrid(g, { jitter: 0, scale: size / VOX, greedy: true, ao: vopts.ao }).main;
+  return meshGrid(g, { jitter: 0, scale: size / VOX, greedy: true, ao: vopts.ao, noBottom: vopts.noBottom }).main;
 }
 
 interface Buf {

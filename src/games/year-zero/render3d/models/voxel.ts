@@ -14,23 +14,45 @@ import * as RawN from './nature';
 
 type Builder = (...args: never[]) => BufferGeometry;
 
-const cache = new Map<string, BufferGeometry>();
+const cache = new Map<string, { geo: BufferGeometry; rngAfter: number[] }>();
+
+type RngLike = { s: number; next: () => number };
+const isRng = (a: unknown): a is RngLike => !!a && typeof a === 'object' && typeof (a as RngLike).s === 'number' && typeof (a as RngLike).next === 'function';
+
+/** A cache key for builder arguments: primitives, plain option objects and Rng states (null: uncacheable). */
+function keyOf(args: unknown[]): string | null {
+  const parts: string[] = [];
+  for (const a of args) {
+    if (isRng(a)) parts.push(`rng:${a.s}`);
+    else if (a === undefined || ['number', 'string', 'boolean'].includes(typeof a)) parts.push(JSON.stringify(a ?? null));
+    else if (a && typeof a === 'object' && Object.values(a).every((v) => v === undefined || ['number', 'string', 'boolean'].includes(typeof v))) parts.push(JSON.stringify(a));
+    else if (a && typeof a === 'object' && (a as { isColor?: boolean }).isColor) parts.push(`c:${(a as { getHex: () => number }).getHex()}`);
+    else return null;
+  }
+  return parts.join('|');
+}
 
 function wrap(name: string, fn: Builder, n: number): Builder {
   return ((...args: unknown[]) => {
-    const plain = args.every((a) => a === undefined || ['number', 'string', 'boolean'].includes(typeof a));
-    const key = plain ? `${name}|${JSON.stringify(args)}` : '';
-    const hit = key && cache.get(key);
-    if (hit) return hit.clone();
+    const k = keyOf(args);
+    const key = k === null ? '' : `${name}|${k}`;
+    const hit = key ? cache.get(key) : undefined;
+    const rngs = args.filter(isRng);
+    if (hit) {
+      // the real builder would have advanced the generators: keep later draws identical
+      rngs.forEach((r, i) => (r.s = hit.rngAfter[i]));
+      return hit.geo.clone();
+    }
     const g = (fn as (...a: unknown[]) => BufferGeometry)(...args);
     g.computeBoundingBox();
     const bb = g.boundingBox!;
     const span = Math.max(bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z);
-    const v = prep(voxelize(g, Math.max(span / n, 1e-4)));
+    const v = prep(voxelize(g, Math.max(span / n, 1e-4), { levels: 12, noBottom: true }));
+    v.name = name;
     g.dispose();
     if (key) {
-      if (cache.size > 600) cache.clear();
-      cache.set(key, v);
+      if (cache.size > 1500) cache.clear();
+      cache.set(key, { geo: v, rngAfter: rngs.map((r) => r.s) });
       return v.clone();
     }
     return v;
@@ -47,10 +69,10 @@ function wrapAll<T extends object>(mod: T, prefix: string, skip: string[], n: nu
 }
 
 /** Nature: trees, bushes, rocks, mountains, animals… (water surfaces stay smooth). */
-export const N = wrapAll(RawN, 'N', ['setCanopyDetail', 'lava', 'puddle', 'waterfall'], 20, { tuft: 7, flowers: 9, reeds: 9, mountain: 26, volcano: 26, giantTree: 28 });
+export const N = wrapAll(RawN, 'N', ['setCanopyDetail', 'lava', 'puddle', 'waterfall'], 16, { tuft: 4, flowers: 6, reeds: 6, rock: 8, bush: 8, mountain: 20, volcano: 20, giantTree: 22 });
 /** Buildings and town pieces. */
-export const B = wrapAll(RawB, 'B', ['place', 'flagCloth'], 22, { cropField: 12, plaza: 16, palisade: 18, aqueduct: 26 });
+export const B = wrapAll(RawB, 'B', ['place', 'flagCloth'], 18, { cropField: 10, plaza: 14, palisade: 16, aqueduct: 22 });
 /** Siege engines, ships, vehicles and aircraft. */
-export const F = wrapAll(RawF, 'F', [], 24);
+export const F = wrapAll(RawF, 'F', [], 20);
 /** Kit-based nature: only the code-built pieces need voxelising (kit models already are). */
-export const K = wrapAll(RawK, 'K', [], 18, { peak: 30 }, ['broadleaf', 'shrub', 'peak']);
+export const K = wrapAll(RawK, 'K', [], 12, { peak: 20, shrub: 7 }, ['broadleaf', 'shrub', 'peak']);

@@ -518,7 +518,8 @@ export class Map3D implements MapView, StageScene {
 
   /** A portrait of a tile or city for the side panels. */
   portrait(tile: number, w = 300, h = 170, close = 1): HTMLCanvasElement {
-    const cam = new PerspectiveCamera(32, w / h, 0.05, 80);
+    // a close-up: nothing past a few tiles away is drawn
+    const cam = new PerspectiveCamera(32, w / h, 0.05, 9);
     const x = this.shape.cx(tile);
     const z = this.shape.cz(tile);
     const y = this.shape.height(tile, x, z);
