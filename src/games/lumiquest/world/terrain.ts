@@ -152,9 +152,10 @@ export class Terrain {
   private paint(): void {
     const col = new Color();
     const tmp = new Color();
-    const grassA = new Color('#4cae38');
-    const grassB = new Color('#a6dc4c');
-    const forestG = new Color('#358a38');
+    // a summer meadow: deep green in the hollows, sun-dried gold on the rises
+    const grassA = new Color('#4f8e2c');
+    const grassB = new Color('#b4c252');
+    const forestG = new Color('#3a6e2c');
     const dirt = new Color('#c7a06a');
     const sand = new Color('#e6d39c');
     const rock = new Color('#958f86');
@@ -302,27 +303,7 @@ export class Terrain {
 
   /** Builds the chunk meshes. */
   build(detail: Texture = groundDetail()): Group {
-    void detail;
-    const mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.93, metalness: 0 });
-    // voxel look over the walkable (smooth) surface: colour in 0.5 m blocks and a
-    // darker edge on every half-metre terrace, so the vale reads as stacked blocks
-    mat.onBeforeCompile = (shader) => {
-      shader.vertexShader = shader.vertexShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vVoxW;')
-        .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvVoxW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-      shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', `#include <common>
-varying vec3 vVoxW;
-float voxHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }`)
-        .replace('#include <color_fragment>', `#include <color_fragment>
-  {
-    vec2 cell = floor(vVoxW.xz * 2.0);
-    diffuseColor.rgb *= 0.92 + 0.12 * voxHash(cell);
-    float band = fract(vVoxW.y * 2.0);
-    diffuseColor.rgb *= band < 0.12 ? 0.82 : 1.0;
-  }`);
-    };
-    mat.customProgramCacheKey = () => 'lq-voxel-ground';
+    const mat = new MeshStandardMaterial({ vertexColors: true, map: detail, roughness: 0.93, metalness: 0 });
     this.material = mat;
     const chunksPerSide = Math.ceil((RES - 1) / CHUNK_QUADS);
     for (let cj = 0; cj < chunksPerSide; cj++) {

@@ -1,15 +1,15 @@
-// The player and villagers, built from the shared chibi kit (the same
-// characters, proportions, materials and clips as Year Zero's art pack).
+// The player and villagers, built from the painterly character kit
+// (shared/toon: smooth, softly lit, painted faces).
 // A LumiQuest `Appearance` (saved with the game) maps onto a chibi spec:
 // the hair styles, outfits and accessories keep their ids, so old saves and
 // the character creator keep working.
 
 import { Color, Group, type Object3D } from 'three';
 import type { Animator } from '../../shared/chibi/anim';
-import type { Expression } from '../../shared/chibi/face';
-import { ChibiModel } from '../../shared/chibi/model';
-import type { BoneName } from '../../shared/chibi/rig';
-import type { ChibiSpec, HairStyle, Piece } from '../../shared/chibi/spec';
+import type { Expression } from '../../shared/toon/face';
+import { ToonModel } from '../../shared/toon/model';
+import type { BoneName } from '../../shared/toon/rig';
+import type { ChibiSpec, HairStyle, Piece } from '../../shared/toon/spec';
 import type { AccessoryId, Appearance, FaceId } from '../data/characters';
 
 /** LumiQuest's world was built for characters about 1.44 tall; chibis are 1.26. */
@@ -111,7 +111,7 @@ export class CharacterModel {
   /** A stable root: rebuilding the character swaps what is inside it. */
   readonly root = new Group();
   appearance: Appearance;
-  private model: ChibiModel;
+  private model: ToonModel;
   private bodyVisible = true;
   private castShadow: boolean;
 
@@ -121,8 +121,8 @@ export class CharacterModel {
     this.model = this.build();
   }
 
-  private build(): ChibiModel {
-    const m = new ChibiModel(appearanceSpec(this.appearance), { shadows: this.castShadow });
+  private build(): ToonModel {
+    const m = new ToonModel(appearanceSpec(this.appearance), { shadows: this.castShadow });
     this.root.add(m.root);
     return m;
   }

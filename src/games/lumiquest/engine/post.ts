@@ -13,9 +13,9 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 const Grade = {
   uniforms: {
     tDiffuse: { value: null },
-    uVibrance: { value: 0.32 },
-    uWarm: { value: 0.05 },
-    uVignette: { value: 0.28 },
+    uVibrance: { value: 0.18 },
+    uWarm: { value: 0.1 },
+    uVignette: { value: 0.34 },
     uNight: { value: 0 },
   },
   vertexShader: /* glsl */ `
@@ -41,6 +41,10 @@ const Grade = {
       vec3 warm = vec3(1.0 + uWarm, 1.0 + uWarm * 0.4, 1.0 - uWarm * 0.6);
       vec3 cool = mix(vec3(0.97, 0.99, 1.04), vec3(0.9, 0.96, 1.12), uNight);
       col *= mix(cool, warm, smoothstep(0.05, 0.8, l));
+      // filmic: a gentle S-curve, lifted blacks with a cool tint, honeyed highlights
+      col = col / (col + vec3(0.62)) * 1.62;
+      col = mix(col, col * col * (3.0 - 2.0 * col), 0.35);
+      col += vec3(0.012, 0.018, 0.03) * (1.0 - smoothstep(0.0, 0.35, l));
       // soft vignette
       vec2 d = vUv - 0.5;
       col *= 1.0 - uVignette * smoothstep(0.25, 0.85, dot(d, d) * 2.2);
@@ -64,7 +68,7 @@ export class Post {
     const target = new WebGLRenderTarget(size.x, size.y, { type: HalfFloatType, samples: 4 });
     this.composer = new EffectComposer(this.renderer, target);
     this.renderPass = new RenderPass(scene, camera);
-    this.bloom = new UnrealBloomPass(new Vector2(size.x, size.y), 0.32, 0.55, 0.88);
+    this.bloom = new UnrealBloomPass(new Vector2(size.x, size.y), 0.45, 0.6, 0.9);
     this.grade = new ShaderPass(Grade);
     this.composer.addPass(this.renderPass);
     this.composer.addPass(this.bloom);

@@ -516,7 +516,7 @@ export class Game implements InteractHost, DialogueHost {
     const riverD = this.riverNear();
     this.audio.ambience(dt, { night: this.world.sky.night, river: riverD, cave: this.world.caveFactor, rain: this.world.sky.rainAmount, underwater: this.player.underwater, height: this.player.pos.y, paused: this.paused });
     // render
-    this.post.render(this.world.scene, this.rig.camera, this.world.sky.night, this.world.caveFactor > 0.5 ? 0.45 : 0.32);
+    this.post.render(this.world.scene, this.rig.camera, this.world.sky.night, this.world.caveFactor > 0.5 ? 0.5 : 0.4);
     this.ui.hud(dt);
   }
 

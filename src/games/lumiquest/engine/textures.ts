@@ -524,3 +524,51 @@ export function disposeTextures(): void {
   for (const t of cache.values()) t.dispose();
   cache.clear();
 }
+
+/**
+ * A painted cluster of leaves on transparency (greyscale: vertex colours tint
+ * it): overlapping brush-stroke leaves, darker toward the middle and with
+ * light catching the upper edges, the way painterly foliage cards read.
+ */
+export function leafCluster(): Texture {
+  return cached('leafCluster', () => {
+    const S = 256;
+    const [c, ctx] = canvas(S);
+    const rng = new Rng(17);
+    ctx.clearRect(0, 0, S, S);
+    const leaf = (x: number, y: number, len: number, w: number, a: number, shade: number) => {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(a);
+      const g = Math.round(255 * shade);
+      ctx.fillStyle = `rgb(${g},${g},${g})`;
+      ctx.beginPath();
+      ctx.moveTo(0, -len / 2);
+      ctx.quadraticCurveTo(w, 0, 0, len / 2);
+      ctx.quadraticCurveTo(-w, 0, 0, -len / 2);
+      ctx.fill();
+      // a lighter stroke on the lit edge
+      ctx.strokeStyle = `rgba(255,255,255,${0.25 * shade})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(-w * 0.2, -len / 2 + 2);
+      ctx.quadraticCurveTo(w * 0.7, -len * 0.1, w * 0.1, len * 0.3);
+      ctx.stroke();
+      ctx.restore();
+    };
+    // an opaque patch in the top-left corner: trunks and branches sample it
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, 24, 24);
+    // leaves scattered over a soft circle, denser in the middle, lit from above
+    for (let i = 0; i < 330; i++) {
+      const r = Math.sqrt(rng.next()) * S * 0.44;
+      const t = rng.next() * Math.PI * 2;
+      const x = S / 2 + Math.cos(t) * r;
+      const y = S / 2 + Math.sin(t) * r * 0.92;
+      const depth = 1 - r / (S * 0.44);
+      const lit = 0.55 + 0.4 * (1 - y / S) - depth * 0.15 + (rng.next() - 0.5) * 0.18;
+      leaf(x, y, rng.float(22, 34), rng.float(7, 11), t + Math.PI / 2 + rng.float(-0.6, 0.6), Math.max(0.3, Math.min(1, lit)));
+    }
+    return toTexture(c, { repeat: false, aniso: 4 });
+  });
+}

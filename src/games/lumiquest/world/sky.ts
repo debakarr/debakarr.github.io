@@ -31,11 +31,12 @@ interface Key {
 const KEYS: Key[] = [
   { h: 0, zenith: '#0d1a44', horizon: '#33467e', sun: '#a9bcff', sunI: 0.55, hemiSky: '#5a6cc0', hemiGround: '#2f4a3a', hemiI: 0.95, fog: '#2c3f72' },
   { h: 4.6, zenith: '#13245a', horizon: '#46548c', sun: '#a9bcff', sunI: 0.5, hemiSky: '#5a6cc0', hemiGround: '#2f4a3a', hemiI: 0.95, fog: '#34477c' },
-  { h: 6, zenith: '#4870c0', horizon: '#ffbf98', sun: '#ffb27a', sunI: 1.3, hemiSky: '#b0b8e8', hemiGround: '#6f6a48', hemiI: 1.05, fog: '#efc2a8' },
-  { h: 8, zenith: '#2f88ec', horizon: '#bfe6ff', sun: '#ffe9c8', sunI: 3.0, hemiSky: '#c8e4ff', hemiGround: '#6f9a46', hemiI: 1.1, fog: '#c6e4f8' },
-  { h: 13, zenith: '#2a80ea', horizon: '#c2e8ff', sun: '#fff0d8', sunI: 3.4, hemiSky: '#cfe8ff', hemiGround: '#74a04a', hemiI: 1.12, fog: '#cae6fa' },
-  { h: 17, zenith: '#3a7ed8', horizon: '#ffd8a6', sun: '#ffcf90', sunI: 2.9, hemiSky: '#e6dcf0', hemiGround: '#868a4a', hemiI: 1.05, fog: '#f2d8b8' },
-  { h: 19, zenith: '#38488e', horizon: '#ff9f72', sun: '#ff8d58', sunI: 1.4, hemiSky: '#d0a8c8', hemiGround: '#6a5a48', hemiI: 1.0, fog: '#f2aa8c' },
+  { h: 6, zenith: '#4a6cb8', horizon: '#ffb98a', sun: '#ffa868', sunI: 1.6, hemiSky: '#b4a8d8', hemiGround: '#6a5a3a', hemiI: 0.9, fog: '#f0b894' },
+  // the vale lives in a long golden afternoon: warm sun, cool sky fill, honey haze
+  { h: 8, zenith: '#3f78d4', horizon: '#ead8b8', sun: '#ffdcaa', sunI: 3.1, hemiSky: '#a8c0e8', hemiGround: '#6a6a34', hemiI: 0.85, fog: '#cfc8b8' },
+  { h: 13, zenith: '#3a76d4', horizon: '#e6dcc2', sun: '#ffe4b8', sunI: 3.3, hemiSky: '#aac4ea', hemiGround: '#70703a', hemiI: 0.85, fog: '#cdcabc' },
+  { h: 17, zenith: '#3c68c2', horizon: '#f4c896', sun: '#ffc27a', sunI: 3.4, hemiSky: '#b8b0d8', hemiGround: '#7a6a36', hemiI: 0.8, fog: '#d8bc98' },
+  { h: 19, zenith: '#3a468a', horizon: '#ff9a62', sun: '#ff8a4c', sunI: 2.0, hemiSky: '#c8a0c0', hemiGround: '#5a4a34', hemiI: 0.85, fog: '#eaa080' },
   { h: 20.4, zenith: '#18265a', horizon: '#6c5c9e', sun: '#a9bcff', sunI: 0.5, hemiSky: '#6a74c8', hemiGround: '#34483e', hemiI: 0.95, fog: '#4a4c86' },
   { h: 24, zenith: '#0d1a44', horizon: '#33467e', sun: '#a9bcff', sunI: 0.55, hemiSky: '#5a6cc0', hemiGround: '#2f4a3a', hemiI: 0.95, fog: '#2c3f72' },
 ];
@@ -83,7 +84,7 @@ void main() {
   col = mix(col, uGround, smoothstep(0.0, -0.25, y));
   // sun glow and disc
   float sd = max(dot(d, uSunDir), 0.0);
-  col += uSunColor * (pow(sd, 6.0) * 0.35 + pow(sd, 64.0) * 0.6) * (1.0 - uRain * 0.8);
+  col += uSunColor * (pow(sd, 3.0) * 0.28 + pow(sd, 8.0) * 0.4 + pow(sd, 64.0) * 0.8) * (1.0 - uRain * 0.8) * (1.0 - uNight * 0.8);
   col += uSunColor * smoothstep(0.9993, 0.9997, sd) * 2.0 * (1.0 - uNight) * (1.0 - uRain);
   // moon
   float md = max(dot(d, uMoonDir), 0.0);
@@ -209,7 +210,8 @@ export class Atmosphere {
 
     // Sun path: rises in the east (+x), sets in the west.
     const ang = ((hour - 6) / 12) * Math.PI;
-    const sunDir = new Vector3(Math.cos(ang), Math.sin(ang), -0.35).normalize();
+    // a low arc (about 33 degrees at noon): long, warm shadows all day
+    const sunDir = new Vector3(Math.cos(ang), Math.sin(ang) * 0.62, -0.42).normalize();
     const moonDir = new Vector3(-Math.cos(ang), -Math.sin(ang), 0.3).normalize();
     const day = Math.max(0, Math.min(1, (sunDir.y + 0.08) / 0.25));
     this.night = 1 - day;
@@ -249,8 +251,9 @@ export class Atmosphere {
     const grey = new Color('#9aa6b4').lerp(k.fog, 0.4);
     const fogC = k.fog.clone().lerp(grey, overcast * 0.8);
     if (this.cave > 0) fogC.lerp(new Color('#141826'), this.cave * 0.9);
-    let near = 55 - this.mist * 45;
-    let far = (this.drawDistance * 1.35 + 60) * (1 - this.mist * 0.65) * (1 - this.rain * 0.25);
+    // aerial haze: the middle distance already softens, far hills melt into the sky
+    let near = 30 - this.mist * 24;
+    let far = (this.drawDistance * 1.7 + 90) * (1 - this.mist * 0.65) * (1 - this.rain * 0.25);
     if (this.cave > 0) {
       near = near * (1 - this.cave) + 6 * this.cave;
       far = far * (1 - this.cave) + 70 * this.cave;

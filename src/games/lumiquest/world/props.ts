@@ -83,7 +83,7 @@ export class Props {
     const stone = new MeshStandardMaterial({ map: stoneTexture(), roughness: 0.9, color: '#f2ece0' });
     const ruin = new MeshStandardMaterial({ map: stoneTexture(), roughness: 0.92, color: '#d6d2c4' });
     const rock = new MeshStandardMaterial({ map: rockTexture(), roughness: 0.95, vertexColors: true });
-    const plaster = new MeshStandardMaterial({ map: plasterTexture(), roughness: 0.9 });
+    const plaster = new MeshStandardMaterial({ map: plasterTexture(), color: '#ead8b8', roughness: 0.9 });
     const wood = new MeshStandardMaterial({ map: plankTexture(), roughness: 0.8, color: '#ffffff' });
     const darkWood = new MeshStandardMaterial({ map: plankTexture(), roughness: 0.8, color: '#9a7a62' });
     const vc = new MeshStandardMaterial({ vertexColors: true, roughness: 0.8 });
@@ -110,7 +110,11 @@ export class Props {
       const t = roofTexture().clone();
       t.needsUpdate = true;
       t.repeat.set(3, 2);
-      this.mats[key] = new MeshStandardMaterial({ map: t, color, roughness: 0.75 });
+      // every roof in the vale is fired clay, weathered timber or slate
+      const earthy = ['#a4502c', '#8c4428', '#b2643a', '#6e4c3a', '#7c5c4a', '#5c5a5e'];
+      let h = 0;
+      for (const ch of color) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      this.mats[key] = new MeshStandardMaterial({ map: t, color: earthy[h % earthy.length], roughness: 0.82 });
     }
     return this.mats[key] as MeshStandardMaterial;
   }
@@ -828,8 +832,8 @@ export class Props {
     const ringGeo = new CylinderGeometry(1, 1, 1, 160, 10, true);
     const pos = ringGeo.attributes.position;
     const colors: number[] = [];
-    const base = new Color('#5f8a8a');
-    const mid = new Color('#8a9ab8');
+    const base = new Color('#456682');
+    const mid = new Color('#7a8eb4');
     const snow = new Color('#f4f8ff');
     const c = new Color();
     for (let i = 0; i < pos.count; i++) {

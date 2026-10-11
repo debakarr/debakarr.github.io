@@ -14,9 +14,12 @@ import {
   Color,
   DynamicDrawUsage,
   Group,
+  DoubleSide,
   IcosahedronGeometry,
   InstancedMesh,
   Matrix4,
+  MeshDepthMaterial,
+  RGBADepthPacking,
   MeshStandardMaterial,
   Object3D,
   Quaternion,
@@ -28,8 +31,7 @@ import { Rng } from '../../shared/rng';
 import { CAVE, HILL, INTERACTABLES, LOCATION_BY_ID, OUTPOST, PATHS, PLAY_HALF, RUINS, WATER_LEVEL, type V2 } from '../data/world';
 import { capsule, cone, cylinder, ellipsoid, gradient, lumpy, merge, prep, rockGeo, teardrop, xf } from '../engine/geometry';
 import type { CollisionWorld } from '../engine/physics';
-import { groundDetail } from '../engine/textures';
-import { voxelize } from '../../shared/chibi/voxel';
+import { groundDetail, leafCluster } from '../engine/textures';
 import { polyDistance, smoothstep, type Terrain } from './terrain';
 import { windPatch } from './wind';
 
@@ -61,29 +63,85 @@ const tmpV = new Vector3();
 const tmpS = new Vector3();
 const up = new Vector3(0, 1, 0);
 
+let leafDepthMat: MeshDepthMaterial | null = null;
+function leafDepth(): MeshDepthMaterial {
+  return (leafDepthMat ??= new MeshDepthMaterial({ depthPacking: RGBADepthPacking, map: leafCluster(), alphaTest: 0.5 }));
+}
+
+/** UV inside the leaf texture's opaque corner (trunks, branches, berries). */
+const SOLID_UV: [number, number] = [0.045, 0.955];
+
+function solidUV(g: BufferGeometry): BufferGeometry {
+  const uv = g.attributes.uv;
+  for (let k = 0; k < uv.count; k++) uv.setXY(k, SOLID_UV[0], SOLID_UV[1]);
+  uv.needsUpdate = true;
+  return g;
+}
+
 /**
- * A fluffy canopy: lumpy blobs whose normals point away from each blob's
- * centre (soft, cloud-like shading), dark and cool underneath, bright and
- * warm where the sun hits the top.
+ * A painterly canopy: each leaf mass is a dark core wrapped in dozens of
+ * leaf-cluster cards (alpha-cut brush strokes). Every card's normal points
+ * away from its mass's centre, so the whole mass lights like one soft,
+ * rounded volume while its silhouette stays leafy. Colour runs from cool and
+ * dark underneath to warm where the sun hits the top.
  */
 function canopy(seed: number, blobs: [number, number, number, number][], bottom: string, top: string, detail: number): BufferGeometry {
-  const v = new Vector3();
-  const parts = blobs.map(([x, y, z, r], i) => {
-    const g = lumpy(new IcosahedronGeometry(r, detail), r * 0.16, 1.1 / r, seed + i);
-    const pos = g.attributes.position;
-    const nor = g.attributes.normal;
-    for (let k = 0; k < pos.count; k++) {
-      // radial normals: shared by every face at a vertex, so the shading is smooth
-      v.fromBufferAttribute(pos, k).normalize();
-      const nx = nor.getX(k) * 0.05 + v.x * 0.95;
-      const ny = nor.getY(k) * 0.05 + v.y * 0.95;
-      const nz = nor.getZ(k) * 0.05 + v.z * 0.95;
-      const l = Math.hypot(nx, ny, nz) || 1;
-      nor.setXYZ(k, nx / l, ny / l, nz / l);
+  const rng = new Rng(seed);
+  const density = detail >= 2 ? 1 : detail >= 1 ? 0.5 : 0.3;
+  const P: number[] = [];
+  const N: number[] = [];
+  const UV: number[] = [];
+  const idx: number[] = [];
+  const dir = new Vector3();
+  const nrm = new Vector3();
+  const ax = new Vector3();
+  const ay = new Vector3();
+  const q = new Quaternion();
+  const parts: BufferGeometry[] = [];
+  for (const [bx, by, bz, r] of blobs) {
+    // the core keeps the canopy from looking see-through
+    const core = solidUV(prep(lumpy(new IcosahedronGeometry(r * 0.55, 2), r * 0.08, 1.1 / r, seed)));
+    // smooth rounded shading on the core: normals point out from the centre
+    const cp = core.attributes.position;
+    const cn = core.attributes.normal;
+    for (let k = 0; k < cp.count; k++) {
+      nrm.fromBufferAttribute(cp, k).normalize();
+      cn.setXYZ(k, nrm.x, nrm.y, nrm.z);
     }
-    g.translate(x, y, z);
-    return prep(g);
-  });
+    core.translate(bx, by, bz);
+    parts.push(core);
+    const n = Math.round((14 + r * r * 30) * density);
+    for (let k = 0; k < n; k++) {
+      dir.set(rng.next() * 2 - 1, rng.next() * 2 - 1, rng.next() * 2 - 1);
+      if (dir.lengthSq() < 0.01) dir.set(0, 1, 0);
+      dir.normalize();
+      dir.y = Math.abs(dir.y) * 0.9 + dir.y * 0.1 - 0.15; // fewer cards hang underneath
+      dir.normalize();
+      const d = r * (0.4 + 0.55 * Math.sqrt(rng.next()));
+      const cx = bx + dir.x * d;
+      const cy = by + dir.y * d;
+      const cz = bz + dir.z * d;
+      const size = r * (0.95 + 0.5 * rng.next());
+      q.setFromAxisAngle(new Vector3(rng.next() - 0.5, rng.next() - 0.5, rng.next() - 0.5).normalize(), rng.next() * Math.PI * 2);
+      ax.set(1, 0, 0).applyQuaternion(q).multiplyScalar(size / 2);
+      ay.set(0, 1, 0).applyQuaternion(q).multiplyScalar(size / 2);
+      nrm.set(cx - bx, cy - by, cz - bz).normalize().lerp(new Vector3(0, 1, 0), 0.15).normalize();
+      const base = P.length / 3;
+      for (const [u, v] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+        P.push(cx + ax.x * u + ay.x * v, cy + ax.y * u + ay.y * v, cz + ax.z * u + ay.z * v);
+        N.push(nrm.x, nrm.y, nrm.z);
+        // stay inside the painted disc (the opaque corner patch is for trunks)
+        UV.push(0.1 + 0.4 * (u + 1), 0.1 + 0.4 * (v + 1));
+      }
+      idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+  }
+  const cards = new BufferGeometry();
+  cards.setAttribute('position', new BufferAttribute(new Float32Array(P), 3));
+  cards.setAttribute('normal', new BufferAttribute(new Float32Array(N), 3));
+  cards.setAttribute('uv', new BufferAttribute(new Float32Array(UV), 2));
+  cards.setIndex(idx);
+  parts.push(prep(cards));
   const g = merge(parts);
   g.computeBoundingBox();
   const bb = g.boundingBox!;
@@ -92,27 +150,29 @@ function canopy(seed: number, blobs: [number, number, number, number][], bottom:
   const col = g.attributes.color as BufferAttribute;
   const a = new Color(bottom);
   const b = new Color(top);
-  const sun = new Color('#f2f78a');
+  const sun = new Color('#f6e27a');
   const c = new Color();
-  const rng = new Rng(seed);
   const span = Math.max(0.01, bb.max.y - bb.min.y);
-  for (let k = 0; k < pos.count; k++) {
+  for (let k = 0; k < pos.count; k += 1) {
     const t = (pos.getY(k) - bb.min.y) / span;
     const ny = nor.getY(k);
-    c.copy(a).lerp(b, Math.min(1, t * 0.55 + (ny * 0.5 + 0.5) * 0.55));
-    if (ny > 0.55) c.lerp(sun, (ny - 0.55) * 0.55);
-    c.offsetHSL((rng.next() - 0.5) * 0.02, 0, (rng.next() - 0.5) * 0.05);
+    c.copy(a).lerp(b, Math.min(1, t * 0.6 + (ny * 0.5 + 0.5) * 0.5));
+    if (ny > 0.5) c.lerp(sun, (ny - 0.5) * 0.6);
+    // one colour per card (four vertices), so clusters vary like brush strokes
+    if (k % 4 === 0) rng.next();
+    c.offsetHSL((rng.next() - 0.5) * 0.015, 0, (rng.next() - 0.5) * 0.04);
     col.setXYZ(k, c.r, c.g, c.b);
   }
   return g;
 }
 
-function trunk(h: number, r0: number, r1: number, color = '#7a5236', seg = 8): BufferGeometry {
-  return gradient(xf(cylinder(r1, r0, h, seg), { p: [0, h / 2, 0] }), color, '#9a6a44');
+function trunk(h: number, r0: number, r1: number, color = '#4e3a2a', seg = 8): BufferGeometry {
+  return solidUV(gradient(xf(cylinder(r1, r0, h, seg), { p: [0, h / 2, 0] }), color, '#7a6450', { jitter: 0.12, seed: Math.round(h * 10) }));
 }
 
 function buildKits(): Record<Kind, Kit> {
-  const leaf = new MeshStandardMaterial({ vertexColors: true, roughness: 0.85, map: groundDetail() });
+  // leaves are painted cards: the leaf-cluster texture, cut out by its alpha
+  const leaf = new MeshStandardMaterial({ vertexColors: true, roughness: 0.82, map: leafCluster(), alphaTest: 0.5, side: DoubleSide });
   const leafWind = windPatch(leaf.clone(), { bend: 0.06, key: 'tree' }) as MeshStandardMaterial;
   const solid = new MeshStandardMaterial({ vertexColors: true, roughness: 0.9 });
   const rockMat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.95, map: groundDetail() });
@@ -120,42 +180,37 @@ function buildKits(): Record<Kind, Kit> {
   const glow = new MeshStandardMaterial({ vertexColors: true, roughness: 0.4, emissive: new Color('#46e0d0'), emissiveIntensity: 0.7 });
 
   const oakBlobs: [number, number, number, number][] = [[0, 3.7, 0, 1.6], [1.2, 3.3, 0.3, 1.15], [-1.1, 3.4, -0.4, 1.2], [0.2, 4.6, -0.6, 1.1], [-0.3, 3.1, 1.1, 1.05], [0.6, 4.4, 0.8, 0.95], [-0.8, 4.3, 0.5, 0.9], [0.9, 3.0, -0.9, 0.9]];
-  const oak = (detail: number) => merge([trunk(3, 0.36, 0.22), xf(trunk(1.1, 0.12, 0.06), { r: [0, 0, 0.9], p: [0.15, 2.0, 0] }), canopy(3, oakBlobs, '#23702e', '#9ee05a', detail)]);
+  const oak = (detail: number) => merge([trunk(3, 0.36, 0.22), xf(trunk(1.1, 0.12, 0.06), { r: [0, 0, 0.9], p: [0.15, 2.0, 0] }), canopy(3, oakBlobs, '#2c5626', '#aec45c', detail)]);
   const oak2Blobs: [number, number, number, number][] = [[0, 3.0, 0, 1.4], [0.9, 2.7, -0.4, 1.0], [-0.8, 2.8, 0.5, 1.05], [0, 3.9, 0.2, 0.95]];
-  const oak2 = (detail: number) => merge([trunk(2.5, 0.3, 0.2), canopy(8, oak2Blobs, '#2f8434', '#b6e866', detail)]);
+  const oak2 = (detail: number) => merge([trunk(2.5, 0.3, 0.2), canopy(8, oak2Blobs, '#345e2a', '#bccc64', detail)]);
   const pine = (detail: number) => {
     const tiers: BufferGeometry[] = [];
     for (let i = 0; i < 4; i++) {
       const r = 1.9 - i * 0.42;
       tiers.push(lumpy(xf(cone(r, 1.9 - i * 0.2, detail ? 12 : 7), { p: [0, 1.8 + i * 1.15, 0] }), 0.1, 1.5, 20 + i));
     }
-    return merge([trunk(2.2, 0.3, 0.2, '#6a4630'), gradient(merge(tiers), '#175c3c', '#62b862', { jitter: 0.05 })]);
+    return merge([trunk(2.2, 0.3, 0.2, '#6a4630'), solidUV(gradient(merge(tiers), '#1d5a40', '#6cae5e', { jitter: 0.05 }))]);
   };
   const birchBlobs: [number, number, number, number][] = [[0, 4.4, 0, 1.0], [0.6, 3.9, 0.3, 0.8], [-0.5, 4.0, -0.3, 0.85], [0.1, 5.0, 0.1, 0.7]];
-  const birch = (detail: number) => merge([gradient(xf(cylinder(0.12, 0.2, 4.2, 8), { p: [0, 2.1, 0] }), '#e8e4da', '#ffffff', { jitter: 0.25, seed: 4 }), canopy(5, birchBlobs, '#6cac38', '#e6f27a', detail)]);
+  const birch = (detail: number) => merge([solidUV(gradient(xf(cylinder(0.12, 0.2, 4.2, 8), { p: [0, 2.1, 0] }), '#e8e4da', '#ffffff', { jitter: 0.25, seed: 4 })), canopy(5, birchBlobs, '#5a8434', '#dade7a', detail)]);
   const blossom = (detail: number) => merge([trunk(2.6, 0.3, 0.2, '#6a4a3a'), canopy(11, oak2Blobs, '#e070a6', '#ffe0ee', detail)]);
   const elderBlobs: [number, number, number, number][] = [
     [0, 8, 0, 3.6], [2.8, 7, 1, 2.6], [-2.8, 7.2, -1, 2.8], [1, 9.8, -1.5, 2.4], [-1.5, 6.6, 2.6, 2.4], [2, 9, 2, 2.0], [-2.2, 9.6, 0.8, 2.0],
   ];
   const elder = (detail: number) => merge([
     trunk(6.5, 1.4, 0.75, '#6a4630', 12),
-    ...[0, 1, 2, 3, 4].map((k) => xf(gradient(cone(0.5, 1.6, 6), '#6a4630', '#7a5236'), { r: [0, (k / 5) * Math.PI * 2, 1.9], p: [Math.cos((k / 5) * Math.PI * 2) * 1.2, 0.3, Math.sin((k / 5) * Math.PI * 2) * 1.2] })),
-    canopy(33, elderBlobs, '#2a6a32', '#7fc458', detail),
+    ...[0, 1, 2, 3, 4].map((k) => xf(solidUV(gradient(cone(0.5, 1.6, 6), '#6a4630', '#7a5236')), { r: [0, (k / 5) * Math.PI * 2, 1.9], p: [Math.cos((k / 5) * Math.PI * 2) * 1.2, 0.3, Math.sin((k / 5) * Math.PI * 2) * 1.2] })),
+    canopy(33, elderBlobs, '#2a5430', '#92b656', detail),
   ]);
   const bush = (detail: number, berries: boolean) => {
-    const parts = [
-      lumpy(xf(new IcosahedronGeometry(0.7, detail), { p: [0, 0.45, 0] }), 0.12, 1.6, 1),
-      lumpy(xf(new IcosahedronGeometry(0.55, detail), { p: [0.55, 0.35, 0.2] }), 0.1, 1.8, 2),
-      lumpy(xf(new IcosahedronGeometry(0.5, detail), { p: [-0.5, 0.32, -0.15] }), 0.1, 1.8, 3),
-    ];
-    const g = gradient(merge(parts), '#2f7a34', '#7cc456', { jitter: 0.08 });
+    const g = canopy(berries ? 7 : 6, [[0, 0.5, 0, 0.7], [0.55, 0.38, 0.2, 0.55], [-0.5, 0.36, -0.15, 0.5]], '#2f6a32', '#8cc85a', detail + 1);
     if (!berries) return g;
     const rng = new Rng(7);
     const dots: BufferGeometry[] = [];
     for (let i = 0; i < 14; i++) {
       const a = rng.next() * Math.PI * 2;
       const yy = rng.float(0.3, 0.95);
-      dots.push(prep(xf(new SphereGeometry(0.07, 6, 4), { p: [Math.cos(a) * 0.62, yy, Math.sin(a) * 0.62] }), '#ff4a5a'));
+      dots.push(solidUV(prep(xf(new SphereGeometry(0.07, 6, 4), { p: [Math.cos(a) * 0.68, yy, Math.sin(a) * 0.68] }), '#ff4a5a')));
     }
     return merge([g, ...dots]);
   };
@@ -196,9 +251,7 @@ function buildKits(): Record<Kind, Kit> {
     return gradient(merge(blades), '#3f7a3a', '#a6c860');
   };
 
-  // everything drawn in voxels like the characters: big trees in 0.16 m blocks, small plants finer
-  const V = (g: BufferGeometry, size: number) => prep(voxelize(g, size));
-  const raw: Record<Kind, Kit> = {
+  return {
     oak: { hi: oak(2), lo: oak(1), mat: leafWind, collide: 0.36, height: 4, shadow: true },
     oak2: { hi: oak2(2), lo: oak2(1), mat: leafWind, collide: 0.3, height: 3.5, shadow: true },
     pine: { hi: pine(1), lo: pine(0), mat: leafWind, collide: 0.3, height: 5, shadow: true },
@@ -217,34 +270,6 @@ function buildKits(): Record<Kind, Kit> {
     stump: { hi: stump(), lo: stump(), mat: solid, collide: 0.5, height: 0.6, shadow: true },
     reed: { hi: reed(), lo: reed(), mat: plantWind, collide: 0, height: 1.6, shadow: false },
   };
-  const SIZE: Record<Kind, number> = {
-    oak: 0.2, oak2: 0.2, pine: 0.2, birch: 0.18, blossom: 0.2, elder: 0.32, bush: 0.12, berry: 0.12, fern: 0.07,
-    rock: 0.14, rock2: 0.14, boulder: 0.16, mushroom: 0.05, glowshroom: 0.05, log: 0.12, stump: 0.1, reed: 0.07,
-  };
-  for (const k of Object.keys(raw) as Kind[]) {
-    const kit = raw[k];
-    const hi = V(kit.hi, SIZE[k]);
-    const lo = kit.lo === kit.hi ? hi : V(kit.lo, SIZE[k] * 1.6);
-    raw[k] = { ...kit, hi, lo, mat: plain(kit.mat) };
-  }
-  return raw;
-}
-
-/** Voxel art carries its colour in the blocks: drop the painted detail map. */
-const plainCache = new Map<Material, Material>();
-function plain(m: Material): Material {
-  const std = m as MeshStandardMaterial;
-  if (!std.map) return m;
-  let out = plainCache.get(m);
-  if (!out) {
-    out = std.clone();
-    (out as MeshStandardMaterial).map = null;
-    (out as MeshStandardMaterial).needsUpdate = true;
-    out.onBeforeCompile = std.onBeforeCompile;
-    out.customProgramCacheKey = std.customProgramCacheKey;
-    plainCache.set(m, out);
-  }
-  return out;
 }
 
 
@@ -425,6 +450,8 @@ export class Nature {
       });
       const make = (geo: BufferGeometry, shadow: boolean) => {
         const m = new InstancedMesh(geo, kit.mat, list.length);
+        // leaf cards cast leafy shadows, not squares
+        if ((kit.mat as MeshStandardMaterial).alphaTest > 0) m.customDepthMaterial = leafDepth();
         m.instanceMatrix.setUsage(DynamicDrawUsage);
         m.count = 0;
         // instances are spread over the whole vale: cull per instance by distance instead
@@ -501,19 +528,20 @@ function tuftGeometry(): BufferGeometry {
   const pos: number[] = [];
   const col: number[] = [];
   const nor: number[] = [];
-  const base = new Color('#2a7a28');
-  const tip = new Color('#dcf47e');
-  const blades = 5;
+  // fine blades, deep green at the root and sun-bleached gold at the tip
+  const base = new Color('#2c5a20');
+  const tip = new Color('#c9d06a');
+  const blades = 8;
   for (let b = 0; b < blades; b++) {
     const a = (b / blades) * Math.PI + (b % 2) * 0.3;
     const dx = Math.cos(a);
     const dz = Math.sin(a);
     const ox = Math.cos(a * 2.3) * 0.12;
     const oz = Math.sin(a * 1.7) * 0.12;
-    const h = 0.45 + (b % 3) * 0.12;
-    const lean = 0.12 + (b % 2) * 0.08;
-    const w = 0.06;
-    const seg = 3;
+    const h = 0.5 + (b % 4) * 0.14;
+    const lean = 0.14 + (b % 3) * 0.07;
+    const w = 0.035;
+    const seg = 2;
     const pts: [number, number, number, number][] = [];
     for (let s = 0; s <= seg; s++) {
       const t = s / seg;
@@ -531,7 +559,8 @@ function tuftGeometry(): BufferGeometry {
       ];
       for (const p of v) {
         pos.push(p[0], p[1], p[2]);
-        nor.push(0, 1, 0);
+        // mostly up, leaning with the blade: soft, even meadow light
+        nor.push(-dz * 0.25, 0.95, dx * 0.25);
         const c = base.clone().lerp(tip, Math.min(1, p[1] / h));
         col.push(c.r, c.g, c.b);
       }
@@ -548,18 +577,18 @@ function fill(g: BufferGeometry, pos: number[], nor: number[], col: number[]): B
   return g;
 }
 
-/** One flower; petals are white and marked with aPetal so instances tint them. */
+/** One wildflower: a slim stem and a small bloom; petals are white and marked with aPetal so instances tint them. */
 function flowerGeometry(): BufferGeometry {
-  const h = 0.4;
-  const parts: BufferGeometry[] = [prep(xf(cylinder(0.012, 0.016, h, 4), { p: [0, h / 2, 0] }), '#4f9a3a')];
+  const h = 0.55;
+  const parts: BufferGeometry[] = [prep(xf(cylinder(0.008, 0.011, h, 4), { p: [0, h / 2, 0] }), '#4f7a32')];
   const petals: BufferGeometry[] = [];
   const n = 5;
   for (let i = 0; i < n; i++) {
     const a = (i / n) * Math.PI * 2;
-    petals.push(prep(xf(ellipsoid(0.085, 0.016, 0.048, 6, 4), { r: [0, -a, 0.25], p: [Math.cos(a) * 0.075, h, Math.sin(a) * 0.075] }), '#ffffff'));
+    petals.push(prep(xf(ellipsoid(0.055, 0.012, 0.035, 6, 4), { r: [0, -a, 0.35], p: [Math.cos(a) * 0.045, h, Math.sin(a) * 0.045] }), '#ffffff'));
   }
-  parts.push(prep(xf(ellipsoid(0.045, 0.03, 0.045, 6, 4), { p: [0, h + 0.015, 0] }), '#ffd23a'));
-  parts.push(prep(xf(ellipsoid(0.07, 0.008, 0.025, 5, 3), { r: [0, 0.6, -0.5], p: [0.04, h * 0.35, 0] }), '#5aa84a'));
+  parts.push(prep(xf(ellipsoid(0.026, 0.02, 0.026, 6, 4), { p: [0, h + 0.012, 0] }), '#2a2018'));
+  parts.push(prep(xf(ellipsoid(0.05, 0.006, 0.018, 5, 3), { r: [0, 0.6, -0.5], p: [0.03, h * 0.35, 0] }), '#5a8a3a'));
   const stemCount = merge(parts.map((p) => p.clone())).attributes.position.count;
   const g = merge([...parts, ...petals]);
   const mask = new Float32Array(g.attributes.position.count);
@@ -571,7 +600,10 @@ function flowerGeometry(): BufferGeometry {
   return g;
 }
 
-const PETALS = ['#ffffff', '#ffd84a', '#ff8fc0', '#a88cff', '#6fb8ff', '#ff6a5a'].map((c) => new Color(c));
+const GOLDEN = new Color('#b9b04a');
+
+/** Poppies, cornflowers, daisies, buttercups, a few pinks and violets. */
+const PETALS = ['#e2341f', '#3a5fd8', '#f6f2e8', '#f2c23a', '#ff8fb0', '#9a72e8'].map((c) => new Color(c));
 
 interface GChunk {
   key: string;
@@ -640,7 +672,7 @@ class GrassField {
     const grass: [number, number, number, number, number][] = [];
     const flowers: [number, number, number, number, number, number][] = [];
     const meadowAt = LOCATION_BY_ID.meadow.at;
-    const tries = Math.floor(area * 3.2 * this.density);
+    const tries = Math.floor(area * 4.6 * this.density);
     for (let k = 0; k < tries; k++) {
       const x = x0 + rng.next() * GCHUNK;
       const z = z0 + rng.next() * GCHUNK;
@@ -655,12 +687,13 @@ class GrassField {
       const meadow = 1 - smoothstep(14, 44, Math.hypot(x - meadowAt[0], z - meadowAt[1]));
       const forest = smoothstep(-28, -58, x) * smoothstep(40, 8, z);
       const tall = 0.75 + meadow * 0.7 + forest * 0.15;
-      if (rng.next() < 0.1 + meadow * 0.12 - forest * 0.06 && rng.next() < 0.5) {
-        const fi = meadow > 0.3 ? rng.int(PETALS.length) : rng.int(4);
+      if (rng.next() < 0.16 + meadow * 0.14 - forest * 0.1) {
+        // poppies and cornflowers everywhere, the rest mostly in the meadow
+        const fi = rng.next() < 0.7 ? rng.int(3) : meadow > 0.3 ? rng.int(PETALS.length) : 3;
         flowers.push([x, h, z, rng.next() * Math.PI * 2, rng.float(0.8, 1.3), fi]);
         continue;
       }
-      grass.push([x, h, z, rng.next() * Math.PI * 2, rng.float(0.65, 1.25) * tall]);
+      grass.push([x, h, z, rng.next() * Math.PI * 2, rng.float(0.75, 1.35) * tall]);
     }
     const meshes: InstancedMesh[] = [];
     if (grass.length) {
@@ -671,7 +704,8 @@ class GrassField {
         this.obj.scale.set(s, s * (0.85 + 0.3 * ((idx * 7) % 5) / 5), s);
         this.obj.updateMatrix();
         m.setMatrixAt(idx, this.obj.matrix);
-        t.colorAt(x, z, this.col).multiplyScalar(1.3).offsetHSL(0, 0.08, 0);
+        // the ground's colour, warmed toward the meadow's gold
+        t.colorAt(x, z, this.col).lerp(GOLDEN, 0.18).multiplyScalar(1.12);
         m.setColorAt(idx, this.col);
       });
       meshes.push(m);
@@ -681,7 +715,7 @@ class GrassField {
       flowers.forEach(([x, y, z, r, s, fi], idx) => {
         this.obj.position.set(x, y - 0.02, z);
         this.obj.rotation.set(0, r, 0);
-        this.obj.scale.set(s, s * (fi >= 4 ? 1.5 : 1), s);
+        this.obj.scale.set(s, s * (0.8 + ((idx * 13) % 7) / 10), s);
         this.obj.updateMatrix();
         m.setMatrixAt(idx, this.obj.matrix);
         m.setColorAt(idx, PETALS[fi]);

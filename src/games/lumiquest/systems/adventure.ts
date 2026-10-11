@@ -85,7 +85,7 @@ export class Adventure {
   private noteGeo: BufferGeometry;
   private wispGeo: BufferGeometry;
   private noteMat = new MeshStandardMaterial({ vertexColors: true, emissive: new Color('#ffd66a'), emissiveIntensity: 0.9, roughness: 0.4 });
-  private beamMat = new MeshBasicMaterial({ color: '#ffe9a8', transparent: true, opacity: 0.18, blending: AdditiveBlending, depthWrite: false });
+  private beamMat = new MeshBasicMaterial({ color: '#ffd98a', transparent: true, opacity: 0.07, blending: AdditiveBlending, depthWrite: false });
   private wispMat = new MeshStandardMaterial({ vertexColors: true, emissive: new Color('#7a3cff'), emissiveIntensity: 0.6, roughness: 0.6 });
   private group = new Group();
   private spawnIn = 4;
