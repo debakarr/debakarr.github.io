@@ -7,7 +7,7 @@
 // the renderer; see the LumiQuest section of src/games/README.md.
 
 import {
-  ACESFilmicToneMapping,
+  NeutralToneMapping,
   PCFShadowMap,
   SRGBColorSpace,
   WebGLRenderer,
@@ -75,8 +75,8 @@ export class RenderHost {
     });
     if (!renderer.capabilities.isWebGL2) throw new Error('WebGL 2 is not available.');
     renderer.outputColorSpace = SRGBColorSpace;
-    renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.08;
+    renderer.toneMapping = NeutralToneMapping;
+    renderer.toneMappingExposure = 1.0;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
     container.appendChild(canvas);

@@ -27,10 +27,9 @@ import { Fx } from './world/fx';
 import { Interactables, type Entry, type InteractHost } from './world/interactables';
 import { Adventure } from './systems/adventure';
 import { installAtmosphericFog } from './engine/atmosphere';
+import { installToonLighting } from './anime/toon';
 import { toonRim } from '../shared/toon/mats';
 
-/** Colour of each companion ability's strike against the gloom. */
-const ABILITY_COLOR: Record<string, string> = { ember: '#ff8a3a', tide: '#6ad2ff', quake: '#c89a5a', glide: '#c8ffe8', glow: '#fff2a0', forage: '#7ee07e' };
 import { World } from './world/world';
 import { Studio } from './ui/studio';
 import { UI } from './ui/ui';
@@ -85,6 +84,7 @@ export class Game implements InteractHost, DialogueHost {
 
   constructor(readonly root: HTMLElement) {
     installAtmosphericFog();
+    installToonLighting();
     this.settings = loadSettings();
     this.audio.volumes = { master: this.settings.master, music: this.settings.music, sfx: this.settings.sfx, ambient: this.settings.ambient };
     this.host = new RenderHost(root, this.settings.quality);
@@ -131,7 +131,9 @@ export class Game implements InteractHost, DialogueHost {
       this.ui.loading(0.75, 'Waking the villagers');
       this.world.scene.add(this.fx.group);
       this.world.scene.add(this.rig.camera);
-      this.npcs = buildNpcs(this.world.terrain, this.world.physics, this.world.scene);
+      // the vale is for roaming and creatures now: no quest-giving villagers
+      this.npcs = [];
+      void buildNpcs;
       await frame();
       this.ui.loading(0.85, 'Lighting the lanterns');
       // compile shaders up front so the first frames do not stutter
@@ -281,24 +283,9 @@ export class Game implements InteractHost, DialogueHost {
     this.interact.attachBeacon(this.world.props.beacon);
     this.world.scene.add(this.interact.group);
     this.interact.sync();
-    this.adventure = new Adventure({
-      scene: this.world.scene,
-      terrain: this.world.terrain,
-      physics: this.world.physics,
-      fx: this.fx,
-      audio: this.audio,
-      player: this.player,
-      state: () => this.state,
-      hud: this.ui.hudEl,
-      toast: (m, k) => this.toast(m, k),
-      companion: () => {
-        const c = this.creatures.companion;
-        const def = this.companionDef();
-        if (!c || c.dismissed || !def) return null;
-        return { pos: c.pos, color: ABILITY_COLOR[def.ability] ?? '#bff4ff' };
-      },
-      isCave: (x, z) => this.world.isCave(x, z),
-    });
+    // no objectives in the vale any more: Star Notes, gloom wisps and ranger levels are gone
+    this.adventure = null;
+    void Adventure;
     this.creatures.setCompanion(s.active, s.companionOut, this.player.pos);
     this.rig.mode = s.player.camera;
     this.rig.yaw = s.player.yaw + Math.PI;
@@ -468,9 +455,7 @@ export class Game implements InteractHost, DialogueHost {
     this.rig.update(dt, this.player.pos, this.player.eyeHeight, this.world.physics);
     this.player.updateHand(this.rig.camera, dt, this.rig.mode === 'first' && !this.cinematic, Math.min(1, Math.hypot(this.player.vel.x, this.player.vel.z) / 4));
     // clock and weather
-    // the new look is a fixed golden hour for now (its sky is a photograph)
-    if (this.world.next) s.clock = Math.floor(s.clock / 24) * 24 + 17.5;
-    else if (!this.paused && this.phase === 'play' && !this.modal && this.settings.dayMinutes > 0) s.clock += (simDt * 24) / (this.settings.dayMinutes * 60);
+    if (!this.paused && this.phase === 'play' && !this.modal && this.settings.dayMinutes > 0) s.clock += (simDt * 24) / (this.settings.dayMinutes * 60);
     if (s.clock >= s.weather.until) this.rollWeather();
     s.playSeconds += simDt;
     const hour = hourOfDay(s);

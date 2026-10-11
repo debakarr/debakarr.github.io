@@ -64,6 +64,8 @@ export class Props {
   backdropMat!: MeshStandardMaterial;
   /** The castle on the far ridge (part of the old backdrop). */
   farCastle: Group | null = null;
+  /** Everything beyond the play area (mountain ring, far castle, ribbon falls), so a look can replace it. */
+  readonly backdropGroup = new Group();
 
   constructor(private terrain: Terrain, private physics: CollisionWorld) {
     this.materials();
@@ -75,6 +77,7 @@ export class Props {
     this.falls();
     this.windmill();
     this.backdrop();
+    this.group.add(this.backdropGroup);
     const stats = batchStatic(this.group);
     this.drawCallsSaved = stats.before - stats.after;
   }
@@ -85,7 +88,7 @@ export class Props {
     const stone = new MeshStandardMaterial({ map: stoneTexture(), roughness: 0.9, color: '#f2ece0' });
     const ruin = new MeshStandardMaterial({ map: stoneTexture(), roughness: 0.92, color: '#d6d2c4' });
     const rock = new MeshStandardMaterial({ map: rockTexture(), roughness: 0.95, vertexColors: true });
-    const plaster = new MeshStandardMaterial({ map: plasterTexture(), color: '#ead8b8', roughness: 0.9 });
+    const plaster = new MeshStandardMaterial({ map: plasterTexture(), color: '#fbf4e6', roughness: 0.9 });
     const wood = new MeshStandardMaterial({ map: plankTexture(), roughness: 0.8, color: '#ffffff' });
     const darkWood = new MeshStandardMaterial({ map: plankTexture(), roughness: 0.8, color: '#9a7a62' });
     const vc = new MeshStandardMaterial({ vertexColors: true, roughness: 0.8 });
@@ -112,11 +115,8 @@ export class Props {
       const t = roofTexture().clone();
       t.needsUpdate = true;
       t.repeat.set(3, 2);
-      // every roof in the vale is fired clay, weathered timber or slate
-      const earthy = ['#a4502c', '#8c4428', '#b2643a', '#6e4c3a', '#7c5c4a', '#5c5a5e'];
-      let h = 0;
-      for (const ch of color) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-      this.mats[key] = new MeshStandardMaterial({ map: t, color: earthy[h % earthy.length], roughness: 0.82 });
+      // clean, saturated tiles: the roof colours are the village's palette
+      this.mats[key] = new MeshStandardMaterial({ map: t, color, roughness: 0.75 });
     }
     return this.mats[key] as MeshStandardMaterial;
   }
@@ -854,7 +854,7 @@ export class Props {
     this.backdropMat = new MeshStandardMaterial({ vertexColors: true, roughness: 1, side: DoubleSide, fog: false });
     const ring = new Mesh(ringGeo, this.backdropMat);
     ring.frustumCulled = false;
-    this.group.add(ring);
+    this.backdropGroup.add(ring);
     // castle on a far ridge
     const castle = new Group();
     const cm = new MeshStandardMaterial({ color: '#e8e6f2', roughness: 0.9, fog: false });
@@ -874,11 +874,11 @@ export class Props {
     this.farCastle = castle;
     castle.position.set(250, 95, -330);
     castle.scale.setScalar(1.3);
-    this.group.add(castle);
+    this.backdropGroup.add(castle);
     // a rock for it to stand on
     const crag = new Mesh(gradient(xf(rockGeo(5, 2), { s: [60, 110, 50] }), '#6f7f8a', '#9aa8b8'), this.backdropMat);
     crag.position.set(250, 0, -330);
-    this.group.add(crag);
+    this.backdropGroup.add(crag);
     // ribbon waterfalls on the mountains
     const fallMat = new MeshBasicMaterial({ color: '#dff4ff', transparent: true, opacity: 0.55, depthWrite: false });
     for (const [a, h] of [[-1.2, 120], [-1.9, 90], [2.6, 110], [0.4, 80]] as [number, number][]) {
@@ -886,13 +886,13 @@ export class Props {
       const f = new Mesh(new PlaneGeometry(6, h), fallMat);
       f.position.set(Math.cos(a) * r, h / 2 + 10, Math.sin(a) * r);
       f.lookAt(0, h / 2, 0);
-      this.group.add(f);
+      this.backdropGroup.add(f);
     }
     // soft glow sprite behind the castle for depth
     const glow = new Mesh(new PlaneGeometry(240, 140), new MeshBasicMaterial({ map: softDot(), color: '#ffffff', transparent: true, opacity: 0.25, depthWrite: false }));
     glow.position.set(230, 120, -360);
     glow.lookAt(0, 60, 0);
-    this.group.add(glow);
+    this.backdropGroup.add(glow);
   }
 
   private hazed: MeshStandardMaterial[] = [];

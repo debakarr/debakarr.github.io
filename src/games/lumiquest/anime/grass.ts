@@ -1,10 +1,10 @@
 // GPU grass: every blade is a few triangles of one shared strip, placed by
 // per-blade data (root, height, width, facing, curve, a random key) and
 // shaped entirely in the vertex shader: an arched, tapered blade that sways
-// in travelling gusts of wind. The fragment shader colours it from a dark,
-// occluded root to a sun-dried tip (patches of greener and more golden
-// grass across the meadow) and lets light shine through it when you look
-// toward the sun.
+// in travelling gusts of wind. Anime-styled: blades are lit like the ground
+// they grow from (so the meadow reads as one soft, bright surface), coloured
+// from the ground's green at the root to a sunny yellow-green tip, and the
+// gusts show as brighter waves rolling across the field.
 //
 // The vale is covered in 12 m chunks streamed around the camera. Each
 // chunk's blades are stored sorted by their random key, so a chunk draws only
@@ -104,15 +104,15 @@ export const grassUniforms = {
   uNear: { value: 8 },
   uSunDir: { value: new Vector3(0, 1, 0) },
   uSunColor: { value: new Color('#ffe2b0') },
-  uRootCol: { value: new Color('#2e3d14') },
-  uMidCol: { value: new Color('#6b7a24') },
-  uTipGreen: { value: new Color('#a9b440') },
-  uTipGold: { value: new Color('#dcb44c') },
+  uRootCol: { value: new Color('#3f8a30') },
+  uMidCol: { value: new Color('#62ad3c') },
+  uTipGreen: { value: new Color('#a4d958') },
+  uTipGold: { value: new Color('#d2ea7c') },
 };
 
 function grassMaterial(flowers: boolean): MeshStandardMaterial {
   // rough and matte: grass should not mirror the blue sky
-  const m = new MeshStandardMaterial({ roughness: 0.85, metalness: 0, side: DoubleSide, envMapIntensity: 0.35 });
+  const m = new MeshStandardMaterial({ roughness: 0.95, metalness: 0, side: DoubleSide, envMapIntensity: 0.2 });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, grassUniforms);
     sh.vertexShader = sh.vertexShader
@@ -168,15 +168,17 @@ function grassMaterial(flowers: boolean): MeshStandardMaterial {
           }`
           : `p.xz += perp * position.x * w * (1.0 - t * 0.88);`}
         vec3 transformed = p;
-        // normal: soft and mostly up, rounded across the blade, leaning with its face
-        vec3 bn = normalize(vec3(face.x, 0.0, face.y) * 0.45 + vec3(0.0, 1.0, 0.0) + vec3(perp.x, 0.0, perp.y) * position.x * 0.9);
+        // normal: the ground's, so the meadow shades as one soft surface
+        vec3 bn = normalize(vec3(0.0, 1.0, 0.0) + vec3(face.x, 0.0, face.y) * 0.12);
         vGrassN = normalize(normalMatrix * bn);
         // colour: root shade to tip; meadow patches drift between fresh green and dry gold
         float patchN = lqNoise(root.xz * 0.035 + 7.0) * 0.7 + lqNoise(root.xz * 0.11) * 0.3;
         vec3 tip = mix(uTipGreen, uTipGold, smoothstep(0.3, 0.75, patchN));
         vec3 col = mix(uRootCol, uMidCol, smoothstep(0.0, 0.45, t));
         col = mix(col, tip, smoothstep(0.35, 1.0, t));
-        col *= 0.88 + 0.24 * lqHash(root.xz * 3.1);
+        col *= 0.92 + 0.14 * lqHash(root.xz * 3.1);
+        // gusts roll across the meadow as brighter waves
+        col += vec3(0.11, 0.13, 0.05) * smoothstep(0.58, 0.88, gust) * t * uWind;
         ${flowers ? 'if (bloom > 0.5) col = aBloom; else col = uMidCol * 0.8;' : ''}
         vGrassCol = col;
         vTip = ${flowers ? 'bloom > 0.5 ? 1.0 : t' : 't'};
@@ -190,7 +192,7 @@ function grassMaterial(flowers: boolean): MeshStandardMaterial {
         uniform vec3 uSunDir; uniform vec3 uSunColor;
         varying vec3 vGrassCol; varying float vTip; varying vec3 vGrassN;`,
       )
-      .replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= vGrassCol;\n diffuseColor.rgb *= mix(0.55, 1.0, smoothstep(0.0, 0.35, vTip));')
+      .replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= vGrassCol;\n diffuseColor.rgb *= mix(0.8, 1.0, smoothstep(0.0, 0.35, vTip));')
       .replace('#include <normal_fragment_begin>', '#include <normal_fragment_begin>\n normal = normalize(vGrassN);')
       .replace(
         '#include <emissivemap_fragment>',
@@ -200,7 +202,7 @@ function grassMaterial(flowers: boolean): MeshStandardMaterial {
           vec3 lqL = normalize((viewMatrix * vec4(uSunDir, 0.0)).xyz);
           vec3 lqV = normalize(vViewPosition);
           float lqT = pow(max(dot(-lqV, lqL), 0.0), 3.0);
-          totalEmissiveRadiance += vGrassCol * uSunColor * lqT * (0.25 + 0.75 * vTip) * 0.9;
+          totalEmissiveRadiance += vGrassCol * uSunColor * lqT * (0.25 + 0.75 * vTip) * 0.35;
         }`,
       );
   };
@@ -208,7 +210,7 @@ function grassMaterial(flowers: boolean): MeshStandardMaterial {
   return m;
 }
 
-const PETALS = ['#d8341e', '#2f55c8', '#f4efe2', '#f0c02a', '#d8341e', '#2f55c8'].map((c) => new Color(c));
+const PETALS = ['#ffffff', '#fff0a0', '#7ab4ff', '#ff9cc4', '#ffffff', '#ffd84a'].map((c) => new Color(c));
 
 interface Chunk {
   key: string;
@@ -318,8 +320,8 @@ export class GpuGrass {
       // taller in the open meadow, shorter on slopes (normal from the heightfield)
       const slope = Math.abs(t.height(x + 0.8, z) - t.height(x - 0.8, z)) + Math.abs(t.height(x, z + 0.8) - t.height(x, z - 0.8));
       const tall = Math.max(0.35, 1 - slope * 0.45);
-      const h = (0.42 + rng.next() * 0.5) * tall;
-      blades.push([x, y - 0.02, z, key2, h, 0.018 + rng.next() * 0.016, rng.next() * Math.PI * 2, 0.2 + rng.next() * 0.7]);
+      const h = (0.34 + rng.next() * 0.38) * tall;
+      blades.push([x, y - 0.02, z, key2, h, 0.03 + rng.next() * 0.022, rng.next() * Math.PI * 2, 0.2 + rng.next() * 0.6]);
       // wildflowers gather in drifts across the meadow
       const drift = Math.max(0, Math.sin(x * 0.11 + Math.sin(z * 0.07) * 2) * Math.cos(z * 0.09 - x * 0.03));
       if (rng.next() < 0.004 + drift * drift * 0.05) {

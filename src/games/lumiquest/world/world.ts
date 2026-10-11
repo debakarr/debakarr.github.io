@@ -26,7 +26,7 @@ import { Atmosphere } from './sky';
 import { Terrain } from './terrain';
 import { Water } from './water';
 import { wind } from './wind';
-import { NextLook, nextLookEnabled } from '../next/look';
+import { AnimeLook } from '../anime/look';
 
 export class World {
   readonly scene = new Scene();
@@ -44,8 +44,8 @@ export class World {
   private envHour = -99;
   private envWeather = '';
   caveFactor = 0;
-  /** The new look (photo sky, textured terrain, GPU meadow), when ?next is on. */
-  readonly next: NextLook | null = null;
+  /** The anime look's meadow and painted mountains. */
+  readonly look: AnimeLook;
 
   constructor(renderer: WebGLRenderer, private profile: QualityProfile, onProgress?: (p: number, label: string) => void) {
     onProgress?.(0.1, 'Shaping the vale');
@@ -68,16 +68,13 @@ export class World {
     this.pmrem = new PMREMGenerator(renderer);
     this.envDome = new Mesh(new SphereGeometry(10, 24, 12), new MeshBasicMaterial({ side: BackSide, vertexColors: false }));
     this.envScene.add(this.envDome);
-    if (nextLookEnabled()) {
-      this.next = new NextLook(this, renderer, profile);
-      this.next.load().catch((e) => console.error('new look failed to load', e));
-    }
+    this.look = new AnimeLook(this, profile);
   }
 
   setProfile(p: QualityProfile): void {
     this.profile = p;
     this.sky.setShadowSize(p.shadowSize);
-    this.next?.setProfile(p);
+    this.look.setProfile(p);
   }
 
   /** Rebuilds the environment map from the sky when the light changes enough. */
@@ -104,11 +101,9 @@ export class World {
     this.sky.shadowRange = this.profile.shadowRange;
     this.sky.drawDistance = this.profile.drawDistance;
     this.sky.update(hour, weather, focus, cam, dt, time);
-    if (this.next?.ready) this.next.apply(cam, time);
-    else {
-      this.refreshEnv(hour, weather);
-      this.scene.environmentIntensity = 0.55 * (1 - this.caveFactor * 0.8) * (1 - this.sky.night * 0.4);
-    }
+    this.refreshEnv(hour, weather);
+    this.scene.environmentIntensity = 0.5 * (1 - this.caveFactor * 0.8) * (1 - this.sky.night * 0.4);
+    this.look.update(cam, time);
     this.nature.update(cam, this.profile.drawDistance, this.profile.shadowRange + 10, this.profile.grassRange, this.profile.grassDensity);
     this.water.update(time, dt);
     this.props.update(time, this.sky.night, this.caveFactor, this.sky.fogColor);
@@ -129,5 +124,6 @@ export class World {
     this.water.dispose();
     this.envTarget?.dispose();
     this.pmrem.dispose();
+    this.look.dispose();
   }
 }

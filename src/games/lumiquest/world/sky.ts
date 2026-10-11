@@ -28,17 +28,19 @@ interface Key {
   fog: string;
 }
 
+// Anime daylight: a deep, saturated blue overhead, a pale clean horizon, a
+// bright near-white sun and strong sky fill so shade stays blue and readable;
+// orange-pink sunsets and a blue night.
 const KEYS: Key[] = [
-  { h: 0, zenith: '#0d1a44', horizon: '#33467e', sun: '#a9bcff', sunI: 0.55, hemiSky: '#5a6cc0', hemiGround: '#2f4a3a', hemiI: 0.95, fog: '#2c3f72' },
-  { h: 4.6, zenith: '#13245a', horizon: '#46548c', sun: '#a9bcff', sunI: 0.5, hemiSky: '#5a6cc0', hemiGround: '#2f4a3a', hemiI: 0.95, fog: '#34477c' },
-  { h: 6, zenith: '#4a6cb8', horizon: '#ffb98a', sun: '#ffa868', sunI: 1.6, hemiSky: '#b4a8d8', hemiGround: '#6a5a3a', hemiI: 0.9, fog: '#f0b894' },
-  // the vale lives in a long golden afternoon: warm sun, cool sky fill, honey haze
-  { h: 8, zenith: '#3f78d4', horizon: '#ead8b8', sun: '#ffdcaa', sunI: 3.1, hemiSky: '#a8c0e8', hemiGround: '#6a6a34', hemiI: 0.85, fog: '#cfc8b8' },
-  { h: 13, zenith: '#3a76d4', horizon: '#e6dcc2', sun: '#ffe4b8', sunI: 3.3, hemiSky: '#aac4ea', hemiGround: '#70703a', hemiI: 0.85, fog: '#cdcabc' },
-  { h: 17, zenith: '#3c68c2', horizon: '#f4c896', sun: '#ffc27a', sunI: 3.4, hemiSky: '#b8b0d8', hemiGround: '#7a6a36', hemiI: 0.8, fog: '#d8bc98' },
-  { h: 19, zenith: '#3a468a', horizon: '#ff9a62', sun: '#ff8a4c', sunI: 2.0, hemiSky: '#c8a0c0', hemiGround: '#5a4a34', hemiI: 0.85, fog: '#eaa080' },
-  { h: 20.4, zenith: '#18265a', horizon: '#6c5c9e', sun: '#a9bcff', sunI: 0.5, hemiSky: '#6a74c8', hemiGround: '#34483e', hemiI: 0.95, fog: '#4a4c86' },
-  { h: 24, zenith: '#0d1a44', horizon: '#33467e', sun: '#a9bcff', sunI: 0.55, hemiSky: '#5a6cc0', hemiGround: '#2f4a3a', hemiI: 0.95, fog: '#2c3f72' },
+  { h: 0, zenith: '#0a1640', horizon: '#26407e', sun: '#9fb6ff', sunI: 0.45, hemiSky: '#4c62c0', hemiGround: '#223a40', hemiI: 0.95, fog: '#21366e' },
+  { h: 4.6, zenith: '#10205a', horizon: '#3a5090', sun: '#9fb6ff', sunI: 0.45, hemiSky: '#5068c4', hemiGround: '#263e40', hemiI: 0.95, fog: '#2e4482' },
+  { h: 6, zenith: '#5a7ed0', horizon: '#ffcaa4', sun: '#ffb87a', sunI: 1.7, hemiSky: '#b8bce8', hemiGround: '#6a6a4a', hemiI: 0.95, fog: '#f2cab2' },
+  { h: 8, zenith: '#2d84ea', horizon: '#bfe5fa', sun: '#fff3dc', sunI: 2.9, hemiSky: '#a6d2ff', hemiGround: '#78a05c', hemiI: 1.1, fog: '#bfe1f5' },
+  { h: 13, zenith: '#2a7ee8', horizon: '#c6e9fc', sun: '#fffaf0', sunI: 3.1, hemiSky: '#acd6ff', hemiGround: '#7ea864', hemiI: 1.15, fog: '#c4e4f7' },
+  { h: 16.5, zenith: '#3a82e2', horizon: '#d6e9f2', sun: '#fff0d4', sunI: 3.0, hemiSky: '#b2d0f4', hemiGround: '#86a060', hemiI: 1.05, fog: '#cee2ee' },
+  { h: 18.6, zenith: '#4b5cb4', horizon: '#ffb276', sun: '#ff9e5c', sunI: 2.1, hemiSky: '#d2aacc', hemiGround: '#6a5442', hemiI: 0.95, fog: '#f2b494' },
+  { h: 20.2, zenith: '#1c2a6c', horizon: '#7a5eaa', sun: '#a9bcff', sunI: 0.5, hemiSky: '#6272cc', hemiGround: '#2e4042', hemiI: 0.95, fog: '#4a4e8c' },
+  { h: 24, zenith: '#0a1640', horizon: '#26407e', sun: '#9fb6ff', sunI: 0.45, hemiSky: '#4c62c0', hemiGround: '#223a40', hemiI: 0.95, fog: '#21366e' },
 ];
 
 const SKY_VERT = /* glsl */ `
@@ -78,7 +80,7 @@ float fbm(vec2 p) {
 void main() {
   vec3 d = normalize(vDir);
   float y = d.y;
-  float t = pow(clamp(y, 0.0, 1.0), 0.55);
+  float t = pow(clamp(y, 0.0, 1.0), 0.5);
   vec3 col = mix(uHorizon, uZenith, t);
   // below the horizon fade to a soft ground haze
   col = mix(col, uGround, smoothstep(0.0, -0.25, y));
@@ -98,17 +100,30 @@ void main() {
     float star = step(0.9965, s) * smoothstep(0.5, 0.0, length(fract(sp) - 0.5)) * tw;
     col += vec3(star) * uNight * (1.0 - uCloud) * smoothstep(0.0, 0.25, y);
   }
-  // clouds on a dome above the vale
+  // anime cumulus: puffy, crisp-edged clouds, banked up toward the horizon,
+  // cel-shaded in two tones (sunlit white, cool blue-grey shade) with a
+  // bright rim where the sun is behind them
   if (y > -0.02) {
-    vec2 cp = d.xz / (y + 0.18) * 1.6 + vec2(uTime * 0.012, uTime * 0.004);
-    float n = fbm(cp);
-    float cover = mix(0.56, 0.36, uCloud);
-    float c = smoothstep(cover, cover + 0.16, n) * smoothstep(-0.02, 0.16, y);
-    float shade = fbm(cp * 1.7 + 3.0);
-    vec3 lit = mix(vec3(1.0), uSunColor, 0.25) * (0.9 + 0.3 * smoothstep(0.3, 0.8, shade));
-    vec3 cloudCol = mix(lit, uHorizon * 0.9, 0.35 + uRain * 0.4);
-    cloudCol = mix(cloudCol, vec3(0.22, 0.27, 0.42), uNight * 0.75);
-    col = mix(col, cloudCol, c * 0.92);
+    vec2 cp = d.xz / (y + 0.1) * 0.75 + vec2(uTime * 0.01, uTime * 0.0035);
+    float big = fbm(cp * 0.55);
+    float n = big * 0.72 + fbm(cp * 2.3 + 5.0) * 0.28;
+    float bank = (1.0 - smoothstep(0.02, 0.4, y)) * 0.13;
+    float dens = n + bank;
+    float cover = mix(0.6, 0.38, uCloud);
+    float c = smoothstep(cover, cover + 0.035, dens) * smoothstep(-0.02, 0.05, y);
+    vec2 sunXZ = normalize(uSunDir.xz + vec2(1e-4));
+    vec2 sp2 = cp + sunXZ * 0.12;
+    float toward = fbm(sp2 * 0.55) * 0.72 + fbm(sp2 * 2.3 + 5.0) * 0.28 + bank;
+    float lit = smoothstep(-0.015, 0.03, dens - toward);
+    float core = smoothstep(cover + 0.04, cover + 0.2, dens);
+    vec3 cLit = mix(vec3(1.0), uSunColor, 0.18);
+    vec3 cShade = mix(uZenith, vec3(0.78, 0.83, 0.94), 0.62);
+    float k = clamp(lit * 0.75 + (1.0 - core) * 0.45, 0.0, 1.0);
+    vec3 cloudCol = mix(cShade, cLit, step(0.5, k) * 0.85 + k * 0.15);
+    cloudCol += uSunColor * pow(max(dot(d, uSunDir), 0.0), 10.0) * (1.0 - core) * 0.55;
+    cloudCol = mix(cloudCol, uHorizon * 0.85, uRain * 0.5);
+    cloudCol = mix(cloudCol, vec3(0.2, 0.25, 0.42), uNight * 0.78);
+    col = mix(col, cloudCol, c * 0.97);
   }
   gl_FragColor = vec4(col, 1.0);
   #include <tonemapping_fragment>
@@ -214,8 +229,8 @@ export class Atmosphere {
 
     // Sun path: rises in the east (+x), sets in the west.
     const ang = ((hour - 6) / 12) * Math.PI;
-    // a low arc (about 33 degrees at noon): long, warm shadows all day
-    const sunDir = new Vector3(Math.cos(ang), Math.sin(ang) * 0.62, -0.42).normalize();
+    // a high summer arc (about 65 degrees at noon): bright, clean daylight
+    const sunDir = new Vector3(Math.cos(ang), Math.sin(ang) * 0.95, -0.42).normalize();
     const moonDir = new Vector3(-Math.cos(ang), -Math.sin(ang), 0.3).normalize();
     const day = Math.max(0, Math.min(1, (sunDir.y + 0.08) / 0.25));
     this.night = 1 - day;

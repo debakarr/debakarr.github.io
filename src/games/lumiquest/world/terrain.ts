@@ -152,19 +152,19 @@ export class Terrain {
   private paint(): void {
     const col = new Color();
     const tmp = new Color();
-    // a summer meadow: deep green in the hollows, sun-dried gold on the rises
-    const grassA = new Color('#4f8e2c');
-    const grassB = new Color('#b4c252');
-    const forestG = new Color('#3a6e2c');
-    const dirt = new Color('#c7a06a');
-    const sand = new Color('#e6d39c');
-    const rock = new Color('#958f86');
-    const rockDark = new Color('#6f6a66');
-    const snow = new Color('#f2f6ff');
-    const caveC = new Color('#5c5868');
-    const plaza = new Color('#d2c2a0');
-    const ruinStone = new Color('#bdb7a8');
-    const flowerTint = new Color('#c7e06a');
+    // an anime summer: lush green hollows, bright yellow-green rises, warm paths
+    const grassA = new Color('#3f8a30');
+    const grassB = new Color('#8cc84a');
+    const forestG = new Color('#2f7234');
+    const dirt = new Color('#d8b47c');
+    const sand = new Color('#f0dfaa');
+    const rock = new Color('#aaa49a');
+    const rockDark = new Color('#7f7c84');
+    const snow = new Color('#f6fbff');
+    const caveC = new Color('#5c5a6e');
+    const plaza = new Color('#dcd0b6');
+    const ruinStone = new Color('#cbc4b4');
+    const flowerTint = new Color('#b8e05e');
     const n = this.noise2;
     for (let j = 0; j < RES; j++) {
       for (let i = 0; i < RES; i++) {

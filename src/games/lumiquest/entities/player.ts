@@ -11,7 +11,7 @@ import { capsule, cylinder, ellipsoid, prep, torus, xf } from '../engine/geometr
 import type { CollisionWorld } from '../engine/physics';
 import type { Terrain } from '../world/terrain';
 import { PLAY_HALF } from '../data/world';
-import { CharacterModel } from './character';
+import { AnimeCharacter } from '../anime/character';
 
 export interface MoveInput {
   x: number;
@@ -36,7 +36,7 @@ const STEP_UP = 0.42;
 const GRAVITY = 19;
 
 export class Player {
-  readonly model: CharacterModel;
+  readonly model: AnimeCharacter;
   readonly pos = new Vector3();
   readonly vel = new Vector3();
   yaw = Math.PI;
@@ -89,7 +89,7 @@ export class Player {
   private deviceGlow: MeshStandardMaterial;
 
   constructor(appearance: Appearance, private terrain: Terrain, private physics: CollisionWorld) {
-    this.model = new CharacterModel(appearance);
+    this.model = new AnimeCharacter(appearance);
     this.deviceGlow = new MeshStandardMaterial({ color: '#bff4ff', emissive: '#4fd8ff', emissiveIntensity: 1.2, roughness: 0.2 });
     this.buildHand(appearance);
   }
@@ -130,6 +130,7 @@ export class Player {
     this.yaw = yaw;
     this.lastSafe.copy(this.pos);
     this.syncModel(0);
+    this.model.resetPhysics();
   }
 
   get eyeHeight(): number {

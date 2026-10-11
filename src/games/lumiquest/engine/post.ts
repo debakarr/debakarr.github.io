@@ -79,11 +79,11 @@ const Shafts = {
 const Grade = {
   uniforms: {
     tDiffuse: { value: null },
-    uVibrance: { value: 0.16 },
-    uWarm: { value: 0.06 },
-    uVignette: { value: 0.3 },
+    uVibrance: { value: 0.22 },
+    uWarm: { value: 0.02 },
+    uVignette: { value: 0.16 },
     uNight: { value: 0 },
-    uGrain: { value: 0.025 },
+    uGrain: { value: 0 },
     uTime: { value: 0 },
   },
   vertexShader: VERT,
@@ -193,7 +193,11 @@ export class Post {
     }
     this.renderPass.scene = scene;
     this.renderPass.camera = camera;
-    if (this.bloom) this.bloom.strength = frame.bloom + frame.night * 0.25;
+    if (this.bloom) {
+      this.bloom.strength = frame.bloom + frame.night * 0.25;
+      // toon-lit daylight is bright everywhere: only true highlights (sun, lamps, glows) bloom
+      this.bloom.threshold = 3.2 - frame.night * 2.4;
+    }
     if (this.grade) {
       this.grade.uniforms.uNight.value = frame.night;
       this.grade.uniforms.uTime.value = frame.time ?? 0;

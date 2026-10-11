@@ -192,30 +192,30 @@ function buildKits(): Record<Kind, Kit> {
   const glow = new MeshStandardMaterial({ vertexColors: true, roughness: 0.4, emissive: new Color('#46e0d0'), emissiveIntensity: 0.7 });
 
   const oakBlobs: [number, number, number, number][] = [[0, 3.7, 0, 1.6], [1.2, 3.3, 0.3, 1.15], [-1.1, 3.4, -0.4, 1.2], [0.2, 4.6, -0.6, 1.1], [-0.3, 3.1, 1.1, 1.05], [0.6, 4.4, 0.8, 0.95], [-0.8, 4.3, 0.5, 0.9], [0.9, 3.0, -0.9, 0.9]];
-  const oak = (detail: number) => merge([trunk(3, 0.36, 0.22), xf(trunk(1.1, 0.12, 0.06), { r: [0, 0, 0.9], p: [0.15, 2.0, 0] }), canopy(3, oakBlobs, '#2c5626', '#aec45c', detail)]);
+  const oak = (detail: number) => merge([trunk(3, 0.36, 0.22), xf(trunk(1.1, 0.12, 0.06), { r: [0, 0, 0.9], p: [0.15, 2.0, 0] }), canopy(3, oakBlobs, '#2f6e36', '#a6dc5c', detail)]);
   const oak2Blobs: [number, number, number, number][] = [[0, 3.0, 0, 1.4], [0.9, 2.7, -0.4, 1.0], [-0.8, 2.8, 0.5, 1.05], [0, 3.9, 0.2, 0.95]];
-  const oak2 = (detail: number) => merge([trunk(2.5, 0.3, 0.2), canopy(8, oak2Blobs, '#345e2a', '#bccc64', detail)]);
+  const oak2 = (detail: number) => merge([trunk(2.5, 0.3, 0.2), canopy(8, oak2Blobs, '#3a7a3a', '#b8e266', detail)]);
   const pine = (detail: number) => {
     const tiers: BufferGeometry[] = [];
     for (let i = 0; i < 4; i++) {
       const r = 1.9 - i * 0.42;
       tiers.push(lumpy(xf(cone(r, 1.9 - i * 0.2, detail ? 12 : 7), { p: [0, 1.8 + i * 1.15, 0] }), 0.1, 1.5, 20 + i));
     }
-    return merge([trunk(2.2, 0.3, 0.2, '#6a4630'), solidUV(gradient(merge(tiers), '#1d5a40', '#6cae5e', { jitter: 0.05 }))]);
+    return merge([trunk(2.2, 0.3, 0.2, '#6a4630'), solidUV(gradient(merge(tiers), '#1f6a4c', '#6cc07a', { jitter: 0.05 }))]);
   };
   const birchBlobs: [number, number, number, number][] = [[0, 4.4, 0, 1.0], [0.6, 3.9, 0.3, 0.8], [-0.5, 4.0, -0.3, 0.85], [0.1, 5.0, 0.1, 0.7]];
-  const birch = (detail: number) => merge([solidUV(gradient(xf(cylinder(0.12, 0.2, 4.2, 8), { p: [0, 2.1, 0] }), '#e8e4da', '#ffffff', { jitter: 0.25, seed: 4 })), canopy(5, birchBlobs, '#5a8434', '#dade7a', detail)]);
-  const blossom = (detail: number) => merge([trunk(2.6, 0.3, 0.2, '#6a4a3a'), canopy(11, oak2Blobs, '#e070a6', '#ffe0ee', detail)]);
+  const birch = (detail: number) => merge([solidUV(gradient(xf(cylinder(0.12, 0.2, 4.2, 8), { p: [0, 2.1, 0] }), '#e8e4da', '#ffffff', { jitter: 0.25, seed: 4 })), canopy(5, birchBlobs, '#4f9a3c', '#dcef86', detail)]);
+  const blossom = (detail: number) => merge([trunk(2.6, 0.3, 0.2, '#6a4a3a'), canopy(11, oak2Blobs, '#f08cbc', '#ffe8f4', detail)]);
   const elderBlobs: [number, number, number, number][] = [
     [0, 8, 0, 3.6], [2.8, 7, 1, 2.6], [-2.8, 7.2, -1, 2.8], [1, 9.8, -1.5, 2.4], [-1.5, 6.6, 2.6, 2.4], [2, 9, 2, 2.0], [-2.2, 9.6, 0.8, 2.0],
   ];
   const elder = (detail: number) => merge([
     trunk(6.5, 1.4, 0.75, '#6a4630', 12),
     ...[0, 1, 2, 3, 4].map((k) => xf(solidUV(gradient(cone(0.5, 1.6, 6), '#6a4630', '#7a5236')), { r: [0, (k / 5) * Math.PI * 2, 1.9], p: [Math.cos((k / 5) * Math.PI * 2) * 1.2, 0.3, Math.sin((k / 5) * Math.PI * 2) * 1.2] })),
-    canopy(33, elderBlobs, '#2a5430', '#92b656', detail),
+    canopy(33, elderBlobs, '#2a6a3c', '#8ccc5e', detail),
   ]);
   const bush = (detail: number, berries: boolean) => {
-    const g = canopy(berries ? 7 : 6, [[0, 0.5, 0, 0.7], [0.55, 0.38, 0.2, 0.55], [-0.5, 0.36, -0.15, 0.5]], '#2f6a32', '#8cc85a', detail + 1);
+    const g = canopy(berries ? 7 : 6, [[0, 0.5, 0, 0.7], [0.55, 0.38, 0.2, 0.55], [-0.5, 0.36, -0.15, 0.5]], '#2f7a3a', '#96d462', detail + 1);
     if (!berries) return g;
     const rng = new Rng(7);
     const dots: BufferGeometry[] = [];
@@ -252,7 +252,7 @@ function buildKits(): Record<Kind, Kit> {
     prep(xf(cylinder(0.33, 0.33, 0.02, 10), { r: [0, 0, Math.PI / 2], p: [-1.61, 0.3, 0] }), '#d8b88a'),
   ]);
   const stump = () => merge([gradient(xf(cylinder(0.42, 0.55, 0.6, 10), { p: [0, 0.3, 0] }), '#6a4630', '#8a5e3a'), prep(xf(cylinder(0.41, 0.41, 0.02, 10), { p: [0, 0.61, 0] }), '#d8b88a')]);
-  const rock = (seed: number, detail: number) => gradient(xf(rockGeo(seed, detail), { p: [0, 0.35, 0] }), '#8a857e', '#d6d0c4', { moss: '#6fae4a', mossAmount: 0.75, jitter: 0.05, seed });
+  const rock = (seed: number, detail: number) => gradient(xf(rockGeo(seed, detail), { p: [0, 0.35, 0] }), '#9a96a0', '#e6e0d4', { moss: '#7cc04f', mossAmount: 0.75, jitter: 0.05, seed });
   const reed = () => {
     const blades: BufferGeometry[] = [];
     for (let i = 0; i < 6; i++) {
