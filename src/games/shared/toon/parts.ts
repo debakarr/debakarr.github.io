@@ -511,7 +511,8 @@ function capeGeo(w: number, len: number, curve = 0.06): BufferGeometry {
 
 function cape(k: Kit, p: Extract<Piece, { k: 'cape' }>): void {
   const len = p.length ?? 0.38;
-  const g = capeGeo(0.3, len);
+  // a hooded travelling cloak is cut wider, to wrap the shoulders
+  const g = capeGeo(p.hood ? 0.36 : 0.3, len, p.hood ? 0.09 : 0.06);
   // two layers (outside colour / lining) for thickness
   k.add('cape', xf(g.clone(), { r: [0, Math.PI, 0], p: [0, 0.02, -0.012] }), p.color, 'sheet');
   k.add('cape', xf(g, { p: [0, 0.02, 0.0] }), p.inner ?? shade(p.color, -0.18), 'sheet');
@@ -522,6 +523,14 @@ function cape(k: Kit, p: Extract<Piece, { k: 'cape' }>): void {
   // gathered at the shoulders
   k.add('chest', xf(new SphereGeometry(0.17, 26, 12, Math.PI * 0.85, Math.PI * 1.3, Math.PI * 0.28, Math.PI * 0.3), { s: [1, 1, 0.85], p: [0, 0.07, -0.0] }), p.color);
   if (p.collar) k.add('chest', xf(torus(0.1, 0.03, 8, 26, Math.PI), { r: [Math.PI / 2, 0, Math.PI], p: [0, 0.16, -0.02] }), p.collar);
+  if (p.hood) {
+    // a traveller's hood, down: a soft cowl gathered behind the neck, lined inside
+    const shell = (r: number) => new SphereGeometry(r, 28, 14, Math.PI * 0.62, Math.PI * 1.76, Math.PI * 0.08, Math.PI * 0.5);
+    k.add('chest', xf(shell(0.15), { s: [1.12, 0.78, 0.9], r: [-0.55, 0, 0], p: [0, 0.135, -0.075] }), p.color);
+    k.add('chest', xf(shell(0.138), { s: [1.12, 0.78, 0.9], r: [-0.55, 0, 0], p: [0, 0.135, -0.072] }), p.inner ?? shade(p.color, -0.2));
+    // the hood's point, falling down the back
+    k.add('chest', xf(teardrop(0.05, 0.16, 10, 1.2), { r: [Math.PI - 0.5, 0, 0], p: [0, 0.07, -0.17] }), p.color);
+  }
   if (p.emblem) k.decal('cape', xf(new PlaneGeometry(0.14, 0.14), { r: [0, Math.PI, 0], p: [0, -len * 0.45, -0.035] }), emblemMaterial(p.emblem, p.emblemColor ?? '#e8b84a'));
 }
 

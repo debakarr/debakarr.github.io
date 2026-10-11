@@ -12,8 +12,8 @@ import type { BoneName } from '../../shared/toon/rig';
 import type { ChibiSpec, HairStyle, Piece } from '../../shared/toon/spec';
 import type { AccessoryId, Appearance, FaceId } from '../data/characters';
 
-/** LumiQuest's world was built for characters about 1.44 tall; chibis are 1.26. */
-const SCALE = 1.14;
+/** The painterly kit builds figures about 1.54 tall; the vale's people stand about 1.6 m. */
+const SCALE = 1.04;
 
 function shade(hex: string, l: number): string {
   const c = new Color(hex);
@@ -37,6 +37,8 @@ function outfit(a: Appearance): Piece[] {
   switch (a.outfit) {
     case 'ranger':
       return [
+        // a hooded travelling cloak, unless a pack is worn on the back
+        ...(a.accessories.includes('backpack') ? [] : [{ k: 'cape', color: shade(main, -0.12), length: 0.44, inner: shade(main, -0.3), hood: true } as Piece]),
         { k: 'tunic', color: main, length: 0.1, collar: acc, trim: acc },
         { k: 'sleeves', color: main, style: 'long', cuff: acc },
         { k: 'pants', color: '#5b4636', short: true },
@@ -73,7 +75,7 @@ function outfit(a: Appearance): Piece[] {
 function accessory(id: AccessoryId, a: Appearance): Piece {
   switch (id) {
     case 'scarf':
-      return { k: 'scarf', color: a.outfit === 'ranger' ? '#f2c35a' : a.outfitAccent === '#e6e2d8' ? '#d8423a' : a.outfitAccent, tails: true };
+      return { k: 'scarf', color: a.outfitAccent === '#e6e2d8' ? '#d8423a' : a.outfitAccent, tails: true };
     case 'backpack':
       return { k: 'backpack', color: '#b5763c', roll: '#4f8a5a', buckle: '#e2b04a' };
     case 'clip':

@@ -26,6 +26,8 @@ import { day, hourOfDay, isNight, newState, type GameState, type WeatherKind } f
 import { Fx } from './world/fx';
 import { Interactables, type Entry, type InteractHost } from './world/interactables';
 import { Adventure } from './systems/adventure';
+import { installAtmosphericFog } from './engine/atmosphere';
+import { toonRim } from '../shared/toon/mats';
 
 /** Colour of each companion ability's strike against the gloom. */
 const ABILITY_COLOR: Record<string, string> = { ember: '#ff8a3a', tide: '#6ad2ff', quake: '#c89a5a', glide: '#c8ffe8', glow: '#fff2a0', forage: '#7ee07e' };
@@ -82,6 +84,7 @@ export class Game implements InteractHost, DialogueHost {
   saveWarning: string | undefined;
 
   constructor(readonly root: HTMLElement) {
+    installAtmosphericFog();
     this.settings = loadSettings();
     this.audio.volumes = { master: this.settings.master, music: this.settings.music, sfx: this.settings.sfx, ambient: this.settings.ambient };
     this.host = new RenderHost(root, this.settings.quality);
@@ -134,7 +137,7 @@ export class Game implements InteractHost, DialogueHost {
       // compile shaders up front so the first frames do not stutter
       this.placeTitleCamera();
       this.host.renderer.shadowMap.enabled = this.settings.shadows;
-      this.post.setEnabled(this.host.profile.tier !== 'low', this.world.scene, this.rig.camera);
+      this.post.setEnabled(this.host.profile.tier !== 'low', this.world.scene, this.rig.camera, this.postOptions());
       this.post.resize(this.host.width, this.host.height, this.host.renderer.getPixelRatio());
       this.host.renderer.compile(this.world.scene, this.rig.camera);
       await frame();
@@ -397,7 +400,7 @@ export class Game implements InteractHost, DialogueHost {
         this.titleModels?.pet.animator.update(dt);
         this.world.update(dt, this.time, 16.5, 'clear', this.rig.camera.position, this.rig.camera.position, false);
         this.rig.update(dt, this.rig.camera.position, 1.3, this.world.physics);
-        this.post.render(this.world.scene, this.rig.camera, 0);
+        this.post.render(this.world.scene, this.rig.camera, { night: 0, bloom: 0.4, time: this.time });
         this.audio.ambience(dt, { night: 0, river: 0, cave: 0, rain: 0, underwater: false, height: 10, paused: false });
         break;
       }
@@ -516,8 +519,27 @@ export class Game implements InteractHost, DialogueHost {
     const riverD = this.riverNear();
     this.audio.ambience(dt, { night: this.world.sky.night, river: riverD, cave: this.world.caveFactor, rain: this.world.sky.rainAmount, underwater: this.player.underwater, height: this.player.pos.y, paused: this.paused });
     // render
-    this.post.render(this.world.scene, this.rig.camera, this.world.sky.night, this.world.caveFactor > 0.5 ? 0.5 : 0.4);
+    // characters' rim light follows the sun, and fades at night and underground
+    toonRim.value.copy(this.world.sky.sun.color).multiplyScalar((1 - this.world.sky.night * 0.85) * (1 - this.world.caveFactor * 0.8) * 0.9);
+    this.post.render(this.world.scene, this.rig.camera, {
+      night: this.world.sky.night,
+      bloom: this.world.caveFactor > 0.5 ? 0.5 : 0.4,
+      sunDir: this.world.sky.sunVisual,
+      sunColor: this.world.sky.sun.color,
+      shafts: this.world.sky.shaftAmount * (1 - this.world.caveFactor),
+      time: this.time,
+    });
     this.ui.hud(dt);
+  }
+
+  /**
+   * Which costly passes to run: sun shafts from medium up (and on auto when the
+   * device looks like a desktop).
+   */
+  private postOptions(): { shafts: boolean } {
+    const q = this.settings.quality;
+    const tier = this.host.profile.tier;
+    return { shafts: q === 'high' || q === 'medium' || (q === 'auto' && tier === 'high') };
   }
 
   private riverNear(): number {
@@ -1185,7 +1207,7 @@ export class Game implements InteractHost, DialogueHost {
     if (next.quality !== prevQuality) {
       this.host.setQuality(next.quality);
       this.world.setProfile(this.host.profile);
-      this.post.setEnabled(this.host.profile.tier !== 'low', this.world.scene, this.rig.camera);
+      this.post.setEnabled(this.host.profile.tier !== 'low', this.world.scene, this.rig.camera, this.postOptions());
       this.post.resize(this.host.width, this.host.height, this.host.renderer.getPixelRatio());
     }
     this.host.renderer.shadowMap.enabled = next.shadows;

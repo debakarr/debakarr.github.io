@@ -30,7 +30,7 @@ export interface Abilities {
 export type MoveState = 'idle' | 'walk' | 'run' | 'sneak' | 'crouch' | 'air' | 'swim' | 'dive' | 'glide';
 
 const RADIUS = 0.3;
-const HEIGHT = 1.45;
+const HEIGHT = 1.6;
 /** Highest built step (plank, stair, ledge) a walker climbs without jumping. */
 const STEP_UP = 0.42;
 const GRAVITY = 19;
@@ -134,7 +134,7 @@ export class Player {
 
   get eyeHeight(): number {
     if (this.swimming) return this.diving ? 0.5 : 1.25;
-    return this.crouching ? 0.92 : 1.32;
+    return this.crouching ? 1.0 : 1.45;
   }
 
   get height(): number {

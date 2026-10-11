@@ -72,7 +72,7 @@ export const PRESETS: Preset[] = [
     personality: 'Bold and restless. First over every hill.',
     look: {
       skin: SKIN_TONES[1], face: 'bold', eye: EYE_COLORS[0], hair: 'spiky', hairColor: HAIR_COLORS[0],
-      outfit: 'ranger', outfitMain: OUTFIT_COLORS[0], outfitAccent: OUTFIT_COLORS[5], accessories: ['backpack', 'scarf'],
+      outfit: 'ranger', outfitMain: OUTFIT_COLORS[1], outfitAccent: OUTFIT_COLORS[0], accessories: ['scarf'],
     },
   },
   {

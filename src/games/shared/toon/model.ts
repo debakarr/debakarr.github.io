@@ -7,9 +7,9 @@ import { Bone, Group, MeshStandardMaterial, type Material, type Object3D, type S
 import { Animator, bakeSkin, restOffsets, skinMeshes, type Rot, type SkinPart } from '../chibi/anim';
 import { faceTexture, type Expression } from './face';
 import { buildHair } from './hair';
-import { surface } from './mats';
+import { rimPatch, surface } from './mats';
 import { buildParts, headGeometry } from './parts';
-import { BONES, chibiClips, PARENT, REST, type BoneName, type ClipName } from './rig';
+import { BONE_SCALE, BONES, chibiClips, DRAPE_SCALE, PARENT, REST, stretchSlope, stretchY, type BoneName, type ClipName } from './rig';
 import type { ChibiSpec } from './spec';
 
 const OFFSETS = restOffsets(REST as Record<string, Rot>, PARENT as Record<string, string | null>);
@@ -30,12 +30,42 @@ function drapeWeights(x: number, y: number, z: number): [string, number, string,
   return [near, w * share, far, w * (1 - share)];
 }
 
+/** Stretches a part (built in chibi proportions) to the adventurer's: see BONE_SCALE in rig.ts. */
+function proportion(p: SkinPart, drape: boolean): SkinPart {
+  const bone = p.bone as BoneName;
+  const s = drape ? DRAPE_SCALE : BONE_SCALE[bone];
+  if (!drape && (bone === 'spine' || bone === 'chest')) {
+    // the torso stretches below the collar line only
+    const pos = p.geo.attributes.position;
+    const nor = p.geo.attributes.normal;
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      const k = stretchSlope(bone, y);
+      pos.setXYZ(i, pos.getX(i) * s[0], stretchY(bone, y), pos.getZ(i) * s[2]);
+      if (nor) {
+        const nx = nor.getX(i) / s[0];
+        const ny = nor.getY(i) / k;
+        const nz = nor.getZ(i) / s[2];
+        const l = Math.hypot(nx, ny, nz) || 1;
+        nor.setXYZ(i, nx / l, ny / l, nz / l);
+      }
+    }
+    pos.needsUpdate = true;
+    return p;
+  }
+  p.geo.scale(s[0], s[1], s[2]);
+  const w = p.weights;
+  // drape weights are written for chibi coordinates
+  if (w) p.weights = (x, y, z) => w(x / s[0], y / s[1], z / s[2]);
+  return p;
+}
+
 /** All the meshes for a spec, ready to skin. */
 export function toonParts(spec: ChibiSpec, faceMat: Material): SkinPart[] {
   const hidden = spec.outfit.some((p) => p.k === 'helmet') ? 'helmet' : spec.outfit.some((p) => p.k === 'hat' && p.style !== 'cap') ? 'hat' : spec.outfit.some((p) => p.k === 'hat') ? 'cap' : undefined;
-  const parts: SkinPart[] = buildParts(spec).map((p) => ({ bone: p.bone, geo: p.geo, mat: p.mat, weights: p.drape ? drapeWeights : undefined }));
-  for (const h of buildHair(spec.hair, { hidden })) parts.push({ bone: h.bone, geo: h.geo, mat: surface('hair') });
-  parts.push({ bone: 'head', geo: headGeometry(), mat: faceMat });
+  const parts: SkinPart[] = buildParts(spec).map((p) => proportion({ bone: p.bone, geo: p.geo, mat: p.mat, weights: p.drape ? drapeWeights : undefined }, !!p.drape));
+  for (const h of buildHair(spec.hair, { hidden })) parts.push(proportion({ bone: h.bone, geo: h.geo, mat: surface('hair') }, false));
+  parts.push(proportion({ bone: 'head', geo: headGeometry(), mat: faceMat }, false));
   return parts;
 }
 
@@ -68,7 +98,7 @@ export class ToonModel {
     }
     this.bones = bones;
     // skin: soft, a little warm light scattered back out
-    this.faceMat = new MeshStandardMaterial({ map: faceTexture(spec.face, this.mood), roughness: 0.62, emissive: 0x3a1a10, emissiveIntensity: 0.18 });
+    this.faceMat = rimPatch(new MeshStandardMaterial({ map: faceTexture(spec.face, this.mood), roughness: 0.62, emissive: 0x3a1a10, emissiveIntensity: 0.18 }));
     const batches = bakeSkin(toonParts(spec, this.faceMat).map((p) => ({ ...p, cast: opts.shadows !== false })), BONES as unknown as string[], OFFSETS);
     this.meshes = skinMeshes(this.root, BONES.map((n) => bones[n]), OFFSETS, batches);
     for (const m of this.meshes) m.receiveShadow = true;

@@ -109,24 +109,23 @@ export function paintFaceCanvas(f: FaceSpec, expr: Expression): HTMLCanvasElemen
     ctx.fill();
   }
 
-  // Cheeks: a soft wash with anime hatch strokes.
+  // Cheeks: a soft warm wash, and a little shading under the brow and down the nose.
   const blush = (f.blush ?? 0.55) + (m.flush ?? 0);
   for (const s of [-1, 1]) {
-    const g = ctx.createRadialGradient(FX + s * 80, EY + 46, 2, FX + s * 80, EY + 46, 30);
-    g.addColorStop(0, `rgba(250,120,130,${0.32 * blush})`);
-    g.addColorStop(1, 'rgba(250,120,130,0)');
+    const g = ctx.createRadialGradient(FX + s * 78, EY + 50, 2, FX + s * 78, EY + 50, 40);
+    g.addColorStop(0, `rgba(226,120,110,${0.22 * blush})`);
+    g.addColorStop(1, 'rgba(226,120,110,0)');
     ctx.fillStyle = g;
     ctx.beginPath();
-    ctx.ellipse(FX + s * 80, EY + 46, 36, 20, 0, 0, Math.PI * 2);
+    ctx.ellipse(FX + s * 78, EY + 50, 44, 28, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = `rgba(230,90,110,${0.55 * blush})`;
-    ctx.lineWidth = 2;
-    for (let k = -1; k <= 1; k++) {
-      ctx.beginPath();
-      ctx.moveTo(FX + s * 80 + k * 9 - 3, EY + 52);
-      ctx.lineTo(FX + s * 80 + k * 9 + 4, EY + 41);
-      ctx.stroke();
-    }
+    const sock = ctx.createRadialGradient(FX + s * 56, EY - 18, 4, FX + s * 56, EY - 18, 46);
+    sock.addColorStop(0, rgba(shade(skin, -0.12, 0.05), 0.35));
+    sock.addColorStop(1, rgba(shade(skin, -0.12, 0.05), 0));
+    ctx.fillStyle = sock;
+    ctx.beginPath();
+    ctx.ellipse(FX + s * 56, EY - 14, 50, 34, 0, 0, Math.PI * 2);
+    ctx.fill();
   }
   if (f.freckles) {
     ctx.fillStyle = rgba(shade(skin, -0.25, 0.1), 0.55);
@@ -138,15 +137,24 @@ export function paintFaceCanvas(f: FaceSpec, expr: Expression): HTMLCanvasElemen
     }
   }
 
-  // Nose: a tiny anime dot.
-  ctx.fillStyle = rgba(shade(skin, -0.32, 0.1), 0.85);
+  // Nose: a soft shadowed tip and nostril hint.
+  const nose = ctx.createRadialGradient(FX + 4, EY + 30, 1, FX + 4, EY + 30, 16);
+  nose.addColorStop(0, rgba(shade(skin, -0.2, 0.08), 0.6));
+  nose.addColorStop(1, rgba(shade(skin, -0.2, 0.08), 0));
+  ctx.fillStyle = nose;
   ctx.beginPath();
-  ctx.ellipse(FX + 2, EY + 34, 2.6, 3.4, 0, 0, Math.PI * 2);
+  ctx.ellipse(FX + 4, EY + 30, 16, 12, 0, 0, Math.PI * 2);
   ctx.fill();
+  ctx.strokeStyle = rgba(shade(skin, -0.3, 0.1), 0.6);
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(FX - 7, EY + 36);
+  ctx.quadraticCurveTo(FX + 1, EY + 40, FX + 9, EY + 36);
+  ctx.stroke();
 
   const es = f.eyeScale ?? 1;
   for (const s of [-1, 1] as const) {
-    const x = FX + s * 60;
+    const x = FX + s * 56;
     const winked = !!m.wink && s === 1;
     eye(ctx, f, m, x, EY, s, es, winked);
     brow(ctx, f, m, x, EY, s, es);
@@ -157,133 +165,100 @@ export function paintFaceCanvas(f: FaceSpec, expr: Expression): HTMLCanvasElemen
 }
 
 function eye(ctx: CanvasRenderingContext2D, f: FaceSpec, m: Mood, x: number, y: number, side: -1 | 1, es: number, winked: boolean): void {
-  // anime eyes: tall, with a heavy winged upper lid and banded irises
-  const w = (f.almond ? 36 : 39) * es;
-  const h = (f.almond ? 48 : 60) * es;
-  const lash = '#3a2420';
+  // storybook eyes: almond shapes, mostly iris, one catch-light, a fine lid line
+  const w = (f.almond ? 24 : 25) * es;
+  const h = (f.almond ? 15 : 18) * es;
+  const lid = '#3a2a24';
   const open = winked ? 0 : m.open;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   if (open <= 0.01) {
-    ctx.strokeStyle = lash;
-    ctx.lineWidth = 6;
+    ctx.strokeStyle = lid;
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
     if (m.arcs || winked) {
-      ctx.moveTo(x - w, y + 4);
-      ctx.quadraticCurveTo(x, y - 22, x + w, y + 4);
+      ctx.moveTo(x - w, y + 3);
+      ctx.quadraticCurveTo(x, y - 12, x + w, y + 3);
     } else {
       ctx.moveTo(x - w, y);
-      ctx.quadraticCurveTo(x, y + 14, x + w, y);
+      ctx.quadraticCurveTo(x, y + 7, x + w, y);
     }
     ctx.stroke();
     return;
   }
   const hh = h * open;
-  const top = y - hh * 0.62;
-  const bottom = y + h * 0.5 * (1 - m.squint * 0.6) * Math.min(1, open + 0.2);
-  const outer = x + side * w;
-  const inner = x - side * w;
-  // the eye shape: flat-ish top under the lid, round at the bottom
+  const top = y - hh;
+  const bottom = y + h * 0.75 * (1 - m.squint * 0.5);
   const shape = () => {
     ctx.beginPath();
-    ctx.moveTo(inner, y - hh * 0.15);
-    ctx.bezierCurveTo(inner, top - 2, outer, top - 6, outer, y - hh * 0.2);
-    ctx.bezierCurveTo(outer + side * 1, bottom - 4, x + side * w * 0.3, bottom + 2, x, bottom + 2);
-    ctx.bezierCurveTo(x - side * w * 0.5, bottom + 2, inner - side * 2, bottom - 8, inner, y - hh * 0.15);
+    ctx.moveTo(x - w, y);
+    ctx.bezierCurveTo(x - w * 0.55, top - 2, x + w * 0.55, top - 2, x + w, y - 2);
+    ctx.bezierCurveTo(x + w * 0.5, bottom + 1, x - w * 0.5, bottom + 1, x - w, y);
     ctx.closePath();
   };
   ctx.save();
   shape();
-  ctx.fillStyle = '#ffffff';
+  ctx.fillStyle = '#f6f1ea';
   ctx.fill();
   ctx.clip();
-  // sclera shadow under the lid
-  ctx.fillStyle = 'rgba(150,160,190,0.45)';
-  ctx.fillRect(x - w - 4, top - 6, w * 2 + 8, hh * 0.32);
-  // iris: a tall oval in three bands, dark at the top
-  const ir = w * 0.78 * m.iris;
-  const iy = y + hh * 0.08;
-  const ix = x + side * 2;
-  const irh = ir * 1.45;
-  ctx.fillStyle = shade(f.eyes, -0.22);
+  // the lid's soft shadow on the eyeball
+  ctx.fillStyle = 'rgba(120,90,80,0.28)';
+  ctx.fillRect(x - w - 2, top - 4, w * 2 + 4, hh * 0.6);
+  // iris and pupil
+  const ir = w * 0.56 * m.iris;
+  const ix = x + side * 1.5;
+  const iy = y - hh * 0.05;
+  const ig = ctx.createRadialGradient(ix, iy + ir * 0.3, ir * 0.2, ix, iy, ir);
+  ig.addColorStop(0, shade(f.eyes, 0.14, 0.05));
+  ig.addColorStop(0.7, f.eyes);
+  ig.addColorStop(1, shade(f.eyes, -0.25));
+  ctx.fillStyle = ig;
   ctx.beginPath();
-  ctx.ellipse(ix, iy, ir, irh, 0, 0, Math.PI * 2);
+  ctx.arc(ix, iy, ir, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = shade(f.eyes, 0.02);
+  ctx.fillStyle = '#140d0a';
   ctx.beginPath();
-  ctx.ellipse(ix, iy + irh * 0.22, ir * 0.92, irh * 0.75, 0, 0, Math.PI * 2);
+  ctx.arc(ix, iy, ir * 0.46, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = shade(f.eyes, 0.2, 0.05);
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
   ctx.beginPath();
-  ctx.ellipse(ix, iy + irh * 0.62, ir * 0.72, irh * 0.36, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = shade(f.eyes, -0.38);
-  ctx.lineWidth = 2.4;
-  ctx.beginPath();
-  ctx.ellipse(ix, iy, ir, irh, 0, 0, Math.PI * 2);
-  ctx.stroke();
-  // pupil: a dark vertical oval
-  ctx.fillStyle = shade(f.eyes, -0.45);
-  ctx.beginPath();
-  ctx.ellipse(ix, iy - irh * 0.05, ir * 0.3, irh * 0.4, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // highlights: a big disc upper-inner, a sparkle, a soft one low
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(ix - side * ir * 0.42, iy - irh * 0.42, ir * 0.36, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(ix - side * ir * 0.05, iy - irh * 0.2, ir * 0.1, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.8)';
-  ctx.beginPath();
-  ctx.arc(ix + side * ir * 0.48, iy + irh * 0.5, ir * 0.14, 0, Math.PI * 2);
+  ctx.arc(ix - side * ir * 0.35 - ir * 0.1, iy - ir * 0.38, ir * 0.24, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
-  // upper lid: a thick dark shape winging out past the outer corner
-  ctx.fillStyle = lash;
-  ctx.beginPath();
-  ctx.moveTo(inner - side * 2, y - hh * 0.05);
-  ctx.bezierCurveTo(inner, top - 6, outer, top - 12, outer + side * (f.lashes ? 14 : 9), y - hh * (f.lashes ? 0.5 : 0.32));
-  ctx.lineTo(outer + side * 2, y - hh * 0.12);
-  ctx.bezierCurveTo(outer, top + 2, inner + side * 4, top + 3, inner + side * 1, y - hh * 0.02);
-  ctx.closePath();
-  ctx.fill();
-  if (f.lashes) {
-    ctx.strokeStyle = lash;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(outer + side * 4, y - hh * 0.36);
-    ctx.lineTo(outer + side * 15, y - hh * 0.22);
-    ctx.stroke();
-  }
-  // the crease above the eye, in a warm tone
-  ctx.strokeStyle = 'rgba(220,120,100,0.7)';
+  // upper lid line and a hint of lashes at the outer corner
+  ctx.strokeStyle = lid;
   ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.moveTo(x - side * w * 0.35, top - 16);
-  ctx.quadraticCurveTo(x + side * w * 0.2, top - 21, x + side * w * 0.8, top - 13);
+  ctx.moveTo(x - w - 1, y + 0.5);
+  ctx.bezierCurveTo(x - w * 0.55, top - 2.5, x + w * 0.55, top - 2.5, x + w + 1, y - 2);
   ctx.stroke();
-  // a short lower lash at the outer corner
-  ctx.strokeStyle = rgba(lash, 0.75);
-  ctx.lineWidth = 2.4;
+  if (f.lashes) {
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(x + side * (w + 1), y - 2);
+    ctx.lineTo(x + side * (w + 6), y - 6);
+    ctx.stroke();
+  }
+  // the crease above, very soft
+  ctx.strokeStyle = 'rgba(150,90,80,0.35)';
+  ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(x + side * w * 0.35, bottom + 3);
-  ctx.quadraticCurveTo(x + side * w * 0.8, bottom, outer + side * 2, y + hh * 0.05);
+  ctx.moveTo(x - w * 0.7, top - 6);
+  ctx.quadraticCurveTo(x, top - 11, x + w * 0.75, top - 5);
   ctx.stroke();
 }
 
 function brow(ctx: CanvasRenderingContext2D, f: FaceSpec, m: Mood, x: number, y: number, side: -1 | 1, es: number): void {
   const b = m.brow;
-  const by = y - 82 * es + b.lift;
-  const inner = x - side * 24;
-  const outer = x + side * 34;
+  const by = y - 40 * es + b.lift * 0.7;
+  const inner = x - side * 22;
+  const outer = x + side * 28;
   ctx.strokeStyle = f.brows;
   ctx.lineCap = 'round';
-  ctx.lineWidth = 4.5;
+  ctx.lineWidth = 5;
   ctx.beginPath();
-  ctx.moveTo(inner, by - b.inner + 4);
-  ctx.quadraticCurveTo(x + side * 4, by - b.arch - 6, outer, by + 6);
+  ctx.moveTo(inner, by - b.inner * 0.7 + 3);
+  ctx.quadraticCurveTo(x + side * 4, by - b.arch * 0.6 - 4, outer, by + 4);
   ctx.stroke();
 }
 

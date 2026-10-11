@@ -153,11 +153,23 @@ function canopy(seed: number, blobs: [number, number, number, number][], bottom:
   const sun = new Color('#f6e27a');
   const c = new Color();
   const span = Math.max(0.01, bb.max.y - bb.min.y);
+  // self-shadowing: leaves deep inside a mass, or under another mass, sit in shade
+  const occl = (x: number, y: number, z: number): number => {
+    let o = 0;
+    for (const [bx, by, bz, r] of blobs) {
+      const d = Math.hypot(x - bx, y - by, z - bz) / r;
+      o = Math.max(o, 1 - Math.min(1, d));
+      // a mass above casts shade straight down
+      if (by > y + r * 0.3 && Math.hypot(x - bx, z - bz) < r * 0.9) o = Math.max(o, 0.45 * Math.min(1, (by - y) / (r * 2)));
+    }
+    return o;
+  };
   for (let k = 0; k < pos.count; k += 1) {
     const t = (pos.getY(k) - bb.min.y) / span;
     const ny = nor.getY(k);
     c.copy(a).lerp(b, Math.min(1, t * 0.6 + (ny * 0.5 + 0.5) * 0.5));
     if (ny > 0.5) c.lerp(sun, (ny - 0.5) * 0.6);
+    c.multiplyScalar(1 - 0.55 * occl(pos.getX(k), pos.getY(k), pos.getZ(k)));
     // one colour per card (four vertices), so clusters vary like brush strokes
     if (k % 4 === 0) rng.next();
     c.offsetHSL((rng.next() - 0.5) * 0.015, 0, (rng.next() - 0.5) * 0.04);

@@ -156,6 +156,10 @@ export class Atmosphere {
   shadowRange = 50;
   drawDistance = 220;
   fogColor = new Color();
+  /** The sun's true direction (unclamped), for sun shafts. */
+  readonly sunVisual = new Vector3(0, 1, 0);
+  /** How strongly sun shafts show: daylight, a clear sky, the sun above the hills. */
+  shaftAmount = 0;
 
   constructor(scene: Scene, shadowSize: number) {
     this.mat = new ShaderMaterial({
@@ -273,6 +277,8 @@ export class Atmosphere {
     (u.uHorizon.value as Color).copy(k.horizon).lerp(grey, overcast * 0.6);
     (u.uGround.value as Color).copy(fogC);
     (u.uSunDir.value as Vector3).copy(sunDir);
+    this.sunVisual.copy(sunDir);
+    this.shaftAmount = Math.max(0, Math.min(1, sunDir.y / 0.08)) * (1 - this.night) * (1 - overcast) * (1 - this.mist * 0.5) * 0.9;
     (u.uMoonDir.value as Vector3).copy(moonDir);
     (u.uSunColor.value as Color).copy(k.sun);
     u.uTime.value = time;

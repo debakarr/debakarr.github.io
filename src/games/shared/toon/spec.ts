@@ -50,7 +50,7 @@ export type Piece =
   | { k: 'strap'; color: string; side: 1 | -1; buckle?: string }
   | { k: 'pouch'; color: string; side: 1 | -1; flap?: string; front?: boolean }
   | { k: 'scarf'; color: string; trim?: string; tails?: boolean }
-  | { k: 'cape'; color: string; length?: number; emblem?: Emblem; emblemColor?: string; trim?: string; inner?: string; collar?: string }
+  | { k: 'cape'; color: string; length?: number; emblem?: Emblem; emblemColor?: string; trim?: string; inner?: string; collar?: string; hood?: boolean }
   | { k: 'furCloak'; color: string; fur: string; emblem?: Emblem; emblemColor?: string; trim?: string }
   | { k: 'backpack'; color: string; roll?: string; strap?: string; buckle?: string; big?: boolean }
   | { k: 'sash'; color: string; side: 1 | -1; trim?: string }

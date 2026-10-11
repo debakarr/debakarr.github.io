@@ -9,6 +9,29 @@ export type Surface = 'cloth' | 'silk' | 'leather' | 'metal' | 'gold' | 'skin' |
 
 const cache = new Map<string, Material>();
 
+/**
+ * A rim of light around every character, so they stand out against the meadow
+ * the way a hero does in a painting. The game sets the colour each frame (the
+ * sun's, dimmed at night).
+ */
+export const toonRim = { value: new Color('#ffd8a8') };
+
+export function rimPatch<M extends Material>(m: M): M {
+  m.onBeforeCompile = (sh) => {
+    sh.uniforms.uRim = toonRim;
+    sh.fragmentShader = `uniform vec3 uRim;\n${sh.fragmentShader}`.replace(
+      '#include <emissivemap_fragment>',
+      `#include <emissivemap_fragment>
+      {
+        float lqF = 1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0);
+        totalEmissiveRadiance += uRim * pow(lqF, 3.0) * 0.55;
+      }`,
+    );
+  };
+  m.customProgramCacheKey = () => 'toon-rim';
+  return m;
+}
+
 /** One shared vertex-coloured material per surface type. */
 export function surface(s: Surface): Material {
   let m = cache.get(s);
@@ -56,6 +79,7 @@ export function surface(s: Surface): Material {
       m = std({ roughness: 0.8 });
   }
   m!.userData.surface = s;
+  if (s !== 'glass') rimPatch(m!);
   cache.set(s, m!);
   return m!;
 }
@@ -215,7 +239,7 @@ export function emblemMaterial(e: Emblem, color: string, metallic = true): Mater
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
   t.anisotropy = 4;
-  m = new MeshStandardMaterial({ map: t, alphaTest: 0.35, side: DoubleSide, roughness: metallic ? 0.35 : 0.8, metalness: metallic ? 0.6 : 0, polygonOffset: true, polygonOffsetFactor: -2 });
+  m = rimPatch(new MeshStandardMaterial({ map: t, alphaTest: 0.35, side: DoubleSide, roughness: metallic ? 0.35 : 0.8, metalness: metallic ? 0.6 : 0, polygonOffset: true, polygonOffsetFactor: -2 }));
   emblemCache.set(key, m);
   return m;
 }

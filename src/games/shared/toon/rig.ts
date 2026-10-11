@@ -1,7 +1,9 @@
-// The shared chibi skeleton and its animation library. Every character in
-// Year Zero and LumiQuest uses these proportions (head ≈ a third of the
-// height, short sturdy legs, big hands and boots) and these clips, so a
-// costume or a clip made for one game works in the other.
+// The skeleton and animation library for LumiQuest's painterly characters.
+// The pose clips were authored for a chibi body; here every bone carries a
+// proportion scale (longer legs and arms, a taller torso, a smaller head),
+// so the same clips drive an adventurer about 4.3 heads tall. A bone's scale
+// stretches the geometry attached to it and the offsets of its child joints
+// together, so joints stay connected; rotations are unchanged.
 
 import type { AnimationClip } from 'three';
 import { cos, makeClip, sin, type ClipSpec, type PoseFrame, type Rot } from '../chibi/anim';
@@ -13,8 +15,14 @@ export const BONES = [
 ] as const;
 export type BoneName = (typeof BONES)[number];
 
-/** Rest offsets from the parent bone (model units: the figure is ~1.36 tall). */
-export const REST: Record<BoneName, Rot> = {
+export const PARENT: Record<BoneName, BoneName | null> = {
+  hips: null, spine: 'hips', chest: 'spine', neck: 'chest', head: 'neck', cape: 'chest',
+  armL: 'chest', foreL: 'armL', handL: 'foreL', armR: 'chest', foreR: 'armR', handR: 'foreR',
+  thighL: 'hips', shinL: 'thighL', footL: 'shinL', thighR: 'hips', shinR: 'thighR', footR: 'shinR',
+};
+
+/** The chibi offsets the parts and clips were designed around. */
+const BASE: Record<BoneName, Rot> = {
   hips: [0, 0.47, 0],
   spine: [0, 0.05, 0],
   chest: [0, 0.12, 0],
@@ -35,13 +43,68 @@ export const REST: Record<BoneName, Rot> = {
   footR: [0, -0.19, 0],
 };
 
-export const PARENT: Record<BoneName, BoneName | null> = {
-  hips: null, spine: 'hips', chest: 'spine', neck: 'chest', head: 'neck', cape: 'chest',
-  armL: 'chest', foreL: 'armL', handL: 'foreL', armR: 'chest', foreR: 'armR', handR: 'foreR',
-  thighL: 'hips', shinL: 'thighL', footL: 'shinL', thighR: 'hips', shinR: 'thighR', footR: 'shinR',
+const TORSO = 1.45;
+const ARM = 1.45;
+const LEG = 1.7;
+/** Proportions: the scale of each bone's own geometry (and of its children's offsets). */
+export const BONE_SCALE: Record<BoneName, Rot> = {
+  hips: [1, 1.15, 1],
+  spine: [1, TORSO, 1],
+  chest: [1, TORSO, 1],
+  neck: [0.85, 1.35, 0.85],
+  head: [0.7, 0.7, 0.7],
+  cape: [1, 1.6, 1],
+  armL: [0.92, ARM, 0.92],
+  foreL: [0.92, ARM, 0.92],
+  handL: [0.82, 0.82, 0.82],
+  armR: [0.92, ARM, 0.92],
+  foreR: [0.92, ARM, 0.92],
+  handR: [0.82, 0.82, 0.82],
+  thighL: [0.95, LEG, 0.95],
+  shinL: [0.95, LEG, 0.95],
+  footL: [0.9, 0.9, 0.9],
+  thighR: [0.95, LEG, 0.95],
+  shinR: [0.95, LEG, 0.95],
+  footR: [0.9, 0.9, 0.9],
 };
+/** Skirts and robes hang from the hips but reach down the legs: they stretch with the legs. */
+export const DRAPE_SCALE: Rot = [1, LEG, 1];
 
-/** Head sphere centre relative to the head bone, and its radius. */
+/**
+ * The torso stretches below the collar line only: above it (neckline, collars,
+ * scarves, the neck joint) heights grow gently, so neckwear stays under the
+ * smaller head's chin. Collar heights are in each bone's chibi space.
+ */
+const COLLAR: Partial<Record<BoneName, number>> = { spine: 0.22, chest: 0.1 };
+const COLLAR_SLOPE = 0.83;
+
+/** A height in a bone's chibi space mapped to the adventurer's proportions. */
+export function stretchY(bone: BoneName, y: number): number {
+  const s = BONE_SCALE[bone][1];
+  const c = COLLAR[bone];
+  if (c === undefined || y <= c) return y * s;
+  return c * s + (y - c) * COLLAR_SLOPE;
+}
+
+/** The local vertical stretch at a height (for transforming normals). */
+export function stretchSlope(bone: BoneName, y: number): number {
+  const c = COLLAR[bone];
+  return c === undefined || y <= c ? BONE_SCALE[bone][1] : COLLAR_SLOPE;
+}
+
+/** Rest offsets from the parent bone, in the adventurer's proportions (about 1.52 tall). */
+export const REST = {} as Record<BoneName, Rot>;
+for (const b of BONES) {
+  const p = PARENT[b];
+  const o = BASE[b];
+  REST[b] = p ? [o[0] * BONE_SCALE[p][0], stretchY(p, o[1]), o[2] * BONE_SCALE[p][2]] : [o[0], o[1], o[2]];
+}
+// stand the feet on the ground: hip joint, thigh and shin, then the (scaled) sole
+REST.hips[1] = -REST.thighL[1] - REST.shinL[1] - REST.footL[1] + 0.05 * BONE_SCALE.footL[1];
+/** Hip motion in the clips was tuned for chibi legs. */
+const HIP_K = REST.hips[1] / BASE.hips[1];
+
+/** Head sphere centre relative to the head bone, and its radius (chibi units, before BONE_SCALE.head). */
 export const HEAD_Y = 0.21;
 export const HEAD_R = 0.255;
 
@@ -458,7 +521,13 @@ export function chibiClips(): Record<ClipName, ClipSpec> {
   const out = {} as Record<ClipName, ClipSpec>;
   for (const name of Object.keys(POSES) as ClipName[]) {
     const [loop, dur] = LOOPING[name];
-    const clip: AnimationClip = makeClip(name, dur, POSES[name], bones, rest, loop ? 24 : 20, loop);
+    const pose = POSES[name];
+    const scaled = (p: number): PoseFrame => {
+      const f = pose(p);
+      const h = f.pos?.hips;
+      return h ? { ...f, pos: { ...f.pos, hips: [h[0] * HIP_K, h[1] * HIP_K, h[2] * HIP_K] } } : f;
+    };
+    const clip: AnimationClip = makeClip(name, dur, scaled, bones, rest, loop ? 24 : 20, loop);
     out[name] = { clip, loop };
   }
   return (cache = out);
