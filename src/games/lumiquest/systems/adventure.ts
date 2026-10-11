@@ -216,8 +216,8 @@ export class Adventure {
       root.position.copy(at);
       const star = new Mesh(this.noteGeo, this.noteMat);
       root.add(star);
-      const beam = new Mesh(new CylinderGeometry(0.25, 0.25, 40, 8, 1, true), this.beamMat);
-      beam.position.y = 20;
+      const beam = new Mesh(new CylinderGeometry(0.12, 0.3, 16, 8, 1, true), this.beamMat);
+      beam.position.y = 8;
       root.add(beam);
       this.group.add(root);
       this.notes.push({ i, at, root, beam });
@@ -237,7 +237,7 @@ export class Adventure {
       n.root.children[0].position.y = Math.sin(this.time * 2 + n.i) * 0.15;
       const d = Math.hypot(n.at.x - p.x, n.at.z - p.z);
       // beams fade in the distance and vanish up close
-      n.beam.visible = d > 6 && d < 140;
+      n.beam.visible = d > 6 && d < 75;
       if (Math.abs(n.at.y - (p.y + 0.9)) < 1.8 && d < 1.4) this.collect(n);
     }
   }

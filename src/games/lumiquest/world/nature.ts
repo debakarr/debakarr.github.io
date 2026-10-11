@@ -46,7 +46,7 @@ export const clearings: Clearing[] = [];
 
 type Kind = 'oak' | 'oak2' | 'pine' | 'birch' | 'blossom' | 'elder' | 'bush' | 'berry' | 'fern' | 'rock' | 'rock2' | 'boulder' | 'mushroom' | 'glowshroom' | 'log' | 'stump' | 'reed';
 
-interface Kit {
+export interface Kit {
   hi: BufferGeometry;
   lo: BufferGeometry;
   mat: Material;
@@ -87,7 +87,7 @@ function solidUV(g: BufferGeometry): BufferGeometry {
  */
 function canopy(seed: number, blobs: [number, number, number, number][], bottom: string, top: string, detail: number): BufferGeometry {
   const rng = new Rng(seed);
-  const density = detail >= 2 ? 1 : detail >= 1 ? 0.5 : 0.3;
+  const density = detail >= 2 ? 1 : detail >= 1 ? 0.4 : 0.25;
   const P: number[] = [];
   const N: number[] = [];
   const UV: number[] = [];
@@ -100,7 +100,7 @@ function canopy(seed: number, blobs: [number, number, number, number][], bottom:
   const parts: BufferGeometry[] = [];
   for (const [bx, by, bz, r] of blobs) {
     // the core keeps the canopy from looking see-through
-    const core = solidUV(prep(lumpy(new IcosahedronGeometry(r * 0.55, 2), r * 0.08, 1.1 / r, seed)));
+    const core = solidUV(prep(lumpy(new IcosahedronGeometry(r * 0.55, detail >= 2 ? 1 : 0), r * 0.08, 1.1 / r, seed)));
     // smooth rounded shading on the core: normals point out from the centre
     const cp = core.attributes.position;
     const cn = core.attributes.normal;
@@ -297,12 +297,14 @@ interface Placement {
 
 export class Nature {
   readonly group = new Group();
-  private kits = buildKits();
+  readonly kits = buildKits();
   private layers: { kind: Kind; list: Placement[]; matrices: Float32Array; hi: InstancedMesh; lo: InstancedMesh; far: number }[] = [];
   private lastRefill = new Vector3(1e9, 0, 1e9);
   private lastDraw = 0;
   readonly placements: Placement[] = [];
   private grass: GrassField;
+  /** Hands the old streamed grass over to another system (the new look draws its own). */
+  grassEnabled = true;
 
   constructor(private terrain: Terrain, private physics: CollisionWorld) {
     this.scatter();
@@ -515,7 +517,8 @@ export class Nature {
       this.lastDraw = drawDistance;
       this.refill(cam, drawDistance);
     }
-    this.grass.update(cam, grassRange, grassDensity);
+    this.grass.group.visible = this.grassEnabled;
+    if (this.grassEnabled) this.grass.update(cam, grassRange, grassDensity);
   }
 
   dispose(): void {
@@ -543,7 +546,7 @@ function tuftGeometry(): BufferGeometry {
   // fine blades, deep green at the root and sun-bleached gold at the tip
   const base = new Color('#2c5a20');
   const tip = new Color('#c9d06a');
-  const blades = 8;
+  const blades = 6;
   for (let b = 0; b < blades; b++) {
     const a = (b / blades) * Math.PI + (b % 2) * 0.3;
     const dx = Math.cos(a);
@@ -684,7 +687,7 @@ class GrassField {
     const grass: [number, number, number, number, number][] = [];
     const flowers: [number, number, number, number, number, number][] = [];
     const meadowAt = LOCATION_BY_ID.meadow.at;
-    const tries = Math.floor(area * 4.6 * this.density);
+    const tries = Math.floor(area * 4.0 * this.density);
     for (let k = 0; k < tries; k++) {
       const x = x0 + rng.next() * GCHUNK;
       const z = z0 + rng.next() * GCHUNK;

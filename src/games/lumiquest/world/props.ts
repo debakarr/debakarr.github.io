@@ -59,9 +59,11 @@ export class Props {
   /** Beacon pieces animated when it is restored. */
   beacon!: { crystal: Mesh; beam: Mesh; light: PointLight; ring: Mesh; top: Vector3 };
   caveLights: PointLight[] = [];
-  private mats: Record<string, Material> = {};
+  mats: Record<string, Material> = {};
   /** Far mountains skip scene fog and get a lighter aerial haze instead. */
   backdropMat!: MeshStandardMaterial;
+  /** The castle on the far ridge (part of the old backdrop). */
+  farCastle: Group | null = null;
 
   constructor(private terrain: Terrain, private physics: CollisionWorld) {
     this.materials();
@@ -869,6 +871,7 @@ export class Props {
     const keep = new Mesh(new BoxGeometry(18, 16, 14), cm);
     keep.position.set(0, 8, 2);
     castle.add(keep);
+    this.farCastle = castle;
     castle.position.set(250, 95, -330);
     castle.scale.setScalar(1.3);
     this.group.add(castle);
@@ -893,13 +896,16 @@ export class Props {
   }
 
   private hazed: MeshStandardMaterial[] = [];
+  /** How far the distant backdrop melts into the haze (glow from the haze colour, and its own shade). */
+  hazeGlow = 0.42;
+  hazeShade = 0.62;
 
   /** Night factor 0..1 drives windows, lanterns and lamps. */
   update(time: number, night: number, cave: number, haze?: Color): void {
     if (haze) {
       for (const m of [this.backdropMat, ...this.hazed]) {
-        m.emissive.copy(haze).multiplyScalar(0.42);
-        m.color.setScalar(0.62);
+        m.emissive.copy(haze).multiplyScalar(this.hazeGlow);
+        m.color.setScalar(this.hazeShade);
       }
     }
     for (const n of this.nightGlow) n.mat.emissiveIntensity = n.day + (n.night - n.day) * night;

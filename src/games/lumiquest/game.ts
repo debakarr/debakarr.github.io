@@ -468,7 +468,9 @@ export class Game implements InteractHost, DialogueHost {
     this.rig.update(dt, this.player.pos, this.player.eyeHeight, this.world.physics);
     this.player.updateHand(this.rig.camera, dt, this.rig.mode === 'first' && !this.cinematic, Math.min(1, Math.hypot(this.player.vel.x, this.player.vel.z) / 4));
     // clock and weather
-    if (!this.paused && this.phase === 'play' && !this.modal && this.settings.dayMinutes > 0) s.clock += (simDt * 24) / (this.settings.dayMinutes * 60);
+    // the new look is a fixed golden hour for now (its sky is a photograph)
+    if (this.world.next) s.clock = Math.floor(s.clock / 24) * 24 + 17.5;
+    else if (!this.paused && this.phase === 'play' && !this.modal && this.settings.dayMinutes > 0) s.clock += (simDt * 24) / (this.settings.dayMinutes * 60);
     if (s.clock >= s.weather.until) this.rollWeather();
     s.playSeconds += simDt;
     const hour = hourOfDay(s);
