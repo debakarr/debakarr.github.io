@@ -52,6 +52,8 @@ export class Creature {
   alert = 0;
   companion = false;
   dismissed = false;
+  /** Inside a catch orb: no thinking, no model on screen. */
+  held = false;
   bondUid: string | null = null;
   visible = false;
   private speed = 0;
@@ -172,6 +174,7 @@ export class Creature {
 
   /** Main AI step. Returns true when it moved. */
   update(ctx: AiContext): void {
+    if (this.held) return;
     const dt = ctx.dt;
     this.feedCooldown = Math.max(0, this.feedCooldown - dt);
     this.resonateCooldown = Math.max(0, this.resonateCooldown - dt);
@@ -420,6 +423,11 @@ export class Creature {
     }
   }
 
+  /** Current ground speed (m/s), for leading a throw. */
+  get moveSpeed(): number {
+    return this.speed;
+  }
+
   get faded(): boolean {
     return this.fade <= 0.01;
   }
@@ -458,7 +466,16 @@ export class Creature {
     }
   }
 
-  /** Points the creature at something (used when you feed or observe it). */
+  /** Broke out of an orb: wide awake and frightened (brave ones stand their ground). */
+  startle(): void {
+    this.fear = 88;
+    this.alert = 1;
+    this.trust = Math.max(0, this.trust - 20);
+    this.setState('react', 0.4);
+    this.setMood('alarm', 2);
+  }
+
+  /** Points the creature at something. */
   face(p: Vector3): void {
     this.yaw = Math.atan2(p.x - this.pos.x, p.z - this.pos.z);
     if (!this.companion) {

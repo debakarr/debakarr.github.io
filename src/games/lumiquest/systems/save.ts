@@ -4,10 +4,10 @@
 // bad write never silently destroys progress.
 
 import { ACCESSORIES, FACES, HAIRS, OUTFITS, PRESETS, presetAppearance, type Appearance } from '../data/characters';
-import { ITEM_BY_ID } from '../data/items';
-import { LOCATION_BY_ID, PRISMS, PLAYER_START } from '../data/world';
+import { LOCATION_BY_ID, PLAYER_START } from '../data/world';
 import { SPECIES, SPECIES_BY_ID, type SpeciesId } from '../data/species';
-import { SAVE_VERSION, newState, type GameState } from './state';
+import { CAST_BY_ID } from '../anime/cast';
+import { SAVE_VERSION, STARTING_ORBS, newState, type GameState } from './state';
 
 const KEY = 'lumiquest.save.v1';
 const BACKUP = 'lumiquest.save.corrupt';
@@ -78,11 +78,15 @@ const str = (v: unknown, d: string, max = 40): string => (typeof v === 'string' 
 const color = (v: unknown, d: string): string => (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v) ? v : d);
 
 function validAppearance(v: unknown): Appearance {
-  const base = presetAppearance(isObj(v) && typeof v.preset === 'string' ? v.preset : PRESETS[0].id);
+  // the preset is a cast member's id (or, in older saves, one of the four code-built presets)
+  const want = isObj(v) && typeof v.preset === 'string' ? v.preset : PRESETS[0].id;
+  const preset = CAST_BY_ID[want] || PRESETS.some((p) => p.id === want) ? want : PRESETS[0].id;
+  const base = presetAppearance(PRESETS.some((p) => p.id === preset) ? preset : PRESETS[0].id);
+  base.preset = preset;
   if (!isObj(v)) return base;
   return {
     name: str(v.name, base.name, 16),
-    preset: base.preset,
+    preset,
     skin: color(v.skin, base.skin),
     face: FACES.some((f) => f.id === v.face) ? (v.face as Appearance['face']) : base.face,
     eye: color(v.eye, base.eye),
@@ -139,19 +143,8 @@ export function validate(raw: unknown, onBad?: (fatal: boolean) => void): LoadRe
   if (isObj(raw.weather) && ['clear', 'cloudy', 'rain', 'mist'].includes(raw.weather.kind as string)) {
     st.weather = { kind: raw.weather.kind as GameState['weather']['kind'], until: num(raw.weather.until, st.clock + 4) };
   }
-  st.lumens = Math.floor(num(raw.lumens, 20, 0, 999999));
-  if (isObj(raw.inventory)) {
-    st.inventory = {};
-    for (const [k, v] of Object.entries(raw.inventory)) {
-      if (!ITEM_BY_ID[k]) {
-        repaired = true;
-        continue;
-      }
-      const n = Math.floor(num(v, 0, 0, 9999));
-      if (n > 0) st.inventory[k] = n;
-    }
-    st.inventory.device = 1;
-  }
+  // version 1 had Lumens instead of orbs: rangers coming back get a starter stock plus a little extra
+  st.orbs = version >= 2 ? Math.floor(num(raw.orbs, STARTING_ORBS, 0, 999)) : STARTING_ORBS + Math.min(20, Math.floor(num(raw.lumens, 0, 0) / 25));
   if (Array.isArray(raw.bonded)) {
     const list = raw.bonded
       .filter(isObj)
@@ -177,12 +170,16 @@ export function validate(raw: unknown, onBad?: (fatal: boolean) => void): LoadRe
   if (isObj(raw.wild)) {
     for (const [k, v] of Object.entries(raw.wild)) {
       if (!isObj(v)) continue;
+      // version 1 bonded wild creatures left for good; now a caught spawn refills the next day
+      const oldBond = version < 2 && v.bonded === true;
       st.wild[k] = {
         trust: num(v.trust, 0, 0, 100),
         observed: v.observed === true,
-        bonded: v.bonded === true,
-        variant: typeof v.variant === 'string' ? v.variant : null,
+        bonded: false,
+        variant: oldBond ? null : typeof v.variant === 'string' ? v.variant : null,
         fedAt: num(v.fedAt, -999),
+        caughtAt: oldBond ? st.clock - 24 : typeof v.caughtAt === 'number' && Number.isFinite(v.caughtAt) ? v.caughtAt : null,
+        gen: Math.floor(num(v.gen, oldBond ? 1 : 0, 0, 9999)),
       };
     }
   }
@@ -193,20 +190,9 @@ export function validate(raw: unknown, onBad?: (fatal: boolean) => void): LoadRe
       st.species[s.id] = { seen: r.seen === true, observed: Math.floor(num(r.observed, 0, 0)), bonded: Math.floor(num(r.bonded, 0, 0)) };
     }
   }
-  if (isObj(raw.quests)) {
-    for (const [k, v] of Object.entries(raw.quests)) {
-      if (!isObj(v)) continue;
-      const status = v.status === 'done' || v.status === 'locked' ? v.status : 'active';
-      st.quests[k] = { status, stage: Math.floor(num(v.stage, 0, 0, 50)) };
-    }
-  }
-  st.tracked = str(raw.tracked, 'beacon', 24);
   if (isObj(raw.done)) {
     st.done = {};
     for (const [k, v] of Object.entries(raw.done)) if (typeof v === 'number' && Number.isFinite(v)) st.done[k] = v;
-  }
-  if (Array.isArray(raw.prisms) && raw.prisms.length === PRISMS.length) {
-    st.prisms = raw.prisms.map((p) => Math.floor(num(p, 0, 0, 7)));
   }
   if (Array.isArray(raw.discovered)) {
     st.discovered = raw.discovered.filter((d): d is string => typeof d === 'string' && !!LOCATION_BY_ID[d]);
@@ -225,20 +211,19 @@ export function validate(raw: unknown, onBad?: (fatal: boolean) => void): LoadRe
 
 export type Quality = 'auto' | 'low' | 'medium' | 'high';
 export type Action =
-  | 'forward' | 'back' | 'left' | 'right' | 'sprint' | 'jump' | 'crouch' | 'interact' | 'observe'
-  | 'view' | 'companion' | 'ability' | 'map' | 'collection' | 'journal' | 'inventory' | 'dodge' | 'pulse';
+  | 'forward' | 'back' | 'left' | 'right' | 'sprint' | 'jump' | 'crouch' | 'interact' | 'throw'
+  | 'view' | 'companion' | 'map' | 'collection' | 'dodge';
 
 export const DEFAULT_BINDINGS: Record<Action, string> = {
   forward: 'KeyW', back: 'KeyS', left: 'KeyA', right: 'KeyD', sprint: 'ShiftLeft', jump: 'Space',
-  crouch: 'ControlLeft', interact: 'KeyE', observe: 'KeyF', view: 'KeyV', companion: 'KeyR', ability: 'KeyQ',
-  map: 'KeyM', collection: 'Tab', journal: 'KeyJ', inventory: 'KeyI', dodge: 'KeyZ', pulse: 'KeyX',
+  crouch: 'ControlLeft', interact: 'KeyE', throw: 'KeyF', view: 'KeyV', companion: 'KeyR',
+  map: 'KeyM', collection: 'Tab', dodge: 'KeyQ',
 };
 
 export const ACTION_LABELS: Record<Action, string> = {
   forward: 'Move forward', back: 'Move back', left: 'Move left', right: 'Move right', sprint: 'Sprint', jump: 'Jump / glide',
-  crouch: 'Crouch / sneak / dive', interact: 'Interact', observe: 'Observe', view: 'Switch camera', companion: 'Call / dismiss companion',
-  ability: 'Companion ability', map: 'World map', collection: 'Creature collection', journal: 'Quest journal', inventory: 'Inventory',
-  dodge: 'Dodge roll', pulse: 'Light pulse (push back gloom)',
+  crouch: 'Crouch / sneak / dive', interact: 'Interact', throw: 'Throw a catch orb (or left-click)', view: 'Switch camera',
+  companion: 'Call / dismiss companion', map: 'World map', collection: 'Creature collection', dodge: 'Dodge roll',
 };
 
 export interface Settings {

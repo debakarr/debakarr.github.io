@@ -2,7 +2,7 @@
 // CC0 (see each model's pixiv help-centre page and the licence field inside
 // every file). Only the chosen character's file is downloaded.
 
-import type { Appearance } from '../data/characters';
+import { presetAppearance, type Appearance } from '../data/characters';
 
 const FILES = import.meta.glob('../assets/vrm/*.vrm', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
 
@@ -35,6 +35,15 @@ const LEGACY: Record<string, string> = { aero: 'fumiriya', luna: 'rubi', kai: 'k
 
 export function castFor(a: Pick<Appearance, 'preset'>): CastMember {
   return CAST_BY_ID[a.preset] ?? CAST_BY_ID[LEGACY[a.preset] ?? ''] ?? CAST[0];
+}
+
+/** A fresh appearance for a cast member (the legacy look fields are kept for old saves' sake). */
+export function castAppearance(id: string, name?: string): Appearance {
+  const a = presetAppearance('aero');
+  const m = CAST_BY_ID[id] ?? CAST[0];
+  a.preset = m.id;
+  a.name = name ?? m.name;
+  return a;
 }
 
 export function castUrl(m: CastMember): string {

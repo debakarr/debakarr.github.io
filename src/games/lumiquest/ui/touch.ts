@@ -97,10 +97,8 @@ export class TouchControls {
     };
     btns.append(
       make('jump', 'jump', 'Jump', 'lq-tbtn-big', true),
-      make('interact', 'hand', 'Use', 'lq-tbtn-big lq-tbtn-gold'),
-      make('observe', 'eye', 'Observe'),
-      make('ability', 'spark', 'Skill'),
-      make('pulse', 'light', 'Pulse'),
+      make('throw', 'spark', 'Throw', 'lq-tbtn-big lq-tbtn-gold'),
+      make('interact', 'hand', 'Use'),
       make('dodge', 'air', 'Dodge'),
       toggle('sprint', 'run', 'Run'),
       toggle('crouch', 'crouch', 'Sneak'),

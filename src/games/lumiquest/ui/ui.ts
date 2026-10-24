@@ -1,18 +1,15 @@
-// The UI: overlay layers above the canvas, the in-world HUD, toasts and
-// banners, and the panel stack. Screens (menus, creation), panels (map,
-// collection, inventory, journal, shop, settings) and dialogs (dialogue,
-// resonance, notes) live in their own modules and render into these layers.
+// The UI: overlay layers above the canvas, the in-world HUD (crosshair with
+// the catch-chance ring, the creature in your sights, orbs, clock,
+// companion), toasts and banners, and the panel stack. Screens (menus,
+// creation), panels (map, collection, settings) and dialogs (notes, catches)
+// live in their own modules and render into these layers.
 
-import { ITEM_BY_ID } from '../data/items';
-import { ABILITIES, ELEMENT_COLOR, ELEMENT_NAME, SPECIES_BY_ID, variantName } from '../data/species';
+import { ELEMENT_COLOR, ELEMENT_NAME, SPECIES_BY_ID, variantName } from '../data/species';
 import { LOCATIONS } from '../data/world';
-import type { Creature } from '../entities/creature';
 import type { Game } from '../game';
 import { keyLabel } from '../engine/input';
-import { RESONATE_TRUST, bestFood, canResonate, preference } from '../systems/bonding';
-import { QUEST_BY_ID } from '../systems/quests';
+import type { Action } from '../systems/save';
 import { clockLabel, day, hourOfDay } from '../systems/state';
-import type { Tree } from '../data/dialogue';
 import { el, h, html, portrait } from './kit';
 import { icon } from './icons';
 import { MapView } from './map';
@@ -58,10 +55,10 @@ export class UI {
     if (!this.loadingEl) {
       this.loadingEl = html('lq-loading', `
         <div class="lq-loading-inner">
-          <div class="lq-logo"><span class="lq-logo-main">LumiQuest</span><span class="lq-logo-sub">Explore • Befriend • Discover</span></div>
+          <div class="lq-logo"><span class="lq-logo-main">LumiQuest</span><span class="lq-logo-sub">Roam • Sneak • Catch</span></div>
           <div class="lq-progress"><div class="lq-progress-fill"></div></div>
           <p class="lq-loading-label"></p>
-          <p class="lq-loading-tip">Tip: crouch and move slowly — shy creatures trust a quiet approach.</p>
+          <p class="lq-loading-tip">Tip: creatures that haven't noticed you, or are asleep, are far easier to catch. Crouch and come from behind.</p>
         </div>`);
       this.root.append(this.loadingEl);
     }
@@ -107,10 +104,6 @@ export class UI {
 
   charSelect(): void {
     screens.charSelect(this);
-  }
-
-  customize(): void {
-    screens.customize(this);
   }
 
   starter(): void {
@@ -160,12 +153,10 @@ export class UI {
   private buildHud(): void {
     const g = this.game;
     this.hudEl.replaceChildren();
-    const quest = html('lq-hud-quest', `<div class="lq-hud-quest-head">${icon('quest')}<span class="lq-hud-quest-title"></span></div><div class="lq-hud-quest-obj"></div><div class="lq-hud-quest-dist"></div>`);
-    quest.addEventListener('click', () => this.openPanel('journal'));
     const compass = html('lq-compass', '<div class="lq-compass-strip"></div><div class="lq-compass-mark"></div><div class="lq-compass-tick"></div>');
     const mini = html('lq-minimap', '<canvas width="168" height="168"></canvas><span class="lq-minimap-n">N</span>');
     mini.addEventListener('click', () => this.openPanel('map'));
-    const clock = html('lq-hud-clock', '<span class="lq-clock-ico"></span><span class="lq-clock-time"></span><span class="lq-clock-day"></span><span class="lq-hud-lumens"></span>');
+    const clock = html('lq-hud-clock', '<span class="lq-clock-ico"></span><span class="lq-clock-time"></span><span class="lq-clock-day"></span><span class="lq-hud-orbs"></span>');
     const comp = html('lq-hud-comp', '');
     comp.addEventListener('click', () => this.openPanel('collection'));
     const prompt = html('lq-prompt', '');
@@ -176,8 +167,6 @@ export class UI {
     const chips: [string, string, string, () => void][] = [
       ['map', 'Map', keyLabel(b.map), () => this.openPanel('map')],
       ['paw', 'Creatures', keyLabel(b.collection), () => this.openPanel('collection')],
-      ['book', 'Journal', keyLabel(b.journal), () => this.openPanel('journal')],
-      ['bag', 'Bag', keyLabel(b.inventory), () => this.openPanel('inventory')],
       ['camera', 'View', keyLabel(b.view), () => g.toggleView()],
       ['pause', 'Menu', 'Esc', () => g.pause()],
     ];
@@ -190,86 +179,60 @@ export class UI {
       });
       hot.append(c);
     }
-    const auto = h('button', { class: 'lq-chip lq-auto', type: 'button', title: 'Automatic mode: an auto-ranger plays the main quest. Move to take over.' });
-    auto.innerHTML = `${icon('spark')}<span class="lq-chip-label">AUTO</span>`;
-    auto.addEventListener('click', (e) => {
-      e.stopPropagation();
-      g.startAuto(!g.auto);
-    });
-    hot.append(auto);
     const banner = el('div', 'lq-banner');
     const water = el('div', 'lq-underwater');
     const fps = el('div', 'lq-fps');
     const save = html('lq-save-ind', icon('check'));
-    const autoLabel = el('div', 'lq-auto-label');
-    this.hudEl.append(water, compass, quest, mini, clock, comp, cross, prompt, creature, hot, banner, fps, save, autoLabel);
-    this.hudParts = { quest, compass, mini, clock, comp, prompt, creature, cross, banner, water, fps, save, auto, autoLabel };
+    this.hudEl.append(water, compass, mini, clock, comp, cross, prompt, creature, hot, banner, fps, save);
+    this.hudParts = { compass, mini, clock, comp, prompt, creature, cross, banner, water, fps, save };
     this.lastPrompt = '';
     this.lastCreaturePanel = '';
   }
 
-  /** Per-frame HUD refresh (cheap parts every frame, heavy parts throttled). */
   hud(dt: number): void {
     const g = this.game;
     const s = g.state;
     const P = this.hudParts;
-    if (!P.quest) return;
+    if (!P.cross) return;
     this.hudEl.classList.toggle('is-cinematic', g.phase === 'intro');
     this.hudEl.classList.toggle('is-first', g.rig.mode === 'first');
     P.water.classList.toggle('is-on', g.world.sky.underwater);
     this.hudEl.classList.toggle('is-cave', g.world.caveFactor > 0.5);
-    // crosshair and observe ring
+    // crosshair: the ring fills to the catch chance of the creature in your sights
     const ring = P.cross.querySelector('circle') as SVGCircleElement;
-    const prog = g.observeProgress;
-    ring.style.strokeDashoffset = `${113 * (1 - prog)}`;
-    P.cross.classList.toggle('is-observing', prog > 0);
-    P.cross.classList.toggle('is-target', !!g.target);
+    const t = g.target;
+    const chance = t?.kind === 'creature' ? t.chance.chance : 0;
+    ring.style.strokeDashoffset = `${113 * (1 - chance)}`;
+    P.cross.classList.toggle('is-observing', chance > 0);
+    P.cross.dataset.tone = t?.kind === 'creature' ? t.chance.tone : '';
+    P.cross.classList.toggle('is-target', !!t);
     this.prompt();
     this.creaturePanel();
     this.hudTick -= dt;
     if (this.hudTick > 0) return;
     this.hudTick = 0.2;
-    // quest tracker
-    const tracked = s.quests[s.tracked]?.status === 'active' ? s.tracked : Object.keys(s.quests).find((k) => s.quests[k].status === 'active');
-    if (tracked) {
-      const q = QUEST_BY_ID[tracked];
-      P.quest.hidden = false;
-      (P.quest.querySelector('.lq-hud-quest-title') as HTMLElement).textContent = q.title;
-      (P.quest.querySelector('.lq-hud-quest-obj') as HTMLElement).textContent = g.quests.objective(tracked);
-      const t = g.quests.target(tracked);
-      const dEl = P.quest.querySelector('.lq-hud-quest-dist') as HTMLElement;
-      if (t) dEl.textContent = `${Math.round(Math.hypot(t[0] - g.player.pos.x, t[1] - g.player.pos.z))} m`;
-      else dEl.textContent = '';
-    } else P.quest.hidden = true;
     // compass
     const yaw = g.rig.yaw;
     const strip = P.compass.querySelector('.lq-compass-strip') as HTMLElement;
     const deg = ((-yaw * 180) / Math.PI + 360) % 360;
     strip.style.backgroundPositionX = `${-deg * 2 + 150}px`;
-    const mark = P.compass.querySelector('.lq-compass-mark') as HTMLElement;
-    const qt = tracked ? g.quests.target(tracked) : null;
-    if (qt) {
-      const ang = Math.atan2(qt[0] - g.player.pos.x, -(qt[1] - g.player.pos.z));
-      let rel = ((ang * 180) / Math.PI - deg + 540) % 360 - 180;
-      rel = Math.max(-80, Math.min(80, rel));
-      mark.style.transform = `translateX(${rel * 2}px)`;
-      mark.hidden = false;
-      mark.innerHTML = icon('quest');
-    } else mark.hidden = true;
-    // clock & weather
+    (P.compass.querySelector('.lq-compass-mark') as HTMLElement).hidden = true;
+    // clock, weather and orbs
     const hr = hourOfDay(s);
     const w = s.weather.kind;
     const wIcon = w === 'rain' ? 'rain' : w === 'mist' ? 'mist' : w === 'cloudy' ? 'cloud' : hr >= 6 && hr < 19.5 ? 'sun' : 'moon';
     (P.clock.querySelector('.lq-clock-ico') as HTMLElement).innerHTML = icon(wIcon);
     (P.clock.querySelector('.lq-clock-time') as HTMLElement).textContent = clockLabel(s.clock);
     (P.clock.querySelector('.lq-clock-day') as HTMLElement).textContent = `Day ${day(s)}`;
-    (P.clock.querySelector('.lq-hud-lumens') as HTMLElement).innerHTML = `${icon('lumens')}${s.lumens}`;
+    const orbs = P.clock.querySelector('.lq-hud-orbs') as HTMLElement;
+    orbs.innerHTML = `<i class="lq-orb-ico"></i>${s.orbs}`;
+    orbs.classList.toggle('is-low', s.orbs <= 2);
+    orbs.title = 'Lumi orbs';
     // companion card
     const b = s.bonded.find((x) => x.uid === s.active);
     const out = !!g.creatures.companion && !g.creatures.companion.dismissed;
     if (b) {
       const def = SPECIES_BY_ID[b.species];
-      const ab = ABILITIES[def.ability];
       const key = `${b.uid}|${out}|${Math.round(b.friendship)}|${b.name}`;
       if (P.comp.dataset.key !== key) {
         P.comp.dataset.key = key;
@@ -277,7 +240,6 @@ export class UI {
           <img class="lq-comp-portrait" alt="" src="${portrait(g.host.renderer, b.species, b.variant, 96)}">
           <div class="lq-comp-info">
             <div class="lq-comp-name">${escapeHtml(b.name)} <span class="lq-elem" style="--c:${ELEMENT_COLOR[def.element]}">${icon(def.element)}${ELEMENT_NAME[def.element]}</span></div>
-            <div class="lq-comp-ab">${ab.name} <kbd class="lq-kbd">${keyLabel(g.settings.bindings.ability)}</kbd></div>
             <div class="lq-comp-bar"><span style="width:${b.friendship}%"></span></div>
             <div class="lq-comp-state">${out ? 'Following you' : 'Resting'} • <kbd class="lq-kbd">${keyLabel(g.settings.bindings.companion)}</kbd> ${out ? 'dismiss' : 'call'}</div>
           </div>`;
@@ -289,24 +251,19 @@ export class UI {
     this.map.drawMini(P.mini.querySelector('canvas') as HTMLCanvasElement);
     P.fps.hidden = !g.settings.showFps;
     if (g.settings.showFps) P.fps.textContent = `${Math.round(g.fps)} fps • ${g.tierName} • ${Math.round(g.host.scale * 100)}%`;
-    P.auto.classList.toggle('is-on', !!g.auto);
-    P.autoLabel.hidden = !g.auto;
-    if (g.auto) P.autoLabel.textContent = `Auto-ranger: ${g.auto.label || 'thinking'} — move to take over`;
   }
 
   private prompt(): void {
     const g = this.game;
     const P = this.hudParts;
-    const t = g.target;
+    const u = g.useTarget;
     const kb = g.settings.bindings;
     let markup = '';
-    if (t?.kind === 'interact') {
-      const p = g.interact.prompt(t.entry);
+    if (u) {
+      const p = g.interact.prompt(u);
       markup = p.blocked
         ? `<span class="lq-prompt-label">${escapeHtml(p.label)}</span><span class="lq-prompt-blocked">${escapeHtml(p.blocked)}</span>`
         : `<kbd class="lq-kbd">${keyLabel(kb.interact)}</kbd><span class="lq-prompt-verb">${p.verb}</span><span class="lq-prompt-label">${escapeHtml(p.label)}</span>`;
-    } else if (t?.kind === 'npc') {
-      markup = `<kbd class="lq-kbd">${keyLabel(kb.interact)}</kbd><span class="lq-prompt-verb">Talk</span><span class="lq-prompt-label">${t.npc.def.name}</span>`;
     }
     if (markup !== this.lastPrompt) {
       this.lastPrompt = markup;
@@ -328,34 +285,22 @@ export class UI {
     }
     const c = t.creature;
     const def = c.def;
-    const kb = g.settings.bindings;
-    const known = g.state.species[c.species].observed > 0 || c.companion;
-    const name = c.companion ? g.companionName() : known ? variantName(c.species, c.variant) : '???';
-    const trust = Math.round(c.trust);
-    const fear = Math.round(c.fear);
-    const res = canResonate(c);
-    const near = t.dist < 3.6;
-    const food = bestFood(g.state, c);
-    const pref = known && !c.companion ? preference(c, g.conditions(c)).note : '';
-    let action = '';
-    if (c.companion) action = food ? `<div class="lq-act"><kbd class="lq-kbd">${keyLabel(kb.interact)}</kbd> Share ${ITEM_BY_ID[food].name}</div>` : '';
-    else if (res.ok && t.dist < 4.2) action = `<div class="lq-act is-glow"><kbd class="lq-kbd">${keyLabel(kb.interact)}</kbd> Resonate</div>`;
-    else if (near) action = food ? `<div class="lq-act"><kbd class="lq-kbd">${keyLabel(kb.interact)}</kbd> Offer ${ITEM_BY_ID[food].name}</div>` : `<div class="lq-act is-dim">No food to offer</div>`;
-    else action = `<div class="lq-act is-dim">Get closer to offer food</div>`;
-    const key = `${c.id}|${trust}|${fear > 45}|${action}|${known}|${pref}|${c.observed}`;
+    const caught = g.state.species[c.species].bonded;
+    const name = caught > 0 ? variantName(c.species, c.variant) : c.variant ? `${def.name} (rare colour!)` : def.name;
+    const pct = Math.round(t.chance.chance * 100);
+    const orbs = g.state.orbs;
+    const action = orbs > 0
+      ? `<div class="lq-act is-glow"><kbd class="lq-kbd">${keyLabel(g.settings.bindings.throw)}</kbd> Throw a Lumi orb <span class="lq-muted">(${orbs} left)</span></div>`
+      : `<div class="lq-act is-dim">Out of orbs: find glowing blossoms or rest at the campfire</div>`;
+    const key = `${c.id}|${name}|${pct}|${t.chance.note}|${orbs}|${caught}`;
     if (key === this.lastCreaturePanel) return;
     this.lastCreaturePanel = key;
     const color = ELEMENT_COLOR[def.element];
     P.creature.innerHTML = `
       <div class="lq-cp-head"><span class="lq-cp-name">${escapeHtml(name)}</span><span class="lq-elem" style="--c:${color}">${icon(def.element)}${ELEMENT_NAME[def.element]}</span></div>
-      ${c.companion ? '<div class="lq-cp-note">Your companion</div>' : `
-      <div class="lq-cp-trust"><span>Trust</span><div class="lq-cp-meter"><span style="width:${trust}%"></span><i style="left:${RESONATE_TRUST}%"></i></div><b>${trust}</b></div>
-      ${fear > 45 ? '<div class="lq-cp-fear">Frightened — back off and crouch</div>' : pref ? `<div class="lq-cp-note">${pref}</div>` : ''}`}
-      <div class="lq-cp-actions">
-        <div class="lq-act"><kbd class="lq-kbd">${keyLabel(kb.observe)}</kbd> ${c.observed || c.companion ? 'Observe' : 'Observe (new)'}</div>
-        ${action}
-        <div class="lq-act"><kbd class="lq-kbd">${keyLabel(kb.collection)}</kbd> Info</div>
-      </div>`;
+      <div class="lq-cp-trust is-${t.chance.tone}"><span>Catch</span><div class="lq-cp-meter"><span style="width:${pct}%"></span></div><b>${pct}%</b></div>
+      <div class="lq-cp-note">${escapeHtml(t.chance.note)}${caught ? ` • ${caught} caught` : ' • not caught yet'}</div>
+      <div class="lq-cp-actions">${action}</div>`;
     P.creature.classList.add('is-on');
   }
 
@@ -369,14 +314,18 @@ export class UI {
     setTimeout(() => t.remove(), 4200);
   }
 
-  itemToast(item: string, n: number): void {
-    const name = item === 'lumens' ? 'Lumens' : ITEM_BY_ID[item]?.name ?? item;
-    const ic = item === 'lumens' ? 'lumens' : ITEM_BY_ID[item]?.icon ?? 'spark';
-    const t = html('lq-toast lq-toast-item', `${icon(ic)}<span>+${n} ${escapeHtml(name)}</span>`);
+  /** "+n Lumi orbs" */
+  orbToast(n: number): void {
+    const t = html('lq-toast lq-toast-item', `<i class="lq-orb-ico"></i><span>+${n} Lumi orb${n === 1 ? '' : 's'}</span>`);
     this.toasts.append(t);
     while (this.toasts.children.length > 4) this.toasts.firstElementChild?.remove();
     setTimeout(() => t.classList.add('is-out'), 2400);
     setTimeout(() => t.remove(), 3000);
+  }
+
+  /** Label of the key bound to an action. */
+  key(a: Action): string {
+    return keyLabel(this.game.settings.bindings[a]);
   }
 
   banner(title: string, sub: string): void {
@@ -405,22 +354,12 @@ export class UI {
     const g = this.game;
     const b = g.settings.bindings;
     const hint = g.input.touch
-      ? 'Left stick to move • drag to look • buttons to jump, interact and observe'
-      : `${keyLabel(b.forward)}${keyLabel(b.left)}${keyLabel(b.back)}${keyLabel(b.right)} move • Mouse look (click to lock) • ${keyLabel(b.sprint)} sprint • ${keyLabel(b.crouch)}/C sneak • ${keyLabel(b.jump)} jump • ${keyLabel(b.interact)} interact • ${keyLabel(b.observe)} observe • ${keyLabel(b.dodge)} dodge • ${keyLabel(b.pulse)} pulse • ${keyLabel(b.view)} camera`;
+      ? 'Left stick to move • drag to look • Throw to catch • Sneak to get close'
+      : `${keyLabel(b.forward)}${keyLabel(b.left)}${keyLabel(b.back)}${keyLabel(b.right)} move • Mouse look (click to lock) • ${keyLabel(b.throw)} or click: throw a Lumi orb • ${keyLabel(b.crouch)}/C sneak • ${keyLabel(b.sprint)} sprint • ${keyLabel(b.jump)} jump • ${keyLabel(b.interact)} use • ${keyLabel(b.dodge)} dodge • ${keyLabel(b.collection)} creatures • ${keyLabel(b.view)} camera`;
     const e = html('lq-controls-hint', escapeHtml(hint));
     this.hudEl.append(e);
     setTimeout(() => e.classList.add('is-out'), 9000);
     setTimeout(() => e.remove(), 10000);
-  }
-
-  observed(c: Creature, first: boolean, text: string): void {
-    const g = this.game;
-    const card = html('lq-observed', `
-      <img alt="" src="${portrait(g.host.renderer, c.species, c.variant, 96)}">
-      <div><div class="lq-observed-title">${first ? 'New Field Guide entry!' : 'Observed'}</div><div class="lq-observed-text">${escapeHtml(text)}</div></div>`);
-    this.hudEl.append(card);
-    setTimeout(() => card.classList.add('is-out'), 5200);
-    setTimeout(() => card.remove(), 6000);
   }
 
   fade(mid: () => void): void {
@@ -438,16 +377,8 @@ export class UI {
     dialogs.note(this, title, text);
   }
 
-  dialogue(name: string, role: string, tree: Tree, onClose: () => void): void {
-    dialogs.dialogue(this, name, role, tree, onClose);
-  }
-
-  resonance(c: Creature, done: (ok: boolean) => void): void {
-    dialogs.resonance(this, c, done);
-  }
-
-  bonded(uid: string, name: string): void {
-    dialogs.bonded(this, uid, name);
+  caught(uid: string, name: string, first: boolean): void {
+    dialogs.caught(this, uid, name, first);
   }
 
   // --- panel stack -------------------------------------------------------------
@@ -457,7 +388,7 @@ export class UI {
     const wrap = el('div', 'lq-modal');
     wrap.append(node);
     wrap.addEventListener('pointerdown', (e) => {
-      if (e.target === wrap && name !== 'resonance' && name !== 'bonded') this.closeTop();
+      if (e.target === wrap && name !== 'bonded') this.closeTop();
     });
     this.panels.append(wrap);
     this.stack.push({ name, el: wrap, onClose });
@@ -515,7 +446,7 @@ export class UI {
     const already = this.stack.findIndex((s) => s.name === name);
     if (already >= 0) return;
     // panels replace each other rather than stacking (except over pause)
-    if (this.stack.length && this.topName !== 'pause' && ['map', 'collection', 'journal', 'inventory', 'shop', 'rest'].includes(name)) {
+    if (this.stack.length && this.topName !== 'pause' && ['map', 'collection', 'rest'].includes(name)) {
       const top = this.stack.pop()!;
       top.el.remove();
     }

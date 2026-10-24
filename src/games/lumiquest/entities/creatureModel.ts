@@ -20,6 +20,8 @@ import { paletteFor, SPECIES_BY_ID, type Palette, type SpeciesDef, type SpeciesI
 import { Animator, bakeSkin, cos, makeClip, restOffsets, sin, skinMeshes, type ClipSpec, type PoseFrame, type Rot, type SkinnedBatch } from '../engine/animation';
 import { capsule, cone, ellipsoid, lumpy, prep, teardrop, torus, xf, cylinder } from '../engine/geometry';
 import { eyeTexture } from '../engine/textures';
+import { buildAnimeCreature } from '../anime/creature/build';
+import { ANIME_SPECIES, animePalette } from '../anime/creature/designs';
 
 type MatKey = 'base' | 'glow' | 'fin' | 'eye' | 'gloss';
 
@@ -400,6 +402,13 @@ const geoCache = new Map<string, { rig: Rig; order: string[]; offsets: Record<st
 
 export function buildCreature(species: SpeciesId, variant: string | null = null, castShadow = true): CreatureModel {
   const def = SPECIES_BY_ID[species];
+  // sculpted anime designs replace the assembled ones species by species
+  const anime = ANIME_SPECIES[species];
+  if (anime) {
+    const m = buildAnimeCreature(species, anime.design, animePalette(anime, variant), castShadow);
+    m.root.scale.setScalar(def.size / 0.55);
+    return m;
+  }
   const pal = paletteFor(species, variant);
   const key = `${species}|${variant ?? ''}`;
   let built = geoCache.get(key);

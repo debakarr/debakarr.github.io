@@ -9,6 +9,9 @@ import { hashString, Rng } from '../../shared/rng';
 import { SPECIES_BY_ID, type SpeciesId } from '../data/species';
 import { OUTPOST, SPAWNS, type SpawnDef } from '../data/world';
 import type { GameState, WildMemory } from '../systems/state';
+
+/** In-game hours before a caught creature's spot is filled again. */
+export const RESPAWN_HOURS = 24;
 import type { Terrain } from '../world/terrain';
 import { Creature, type AiContext } from './creature';
 
@@ -21,26 +24,63 @@ export class Creatures {
   constructor(private terrain: Terrain, private state: GameState) {
     for (const s of SPAWNS) {
       const mem = this.memory(s);
-      if (mem.bonded) continue;
-      const c = new Creature(s.id, s.species, mem.variant, [s.at[0], s.at[1]], s.roam, s.habitat, terrain);
-      c.trust = mem.trust;
-      c.observed = mem.observed;
-      this.wild.push(c);
+      if (this.away(mem)) continue;
+      this.spawn(s, mem);
     }
+  }
+
+  /** A caught spawn stays empty for a day. */
+  private away(mem: WildMemory): boolean {
+    return mem.caughtAt !== null && this.state.clock - mem.caughtAt < RESPAWN_HOURS;
+  }
+
+  private spawn(s: SpawnDef, mem: WildMemory): Creature {
+    const c = new Creature(s.id, s.species, mem.variant, [s.at[0], s.at[1]], s.roam, s.habitat, this.terrain);
+    c.trust = mem.trust;
+    c.observed = mem.observed;
+    this.wild.push(c);
+    return c;
+  }
+
+  /** Brings back creatures whose day away is over (call now and then). */
+  refresh(): number {
+    let n = 0;
+    for (const s of SPAWNS) {
+      const mem = this.state.wild[s.id];
+      if (!mem || mem.caughtAt === null || this.away(mem) || this.wild.some((c) => c.id === s.id)) continue;
+      mem.caughtAt = null;
+      mem.variant = this.rollVariant(s, mem.gen);
+      this.spawn(s, mem);
+      n++;
+    }
+    return n;
+  }
+
+  /** Removes a caught creature; its spawn refills after RESPAWN_HOURS. */
+  caught(c: Creature): void {
+    const mem = this.state.wild[c.id];
+    if (mem) {
+      mem.caughtAt = this.state.clock;
+      mem.gen += 1;
+      mem.trust = 0;
+    }
+    const i = this.wild.indexOf(c);
+    if (i >= 0) this.wild.splice(i, 1);
+    c.dispose();
+  }
+
+  private rollVariant(s: SpawnDef, gen: number): string | null {
+    if (s.variant) return s.variant;
+    const def = SPECIES_BY_ID[s.species];
+    const rng = new Rng(hashString(`${s.id}:variant:${this.state.createdAt}:${gen}`));
+    return def.variants.find((x) => x.rarity > 0 && rng.next() < 1 / x.rarity)?.id ?? null;
   }
 
   /** Memory for a spawn, rolling its variant the first time it is met. */
   memory(s: SpawnDef): WildMemory {
     let m = this.state.wild[s.id];
     if (!m) {
-      const def = SPECIES_BY_ID[s.species];
-      let variant: string | null = s.variant ?? null;
-      if (!variant) {
-        const rng = new Rng(hashString(`${s.id}:variant:${this.state.createdAt}`));
-        const v = def.variants.find((x) => x.rarity > 0 && rng.next() < 1 / x.rarity);
-        variant = v?.id ?? null;
-      }
-      m = { trust: 0, observed: false, bonded: false, variant, fedAt: -999 };
+      m = { trust: 0, observed: false, bonded: false, variant: this.rollVariant(s, 0), fedAt: -999, caughtAt: null, gen: 0 };
       this.state.wild[s.id] = m;
     }
     return m;
@@ -83,12 +123,6 @@ export class Creatures {
     this.companion = c;
   }
 
-  /** Removes a wild creature that has just bonded with the player. */
-  removeWild(c: Creature): void {
-    const i = this.wild.indexOf(c);
-    if (i >= 0) this.wild.splice(i, 1);
-    c.dispose();
-  }
 
   update(ctx: AiContext, range: number, playerYaw: number): void {
     this.frame++;

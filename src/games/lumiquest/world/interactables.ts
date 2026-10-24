@@ -1,11 +1,11 @@
-// Everything you can press E on: herbs and crystals, glowing tracks, signs,
-// notes, chests, doors, the ability obstacles (thorns, braziers, cracked
-// boulders, dry basins, hidden glyphs), the rest spot, star fragments and
-// the beacon puzzle (sockets, altar, prisms and the light beam).
+// Everything you can press E on: orb buds (herbs and crystals that ripen
+// into Lumi orbs), creature tracks, signs, notes, rangers' caches and the
+// campfire. (The quest puzzles that used to stand in the vale are gone, and
+// the paths they blocked are open.)
 //
 // Targeting is a short-range cone in front of the player and the camera, so
 // it works the same in first and third person. Each interactable's state
-// lives in GameState.done / flags / prisms, so a save restores the world.
+// lives in GameState.done / flags, so a save restores the world.
 
 import {
   AdditiveBlending,
@@ -13,7 +13,6 @@ import {
   CanvasTexture,
   Color,
   CylinderGeometry,
-  DoubleSide,
   Group,
   Mesh,
   MeshBasicMaterial,
@@ -30,34 +29,24 @@ import {
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import { Rng } from '../../shared/rng';
 import { ITEM_BY_ID } from '../data/items';
-import { ABILITIES, type AbilityId } from '../data/species';
-import { BEACON, INTERACTABLES, PRISMS, ALTAR, type InteractDef } from '../data/world';
+import { INTERACTABLES, type InteractDef } from '../data/world';
 import type { Audio } from '../engine/audio';
-import { cone, cylinder, ellipsoid, gradient, lumpy, merge, prep, rockGeo, teardrop, torus, xf } from '../engine/geometry';
+import { cone, cylinder, ellipsoid, gradient, lumpy, merge, prep, rockGeo, teardrop, xf } from '../engine/geometry';
 import type { CollisionWorld } from '../engine/physics';
 import { canvas, plankTexture, rockTexture, runeTexture, stoneTexture } from '../engine/textures';
 import type { GameState } from '../systems/state';
 import type { Fx } from './fx';
-import { clearings } from './nature';
 import type { Terrain } from './terrain';
 
 export interface InteractHost {
   state: GameState;
   audio: Audio;
   fx: Fx;
-  give(item: string, n: number): void;
-  take(item: string, n: number): boolean;
-  addLumens(n: number): void;
+  /** Adds Lumi orbs (from chests and orb buds), with a little pop of light at `at`. */
+  giveOrbs(n: number, at: Vector3): void;
   toast(msg: string, kind?: 'info' | 'good' | 'quest' | 'warn'): void;
   showNote(title: string, text: string): void;
   openRest(): void;
-  /** Ability of the active companion if it is out, else null. */
-  ability(): AbilityId | null;
-  companionName(): string;
-  companionPerform(at: Vector3): void;
-  checkQuests(): void;
-  beaconRestored(): void;
-  startQuest(id: string): void;
   playerPos: Vector3;
   playerAnim(clip: string): void;
 }
@@ -74,7 +63,8 @@ export interface Entry {
   extra: Record<string, unknown>;
 }
 
-const ABILITY_FOR: Partial<Record<InteractDef['kind'], AbilityId>> = { thorns: 'ember', brazier: 'ember', cracked: 'quake', basin: 'tide' };
+/** Kinds that still exist in the vale (the puzzle pieces left with the quests). */
+const KEPT = new Set<InteractDef['kind']>(['pickup', 'track', 'sign', 'note', 'chest', 'rest']);
 
 function pawTexture(): CanvasTexture {
   const [c, ctx] = canvas(128);
@@ -117,15 +107,9 @@ export class Interactables {
   readonly entries: Entry[] = [];
   private byId = new Map<string, Entry>();
   private mats: Record<string, Material> = {};
-  private beam: Mesh[] = [];
-  private beamMat: MeshBasicMaterial;
   private time = 0;
-  /** Beacon restoration animation 0..1. */
-  beaconGlow = 0;
-  private beaconParts: { crystal: Mesh; beam: Mesh; light: PointLight; ring: Mesh; top: Vector3 } | null = null;
 
   constructor(private terrain: Terrain, private physics: CollisionWorld, private host: InteractHost) {
-    this.beamMat = new MeshBasicMaterial({ color: '#bff4ff', transparent: true, opacity: 0.85, blending: AdditiveBlending, depthWrite: false });
     this.mats = {
       stone: new MeshStandardMaterial({ map: stoneTexture(), roughness: 0.9, color: '#e0dccf' }),
       wood: new MeshStandardMaterial({ map: plankTexture(), roughness: 0.8 }),
@@ -133,17 +117,7 @@ export class Interactables {
       gold: new MeshStandardMaterial({ color: '#f2c35a', metalness: 0.7, roughness: 0.3 }),
       rock: new MeshStandardMaterial({ map: rockTexture(), vertexColors: true, roughness: 0.95 }),
     };
-    for (let i = 0; i < 4; i++) {
-      const m = new Mesh(new CylinderGeometry(0.09, 0.09, 1, 8, 1, true), this.beamMat);
-      m.visible = false;
-      this.group.add(m);
-      this.beam.push(m);
-    }
-    for (const def of INTERACTABLES) this.build(def);
-  }
-
-  attachBeacon(parts: { crystal: Mesh; beam: Mesh; light: PointLight; ring: Mesh; top: Vector3 }): void {
-    this.beaconParts = parts;
+    for (const def of INTERACTABLES) if (KEPT.has(def.kind)) this.build(def);
   }
 
   get(id: string): Entry | undefined {
@@ -213,12 +187,6 @@ export class Interactables {
         if (def.hidden) e.extra.hidden = true;
         break;
       }
-      case 'star': {
-        const s = add(new OctahedronGeometry(0.18, 0), this.glowMat('#ffd75a', 2), 0, 0.8, 0, false);
-        e.extra.spin = s;
-        e.focus.y += 0.3;
-        break;
-      }
       case 'track': {
         const mat = new MeshBasicMaterial({ map: pawTexture(), color: '#9ff4ff', transparent: true, opacity: 0.9, depthWrite: false, blending: AdditiveBlending });
         for (let k = 0; k < 5; k++) {
@@ -271,146 +239,6 @@ export class Interactables {
         add(new BoxGeometry(0.12, 0.16, 0.05), this.mats.gold, 0, 0.45, 0.31, false);
         e.extra.lid = lid;
         this.physics.add({ kind: 'box', x, z, hx: 0.48, hz: 0.33, rot: def.rot ?? 0, y0: y - 1, y1: y + 0.62, id: def.id });
-        break;
-      }
-      case 'thorns': {
-        const rng = new Rng(x * 13 + z);
-        const parts: BufferGeometry[] = [];
-        for (let k = 0; k < 9; k++) {
-          const a = rng.next() * Math.PI * 2;
-          parts.push(xf(torus(0.7 + rng.next() * 0.5, 0.09, 6, 16, Math.PI * 1.3), { r: [rng.float(-1, 1), a, rng.float(-0.6, 0.6)], p: [Math.cos(a) * 0.4, 0.6 + rng.next() * 0.6, Math.sin(a) * 0.4] }));
-          for (let t = 0; t < 4; t++) parts.push(xf(cone(0.05, 0.22, 4), { r: [rng.next() * 3, rng.next() * 3, rng.next() * 3], p: [rng.float(-1, 1), rng.float(0.3, 1.5), rng.float(-1, 1)] }));
-        }
-        const mesh = add(gradient(merge(parts), '#3a2a3a', '#6a5a3a'), this.mats.vc, 0, 0, 0);
-        mesh.scale.set(1.5, 1.2, 1.5);
-        e.extra.mesh = mesh;
-        this.physics.add({ kind: 'cyl', x, z, r: 1.7, y0: y - 1, y1: y + 2, walkable: false, id: def.id });
-        e.range = 3.6;
-        e.focus.y = y + 0.9;
-        clearings.push({ x, z, r: 2.5 });
-        break;
-      }
-      case 'brazier': {
-        add(cylinder(0.3, 0.4, 1.1, 10), this.mats.stone, 0, 0.55, 0);
-        add(new SphereGeometry(0.55, 14, 8, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), this.mats.stone, 0, 1.45, 0).rotation.x = Math.PI;
-        const flame = add(prep(xf(teardrop(0.3, 0.9, 10, 1.6), {}), '#ffb04a'), new MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.9, blending: AdditiveBlending, depthWrite: false }), 0, 1.3, 0, false);
-        flame.visible = false;
-        const light = new PointLight('#ff9a4a', 0, 10, 1.8);
-        light.position.set(0, 1.9, 0);
-        g.add(light);
-        e.extra.flame = flame;
-        e.extra.light = light;
-        this.physics.add({ kind: 'cyl', x, z, r: 0.55, y0: y - 1, y1: y + 1.5, walkable: false });
-        e.focus.y = y + 1.3;
-        e.range = 3;
-        clearings.push({ x, z, r: 1.5 });
-        break;
-      }
-      case 'cracked': {
-        const geo = gradient(xf(rockGeo(Math.round(x * 7 + z), 2), { s: [1.5, 1.35, 1.5] }), '#7a756e', '#c8c0b2', { moss: '#6fae4a', mossAmount: 0.5 });
-        const rock = add(geo, this.mats.rock, 0, 0.9, 0);
-        // glowing cracks: earth creatures can feel them
-        const crack = add(new PlaneGeometry(1.2, 1.4), new MeshBasicMaterial({ map: runeTexture(), color: '#ffb05a', transparent: true, blending: AdditiveBlending, depthWrite: false, side: DoubleSide }), 0, 1.0, 1.25, false);
-        e.extra.mesh = rock;
-        e.extra.crack = crack;
-        this.physics.add({ kind: 'cyl', x, z, r: 1.6, y0: y - 1, y1: y + 2.2, walkable: false, id: def.id });
-        e.range = 3.6;
-        e.focus.y = y + 1;
-        clearings.push({ x, z, r: 2.4 });
-        break;
-      }
-      case 'basin': {
-        add(cylinder(1.1, 1.0, 0.7, 18), this.mats.stone, 0, 0.35, 0);
-        const water = add(new CylinderGeometry(0.92, 0.92, 0.06, 18), new MeshStandardMaterial({ color: '#4fb8e8', roughness: 0.05, transparent: true, opacity: 0.85, emissive: new Color('#1f7fb8'), emissiveIntensity: 0.3 }), 0, 0.12, 0, false);
-        water.visible = false;
-        add(new SphereGeometry(0.22, 10, 8), this.glowMat('#5fd0ff', 0.4), 0, 0.85, 0, false);
-        e.extra.water = water;
-        this.physics.add({ kind: 'cyl', x, z, r: 1.1, y0: y - 1, y1: y + 0.72 });
-        e.range = 3;
-        e.focus.y = y + 0.7;
-        clearings.push({ x, z, r: 2 });
-        break;
-      }
-      case 'glyph': {
-        const mat = new MeshBasicMaterial({ map: runeTexture(), color: '#ffe98a', transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false, side: DoubleSide });
-        const p = add(new PlaneGeometry(2.4, 2.4), mat, 0, 0, 0, false);
-        p.rotation.y = 0.3;
-        e.extra.mat = mat;
-        e.focus.y = y;
-        e.range = 4;
-        break;
-      }
-      case 'door': {
-        const slab = def.id === 'door-lodge'
-          ? add(new RoundedBoxGeometry(1.4, 2.2, 0.12, 2, 0.04), this.mats.wood, 0.7, 1.1, 0)
-          : add(new RoundedBoxGeometry(def.id === 'door-water' ? 2.4 : 2.3, 3.0, 0.4, 2, 0.08), this.mats.stone, 0, 1.5, 0);
-        if (def.id !== 'door-lodge') add(new PlaneGeometry(1.6, 2.0), new MeshBasicMaterial({ map: runeTexture(), color: '#8fe8ff', transparent: true, blending: AdditiveBlending, depthWrite: false }), 0, 1.55, 0.21, false);
-        if (def.id === 'door-lodge') {
-          // hinge on the left edge
-          const hinge = new Group();
-          g.add(hinge);
-          hinge.position.set(-0.7, 0, 0);
-          slab.position.set(0.7, 1.1, 0);
-          hinge.add(slab);
-          e.extra.hinge = hinge;
-        }
-        e.extra.slab = slab;
-        const rot = def.rot ?? 0;
-        this.physics.add({ kind: 'box', x, z, hx: def.id === 'door-lodge' ? 0.75 : 1.2, hz: 0.25, rot, y0: y - 1, y1: y + 3, walkable: false, id: def.id });
-        e.range = 3;
-        e.focus.y = y + 1.2;
-        break;
-      }
-      case 'socket': {
-        const crystals: Mesh[] = [];
-        e.extra.crystals = crystals;
-        for (let k = 0; k < 3; k++) {
-          const a = (k / 3) * Math.PI * 2;
-          add(cylinder(0.22, 0.28, 0.9, 10), this.mats.stone, Math.cos(a) * 0.8, 0.45, Math.sin(a) * 0.8);
-          const c = add(new OctahedronGeometry(0.22, 0), this.glowMat('#8ff0ff', 1.6), Math.cos(a) * 0.8, 1.15, Math.sin(a) * 0.8, false);
-          c.scale.set(0.8, 1.4, 0.8);
-          c.visible = false;
-          crystals.push(c);
-        }
-        e.range = 3;
-        e.focus.y = y + 0.9;
-        this.physics.add({ kind: 'cyl', x, z, r: 1.2, y0: y - 1, y1: y + 0.95 });
-        break;
-      }
-      case 'altar': {
-        add(cylinder(0.9, 1.1, 0.5, 16), this.mats.stone, 0, 0.25, 0);
-        add(cylinder(0.45, 0.6, 1.0, 12), this.mats.stone, 0, 0.9, 0);
-        const ringMat = new MeshStandardMaterial({ color: '#5fd0ff', emissive: new Color('#3fb8ff'), emissiveIntensity: 0.15 });
-        const ring = add(torus(0.42, 0.05, 6, 24), ringMat, 0, 1.45, 0, false);
-        ring.rotation.x = Math.PI / 2;
-        const orb = add(new SphereGeometry(0.22, 16, 12), new MeshStandardMaterial({ color: '#9fb0c8', emissive: new Color('#bff4ff'), emissiveIntensity: 0.05, roughness: 0.2 }), 0, 1.65, 0, false);
-        e.extra.ringMat = ringMat;
-        e.extra.orb = orb;
-        this.physics.add({ kind: 'cyl', x, z, r: 1.0, y0: y - 1, y1: y + 1.4, walkable: false });
-        e.range = 3;
-        e.focus.y = y + 1.4;
-        break;
-      }
-      case 'prism': {
-        add(cylinder(0.55, 0.7, 0.8, 12), this.mats.stone, 0, 0.4, 0);
-        const head = new Group();
-        head.position.set(0, 1.35, 0);
-        g.add(head);
-        const crystal = new Mesh(new OctahedronGeometry(0.45, 0), new MeshStandardMaterial({ color: '#cfefff', emissive: new Color('#7fd8ff'), emissiveIntensity: 0.4, roughness: 0.1, metalness: 0.1, flatShading: true, transparent: true, opacity: 0.9 }));
-        crystal.scale.set(0.7, 1.1, 0.7);
-        head.add(crystal);
-        // arrow showing the facing
-        const arrow = new Mesh(cone(0.14, 0.45, 4), this.mats.gold);
-        arrow.rotation.x = -Math.PI / 2;
-        arrow.position.set(0, -0.35, -0.55);
-        head.add(arrow);
-        const frame = new Mesh(torus(0.6, 0.04, 6, 24), this.mats.gold);
-        head.add(frame);
-        e.extra.head = head;
-        e.extra.crystal = crystal;
-        this.physics.add({ kind: 'cyl', x, z, r: 0.7, y0: y - 1, y1: y + 1.8, walkable: false });
-        e.range = 3;
-        e.focus.y = y + 1.3;
         break;
       }
       case 'rest': {
@@ -469,13 +297,11 @@ export class Interactables {
 
   /** Applies saved state to visuals and colliders (after load or new game). */
   sync(): void {
-    const s = this.host.state;
     for (const e of this.entries) {
       const d = e.def;
       const done = this.done(d.id);
       switch (d.kind) {
         case 'pickup':
-        case 'star':
         case 'note':
           e.visible = !done || d.kind === 'note';
           if (d.kind === 'note') e.visible = true;
@@ -487,45 +313,8 @@ export class Interactables {
         case 'chest':
           (e.extra.lid as Group).rotation.x = done ? -1.9 : 0;
           break;
-        case 'thorns':
-        case 'cracked':
-          e.group.visible = !done;
-          this.physics.setEnabled(d.id, !done);
-          break;
-        case 'brazier':
-          (e.extra.flame as Mesh).visible = done;
-          (e.extra.light as PointLight).intensity = done ? 6 : 0;
-          break;
-        case 'basin':
-          (e.extra.water as Mesh).visible = done;
-          if (done) (e.extra.water as Mesh).position.y = 0.6;
-          break;
-        case 'door': {
-          const open = done;
-          if (e.extra.hinge) (e.extra.hinge as Group).rotation.y = open ? -1.6 : 0;
-          else (e.extra.slab as Mesh).position.y = open ? -1.6 : 1.5;
-          this.physics.setEnabled(d.id, !open);
-          break;
-        }
-        case 'socket':
-          (e.extra.crystals as Mesh[]).forEach((c, i) => (c.visible = (s.flags.crystalsPlaced ?? 0) > i));
-          break;
-        case 'altar':
-          (e.extra.ringMat as MeshStandardMaterial).emissiveIntensity = s.flags.altarLit ? 1.6 : 0.15;
-          ((e.extra.orb as Mesh).material as MeshStandardMaterial).emissiveIntensity = s.flags.altarLit ? 1.6 : 0.05;
-          break;
-        case 'prism': {
-          const i = PRISMS.findIndex((p) => p.id === d.id);
-          (e.extra.head as Group).rotation.y = -s.prisms[i] * (Math.PI / 4);
-          break;
-        }
-        case 'glyph':
-          (e.extra.mat as MeshBasicMaterial).opacity = done ? 0.9 : 0;
-          break;
       }
     }
-    this.beaconGlow = s.flags.beaconLit ? 1 : 0;
-    this.updateBeam();
   }
 
   /** Whether an entry's model should be drawn at all (picked-up herbs are not). */
@@ -536,13 +325,8 @@ export class Interactables {
       case 'pickup':
         if (this.done(d.id)) return false;
         return !e.extra.hidden || !!s.flags[`seen:${d.id}`];
-      case 'star':
-        return !this.done(d.id);
       case 'note':
         return !this.done(d.id) || d.id === 'note-ruins';
-      case 'thorns':
-      case 'cracked':
-        return !this.done(d.id);
       default:
         return true;
     }
@@ -552,10 +336,8 @@ export class Interactables {
   available(e: Entry): boolean {
     const d = e.def;
     const s = this.host.state;
-    if (d.blockedBy && !this.done(d.blockedBy)) return false;
     switch (d.kind) {
       case 'pickup':
-      case 'star':
         if (this.done(d.id)) return false;
         if (e.extra.hidden && !s.flags[`seen:${d.id}`]) return false;
         return true;
@@ -563,23 +345,6 @@ export class Interactables {
         return !this.done(d.id) || d.id === 'note-ruins';
       case 'chest':
         return !this.done(d.id);
-      case 'thorns':
-      case 'cracked':
-        return !this.done(d.id);
-      case 'brazier':
-      case 'basin':
-        return !this.done(d.id);
-      case 'glyph':
-        return (e.extra.mat as MeshBasicMaterial).opacity > 0.3;
-      case 'door':
-        // mechanism doors open from their mechanism, not by hand
-        return d.id === 'door-lodge';
-      case 'socket':
-        return (s.flags.crystalsPlaced ?? 0) < 3;
-      case 'altar':
-        return !s.flags.altarLit;
-      case 'prism':
-        return !s.flags.beaconLit;
       default:
         return true;
     }
@@ -590,7 +355,7 @@ export class Interactables {
     let best: Entry | null = null;
     let bestScore = Infinity;
     for (const e of this.entries) {
-      if (!e.group.visible && e.def.kind !== 'glyph') continue;
+      if (!e.group.visible) continue;
       const dx = e.focus.x - player.x;
       const dz = e.focus.z - player.z;
       const d = Math.hypot(dx, dz);
@@ -611,20 +376,9 @@ export class Interactables {
   /** The prompt shown for a targeted interactable. */
   prompt(e: Entry): { verb: string; label: string; blocked?: string } {
     const d = e.def;
-    const s = this.host.state;
-    const ab = this.host.ability();
-    const name = this.host.companionName();
-    const need = ABILITY_FOR[d.kind];
-    if (need) {
-      const ability = ABILITIES[need];
-      const verbs: Record<AbilityId, string> = { ember: d.kind === 'brazier' ? 'light the brazier' : 'burn the thorns', quake: 'shatter the boulder', tide: 'fill the basin', glide: '', glow: '', forage: '' };
-      if (ab === need) return { verb: 'Ask', label: `${name} to ${verbs[need]}` };
-      return { verb: '', label: d.title ?? '', blocked: `Needs a ${ability.element} companion (${ability.name})` };
-    }
     switch (d.kind) {
       case 'pickup':
-      case 'star':
-        return { verb: 'Pick up', label: ITEM_BY_ID[d.kind === 'star' ? 'starshard' : d.item!].name };
+        return { verb: 'Gather', label: `orb buds (${ITEM_BY_ID[d.item!].name})` };
       case 'track':
         return { verb: 'Examine', label: d.title ?? 'tracks' };
       case 'sign':
@@ -633,22 +387,6 @@ export class Interactables {
         return { verb: 'Read', label: d.title ?? 'note' };
       case 'chest':
         return { verb: 'Open', label: 'chest' };
-      case 'door':
-        return { verb: this.done(d.id) ? 'Close' : 'Open', label: d.title ?? 'door' };
-      case 'glyph':
-        return { verb: 'Read', label: 'the glowing glyphs' };
-      case 'socket': {
-        const have = s.inventory.crystal ?? 0;
-        if (have < 3 - (s.flags.crystalsPlaced ?? 0)) return { verb: '', label: 'Beacon heart sockets', blocked: `Needs 3 luminous crystals (you have ${have})` };
-        return { verb: 'Place', label: 'the luminous crystals' };
-      }
-      case 'altar': {
-        if ((s.flags.crystalsPlaced ?? 0) < 3) return { verb: '', label: 'Resonance altar', blocked: 'The altar is cold. The beacon needs its crystals first.' };
-        if (!ab) return { verb: '', label: 'Resonance altar', blocked: 'Call your companion (R) to channel its power' };
-        return { verb: 'Ask', label: `${name} to awaken the altar` };
-      }
-      case 'prism':
-        return { verb: 'Turn', label: 'the light prism' };
       case 'rest':
         return { verb: 'Rest', label: 'by the campfire' };
       default:
@@ -664,59 +402,13 @@ export class Interactables {
     const mark = () => {
       s.done[d.id] = s.clock;
     };
-    const need = ABILITY_FOR[d.kind];
-    if (need) {
-      if (h.ability() !== need) {
-        h.audio.fail();
-        h.toast(this.prompt(e).blocked ?? 'Nothing happens.', 'warn');
-        return;
-      }
-      h.companionPerform(e.focus);
-      mark();
-      e.anim = 0.001;
-      if (need === 'ember') {
-        h.audio.fire();
-        h.fx.fire(e.focus.clone(), 50, d.kind === 'thorns' ? 1.6 : 0.6);
-        if (d.kind === 'brazier') {
-          (e.extra.flame as Mesh).visible = true;
-          (e.extra.light as PointLight).intensity = 6;
-          h.toast('The brazier roars to life.', 'good');
-          this.checkMechanism(d);
-        } else h.toast(`${h.companionName()} burned away the thorns!`, 'good');
-      } else if (need === 'quake') {
-        h.audio.quake();
-        h.fx.debris(e.pos.clone());
-        h.fx.ring(e.pos.clone().add(new Vector3(0, 0.2, 0)), '#ffcf8a', 5);
-        h.toast(`${h.companionName()} shattered the boulder!`, 'good');
-      } else if (need === 'tide') {
-        h.audio.water();
-        h.fx.splash(e.focus.clone().add(new Vector3(0, 0.4, 0)), 40);
-        (e.extra.water as Mesh).visible = true;
-        h.toast(`${h.companionName()} filled the basin with water.`, 'good');
-        this.checkMechanism(d);
-      }
-      h.checkQuests();
-      return;
-    }
     switch (d.kind) {
       case 'pickup': {
         mark();
-        h.give(d.item!, d.count ?? 1);
+        h.giveOrbs(Math.max(1, Math.min(3, d.count ?? 1)), e.focus.clone());
         h.audio.pickup();
-        h.fx.sparkle(e.focus.clone(), d.item === 'crystal' ? '#8ff0ff' : '#fff6c8', 18);
         e.group.visible = false;
-        h.playerAnim('interact');
-        h.checkQuests();
-        break;
-      }
-      case 'star': {
-        mark();
-        h.give('starshard', 1);
-        h.audio.coin();
-        h.fx.sparkle(e.focus.clone(), '#ffd75a', 30);
-        e.group.visible = false;
-        h.startQuest('stars');
-        h.checkQuests();
+        h.playerAnim('pickup');
         break;
       }
       case 'track':
@@ -728,7 +420,6 @@ export class Interactables {
         h.audio.page();
         h.playerAnim('observe');
         h.showNote(d.title ?? 'Tracks', d.text ?? '');
-        h.checkQuests();
         break;
       case 'sign':
         h.audio.page();
@@ -738,7 +429,6 @@ export class Interactables {
         const item = ITEM_BY_ID[d.item!];
         if (!this.done(d.id)) {
           mark();
-          h.give(d.item!, 1);
           if (d.id !== 'note-ruins') e.group.visible = false;
         }
         h.audio.page();
@@ -749,82 +439,11 @@ export class Interactables {
         mark();
         h.audio.chest();
         e.anim = 0.001;
-        if (d.item) h.give(d.item, d.count ?? 1);
-        if (d.lumens) h.addLumens(d.lumens);
+        // a ranger's cache: a handful of Lumi orbs
+        h.giveOrbs(4 + Math.min(4, Math.round((d.lumens ?? 0) / 20)), e.pos.clone().add(new Vector3(0, 0.8, 0)));
         h.fx.sparkle(e.pos.clone().add(new Vector3(0, 0.8, 0)), '#ffd75a', 26);
         this.physics.setEnabled(d.id, true);
         h.playerAnim('interact');
-        h.checkQuests();
-        break;
-      }
-      case 'door': {
-        if (this.done(d.id)) delete s.done[d.id];
-        else mark();
-        h.audio.door();
-        e.anim = 0.001;
-        this.physics.setEnabled(d.id, !this.done(d.id));
-        h.playerAnim('interact');
-        break;
-      }
-      case 'glyph': {
-        if (!this.done(d.id)) {
-          mark();
-          h.give(d.item!, 1);
-          h.audio.glow();
-          h.fx.sparkle(e.focus.clone(), '#ffe98a', 30, 1.4);
-        }
-        const item = ITEM_BY_ID[d.item!];
-        h.showNote(item.name, item.description);
-        h.checkQuests();
-        break;
-      }
-      case 'socket': {
-        const need3 = 3 - (s.flags.crystalsPlaced ?? 0);
-        if (!h.take('crystal', need3)) {
-          h.audio.fail();
-          h.toast(`You need ${need3} luminous crystals.`, 'warn');
-          return;
-        }
-        s.flags.crystalsPlaced = 3;
-        (e.extra.crystals as Mesh[]).forEach((c) => (c.visible = true));
-        h.audio.glow();
-        h.fx.sparkle(e.focus.clone().add(new Vector3(0, 0.4, 0)), '#8ff0ff', 40, 1.2);
-        h.toast('The crystals hum in their sockets. The altar below the hill stirs.', 'good');
-        h.playerAnim('interact');
-        h.checkQuests();
-        break;
-      }
-      case 'altar': {
-        if ((s.flags.crystalsPlaced ?? 0) < 3 || !h.ability()) {
-          h.audio.fail();
-          h.toast(this.prompt(e).blocked ?? '', 'warn');
-          return;
-        }
-        s.flags.altarLit = 1;
-        h.companionPerform(e.focus);
-        h.audio.glow();
-        h.fx.ring(e.focus.clone(), '#bff4ff', 4);
-        h.fx.sparkle(e.focus.clone(), '#bff4ff', 40, 1.2);
-        (e.extra.ringMat as MeshStandardMaterial).emissiveIntensity = 1.6;
-        ((e.extra.orb as Mesh).material as MeshStandardMaterial).emissiveIntensity = 1.6;
-        h.toast('A beam of light leaps from the altar. Turn the prisms to guide it.', 'good');
-        this.updateBeam();
-        h.checkQuests();
-        break;
-      }
-      case 'prism': {
-        const i = PRISMS.findIndex((p) => p.id === d.id);
-        s.prisms[i] = (s.prisms[i] + 1) % 8;
-        e.anim = 0.001;
-        e.extra.from = (e.extra.head as Group).rotation.y;
-        h.audio.click();
-        h.playerAnim('interact');
-        const solved = this.updateBeam();
-        if (solved && s.flags.altarLit && !s.flags.beaconLit) {
-          s.flags.beaconLit = 1;
-          h.beaconRestored();
-        }
-        h.checkQuests();
         break;
       }
       case 'rest':
@@ -833,79 +452,7 @@ export class Interactables {
     }
   }
 
-  private checkMechanism(d: InteractDef): void {
-    if (!d.opens) return;
-    const parts = this.entries.filter((x) => x.def.opens === d.opens);
-    if (parts.every((x) => this.done(x.def.id))) {
-      const door = this.byId.get(d.opens);
-      if (door && !this.done(door.def.id)) {
-        this.host.state.done[door.def.id] = this.host.state.clock;
-        door.anim = 0.001;
-        this.physics.setEnabled(door.def.id, false);
-        this.host.audio.door();
-        this.host.toast(`The ${door.def.title?.toLowerCase() ?? 'door'} grinds open!`, 'good');
-      }
-    } else if (parts.length > 1) {
-      const left = parts.filter((x) => !this.done(x.def.id)).length;
-      this.host.toast(`${left} more to go…`, 'info');
-    }
-  }
-
-  /** Traces the light beam from the altar; returns true when it reaches the beacon. */
-  updateBeam(): boolean {
-    const s = this.host.state;
-    for (const b of this.beam) b.visible = false;
-    if (!s.flags.altarLit) return false;
-    const pts: Vector3[] = [];
-    const yAt = (p: readonly [number, number]) => this.terrain.height(p[0], p[1]) + 1.55;
-    let pos = new Vector3(ALTAR.at[0], yAt(ALTAR.at), ALTAR.at[1]);
-    pts.push(pos.clone());
-    let dirIdx = 0;
-    const visited = new Set<number>();
-    let solved = false;
-    for (let hop = 0; hop < 4; hop++) {
-      const dir = new Vector3(Math.sin(dirIdx * (Math.PI / 4)), 0, -Math.cos(dirIdx * (Math.PI / 4)));
-      let hit: { kind: 'prism' | 'beacon'; i: number; p: Vector3; d: number } | null = null;
-      const consider = (kind: 'prism' | 'beacon', i: number, at: readonly [number, number], y: number) => {
-        const v = new Vector3(at[0] - pos.x, 0, at[1] - pos.z);
-        const d = v.length();
-        if (d < 0.5 || d > 40) return;
-        if (v.normalize().dot(dir) < 0.998) return;
-        if (!hit || d < hit.d) hit = { kind, i, p: new Vector3(at[0], y, at[1]), d };
-      };
-      PRISMS.forEach((p, i) => {
-        if (!visited.has(i)) consider('prism', i, p.at, yAt(p.at) - 0.2);
-      });
-      consider('beacon', -1, BEACON.at, this.terrain.height(BEACON.at[0], BEACON.at[1]) + 2.2);
-      const h = hit as { kind: 'prism' | 'beacon'; i: number; p: Vector3; d: number } | null;
-      if (!h) {
-        pts.push(pos.clone().addScaledVector(dir, 10));
-        break;
-      }
-      pts.push(h.p.clone());
-      if (h.kind === 'beacon') {
-        solved = true;
-        break;
-      }
-      visited.add(h.i);
-      pos = h.p.clone();
-      dirIdx = s.prisms[h.i];
-    }
-    for (let i = 0; i < pts.length - 1 && i < this.beam.length; i++) {
-      const a = pts[i];
-      const b = pts[i + 1];
-      const m = this.beam[i];
-      const len = a.distanceTo(b);
-      m.position.copy(a).add(b).multiplyScalar(0.5);
-      m.scale.set(1, len, 1);
-      m.lookAt(b);
-      m.rotateX(Math.PI / 2);
-      m.visible = true;
-    }
-    return solved;
-  }
-
-  update(dt: number, player: Vector3, glowCompanion: Vector3 | null, forageCompanion: boolean, night: number): void {
+  update(dt: number, player: Vector3, forageCompanion: boolean, night: number): void {
     this.time += dt;
     const s = this.host.state;
     for (const e of this.entries) {
@@ -917,7 +464,7 @@ export class Interactables {
       }
       const dist = Math.hypot(player.x - e.pos.x, player.z - e.pos.z);
       // small things are not drawn far away
-      const far = dist > (d.kind === 'pickup' || d.kind === 'track' || d.kind === 'star' || d.kind === 'note' ? 60 : 120);
+      const far = dist > (d.kind === 'pickup' || d.kind === 'track' || d.kind === 'note' ? 60 : 120);
       e.group.userData.far = far;
       if (far && e.anim === 0) {
         if (e.group.visible && !e.group.userData.hiddenFar) {
@@ -946,19 +493,11 @@ export class Interactables {
         e.group.visible = (seen || !!s.flags[`seen:${d.id}`]) && !this.done(d.id);
       }
       if (d.kind === 'track' && !this.done(d.id)) (e.extra.mat as MeshBasicMaterial).opacity = 0.55 + 0.35 * Math.sin(this.time * 3);
-      if (d.kind === 'glyph') {
-        const m = e.extra.mat as MeshBasicMaterial;
-        const lit = this.done(d.id) || (!!glowCompanion && glowCompanion.distanceTo(e.pos) < 9);
-        m.opacity += ((lit ? 0.9 : 0) - m.opacity) * Math.min(1, dt * 2);
-      }
-      if ((d.kind === 'brazier' || d.kind === 'rest') && e.extra.flame) {
+      if (d.kind === 'rest' && e.extra.flame) {
         const f = e.extra.flame as Mesh;
-        const lit = d.kind === 'rest' || this.done(d.id);
-        f.visible = lit;
-        if (lit) {
-          f.scale.set(1 + Math.sin(this.time * 13 + e.pos.x) * 0.1, 1 + Math.sin(this.time * 9) * 0.15, 1);
-          (e.extra.light as PointLight).intensity = (d.kind === 'rest' ? 2 + night * 6 : 6) * (0.85 + Math.sin(this.time * 17) * 0.15);
-        }
+        f.visible = true;
+        f.scale.set(1 + Math.sin(this.time * 13 + e.pos.x) * 0.1, 1 + Math.sin(this.time * 9) * 0.15, 1);
+        (e.extra.light as PointLight).intensity = (2 + night * 6) * (0.85 + Math.sin(this.time * 17) * 0.15);
       }
       if (e.anim > 0) {
         e.anim += dt;
@@ -968,59 +507,9 @@ export class Interactables {
           case 'chest':
             (e.extra.lid as Group).rotation.x = -1.9 * ease;
             break;
-          case 'thorns':
-            (e.extra.mesh as Mesh).scale.setScalar(1.5 * (1 - ease) + 0.01);
-            if (k >= 1) {
-              e.group.visible = false;
-              this.physics.setEnabled(d.id, false);
-            }
-            break;
-          case 'cracked':
-            (e.extra.mesh as Mesh).scale.setScalar(Math.max(0.01, 1 - ease * 1.2));
-            (e.extra.mesh as Mesh).position.y = 0.9 - ease * 0.8;
-            if (k >= 0.3) this.physics.setEnabled(d.id, false);
-            if (k >= 1) e.group.visible = false;
-            break;
-          case 'basin':
-            (e.extra.water as Mesh).position.y = 0.12 + 0.48 * ease;
-            break;
-          case 'door': {
-            const open = this.done(d.id);
-            if (e.extra.hinge) (e.extra.hinge as Group).rotation.y = open ? -1.6 * ease : -1.6 * (1 - ease);
-            else (e.extra.slab as Mesh).position.y = 1.5 - 3.1 * ease;
-            break;
-          }
-          case 'prism': {
-            const i = PRISMS.findIndex((p) => p.id === d.id);
-            const to = -s.prisms[i] * (Math.PI / 4);
-            const from = e.extra.from as number;
-            let delta = to - from;
-            while (delta > 0) delta -= Math.PI * 2;
-            while (delta < -Math.PI * 2 + 0.01) delta += Math.PI * 2;
-            if (delta < -Math.PI) delta += Math.PI * 2;
-            (e.extra.head as Group).rotation.y = from + delta * Math.min(1, e.anim / 0.35);
-            if (e.anim > 0.35) e.anim = 0;
-            break;
-          }
         }
-        if (k >= 1 && d.kind !== 'prism') e.anim = 0;
+        if (k >= 1) e.anim = 0;
       }
     }
-    // beacon light
-    const bp = this.beaconParts;
-    if (bp) {
-      const target = s.flags.beaconLit ? 1 : 0;
-      this.beaconGlow += (target - this.beaconGlow) * Math.min(1, dt * 0.6);
-      const g = this.beaconGlow;
-      (bp.crystal.material as MeshStandardMaterial).emissiveIntensity = g * (2.2 + Math.sin(this.time * 2) * 0.3);
-      (bp.crystal.material as MeshStandardMaterial).color.setRGB(0.5 + 0.5 * g, 0.55 + 0.45 * g, 0.66 + 0.34 * g);
-      bp.crystal.rotation.y += dt * (0.2 + g);
-      (bp.beam.material as MeshBasicMaterial).opacity = g * (0.16 + 0.12 * night);
-      (bp.ring.material as MeshBasicMaterial).opacity = g * 0.6;
-      bp.ring.rotation.z += dt * 0.5;
-      bp.light.intensity = g * (30 + night * 60);
-    }
-    // beam shimmer
-    this.beamMat.opacity = 0.65 + Math.sin(this.time * 6) * 0.2;
   }
 }

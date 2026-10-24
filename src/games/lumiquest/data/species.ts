@@ -100,16 +100,16 @@ export const SPECIES: SpeciesDef[] = [
   },
   {
     id: 'aquoray',
-    name: 'Aquoray',
+    name: 'Puddlit',
     element: 'water',
     ability: 'tide',
     habitat: ['river'],
-    personality: 'Calm and friendly. Swims anywhere.',
-    blurb: 'A cheerful river dweller with translucent fins that ripple like light on water.',
-    lore: 'Aquoray hum to one another underwater. Rangers say a river with Aquoray in it never floods the same field twice.',
+    personality: 'Bubbly and friendly. Never far from water.',
+    blurb: 'A droplet of river water that wandered off and decided to stay round. Its curled tip twitches when it is curious.',
+    lore: 'Puddlits gather where streams run clear. If you hear soft plinks at dusk, a Puddlit is practising its hops on the bank.',
     likes: 'kelp',
-    palette: { body: '#3fa8ff', belly: '#d8f6ff', accent: '#8fe8ff', glow: '#6ff0ff', eye: '#103a6a' },
-    variants: [{ id: 'coral', name: 'Coral Aquoray', palette: { body: '#ff7fa8', accent: '#ffd0e0', glow: '#ffb0d0', belly: '#fff0f5' }, rarity: 14 }],
+    palette: { body: '#62c0ff', belly: '#dff6ff', accent: '#4a8cff', glow: '#9ff0ff', eye: '#14407a' },
+    variants: [{ id: 'coral', name: 'Coral Puddlit', palette: { body: '#ff8fb4', accent: '#ff6a96', glow: '#ffc0d8', belly: '#fff0f5' }, rarity: 14 }],
     size: 0.55,
     speed: { walk: 1.4, run: 5.0 },
     awareness: 12,
@@ -118,20 +118,20 @@ export const SPECIES: SpeciesDef[] = [
     threat: 'flee',
     gait: 'swim',
     active: 'any',
-    tip: 'Trusts you more when it is in or near water. Offer River Kelp.',
+    tip: 'Bobs about in the river. Wade in quietly and throw from behind.',
   },
   {
     id: 'terrabun',
-    name: 'Terrabun',
+    name: 'Mossbun',
     element: 'earth',
     ability: 'quake',
     habitat: ['meadow', 'forest'],
-    personality: 'Steady and loyal. Great for exploring.',
-    blurb: 'A sturdy bun with mossy ears and little crystals growing along its back.',
-    lore: 'The crystals on a Terrabun grow one facet each year. Elders with full crowns are said to remember the beacon being built.',
+    personality: 'Gentle and sleepy. Naps in sunny patches.',
+    blurb: 'A round meadow bunny with moss-tipped ears and a little sprout that perks up in the sun.',
+    lore: 'A Mossbun’s sprout leans toward the sun all day. Rangers use them as compasses, as long as the Mossbun is awake.',
     likes: 'crunchroot',
-    palette: { body: '#8ccf5a', belly: '#fff6dc', accent: '#4e9a3a', glow: '#9ff2ff', eye: '#2e2414' },
-    variants: [{ id: 'elder', name: 'Elder Terrabun', palette: { body: '#c9b48a', accent: '#7a9a52', glow: '#e2a8ff' }, rarity: 14 }],
+    palette: { body: '#f6efdf', belly: '#ffffff', accent: '#6fc04a', glow: '#9ff2ff', eye: '#5a3a22' },
+    variants: [{ id: 'elder', name: 'Elder Mossbun', palette: { body: '#d9c39a', accent: '#8aa05a', glow: '#e2a8ff' }, rarity: 14 }],
     size: 0.6,
     speed: { walk: 1.3, run: 5.4 },
     awareness: 10,
@@ -140,7 +140,7 @@ export const SPECIES: SpeciesDef[] = [
     threat: 'flee',
     gait: 'hop',
     active: 'day',
-    tip: 'Slow to trust but never forgets a kindness. Crunchroot is its favourite.',
+    tip: 'Easiest to catch while it naps. Crouch so it does not hear you coming.',
   },
   {
     id: 'zephyra',
@@ -236,6 +236,10 @@ export function paletteFor(species: SpeciesId, variant?: string | null): Palette
   const def = SPECIES_BY_ID[species];
   const v = variant ? def.variants.find((x) => x.id === variant) : undefined;
   return { ...def.palette, ...(v?.palette ?? {}) };
+}
+
+export function speciesName(species: SpeciesId): string {
+  return SPECIES_BY_ID[species].name;
 }
 
 export function variantName(species: SpeciesId, variant?: string | null): string {

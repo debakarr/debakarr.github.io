@@ -4,7 +4,7 @@
 // companion and you.
 
 import { Color } from 'three';
-import { LOCATIONS, NPCS, PLAY_HALF, WATER_LEVEL, type LocationDef } from '../data/world';
+import { LOCATIONS, PLAY_HALF, WATER_LEVEL, type LocationDef } from '../data/world';
 import type { Game } from '../game';
 import { RES, STEP } from '../world/terrain';
 import { WORLD_HALF } from '../data/world';
@@ -128,9 +128,6 @@ export class MapView {
     ctx.drawImage(this.base, 0, 0, W, W);
     const p = g.player.pos;
     ctx.drawImage(this.fog, 0, 0, W, W);
-    // quest target
-    const tracked = g.state.tracked;
-    const qt = g.quests.target(tracked);
     // locations
     for (const l of LOCATIONS) {
       if (!g.state.discovered.includes(l.id)) continue;
@@ -153,34 +150,18 @@ export class MapView {
         ctx.fillText(l.name, x * k, y * k - 12 * k - 4);
       }
     }
-    // villagers
-    for (const n of NPCS) {
-      const [x, y] = this.px(n.at[0], n.at[1]);
-      ctx.fillStyle = '#ffe9b0';
-      ctx.beginPath();
-      ctx.arc(x * k, y * k, 2.5 * k + 1, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Star Notes still waiting: small gold diamonds (a nudge to go and look)
-    for (const n of g.adventure?.openNotes ?? []) {
-      const [x, y] = this.px(n.x, n.z);
-      const r = 3 * k + 1.5;
-      ctx.fillStyle = 'rgba(255, 214, 106, 0.85)';
+    // Lumi blossoms in bloom: where to stock up on orbs
+    g.blossoms.list.forEach((b, i) => {
+      if (!g.blossoms.isReady(i)) return;
+      const [x, y] = this.px(b.pos.x, b.pos.z);
+      ctx.fillStyle = 'rgba(159, 240, 255, 0.95)';
       ctx.strokeStyle = 'rgba(14,22,40,0.8)';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(x * k, y * k - r);
-      ctx.lineTo(x * k + r, y * k);
-      ctx.lineTo(x * k, y * k + r);
-      ctx.lineTo(x * k - r, y * k);
-      ctx.closePath();
+      ctx.arc(x * k, y * k, 2.6 * k + 1.2, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-    }
-    if (qt) {
-      const [x, y] = this.px(qt[0], qt[1]);
-      star(ctx, x * k, y * k, 9 * k + 3, '#f2c35a');
-    }
+    });
     // companion
     const c = g.creatures.companion;
     if (c && !c.dismissed) {
@@ -224,42 +205,23 @@ export class MapView {
       ctx.arc(x, y, 2.4, 0, Math.PI * 2);
       ctx.fill();
     }
-    for (const n of NPCS) {
-      const [x, y] = this.px(n.at[0], n.at[1]);
-      ctx.fillStyle = '#ffe9b0';
+    g.blossoms.list.forEach((b, i) => {
+      if (!g.blossoms.isReady(i)) return;
+      const [x, y] = this.px(b.pos.x, b.pos.z);
+      ctx.fillStyle = 'rgba(159, 240, 255, 0.95)';
       ctx.beginPath();
-      ctx.arc(x, y, 1.3, 0, Math.PI * 2);
+      ctx.arc(x, y, 1.2, 0, Math.PI * 2);
       ctx.fill();
-    }
+    });
     for (const cr of g.creatures.visible()) {
       if (cr.companion) continue;
       const [x, y] = this.px(cr.pos.x, cr.pos.z);
-      ctx.fillStyle = g.state.species[cr.species].observed ? '#ffffff' : 'rgba(255,255,255,0.55)';
+      ctx.fillStyle = g.state.species[cr.species].bonded ? '#ffffff' : 'rgba(255,255,255,0.55)';
       ctx.beginPath();
       ctx.arc(x, y, 1.2, 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.restore();
-    // quest marker on the rim when it is off the minimap
-    const qt = g.quests.target(g.state.tracked);
-    if (qt) {
-      const [qx, qy] = this.px(qt[0], qt[1]);
-      let dx = (qx - px) * zoom;
-      let dy = (qy - py) * zoom;
-      const cs = Math.cos(g.rig.yaw);
-      const sn = Math.sin(g.rig.yaw);
-      const rx = dx * cs - dy * sn;
-      const ry = dx * sn + dy * cs;
-      dx = rx;
-      dy = ry;
-      const d = Math.hypot(dx, dy);
-      const r = W / 2 - 12;
-      if (d > r) {
-        dx = (dx / d) * r;
-        dy = (dy / d) * r;
-      }
-      star(ctx, W / 2 + dx, W / 2 + dy, 8, '#f2c35a');
-    }
     // you (always pointing up relative to view)
     arrow(ctx, W / 2, W / 2, Math.PI - g.player.yaw + g.rig.yaw, 9);
     ctx.strokeStyle = 'rgba(242,195,90,0.85)';
@@ -305,20 +267,3 @@ function arrow(ctx: CanvasRenderingContext2D, x: number, y: number, rot: number,
   ctx.restore();
 }
 
-function star(ctx: CanvasRenderingContext2D, x: number, y: number, r: number, color: string): void {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.fillStyle = color;
-  ctx.strokeStyle = '#4a2a0a';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i < 10; i++) {
-    const a = (i / 10) * Math.PI * 2 - Math.PI / 2;
-    const rr = i % 2 ? r * 0.45 : r;
-    ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.restore();
-}

@@ -1,31 +1,30 @@
 // LumiQuest's orchestrator: owns the renderer, the world, the player, the
-// creatures and villagers, the systems and the UI, and runs the phases:
-// loading → title → character select → customize → starter → intro → play.
+// creatures, catching and the UI, and runs the phases:
+// loading → title → character select → starter → intro → play.
+// There are no quests: you roam Brightwater Vale, find creatures in their
+// habitats and times of day, sneak up and catch them with Lumi orbs.
 
 import { PointLight, Vector3 } from 'three';
 import { hashString, Rng } from '../shared/rng';
-import { presetAppearance, type Appearance } from './data/characters';
-import { ITEM_BY_ID } from './data/items';
-import { ABILITIES, SPECIES_BY_ID, variantName, type AbilityId, type SpeciesId } from './data/species';
-import { BEACON, LOCATIONS, PLAYER_START, WATER_LEVEL, LOCATION_BY_ID } from './data/world';
-import { dialogueFor, type DialogueHost } from './data/dialogue';
+import type { Appearance } from './data/characters';
+import { SPECIES_BY_ID, variantName, type AbilityId, type SpeciesId } from './data/species';
+import { LOCATIONS, PLAYER_START, WATER_LEVEL } from './data/world';
 import { Audio } from './engine/audio';
 import { CameraRig } from './engine/camera';
 import { Input } from './engine/input';
 import { RenderHost, resolveTier, PROFILES } from './engine/renderer';
-import { CharacterModel } from './entities/character';
+import { AnimeCharacter } from './anime/character';
+import { CAST, castAppearance } from './anime/cast';
 import type { Creature } from './entities/creature';
 import { buildCreature, type CreatureModel } from './entities/creatureModel';
 import { Creatures } from './entities/creatures';
-import { buildNpcs, type Npc } from './entities/npc';
 import { Player } from './entities/player';
-import { bestFood, bond, canResonate, feed, preference, resonanceFailed, type Conditions } from './systems/bonding';
-import { QUEST_BY_ID, Quests, type QuestDef } from './systems/quests';
+import { Catcher, catchChance, type Chance } from './systems/catching';
 import { deleteSave, loadGame, loadSettings, saveGame, saveSettings, type Settings } from './systems/save';
-import { day, hourOfDay, isNight, newState, type GameState, type WeatherKind } from './systems/state';
+import { day, hourOfDay, isNight, newState, STARTING_ORBS, type GameState, type WeatherKind } from './systems/state';
+import { Blossoms } from './world/blossoms';
 import { Fx } from './world/fx';
 import { Interactables, type Entry, type InteractHost } from './world/interactables';
-import { Adventure } from './systems/adventure';
 import { installAtmosphericFog } from './engine/atmosphere';
 import { installToonLighting } from './anime/toon';
 import { toonRim } from '../shared/toon/mats';
@@ -33,17 +32,16 @@ import { toonRim } from '../shared/toon/mats';
 import { World } from './world/world';
 import { Studio } from './ui/studio';
 import { UI } from './ui/ui';
-import { Autopilot } from './systems/auto';
 import { Post } from './engine/post';
 
 export type Phase = 'loading' | 'title' | 'charselect' | 'customize' | 'starter' | 'intro' | 'play' | 'error';
 
+/** What the crosshair is on: a creature to throw at (with its odds) or something to use. */
 export type Target =
   | { kind: 'interact'; entry: Entry }
-  | { kind: 'creature'; creature: Creature; dist: number }
-  | { kind: 'npc'; npc: Npc };
+  | { kind: 'creature'; creature: Creature; dist: number; chance: Chance };
 
-export class Game implements InteractHost, DialogueHost {
+export class Game implements InteractHost {
   readonly host: RenderHost;
   settings: Settings;
   readonly audio = new Audio();
@@ -52,30 +50,33 @@ export class Game implements InteractHost, DialogueHost {
   world!: World;
   player!: Player;
   creatures!: Creatures;
-  npcs: Npc[] = [];
   interact!: Interactables;
+  blossoms!: Blossoms;
+  catcher: Catcher | null = null;
   readonly fx = new Fx();
-  adventure: Adventure | null = null;
   readonly studio = new Studio();
   readonly ui: UI;
   readonly post: Post;
   state!: GameState;
-  quests!: Quests;
   phase: Phase = 'loading';
   /** Name of the open panel/dialogue, or null when playing freely. */
   modal: string | null = null;
   paused = false;
-  draft: { appearance: Appearance; starter: SpeciesId; starterName: string } = { appearance: presetAppearance('aero'), starter: 'flamkit', starterName: '' };
+  draft: { appearance: Appearance; starter: SpeciesId; starterName: string } = { appearance: castAppearance(CAST[0].id), starter: 'terrabun', starterName: '' };
+  /** The creature in your sights (for throwing), else something within reach to use. */
   target: Target | null = null;
+  /** Something within reach to use (E), even while a creature is in your sights. */
+  useTarget: Entry | null = null;
   readonly playerPos = new Vector3();
   private last = performance.now();
   private time = 0;
   private slowTick = 0;
   private saveTick = 0;
-  private observing: { creature: Creature; t: number } | null = null;
-  private titleModels: { char: CharacterModel; pet: CreatureModel } | null = null;
+  private titleModels: { char: AnimeCharacter; pet: CreatureModel } | null = null;
+  /** A throw waiting for the arm to reach its release point. */
+  private pendingThrow: { t: number; creature: Creature | null; dir: Vector3 } | null = null;
+  private throwCooldown = 0;
   private cinematic: { t: number; dur: number; path: (k: number) => { pos: Vector3; look: Vector3 }; done: () => void } | null = null;
-  auto: Autopilot | null = null;
   private visible = true;
   fps = 60;
   private fpsAcc = 0;
@@ -128,12 +129,11 @@ export class Game implements InteractHost, DialogueHost {
     try {
       this.world = new World(this.host.renderer, this.host.profile, (p, label) => this.ui.loading(p, label));
       await frame();
-      this.ui.loading(0.75, 'Waking the villagers');
+      this.ui.loading(0.75, 'Waking the creatures');
       this.world.scene.add(this.fx.group);
       this.world.scene.add(this.rig.camera);
-      // the vale is for roaming and creatures now: no quest-giving villagers
-      this.npcs = [];
-      void buildNpcs;
+      this.blossoms = new Blossoms(this.world.terrain);
+      this.world.scene.add(this.blossoms.group);
       await frame();
       this.ui.loading(0.85, 'Lighting the lanterns');
       // compile shaders up front so the first frames do not stutter
@@ -187,13 +187,13 @@ export class Game implements InteractHost, DialogueHost {
     this.rig.shot = { pos: cam, look };
     this.rig.snap();
     if (!this.titleModels) {
-      const char = new CharacterModel(presetAppearance('aero'));
+      const char = new AnimeCharacter(castAppearance('vita'));
       const cp = cam.clone().addScaledVector(f, 5.2).addScaledVector(right, 1.5);
       char.root.position.set(cp.x, t.height(cp.x, cp.z), cp.z);
       char.root.rotation.y = Math.atan2(f.x, f.z) - 0.25;
       char.animator.play('idle', 0);
       this.world.scene.add(char.root);
-      const pet = buildCreature('flamkit', null);
+      const pet = buildCreature('terrabun', null);
       const pp = cam.clone().addScaledVector(f, 4.6).addScaledVector(right, 2.6);
       pet.root.position.set(pp.x, t.height(pp.x, pp.z), pp.z);
       pet.root.rotation.y = Math.atan2(-f.x, -f.z) + 0.9;
@@ -213,15 +213,15 @@ export class Game implements InteractHost, DialogueHost {
 
   newGame(): void {
     this.audio.click();
-    this.draft = { appearance: presetAppearance('aero'), starter: 'flamkit', starterName: '' };
+    this.draft = { appearance: castAppearance(CAST[0].id), starter: 'terrabun', starterName: '' };
     this.phase = 'charselect';
     this.ui.charSelect();
   }
 
-  toCustomize(presetId: string, keepLook = false): void {
-    if (!keepLook) this.draft.appearance = presetAppearance(presetId);
-    this.phase = 'customize';
-    this.ui.customize();
+  /** Picks a cast member and the name to go by, then on to choosing a first creature. */
+  chooseCast(id: string, name: string): void {
+    this.draft.appearance = castAppearance(id, name.replace(/[<>]/g, '').trim().slice(0, 16) || undefined);
+    this.toStarter();
   }
 
   toStarter(): void {
@@ -255,11 +255,6 @@ export class Game implements InteractHost, DialogueHost {
     this.hideTitleModels();
     this.cleanupPlay();
     const s = this.state;
-    this.quests = new Quests(s, {
-      onStart: (q) => this.questStarted(q),
-      onStage: (q) => this.questAdvanced(q),
-      onComplete: (q) => this.questComplete(q),
-    });
     this.player = new Player(s.appearance, this.world.terrain, this.world.physics);
     this.world.scene.add(this.player.model.root);
     this.player.place(s.player.x, s.player.y, s.player.z, s.player.yaw);
@@ -280,12 +275,20 @@ export class Game implements InteractHost, DialogueHost {
     this.creatures = new Creatures(this.world.terrain, s);
     this.world.scene.add(this.creatures.group);
     this.interact = new Interactables(this.world.terrain, this.world.physics, this);
-    this.interact.attachBeacon(this.world.props.beacon);
     this.world.scene.add(this.interact.group);
     this.interact.sync();
-    // no objectives in the vale any more: Star Notes, gloom wisps and ranger levels are gone
-    this.adventure = null;
-    void Adventure;
+    this.blossoms.sync(s.done, s.clock);
+    this.catcher = new Catcher({
+      parent: this.world.scene,
+      terrain: this.world.terrain,
+      fx: this.fx,
+      audio: this.audio,
+      targets: () => this.creatures.wild,
+      chance: (c) => catchChance(c, this.player),
+      onCaught: (c) => this.onCaught(c),
+      onEscaped: (c) => this.onEscaped(c),
+      onMiss: () => this.onMiss(),
+    });
     this.creatures.setCompanion(s.active, s.companionOut, this.player.pos);
     this.rig.mode = s.player.camera;
     this.rig.yaw = s.player.yaw + Math.PI;
@@ -293,7 +296,6 @@ export class Game implements InteractHost, DialogueHost {
     this.player.model.setBodyVisible(this.rig.mode === 'third');
     this.rig.shot = null;
     this.rig.snap();
-    this.quests.check();
     this.ui.enterPlay();
     this.phase = intro ? 'intro' : 'play';
     this.input.gameplay = !intro;
@@ -312,11 +314,11 @@ export class Game implements InteractHost, DialogueHost {
       this.interact?.group.removeFromParent();
     }
     this.player = undefined as unknown as Player;
-    this.adventure?.dispose();
-    this.adventure = null;
-    this.auto = null;
-    this.observing = null;
+    this.catcher?.dispose();
+    this.catcher = null;
+    this.pendingThrow = null;
     this.target = null;
+    this.useTarget = null;
   }
 
   private playIntro(): void {
@@ -325,7 +327,8 @@ export class Game implements InteractHost, DialogueHost {
     const a = new Vector3(70, 70, 150);
     const b = new Vector3(-10, t.height(-10, 30) + 30, 70);
     const c = new Vector3(p.x + 2.5, p.y + 2.2, p.z + 5.5);
-    const look0 = new Vector3(BEACON.at[0], 18, BEACON.at[1]);
+    // across the vale toward Beacon Hill, then down to you
+    const look0 = new Vector3(-20, 18, 10);
     const look1 = p.clone().add(new Vector3(0, 1.1, 0));
     this.ui.introCard(true);
     this.audio.quest();
@@ -339,8 +342,8 @@ export class Game implements InteractHost, DialogueHost {
       this.phase = 'play';
       this.input.gameplay = true;
       this.creatures.companion?.setMood('happy', 2);
-      this.toast(`${this.companionName()} is ready for adventure!`, 'good');
-      setTimeout(() => this.toast('Ranger Elen is waiting by the lodge.', 'quest'), 1600);
+      this.toast(`${this.companionName()} is ready to explore!`, 'good');
+      setTimeout(() => this.toast('Creatures live all over the vale. Sneak close and press F (or click) to throw a Lumi orb.', 'quest'), 1600);
       this.ui.showControlsHint();
       this.saveNow(true);
     });
@@ -408,33 +411,30 @@ export class Game implements InteractHost, DialogueHost {
   private play(dt: number): void {
     const s = this.state;
     const frozen = this.paused || !!this.modal || this.phase === 'intro' || !!this.cinematic;
-    // a perfect dodge slows the whole world for a moment
-    const simDt = this.paused ? 0 : dt * (this.adventure?.timeScale ?? 1);
-    this.adventure?.update(this.paused ? 0 : dt, hourOfDay(s), !frozen && this.phase === 'play');
+    const simDt = this.paused ? 0 : dt;
     // input → player
     const move = this.input.move();
     if (!frozen) {
       const look = this.input.consumeLook();
       this.rig.applyLook(look.x, look.y, look.zoom);
       this.handleActions();
-      if (this.auto) this.auto.update(dt);
     } else {
       this.input.consumeLook();
       this.input.clearEdges();
     }
     const comp = this.companionDef();
     const abil = { canDive: comp?.ability === 'tide', canGlide: comp?.ability === 'glide' };
-    const ai = this.auto?.input;
     this.player.frozen = frozen;
     this.player.update(simDt, {
-      x: ai ? ai.x : move.x,
-      y: ai ? ai.y : move.y,
-      sprint: ai ? ai.sprint : this.input.isDown('sprint'),
-      crouch: ai ? ai.crouch : this.input.isDown('crouch'),
-      jump: ai ? ai.jump : this.input.pressed('jump'),
-      jumpHeld: ai ? ai.jumpHeld : this.input.isDown('jump'),
+      x: move.x,
+      y: move.y,
+      sprint: this.input.isDown('sprint'),
+      crouch: this.input.isDown('crouch'),
+      jump: this.input.pressed('jump'),
+      jumpHeld: this.input.isDown('jump'),
     }, this.rig, abil);
     this.playerPos.copy(this.player.pos);
+    this.updateThrow(simDt);
     // camera
     if (this.cinematic) {
       this.cinematic.t += dt;
@@ -464,7 +464,7 @@ export class Game implements InteractHost, DialogueHost {
     // world
     this.world.sky.underwater = this.player.underwater || this.rig.camera.position.y < WATER_LEVEL - 0.05 && this.world.terrain.waterAt(this.rig.camera.position.x, this.rig.camera.position.z) !== null;
     this.world.update(simDt || 0.0001, this.time, hour, s.weather.kind, this.player.pos, this.rig.camera.position, inCave);
-    // creatures and villagers
+    // creatures
     const poi: Vector3[] = [];
     this.creatures.update({
       dt: simDt,
@@ -477,25 +477,27 @@ export class Game implements InteractHost, DialogueHost {
       poi,
       knock: (from, strength) => this.knockback(from, strength),
     }, this.host.profile.creatureRange, this.player.yaw);
-    for (const n of this.npcs) {
-      const d = n.pos.distanceTo(this.player.pos);
-      if (d < 70) n.update(simDt, this.player.pos);
-    }
     const compC = this.creatures.companion;
-    this.interact.update(simDt, this.player.pos, compC && !compC.dismissed && comp?.ability === 'glow' ? compC.pos : null, !!compC && !compC.dismissed && comp?.ability === 'forage', this.world.sky.night);
+    this.interact.update(simDt, this.player.pos, !!compC && !compC.dismissed && comp?.ability === 'forage', this.world.sky.night);
+    this.catcher?.update(simDt, this.time);
+    this.blossoms.update(this.time);
+    if (!frozen) this.gatherBlossom();
     this.fx.update(simDt);
     // companion glow lights the dark
     this.updateCompanionLight(comp?.ability === 'glow' && !!compC && !compC.dismissed);
-    // targeting and observation
+    // what you're aiming at
     if (!frozen) this.updateTarget();
-    else this.target = null;
-    this.updateObserve(simDt);
-    // periodic work
+    else {
+      this.target = null;
+      this.useTarget = null;
+    }
+    // periodic work: places, regrown blossoms, creatures back after a day away
     this.slowTick -= dt;
     if (this.slowTick <= 0 && this.phase === 'play') {
       this.slowTick = 0.5;
       this.discover();
-      this.quests.check();
+      this.blossoms.sync(s.done, s.clock);
+      this.creatures.refresh();
     }
     this.saveTick += dt;
     if (this.saveTick > 45 && this.phase === 'play' && !this.paused) {
@@ -577,8 +579,6 @@ export class Game implements InteractHost, DialogueHost {
       const map: Record<string, string> = {
         [this.settings.bindings.map]: 'map',
         [this.settings.bindings.collection]: 'collection',
-        [this.settings.bindings.journal]: 'journal',
-        [this.settings.bindings.inventory]: 'inventory',
       };
       const panel = map[e.code];
       if (panel) {
@@ -598,261 +598,164 @@ export class Game implements InteractHost, DialogueHost {
     if (i.pressed('companion')) this.toggleCompanion();
     if (i.pressed('map')) this.ui.openPanel('map');
     if (i.pressed('collection')) this.ui.openPanel('collection');
-    if (i.pressed('journal')) this.ui.openPanel('journal');
-    if (i.pressed('inventory')) this.ui.openPanel('inventory');
     if (i.pressed('interact')) this.doInteract();
-    if (i.pressed('observe')) this.doObserve();
-    if (i.pressed('ability')) this.doAbility();
-    if (i.pressed('dodge') && this.adventure) {
+    if (i.pressed('throw')) this.doThrow();
+    if (i.pressed('dodge')) {
       const m = i.move();
       const fwd = this.rig.forward(new Vector3());
       const right = new Vector3(-fwd.z, 0, fwd.x);
-      this.adventure.dodge(fwd.multiplyScalar(m.y).addScaledVector(right, m.x));
+      this.player.dodge(fwd.multiplyScalar(m.y).addScaledVector(right, m.x));
     }
-    if (i.pressed('pulse')) this.adventure?.pulse();
   }
 
   // -------------------------------------------------------------------------
   // Targeting and actions
 
   private updateTarget(): void {
-    const aim = this.rig.mode === 'first' ? this.rig.aim(new Vector3()) : this.rig.forward(new Vector3()).lerp(new Vector3(Math.sin(this.player.yaw), 0, Math.cos(this.player.yaw)), 0.5).normalize();
-    const fp = this.rig.mode === 'first';
     const p = this.player.pos;
+    const fp = this.rig.mode === 'first';
+    const cam = this.rig.camera;
+    const eye = cam.position;
+    const look = cam.getWorldDirection(new Vector3());
+    // the wild creature nearest the crosshair, within throwing range
     let best: Target | null = null;
-    let bestScore = Infinity;
-    // villagers
-    for (const n of this.npcs) {
-      const d = Math.hypot(n.pos.x - p.x, n.pos.z - p.z);
-      if (d > 3.2) continue;
-      const dot = ((n.pos.x - p.x) * aim.x + (n.pos.z - p.z) * aim.z) / Math.max(0.01, d);
-      if (dot < (fp ? 0.7 : 0.1) && d > 1.3) continue;
-      const score = d * (2 - dot) - 0.5;
-      if (score < bestScore) {
-        bestScore = score;
-        best = { kind: 'npc', npc: n };
-      }
-    }
-    // creatures: interact range for food, longer range for observing
+    let bestAng = Infinity;
+    const to = new Vector3();
     for (const c of this.creatures.visible()) {
+      if (c.companion || c.held || !c.model) continue;
       const d = Math.hypot(c.pos.x - p.x, c.pos.z - p.z);
-      if (d > 22) continue;
-      const dot = ((c.pos.x - p.x) * aim.x + (c.pos.z - p.z) * aim.z) / Math.max(0.01, d);
-      const need = d < 4 ? (fp ? 0.6 : 0) : fp ? 0.94 : 0.8;
-      if (dot < need) continue;
-      const score = d < 4 ? d * (2 - dot) : d * (2 - dot) + 3;
-      if (score < bestScore) {
-        bestScore = score;
-        best = { kind: 'creature', creature: c, dist: d };
+      if (d > 24) continue;
+      to.set(c.pos.x - eye.x, c.pos.y + c.model.height * 0.45 * c.model.root.scale.x - eye.y, c.pos.z - eye.z);
+      const dist = to.length();
+      const ang = Math.acos(Math.min(1, to.dot(look) / Math.max(dist, 1e-3)));
+      // about a body's width either side of the crosshair (more forgiving up close)
+      if (ang > Math.max(0.06, Math.atan2(0.85, dist))) continue;
+      if (ang < bestAng) {
+        bestAng = ang;
+        best = { kind: 'creature', creature: c, dist: d, chance: catchChance(c, this.player) };
       }
     }
-    const entry = this.interact.target(p, aim, fp);
-    if (entry) {
-      const d = Math.hypot(entry.focus.x - p.x, entry.focus.z - p.z);
-      const score = d * 1.2;
-      if (score < bestScore || (best?.kind === 'creature' && best.dist > 4)) {
-        bestScore = score;
-        best = { kind: 'interact', entry };
-      }
-    }
-    if (best?.kind === 'creature' && !best.creature.companion && best.creature.def) {
+    // things within reach to use (E)
+    const aim = fp ? this.rig.aim(new Vector3()) : this.rig.forward(new Vector3()).lerp(new Vector3(Math.sin(this.player.yaw), 0, Math.cos(this.player.yaw)), 0.5).normalize();
+    this.useTarget = this.interact.target(p, aim, fp);
+    if (!best && this.useTarget) best = { kind: 'interact', entry: this.useTarget };
+    if (best?.kind === 'creature') {
       const rec = this.state.species[best.creature.species];
       if (!rec.seen) {
         rec.seen = true;
-        this.toast(`New creature sighted: ${best.creature.def.name}! Press F to observe it.`, 'quest');
+        this.toast(`New creature sighted: ${best.creature.def.name}! Throw a Lumi orb (${this.ui.key('throw')}) to catch it.`, 'quest');
       }
     }
     this.target = best;
   }
 
-  conditions(c: Creature): Conditions {
-    const hour = hourOfDay(this.state);
-    return {
-      night: isNight(hour),
-      inCave: this.world.isCave(c.pos.x, c.pos.z),
-      playerCrouching: this.player.crouching,
-      playerCalmFor: this.player.calmFor,
-      nearFlowers: Math.hypot(c.pos.x - LOCATION_BY_ID.meadow.at[0], c.pos.z - LOCATION_BY_ID.meadow.at[1]) < 34,
-    };
-  }
-
   doInteract(): void {
-    const t = this.target;
-    if (!t) return;
-    if (t.kind === 'interact') {
-      this.interact.interact(t.entry);
-      this.audio.click();
-    } else if (t.kind === 'npc') this.talk(t.npc);
-    else if (t.kind === 'creature') {
-      const c = t.creature;
-      if (!c.companion) {
-        const r = canResonate(c);
-        if (r.ok && t.dist < 4.2) {
-          this.startResonance(c);
-          return;
-        }
-      }
-      if (t.dist > 3.6) {
-        this.toast(`Get closer to ${c.def.name} to offer food.`, 'info');
-        return;
-      }
-      this.feedCreature(c);
-    }
+    if (!this.useTarget) return;
+    this.interact.interact(this.useTarget);
+    this.audio.click();
   }
 
-  feedCreature(c: Creature, item?: string): void {
-    const food = item ?? bestFood(this.state, c);
-    if (!food) {
+  /** Winds up a throw; the orb leaves the hand when the arm reaches its release point. */
+  doThrow(): void {
+    if (this.throwCooldown > 0 || this.pendingThrow || this.phase !== 'play' || !this.catcher) return;
+    const s = this.state;
+    if (this.player.swimming) {
+      this.toast('You can’t throw while swimming.', 'info');
+      return;
+    }
+    if (s.orbs <= 0) {
       this.audio.fail();
-      this.toast('You have no food to offer. Pick herbs or visit Pip’s stall.', 'warn');
+      this.toast('Out of Lumi orbs! Gather glowing blossoms, open caches, or rest by the campfire.', 'warn');
       return;
     }
-    if (c.companion) {
-      if (!this.take(food, 1)) return;
-      const b = this.state.bonded.find((x) => x.uid === c.bondUid);
-      const liked = food === c.def.likes;
-      if (b) b.friendship = Math.min(100, b.friendship + (liked ? 8 : 3));
-      c.perform('happy');
-      c.setMood('heart');
-      this.fx.hearts(c.pos.clone().add(new Vector3(0, c.def.size + 0.4, 0)), liked ? 4 : 2);
-      this.audio.trust(0.8);
-      this.toast(liked ? `${this.companionName()} happily eats the ${ITEM_BY_ID[food].name}!` : `${this.companionName()} munches the ${ITEM_BY_ID[food].name}.`, 'good');
-      this.player.model.animator.once('interact', 0.1, 1.2);
-      return;
-    }
-    const res = feed(this.state, c, food, this.conditions(c));
-    if (!res.ok) {
-      this.audio.fail();
-      this.toast(res.message, 'warn');
-      if (c.fear > 45) c.setMood('alarm');
-      return;
-    }
-    this.take(food, 1);
-    c.face(this.player.pos);
-    c.perform(res.liked ? 'happy' : 'eat');
-    c.setMood(res.liked ? 'heart' : 'curious');
-    if (res.liked) this.fx.hearts(c.pos.clone().add(new Vector3(0, c.def.size + 0.4, 0)), 3);
-    this.audio.trust(c.trust / 100);
-    this.player.model.animator.once('interact', 0.1, 1.2);
-    this.toast(res.message, res.liked ? 'good' : 'info');
-    if (c.trust >= 70) setTimeout(() => this.toast(`${c.def.name} trusts you! Press E to Resonate.`, 'quest'), 900);
+    s.orbs -= 1;
+    this.throwCooldown = 1;
+    const dir = this.rig.camera.getWorldDirection(new Vector3());
+    const creature = this.target?.kind === 'creature' ? this.target.creature : null;
+    // turn to face the throw
+    if (this.rig.mode === 'third') this.player.yaw = Math.atan2(dir.x, dir.z);
+    this.player.model.animator.once('throw', 0.08, 1.4);
+    this.pendingThrow = { t: 0.36, creature, dir };
   }
 
-  doObserve(): void {
-    const t = this.target;
-    if (!t || t.kind !== 'creature') {
-      if (t?.kind === 'interact' && (t.entry.def.kind === 'track' || t.entry.def.kind === 'sign')) this.interact.interact(t.entry);
-      else this.toast('Look at a creature to observe it.', 'info');
-      return;
+  private updateThrow(dt: number): void {
+    this.throwCooldown = Math.max(0, this.throwCooldown - dt);
+    const pt = this.pendingThrow;
+    if (!pt || !this.catcher) return;
+    pt.t -= dt;
+    if (pt.t > 0) return;
+    this.pendingThrow = null;
+    const p = this.player.pos;
+    const fwd = new Vector3(Math.sin(this.player.yaw), 0, Math.cos(this.player.yaw));
+    // the character faces +Z, so its right hand is toward fwd x up
+    const right = new Vector3(-fwd.z, 0, fwd.x);
+    const from =
+      this.rig.mode === 'first'
+        ? this.rig.camera.position.clone().addScaledVector(pt.dir, 0.4).add(new Vector3(0, -0.15, 0))
+        : p.clone().add(new Vector3(0, 1.55, 0)).addScaledVector(fwd, 0.35).addScaledVector(right, 0.25);
+    let target: Vector3 | null = null;
+    const c = pt.creature;
+    if (c && c.visible && !c.held && c.model) {
+      target = c.pos.clone().add(new Vector3(0, c.model.height * 0.45 * c.model.root.scale.x, 0));
+      // lead a moving creature a little
+      const T = Math.min(0.95, Math.max(0.3, from.distanceTo(target) / 16));
+      target.x += Math.sin(c.yaw) * c.moveSpeed * T * 0.8;
+      target.z += Math.cos(c.yaw) * c.moveSpeed * T * 0.8;
     }
-    if (this.observing) return;
-    this.observing = { creature: t.creature, t: 0 };
-    this.player.model.animator.once('observe', 0.1, 0.9);
-    this.audio.hover();
+    this.catcher.throw(from, pt.dir, target);
   }
 
-  private updateObserve(dt: number): void {
-    const o = this.observing;
-    if (!o) return;
-    const c = o.creature;
-    const d = c.pos.distanceTo(this.player.pos);
-    if (!c.visible || d > 26 || c.state === 'flee') {
-      this.observing = null;
-      this.toast('It slipped out of view.', 'warn');
-      return;
-    }
-    o.t += dt;
-    if (o.t < 1.4) return;
-    this.observing = null;
+  private onCaught(c: Creature): void {
     const s = this.state;
     const rec = s.species[c.species];
-    const first = rec.observed === 0;
+    const first = rec.bonded === 0;
+    const name = variantName(c.species, c.variant);
+    const uid = `c${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
+    s.bonded.push({ uid, species: c.species, variant: c.variant, name: c.def.name, origin: c.id, bondedDay: day(s), friendship: 30 });
     rec.seen = true;
-    if (!c.companion && !c.observed) {
-      c.observed = true;
-      rec.observed += 1;
-      const mem = s.wild[c.id];
-      if (mem) mem.observed = true;
-      c.trust = Math.min(100, c.trust + 8);
-    } else if (first) rec.observed += 1;
-    const pref = preference(c, this.conditions(c));
-    const likes = ITEM_BY_ID[c.def.likes].name;
-    const name = variantName(c.species, c.variant);
-    this.audio.glow();
-    c.setMood('curious', 1.5);
-    this.ui.observed(c, first, `${name} — ${c.def.personality} Likes ${likes}. ${pref.note}.`);
-    this.quests.check();
-  }
-
-  get observeProgress(): number {
-    return this.observing ? Math.min(1, this.observing.t / 1.4) : 0;
-  }
-
-  private startResonance(c: Creature): void {
-    this.modal = 'resonance';
-    this.input.releaseLock();
-    c.face(this.player.pos);
-    this.player.model.animator.once('resonate', 0.1, 0.8);
-    this.player.pulse();
-    this.audio.heartbeat();
-    this.ui.resonance(c, (ok) => this.finishResonance(c, ok));
-  }
-
-  private finishResonance(c: Creature, ok: boolean): void {
-    this.modal = null;
-    if (this.phase === 'play' && !this.input.touch) this.input.requestLock();
-    if (!ok) {
-      resonanceFailed(this.state, c);
-      c.setMood('alarm');
-      this.audio.fail();
-      this.toast(`${c.def.name} pulled away. Rebuild its trust and try again.`, 'warn');
-      return;
-    }
-    const uid = bond(this.state, c, day(this.state));
+    rec.bonded += 1;
+    rec.observed = Math.max(rec.observed, 1);
+    this.creatures.caught(c);
     this.audio.bond();
-    this.fx.sparkle(c.pos.clone().add(new Vector3(0, 0.6, 0)), '#ffe98a', 50, 1.5);
-    this.fx.ring(c.pos.clone().add(new Vector3(0, 0.2, 0)), '#ffe98a', 3);
-    this.fx.hearts(c.pos.clone().add(new Vector3(0, 0.8, 0)), 5);
-    const name = variantName(c.species, c.variant);
-    this.creatures.removeWild(c);
-    this.quests.check();
+    this.player.model.animator.once('happy', 0.1, 1);
+    this.player.model.setExpression('happy');
+    setTimeout(() => this.player?.model.setExpression('neutral'), 2400);
+    if (!s.active) {
+      s.active = uid;
+      s.companionOut = true;
+      this.creatures.setCompanion(uid, true, this.player.pos);
+    }
     this.saveNow(true);
-    this.ui.bonded(uid, name);
+    this.ui.caught(uid, name, first);
   }
 
-  doAbility(): void {
-    const comp = this.companionDef();
-    const c = this.creatures.companion;
-    if (!comp || !c || c.dismissed) {
-      this.toast('Call a companion first (R).', 'info');
-      return;
-    }
-    const t = this.target;
-    if (t?.kind === 'interact') {
-      const k = t.entry.def.kind;
-      if (k === 'thorns' || k === 'brazier' || k === 'cracked' || k === 'basin' || k === 'altar') {
-        this.interact.interact(t.entry);
-        return;
-      }
-    }
-    const ab = ABILITIES[comp.ability];
-    this.companionPerform(c.pos.clone().add(new Vector3(Math.sin(this.player.yaw) * 2, 0, Math.cos(this.player.yaw) * 2)));
-    switch (comp.ability) {
-      case 'glide':
-        this.toast(`${ab.name}: hold Jump while falling to glide.`, 'info');
-        break;
-      case 'tide':
-        this.toast(`${ab.name}: crouch while swimming to dive, jump to rise.`, 'info');
-        break;
-      case 'glow':
-        this.toast(`${ab.name}: ${this.companionName()} lights the dark and reveals hidden glyphs.`, 'info');
-        break;
-      case 'forage':
-        this.toast(`${ab.name}: ${this.companionName()} sniffs for hidden herbs nearby.`, 'info');
-        break;
-      default:
-        this.toast(`${ab.name}: ${ab.summary}`, 'info');
-    }
+  private onEscaped(c: Creature): void {
+    this.audio.fail();
+    this.toast(`Oh no! ${variantName(c.species, c.variant)} broke free!`, 'warn');
+  }
+
+  private missNote = 0;
+  private onMiss(): void {
+    const now = performance.now();
+    if (now - this.missNote < 8000) return;
+    this.missNote = now;
+    this.toast('Missed! Get a little closer, or wait for it to stop moving.', 'info');
+  }
+
+  /** Walking through a ripe Lumi blossom gathers its orbs. */
+  private gatherBlossom(): void {
+    const i = this.blossoms.near(this.player.pos);
+    if (i < 0) return;
+    const b = this.blossoms.gather(i);
+    this.state.done[b.id] = this.state.clock;
+    this.audio.pickup();
+    this.giveOrbs(b.orbs, b.pos.clone().add(new Vector3(0, 0.5, 0)));
+  }
+
+  giveOrbs(n: number, at: Vector3): void {
+    this.state.orbs = Math.min(99, this.state.orbs + n);
+    this.fx.sparkle(at, '#bff4ff', 12 + n * 5, 0.9);
+    this.ui.orbToast(n);
   }
 
   private knockback(from: Vector3, strength: number): void {
@@ -862,7 +765,7 @@ export class Game implements InteractHost, DialogueHost {
     this.player.vel.y = 3.5;
     this.player.grounded = false;
     this.audio.alarm();
-    this.toast('The Thornlade raised its fronds at you! Move calmly around it.', 'warn');
+    this.toast('It bumped you away! Give it some space and try again.', 'warn');
   }
 
   toggleView(): void {
@@ -904,50 +807,6 @@ export class Game implements InteractHost, DialogueHost {
   // -------------------------------------------------------------------------
   // Dialogue, shop, rest
 
-  talk(n: Npc): void {
-    this.audio.open();
-    n.talking = true;
-    this.modal = 'dialogue';
-    this.input.releaseLock();
-    const tree = dialogueFor(n.def.id, this);
-    // frame the conversation
-    const mid = n.pos.clone().lerp(this.player.pos, 0.5);
-    const side = new Vector3(n.pos.z - this.player.pos.z, 0, -(n.pos.x - this.player.pos.x)).normalize();
-    this.rig.shot = { pos: mid.clone().addScaledVector(side, 3.2).add(new Vector3(0, 1.7, 0)), look: mid.clone().add(new Vector3(0, 1.1, 0)) };
-    this.ui.dialogue(n.def.name, n.def.role, tree, () => {
-      n.talking = false;
-      this.rig.shot = null;
-      this.modal = null;
-      this.quests.check();
-      if (!this.input.touch) this.input.requestLock();
-    });
-  }
-
-  openShop(): void {
-    setTimeout(() => this.ui.openPanel('shop'), 0);
-  }
-
-  buy(item: string): void {
-    const def = ITEM_BY_ID[item];
-    if (!def?.price) return;
-    if (this.state.lumens < def.price) {
-      this.audio.fail();
-      this.toast('Not enough Lumens.', 'warn');
-      return;
-    }
-    this.state.lumens -= def.price;
-    this.give(item, 1);
-    this.audio.coin();
-  }
-
-  sell(item: string, price: number): number {
-    const n = this.state.inventory[item] ?? 0;
-    if (!n) return 0;
-    this.take(item, n);
-    this.addLumens(n * price);
-    return n;
-  }
-
   openRest(): void {
     this.ui.openPanel('rest');
   }
@@ -961,8 +820,13 @@ export class Game implements InteractHost, DialogueHost {
       s.clock += add;
       if (s.weather.until < s.clock) this.rollWeather();
       this.creatures.companion?.setMood('sleep', 2);
+      // the outpost keeps rangers stocked
+      const topUp = Math.max(0, STARTING_ORBS - s.orbs);
+      s.orbs += topUp;
+      this.blossoms.sync(s.done, s.clock);
+      this.creatures.refresh();
       this.saveNow(true);
-      this.toast(`You rest by the fire until ${String(untilHour).padStart(2, '0')}:00. Progress saved.`, 'good');
+      this.toast(`You rest by the fire until ${String(untilHour).padStart(2, '0')}:00.${topUp ? ` The outpost restocks you with ${topUp} Lumi orbs.` : ''} Progress saved.`, 'good');
     });
   }
 
@@ -983,32 +847,6 @@ export class Game implements InteractHost, DialogueHost {
 
   get playerName(): string {
     return this.state.appearance.name;
-  }
-
-  give(item: string, n: number): void {
-    const s = this.state;
-    s.inventory[item] = (s.inventory[item] ?? 0) + n;
-    const def = ITEM_BY_ID[item];
-    this.ui.itemToast(item, n);
-    if (def?.category === 'note') this.toast(`New note: ${def.name} (see Inventory → Notes).`, 'info');
-  }
-
-  take(item: string, n: number): boolean {
-    const s = this.state;
-    if ((s.inventory[item] ?? 0) < n) return false;
-    s.inventory[item] -= n;
-    if (s.inventory[item] <= 0) delete s.inventory[item];
-    return true;
-  }
-
-  count(item: string): number {
-    return this.state.inventory[item] ?? 0;
-  }
-
-  addLumens(n: number): void {
-    this.state.lumens += n;
-    this.ui.itemToast('lumens', n);
-    this.audio.coin();
   }
 
   toast(msg: string, kind: 'info' | 'good' | 'quest' | 'warn' = 'info'): void {
@@ -1038,81 +876,12 @@ export class Game implements InteractHost, DialogueHost {
     return b?.name ?? 'your companion';
   }
 
-  companionPerform(at: Vector3): void {
-    const c = this.creatures.companion;
-    if (!c) return;
-    c.face(at);
-    c.perform('ability', 1.2);
-    this.player.pulse();
-    this.player.model.animator.once('interact', 0.1, 1);
-    const def = c.def;
-    const p = c.pos.clone().lerp(at, 0.5).add(new Vector3(0, 0.6, 0));
-    if (def.element === 'fire') this.fx.fire(p, 20, 0.5);
-    else if (def.element === 'water') this.fx.splash(p, 20);
-    else if (def.element === 'earth') this.fx.ring(c.pos.clone().add(new Vector3(0, 0.1, 0)), '#c8a06a', 3);
-    else if (def.element === 'air') this.audio.wind();
-    else this.fx.sparkle(p, def.palette.glow, 20);
-  }
-
-  checkQuests(): void {
-    this.quests.check();
-  }
-
-  startQuest(id: string): void {
-    this.quests.start(id);
-  }
-
-  questStatus(id: string): 'locked' | 'active' | 'done' {
-    return this.quests.status(id);
-  }
-
-  questStage(id: string): number {
-    return this.quests.stage(id);
-  }
-
   setFlag(name: string, value = 1): void {
     this.state.flags[name] = value;
   }
 
   playerAnim(clip: string): void {
     this.player.model.animator.once(clip, 0.1, 1.2);
-  }
-
-  beaconRestored(): void {
-    const top = this.world.props.beacon.top;
-    const altar = new Vector3(-36, this.world.terrain.height(-36, 30) + 4, 30);
-    const p0 = this.rig.camera.position.clone();
-    this.audio.beacon();
-    this.phase = 'intro';
-    this.input.gameplay = false;
-    this.input.releaseLock();
-    this.runCinematic(7, (k) => {
-      const e = k * k * (3 - 2 * k);
-      const orbit = new Vector3(top.x + Math.cos(0.8 + e * 1.2) * 26, top.y - 2 + e * 6, top.z + Math.sin(0.8 + e * 1.2) * 26);
-      return { pos: k < 0.2 ? p0.clone().lerp(altar, k / 0.2) : orbit, look: top.clone().add(new Vector3(0, e * 10, 0)) };
-    }, () => {
-      this.phase = 'play';
-      this.input.gameplay = true;
-      this.ui.banner('The Lost Beacon shines again', 'Return to Elen at the outpost.');
-      this.saveNow(true);
-      if (!this.input.touch) this.input.requestLock();
-    });
-  }
-
-  private questStarted(q: QuestDef): void {
-    this.audio.open();
-    this.ui.banner(`New quest: ${q.title}`, this.quests.objective(q.id));
-  }
-
-  private questAdvanced(q: QuestDef): void {
-    this.audio.quest();
-    this.ui.toast(`${q.title}: ${this.quests.objective(q.id)}`, 'quest');
-  }
-
-  private questComplete(q: QuestDef): void {
-    this.audio.quest();
-    this.ui.banner(`Quest complete: ${q.title}`, `Reward: ${q.reward.note}`);
-    this.saveNow(true);
   }
 
   private discover(): void {
@@ -1205,11 +974,6 @@ export class Game implements InteractHost, DialogueHost {
     return PROFILES[resolveTier(this.settings.quality)].tier;
   }
 
-  startAuto(on: boolean): void {
-    this.auto = on ? new Autopilot(this) : null;
-    this.toast(on ? 'Auto-ranger on: it will follow your quest. Move to take over.' : 'Auto-ranger off.', 'info');
-  }
-
   resetPlayerTo(where: 'outpost'): void {
     void where;
     this.player.place(PLAYER_START.at[0], 10, PLAYER_START.at[1], PLAYER_START.facing);
@@ -1220,4 +984,3 @@ function frame(): Promise<void> {
   return new Promise((r) => requestAnimationFrame(() => r()));
 }
 
-export { QUEST_BY_ID };

@@ -3,15 +3,19 @@
 
 import type { Appearance } from '../data/characters';
 import type { SpeciesId } from '../data/species';
-import { SPECIES } from '../data/species';
+import { SPECIES, speciesName } from '../data/species';
+
+/** Orbs a new ranger starts with, and what resting at the campfire tops you up to. */
+export const STARTING_ORBS = 12;
 import { PLAYER_START } from '../data/world';
 
-export const SAVE_VERSION = 1;
+/** 2: catching replaces bonding; quests, lumens, items and prisms are gone. */
+export const SAVE_VERSION = 2;
 
 export type CameraMode = 'third' | 'first';
 export type WeatherKind = 'clear' | 'cloudy' | 'rain' | 'mist';
-export type QuestStatus = 'locked' | 'active' | 'done';
 
+/** A creature in your collection (saved as "bonded" for compatibility with older saves). */
 export interface BondedCreature {
   uid: string;
   species: SpeciesId;
@@ -19,30 +23,31 @@ export interface BondedCreature {
   name: string;
   /** Wild spawn it came from, or 'starter'. */
   origin: string;
+  /** Day it was caught. */
   bondedDay: number;
-  /** 0..100 friendship; grows by feeding and adventuring together. */
+  /** 0..100 friendship; grows while it travels with you. */
   friendship: number;
 }
 
 export interface WildMemory {
   trust: number;
   observed: boolean;
+  /** Old saves: bonded wild creatures never came back. Kept false now. */
   bonded: boolean;
-  /** Rolled once, the first time the creature is met. */
+  /** Rolled when the creature appears (again after each catch). */
   variant: string | null;
-  /** Clock hour of the last time it was fed (for cooldowns). */
   fedAt: number;
+  /** Clock hour it was caught; the spawn stays empty for a day. */
+  caughtAt: number | null;
+  /** How many times this spawn has been caught (re-rolls the variant). */
+  gen: number;
 }
 
 export interface SpeciesRecord {
   seen: boolean;
   observed: number;
+  /** How many you have caught. */
   bonded: number;
-}
-
-export interface QuestState {
-  status: QuestStatus;
-  stage: number;
 }
 
 export interface GameState {
@@ -56,19 +61,15 @@ export interface GameState {
   /** Hours since the start of day 1 (so 33.5 is day 2, 09:30). */
   clock: number;
   weather: { kind: WeatherKind; until: number };
-  lumens: number;
-  inventory: Record<string, number>;
+  /** Lumi orbs to throw. */
+  orbs: number;
   bonded: BondedCreature[];
   active: string | null;
   companionOut: boolean;
   wild: Record<string, WildMemory>;
   species: Record<SpeciesId, SpeciesRecord>;
-  quests: Record<string, QuestState>;
-  tracked: string;
-  /** Interactable id → clock hour it was used/collected/opened. */
+  /** Interactable or blossom id → clock hour it was used/collected/opened. */
   done: Record<string, number>;
-  /** Prism facings, 0..7. */
-  prisms: number[];
   discovered: string[];
   flags: Record<string, number>;
 }
@@ -77,6 +78,7 @@ export function newState(appearance: Appearance, starter: SpeciesId, starterName
   const species = Object.fromEntries(SPECIES.map((s) => [s.id, { seen: false, observed: 0, bonded: 0 }])) as Record<SpeciesId, SpeciesRecord>;
   species[starter] = { seen: true, observed: 1, bonded: 1 };
   const starterDef = SPECIES.find((s) => s.id === starter)!;
+  void starterDef;
   const now = Date.now();
   return {
     version: SAVE_VERSION,
@@ -88,24 +90,16 @@ export function newState(appearance: Appearance, starter: SpeciesId, starterName
     player: { x: PLAYER_START.at[0], y: 4, z: PLAYER_START.at[1], yaw: PLAYER_START.facing, camera: 'third', pitch: -0.18 },
     clock: 9,
     weather: { kind: 'clear', until: 14 },
-    lumens: 20,
-    inventory: { device: 1, [starterDef.likes]: 3, sunberry: starter === 'flamkit' ? 5 : 2 },
-    bonded: [{ uid: 'starter', species: starter, variant: null, name: starterName || starterDef.name, origin: 'starter', bondedDay: 1, friendship: 40 }],
+    orbs: STARTING_ORBS,
+    bonded: [{ uid: 'starter', species: starter, variant: null, name: starterName || speciesName(starter), origin: 'starter', bondedDay: 1, friendship: 40 }],
     active: 'starter',
     companionOut: true,
     wild: {},
     species,
-    quests: { beacon: { status: 'active', stage: 0 } },
-    tracked: 'beacon',
     done: {},
-    prisms: [0, 6, 1],
     discovered: ['outpost'],
     flags: {},
   };
-}
-
-export function count(state: GameState, item: string): number {
-  return state.inventory[item] ?? 0;
 }
 
 export function day(state: GameState): number {

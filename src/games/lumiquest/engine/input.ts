@@ -53,7 +53,7 @@ export class Input {
       }
       const a = this.codeToAction.get(e.code) ?? ALIASES[e.code];
       if (!a) return;
-      if (this.gameplay || a === 'map' || a === 'collection' || a === 'journal' || a === 'inventory') e.preventDefault();
+      if (this.gameplay || a === 'map' || a === 'collection') e.preventDefault();
       if (e.code === 'Tab') e.preventDefault();
       if (!this.down.has(a) && !e.repeat) this.pressedQ.add(a);
       this.down.add(a);
@@ -82,6 +82,8 @@ export class Input {
       if (!this.gameplay) return;
       if (e.pointerType === 'mouse') {
         if (!this.locked && e.button === 0) this.requestLock();
+        // with the pointer locked, a left click throws a catch orb
+        else if (this.locked && e.button === 0) this.pressedQ.add('throw');
         // right-drag looks around without pointer lock
         if (e.button === 2 && this.dragId === null) {
           this.dragId = e.pointerId;
