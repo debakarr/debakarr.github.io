@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>Returning to Channel Studio</title>
+<style>body{font:16px system-ui,sans-serif;max-width:32rem;margin:4rem auto;padding:0 1rem;color:#222}</style></head>
+<body>
+<h1>Returning to Channel Studio&hellip;</h1>
+<p id="m">Sending you back to the program on this computer.</p>
+<noscript><p>JavaScript is needed to pass the sign-in result back to the program on this computer.</p></noscript>
+<script>
+// Passes only Facebook's sign-in answer back to the program on this computer. Nothing is stored or sent anywhere else.
+var keep = ['code', 'state', 'error', 'error_reason', 'error_description'];
+var p = new URLSearchParams(location.search), q = new URLSearchParams();
+keep.forEach(function (k) { if (p.has(k)) q.set(k, p.get(k)); });
+location.replace('http://localhost:4780/oauth/facebook/callback?' + q.toString());
+setTimeout(function () { document.getElementById('m').textContent = 'If nothing happened, Channel Studio is not running on this computer at port 4780.'; }, 4000);
+</script>
+</body></html>
